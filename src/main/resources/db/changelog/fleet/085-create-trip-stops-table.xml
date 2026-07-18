@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-fleet-trip-stops" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="fleet_trip_stops"/></not>
+        </preConditions>
+        <createTable tableName="fleet_trip_stops">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="trip_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stop_order" type="INT"/>
+            <column name="customer_name" type="VARCHAR(255)"/>
+            <column name="address" type="VARCHAR(1000)"/>
+            <column name="latitude" type="DOUBLE"/>
+            <column name="longitude" type="DOUBLE"/>
+            <column name="estimated_arrival" type="DATETIME"/>
+            <column name="actual_arrival" type="DATETIME"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="notes" type="TEXT"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="fleet_trip_stops" baseColumnNames="trip_id" constraintName="fk_trip_stop_trip" referencedTableName="trips" referencedColumnNames="id"/>
+    </changeSet>
+</databaseChangeLog>

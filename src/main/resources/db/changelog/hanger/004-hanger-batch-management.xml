@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="hng-production-batch-base" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="hng_production_batch">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_batch_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+            </column>
+            <column name="batch_no" type="varchar(50)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_hng_batch_no"/>
+            </column>
+            <column name="mo_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_batch_mo" referencedTableName="manufacturing_orders" referencedColumnNames="id"/>
+            </column>
+            <column name="coil_ref_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_batch_coil" referencedTableName="hng_coil_stock" referencedColumnNames="id"/>
+            </column>
+            <column name="hanger_type_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_batch_hanger_type" referencedTableName="hng_hanger_types" referencedColumnNames="id"/>
+            </column>
+            <column name="color" type="varchar(100)"/>
+            <column name="planned_qty" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="shift" type="varchar(20)"/>
+            <column name="machine" type="varchar(100)"/>
+            <column name="status" type="varchar(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_stage" type="varchar(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="remarks" type="TEXT"/>
+            <column name="created_at" type="datetime" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="datetime" defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="hng-batch-add-work-station-fk" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <dropColumn tableName="hng_production_batch" columnName="machine"/>
+        <addColumn tableName="hng_production_batch">
+            <column name="work_station_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_batch_work_station"
+                             referencedTableName="pro_work_stations"
+                             referencedColumnNames="id"
+                             nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

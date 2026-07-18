@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-sales-rentals-docs-schema" author="system">
+        <validCheckSum>ANY</validCheckSum>
+
+        <!-- rental_quotations -->
+        <createTable tableName="rental_quotations">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="quotation_date" type="DATE"/>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="salesperson_id" type="BIGINT"/>
+            <column name="quotation_number" type="VARCHAR(255)"><constraints unique="true"/></column>
+            <column name="reference" type="VARCHAR(255)"/>
+            <column name="expiry_date" type="DATE"/>
+            <column name="delivery_lead" type="VARCHAR(255)"/>
+            <column name="validity" type="VARCHAR(255)"/>
+            <column name="payment_terms" type="VARCHAR(255)"/>
+            <column name="price_basis" type="VARCHAR(255)"/>
+            <column name="dear_sir" type="VARCHAR(255)"/>
+            <column name="quotation_type" type="VARCHAR(64)"/>
+            <column name="rental_duration_days" type="INT"/>
+            <column name="sub_total_per_day" type="DECIMAL(19, 4)"/>
+            <column name="total_discount" type="DECIMAL(19, 4)"/>
+            <column name="gross_total" type="DECIMAL(19, 4)"/>
+            <column name="total_rental_price" type="DECIMAL(19, 4)"/>
+            <column name="total_tax" type="DECIMAL(19, 4)"/>
+            <column name="other_charges" type="DECIMAL(19, 4)"/>
+            <column name="net_total" type="DECIMAL(19, 4)"/>
+            <column name="terms_and_conditions" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="manufacture" type="TEXT"/>
+            <column name="remarks" type="TEXT"/>
+            <column name="email_to" type="VARCHAR(255)"/>
+            <column name="template" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- rental_quotation_items -->
+        <createTable tableName="rental_quotation_items">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="rental_quotation_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="crm_product_id" type="BIGINT"/>
+            <column name="item_code" type="VARCHAR(255)"/>
+            <column name="item_name" type="VARCHAR(255)"/>
+            <column name="category_id" type="BIGINT"/>
+            <column name="subcategory_id" type="BIGINT"/>
+            <column name="description" type="VARCHAR(2000)"/>
+            <column name="quantity" type="INT"/>
+            <column name="rental_value" type="DECIMAL(19, 4)"/>
+            <column name="amount" type="DECIMAL(19, 4)"/>
+            <column name="tax_value" type="DECIMAL(19, 4)"/>
+            <column name="is_tax_exempt" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="tax_percentage" type="DECIMAL(19, 4)"/>
+        </createTable>
+
+        <!-- rental_quotation_attachments -->
+        <createTable tableName="rental_quotation_attachments">
+            <column name="rental_quotation_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="attachment_url" type="VARCHAR(1024)"/>
+        </createTable>
+
+        <!-- rental_quotation_followups -->
+        <createTable tableName="rental_quotation_followups">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="quotation_id" type="BIGINT"/>
+            <column name="rental_quotation_id" type="BIGINT"/>
+            <column name="next_followup_date" type="DATE"/>
+            <column name="next_followup_time" type="TIME"/>
+            <column name="quotation_status" type="VARCHAR(50)"/>
+            <column name="comment" type="TEXT"/>
+            <column name="employee_id" type="BIGINT"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- rental_sales_orders -->
+        <createTable tableName="rental_sales_orders">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="order_date" type="DATE"/>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="salesperson_id" type="BIGINT"/>
+            <column name="order_number" type="VARCHAR(255)"><constraints unique="true"/></column>
+            <column name="reference" type="VARCHAR(255)"/>
+            <column name="shipment_date" type="DATE"/>
+            <column name="from_date" type="DATE"/>
+            <column name="to_date" type="DATE"/>
+            <column name="delivery_lead" type="VARCHAR(255)"/>
+            <column name="validity" type="VARCHAR(255)"/>
+            <column name="payment_terms" type="VARCHAR(255)"/>
+            <column name="price_basis" type="VARCHAR(255)"/>
+            <column name="dear_sir" type="VARCHAR(255)"/>
+            <column name="rental_duration_days" type="INT"/>
+            <column name="sub_total_per_day" type="DECIMAL(19, 4)"/>
+            <column name="total_discount" type="DECIMAL(19, 4)"/>
+            <column name="gross_total" type="DECIMAL(19, 4)"/>
+            <column name="total_rental_price" type="DECIMAL(19, 4)"/>
+            <column name="total_tax" type="DECIMAL(19, 4)"/>
+            <column name="other_charges" type="DECIMAL(19, 4)"/>
+            <column name="net_total" type="DECIMAL(19, 4)"/>
+            <column name="terms_and_conditions" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="manufacture" type="TEXT"/>
+            <column name="remarks" type="TEXT"/>
+            <column name="email_to" type="VARCHAR(255)"/>
+            <column name="template" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- rental_sales_order_items -->
+        <createTable tableName="rental_sales_order_items">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="rental_sales_order_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="crm_product_id" type="BIGINT"/>
+            <column name="item_code" type="VARCHAR(255)"/>
+            <column name="item_name" type="VARCHAR(255)"/>
+            <column name="category_id" type="BIGINT"/>
+            <column name="subcategory_id" type="BIGINT"/>
+            <column name="description" type="VARCHAR(2000)"/>
+            <column name="quantity" type="INT"/>
+            <column name="rental_value" type="DECIMAL(19, 4)"/>
+            <column name="amount" type="DECIMAL(19, 4)"/>
+            <column name="tax_value" type="DECIMAL(19, 4)"/>
+            <column name="is_tax_exempt" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="tax_percentage" type="DECIMAL(19, 4)"/>
+        </createTable>
+
+        <!-- rental_sales_order_attachments -->
+        <createTable tableName="rental_sales_order_attachments">
+            <column name="rental_sales_order_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="attachment_url" type="VARCHAR(1024)"/>
+        </createTable>
+
+        <!-- payment_schedules -->
+        <createTable tableName="payment_schedules">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="rental_sales_order_id" type="BIGINT"/>
+            <column name="due_date" type="DATE"/>
+            <column name="amount" type="DECIMAL(19, 4)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="note" type="VARCHAR(2000)"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- rental_item_recieved -->
+        <createTable tableName="rental_item_recieved">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="do_date" type="DATE"/>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="billing_address" type="VARCHAR(1000)"/>
+            <column name="shipping_address" type="VARCHAR(1000)"/>
+            <column name="do_number" type="VARCHAR(255)"/>
+            <column name="order_number" type="VARCHAR(255)"/>
+            <column name="rental_sales_order_id" type="BIGINT"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- rental_item_recieved_items -->
+        <createTable tableName="rental_item_recieved_items">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="rental_item_recieved_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="crm_product_id" type="BIGINT"/>
+            <column name="item_name" type="VARCHAR(255)"/>
+            <column name="item_code" type="VARCHAR(255)"/>
+            <column name="description" type="VARCHAR(2000)"/>
+            <column name="do_quantity" type="INT"/>
+            <column name="received_quantity" type="INT"/>
+            <column name="current_receive_quantity" type="INT"/>
+            <column name="remaining_quantity" type="INT"/>
+        </createTable>
+
+        <!-- rental_invoices -->
+        <createTable tableName="rental_invoices">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="invoice_ledger" type="VARCHAR(255)"/>
+            <column name="invoice_date" type="DATE"/>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="invoice_number" type="VARCHAR(255)"><constraints unique="true"/></column>
+            <column name="do_number" type="VARCHAR(255)"/>
+            <column name="lpo_number" type="VARCHAR(255)"/>
+            <column name="required_date" type="DATE"/>
+            <column name="due_date" type="DATE"/>
+            <column name="salesperson_id" type="BIGINT"/>
+            <column name="po_number" type="VARCHAR(255)"/>
+            <column name="reference" type="VARCHAR(255)"/>
+            <column name="invoice_type" type="VARCHAR(255)"/>
+            <column name="enable_gross_net_weight" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="sub_total" type="DECIMAL(19, 4)"/>
+            <column name="total_discount" type="DECIMAL(19, 4)"/>
+            <column name="gross_total" type="DECIMAL(19, 4)"/>
+            <column name="total_tax" type="DECIMAL(19, 4)"/>
+            <column name="other_charges" type="DECIMAL(19, 4)"/>
+            <column name="net_total" type="DECIMAL(19, 4)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="terms_and_conditions" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="template" type="VARCHAR(255)"/>
+            <column name="email_to" type="VARCHAR(255)"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- rental_invoice_items -->
+        <createTable tableName="rental_invoice_items">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="rental_invoice_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="crm_product_id" type="BIGINT"/>
+            <column name="item_name" type="VARCHAR(255)"/>
+            <column name="category_id" type="BIGINT"/>
+            <column name="subcategory_id" type="BIGINT"/>
+            <column name="description" type="VARCHAR(2000)"/>
+            <column name="quantity" type="INT"/>
+            <column name="duration" type="INT"/>
+            <column name="rental_value" type="DECIMAL(19, 4)"/>
+            <column name="amount" type="DECIMAL(19, 4)"/>
+            <column name="tax_value" type="DECIMAL(19, 4)"/>
+            <column name="is_tax_exempt" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="tax_percentage" type="DECIMAL(19, 4)"/>
+        </createTable>
+
+        <!-- rental_invoice_attachments -->
+        <createTable tableName="rental_invoice_attachments">
+            <column name="rental_invoice_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="attachment_url" type="VARCHAR(1024)"/>
+        </createTable>
+
+        <!-- sales_doc_templates -->
+        <createTable tableName="sales_doc_templates">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="doc_type" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="template_content" type="LONGTEXT"><constraints nullable="false"/></column>
+            <column name="is_default" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+        <addUniqueConstraint tableName="sales_doc_templates" columnNames="tenant_id, name, doc_type" constraintName="uk_sales_doc_tpl_tenant_name"/>
+
+    </changeSet>
+
+</databaseChangeLog>

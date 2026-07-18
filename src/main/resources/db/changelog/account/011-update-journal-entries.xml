@@ -1,0 +1,226 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="011-add-je-reference-id" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entries" columnName="reference_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entries">
+      <column name="reference_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-je-reference-number" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entries" columnName="reference_number"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entries">
+      <column name="reference_number" type="VARCHAR(100)"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-je-reversal-of-id" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entries" columnName="reversal_of_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entries">
+      <column name="reversal_of_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-je-reversed-by-id" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entries" columnName="reversed_by_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entries">
+      <column name="reversed_by_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-je-posted-date" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entries" columnName="posted_date"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entries">
+      <column name="posted_date" type="DATETIME"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-je-posted-by" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entries" columnName="posted_by"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entries">
+      <column name="posted_by" type="VARCHAR(100)"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-je-tenant-id" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entries" columnName="tenant_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entries">
+      <column name="tenant_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-je-created-by" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entries" columnName="created_by"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entries">
+      <column name="created_by" type="VARCHAR(100)"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-je-created-at" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entries" columnName="created_at"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entries">
+      <column name="created_at" type="DATETIME"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-je-updated-at" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entries" columnName="updated_at"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entries">
+      <column name="updated_at" type="DATETIME"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-jel-dim-bank-account-id" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entry_lines" columnName="dim_bank_account_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entry_lines">
+      <column name="dim_bank_account_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-jel-dim-tax-type-id" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entry_lines" columnName="dim_tax_type_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entry_lines">
+      <column name="dim_tax_type_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-jel-dim-cash-flow-item-id" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entry_lines" columnName="dim_cash_flow_item_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entry_lines">
+      <column name="dim_cash_flow_item_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-jel-dim-item-id" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entry_lines" columnName="dim_item_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entry_lines">
+      <column name="dim_item_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-jel-dim-warehouse" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entry_lines" columnName="dim_warehouse"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entry_lines">
+      <column name="dim_warehouse" type="VARCHAR(100)"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-jel-dim-company-id" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entry_lines" columnName="dim_company_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entry_lines">
+      <column name="dim_company_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-jel-dim-contract" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entry_lines" columnName="dim_contract"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entry_lines">
+      <column name="dim_contract" type="VARCHAR(100)"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-jel-dim-employee-id" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entry_lines" columnName="dim_employee_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entry_lines">
+      <column name="dim_employee_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-jel-dim-expense-item-id" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entry_lines" columnName="dim_expense_item_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entry_lines">
+      <column name="dim_expense_item_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="011-add-jel-dim-income-item-id" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="journal_entry_lines" columnName="dim_income_item_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="journal_entry_lines">
+      <column name="dim_income_item_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+</databaseChangeLog>

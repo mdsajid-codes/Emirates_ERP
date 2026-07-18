@@ -1,0 +1,28 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="012-add-fuel-entry-journal-link" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="fleet_fuel_entries" columnName="journal_entry_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="fleet_fuel_entries">
+      <column name="journal_entry_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="012-add-maintenance-journal-link" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="fleet_vehicle_maintenance" columnName="journal_entry_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="fleet_vehicle_maintenance">
+      <column name="journal_entry_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-ats-business-units" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="ats_business_units"/>
+            </not>
+        </preConditions>
+        <createTable tableName="ats_business_units">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="VARCHAR(50)"/>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ats_business_units" indexName="idx_ats_bu_tenant_name">
+            <column name="tenant_id"/>
+            <column name="name"/>
+        </createIndex>
+
+        <createIndex tableName="ats_business_units" indexName="idx_ats_bu_tenant_active">
+            <column name="tenant_id"/>
+            <column name="is_active"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="ats_business_units" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_bu_tenant"/>
+    </changeSet>
+
+</databaseChangeLog>

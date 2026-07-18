@@ -1,0 +1,87 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "5",
+        "author": "antigravity",
+        "context": "FIXED_ASSETS",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "fa_cash_flow_items",
+              "columns": [
+                {
+                  "column": {
+                    "autoIncrement": true,
+                    "constraints": {
+                      "primaryKey": true,
+                      "nullable": false
+                    },
+                    "name": "id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "unique": true
+                    },
+                    "name": "code",
+                    "type": "VARCHAR(20)"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "description",
+                    "type": "VARCHAR(200)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "folder",
+                    "type": "VARCHAR(100)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "additional_info",
+                    "type": "TEXT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "tenant_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "created_at",
+                    "type": "TIMESTAMP",
+                    "defaultValueComputed": "CURRENT_TIMESTAMP"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "updated_at",
+                    "type": "TIMESTAMP",
+                    "defaultValueComputed": "CURRENT_TIMESTAMP"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

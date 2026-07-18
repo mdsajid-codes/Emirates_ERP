@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="create-driver-performance-table" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="fleet_driver_performance">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_performance_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+            </column>
+            <column name="driver_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_performance_driver" referencedTableName="fleet_drivers" referencedColumnNames="id"/>
+            </column>
+            <column name="evaluation_period" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trips_completed" type="INT"/>
+            <column name="on_time_delivery_percent" type="DOUBLE"/>
+            <column name="incidents_count" type="INT"/>
+            <column name="fuel_efficiency_score" type="DOUBLE"/>
+            <column name="incentive_amount" type="DECIMAL(19, 2)"/>
+            <column name="penalty_amount" type="DECIMAL(19, 2)"/>
+            <column name="remarks" type="TEXT"/>
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint tableName="fleet_driver_performance" columnNames="tenant_id, driver_id, evaluation_period" constraintName="uq_driver_performance_period"/>
+    </changeSet>
+
+</databaseChangeLog>

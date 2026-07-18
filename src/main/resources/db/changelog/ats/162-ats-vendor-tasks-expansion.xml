@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="ats-vendor-tasks-expansion" author="antigravity">
+        <!-- Add task expansion columns -->
+        <addColumn tableName="ats_vendor_tasks">
+            <column name="task_type" type="VARCHAR(100)"/>
+            <column name="task_category" type="VARCHAR(100)"/>
+            <column name="escalate_to_id" type="BIGINT"/>
+            <column name="ownership_id" type="BIGINT"/>
+            <column name="reminder" type="VARCHAR(100)"/>
+            <column name="meeting_link" type="VARCHAR(1000)"/>
+        </addColumn>
+
+        <!-- Add foreign keys constraints for escalation and ownership employees -->
+        <addForeignKeyConstraint baseTableName="ats_vendor_tasks" 
+                                 baseColumnNames="escalate_to_id" 
+                                 referencedTableName="employees" 
+                                 referencedColumnNames="id" 
+                                 constraintName="fk_ats_vendor_task_escalate_to"/>
+
+        <addForeignKeyConstraint baseTableName="ats_vendor_tasks" 
+                                 baseColumnNames="ownership_id" 
+                                 referencedTableName="employees" 
+                                 referencedColumnNames="id" 
+                                 constraintName="fk_ats_vendor_task_ownership"/>
+    </changeSet>
+</databaseChangeLog>

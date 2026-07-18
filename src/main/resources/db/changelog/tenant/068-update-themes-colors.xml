@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="update-themes-table-add-colors" author="system">
+        <addColumn tableName="themes">
+            <!-- Layout Section Colors -->
+            <column name="sidebar_bg_color" type="VARCHAR(50)"/>
+            <column name="sidebar_text_color" type="VARCHAR(50)"/>
+            <column name="sidebar_active_color" type="VARCHAR(50)"/>
+            <column name="sidebar_hover_color" type="VARCHAR(50)"/>
+            <column name="header_bg_color" type="VARCHAR(50)"/>
+            <column name="header_text_color" type="VARCHAR(50)"/>
+            <column name="footer_bg_color" type="VARCHAR(50)"/>
+            <column name="footer_text_color" type="VARCHAR(50)"/>
+
+            <!-- Surface & Component Colors -->
+            <column name="surface_color" type="VARCHAR(50)"/>
+            <column name="border_color" type="VARCHAR(50)"/>
+            <column name="hover_color" type="VARCHAR(50)"/>
+            <column name="link_color" type="VARCHAR(50)"/>
+
+            <!-- Status Colors -->
+            <column name="error_color" type="VARCHAR(50)"/>
+            <column name="success_color" type="VARCHAR(50)"/>
+            <column name="warning_color" type="VARCHAR(50)"/>
+            <column name="info_color" type="VARCHAR(50)"/>
+
+            <!-- Visual Style -->
+            <column name="border_radius" type="VARCHAR(50)"/>
+            <column name="dark_mode" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="favicon_url" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

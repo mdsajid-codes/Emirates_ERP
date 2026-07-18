@@ -1,0 +1,9 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   context="ACCOUNTS">
+  <changeSet id="008-seed-coa-income-statement-empty" author="dev-a">
+    <!-- Empty to prevent duplicate entry collisions as all accounts are now seeded in 006 -->
+  </changeSet>
+</databaseChangeLog>

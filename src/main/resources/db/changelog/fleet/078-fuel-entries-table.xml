@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="create-fuel-entries-table" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="fleet_fuel_entries">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="vehicle_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_fuel_vehicle" referencedTableName="fleet_vehicles" referencedColumnNames="id"/>
+            </column>
+            <column name="driver_id" type="BIGINT">
+                <constraints nullable="true" foreignKeyName="fk_fuel_driver" referencedTableName="fleet_drivers" referencedColumnNames="id"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_fuel_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+            </column>
+            <column name="fuel_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fuel_station" type="VARCHAR(255)"/>
+            <column name="fuel_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity_liters" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount_aed" type="DECIMAL(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="odometer_reading" type="DOUBLE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="receipt_path" type="VARCHAR(255)"/>
+            <column name="notes" type="VARCHAR(500)"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

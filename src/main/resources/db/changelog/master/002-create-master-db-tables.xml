@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Master Users -->
+    <changeSet id="create-master-users" author="sajid">
+        <createTable tableName="master_users">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password_hash" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="roles" type="json"/>
+        </createTable>
+    </changeSet>
+
+    <!-- My Company Info -->
+    <changeSet id="create-my-company-info" author="sajid">
+        <createTable tableName="my_company_info">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="company_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="logo_url" type="VARCHAR(255)"/>
+            <column name="signature_url" type="VARCHAR(255)"/>
+            <column name="stamp_url" type="VARCHAR(255)"/>
+            <column name="invoice_header_url" type="VARCHAR(255)"/>
+            <column name="invoice_footer_url" type="VARCHAR(255)"/>
+            <column name="watermark_url" type="VARCHAR(255)"/>
+            
+            <column name="address" type="VARCHAR(255)"/>
+            <column name="city" type="VARCHAR(255)"/>
+            <column name="emirate" type="VARCHAR(255)"/>
+            <column name="po_box" type="VARCHAR(255)"/>
+            <column name="country" type="VARCHAR(255)"/>
+            <column name="phone" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="website" type="VARCHAR(255)"/>
+            
+            <column name="trade_license_number" type="VARCHAR(255)"/>
+            <column name="trade_license_expiry" type="DATE"/>
+            <column name="trn" type="VARCHAR(255)"/>
+            <column name="mohre_establishment_id" type="VARCHAR(255)"/>
+            <column name="visa_quota_total" type="INT"/>
+            <column name="employer_bank_routing_code" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <!-- My Bank Details -->
+    <changeSet id="create-my-bank-details" author="sajid">
+        <createTable tableName="my_bank_details">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="my_company_info_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bank_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_number" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ifsc_code" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_holder_name" type="VARCHAR(255)"/>
+            <column name="branch_name" type="VARCHAR(255)"/>
+            <column name="swift_code" type="VARCHAR(255)"/>
+            <column name="iban" type="VARCHAR(255)"/>
+            <column name="is_primary" type="BOOLEAN"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="my_bank_details" baseColumnNames="my_company_info_id" referencedTableName="my_company_info" referencedColumnNames="id" constraintName="fk_mbd_company"/>
+    </changeSet>
+
+    <!-- My Custom Fields -->
+    <changeSet id="create-my-custom-fields" author="sajid">
+        <createTable tableName="my_custom_fields">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="my_company_info_id" type="BIGINT"/>
+            <column name="field_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="field_value" type="TEXT"/>
+            <column name="field_type" type="VARCHAR(255)"/>
+            <column name="document_name" type="VARCHAR(255)"/>
+            <column name="document_url" type="VARCHAR(255)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="my_custom_fields" baseColumnNames="my_company_info_id" referencedTableName="my_company_info" referencedColumnNames="id" constraintName="fk_mcf_company"/>
+    </changeSet>
+
+    <!-- Tenant Company Info -->
+    <changeSet id="create-tenant-company-info" author="sajid">
+        <createTable tableName="tenant_company_info">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="master_tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="company_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="logo_url" type="VARCHAR(255)"/>
+            <column name="address" type="VARCHAR(255)"/>
+            <column name="city" type="VARCHAR(255)"/>
+            <column name="state" type="VARCHAR(255)"/>
+            <column name="country" type="VARCHAR(255)"/>
+            <column name="zip_code" type="VARCHAR(255)"/>
+            <column name="phone" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="website" type="VARCHAR(255)"/>
+            <column name="tax_id" type="VARCHAR(255)"/>
+            <column name="registration_number" type="VARCHAR(255)"/>
+            <column name="emirate" type="VARCHAR(255)"/>
+            <column name="po_box" type="VARCHAR(255)"/>
+            <column name="trade_license_number" type="VARCHAR(255)"/>
+            <column name="trade_license_expiry" type="DATE"/>
+            <column name="trn" type="VARCHAR(255)"/>
+            <column name="mohre_establishment_id" type="VARCHAR(255)"/>
+            <column name="visa_quota_total" type="INT"/>
+            <column name="employer_bank_routing_code" type="VARCHAR(255)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="tenant_company_info" baseColumnNames="master_tenant_id" referencedTableName="master_tenant" referencedColumnNames="id" constraintName="fk_tci_master_tenant"/>
+    </changeSet>
+
+    <!-- Tenant Request -->
+    <changeSet id="create-tenant-request" author="sajid">
+        <createTable tableName="tenant_request">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(255)"/>
+            <column name="company_name" type="VARCHAR(255)"/>
+            <column name="admin_email" type="VARCHAR(255)"/>
+            <column name="admin_password" type="VARCHAR(255)"/>
+            <column name="service_modules" type="json"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Tenant Subscription Invoice -->
+    <changeSet id="create-tenant-subscription-invoice" author="sajid">
+        <createTable tableName="tenant_subscription_invoice">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="master_tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="invoice_number" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="generated_date" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subscription_start_date" type="DATE"/>
+            <column name="subscription_end_date" type="DATE"/>
+            <column name="total_amount" type="DECIMAL(19, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="basic_amount" type="DECIMAL(19, 2)"/>
+            <column name="tax" type="DECIMAL(19, 2)"/>
+            <column name="discount" type="DECIMAL(19, 2)"/>
+            <column name="other_charges" type="DECIMAL(19, 2)"/>
+            <column name="advance_amount" type="DECIMAL(19, 2)"/>
+            <column name="pending_amount" type="DECIMAL(19, 2)"/>
+            <column name="payment_status" type="VARCHAR(50)"/>
+            <column name="currency" type="VARCHAR(10)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="tenant_subscription_invoice" baseColumnNames="master_tenant_id" referencedTableName="master_tenant" referencedColumnNames="id" constraintName="fk_tsi_master_tenant"/>
+    </changeSet>
+
+    <!-- Tenant API Keys -->
+    <changeSet id="create-tenant-api-keys" author="antigravity">
+        <createTable tableName="crm_tenant_api_keys">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="api_key" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="modify-tenant-api-keys-id-type" author="antigravity">
+        <modifyDataType tableName="crm_tenant_api_keys" columnName="tenant_id" newDataType="VARCHAR(255)"/>
+    </changeSet>
+</databaseChangeLog>

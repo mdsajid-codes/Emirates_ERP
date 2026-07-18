@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-ats-client-tables" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+
+        <!-- 1. ats_clients -->
+        <createTable tableName="ats_clients">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="primary_business_unit_id" type="BIGINT"/>
+            <column name="client_visibility" type="VARCHAR(50)"/>
+            <column name="client_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_facilities" type="VARCHAR(500)"/>
+            <column name="vms_client_name" type="VARCHAR(200)"/>
+            <column name="federal_id" type="VARCHAR(100)"/>
+            <column name="contact_number" type="VARCHAR(50)"/>
+            <column name="email_id" type="VARCHAR(150)"/>
+            <column name="address" type="VARCHAR(500)"/>
+            <column name="parent_client_id" type="BIGINT"/>
+            <column name="notify_user_near_location" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="country_id" type="BIGINT"/>
+            <column name="state_id" type="BIGINT"/>
+            <column name="city" type="VARCHAR(100)"/>
+            <column name="postal_code" type="VARCHAR(20)"/>
+            <column name="website" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="send_requirement" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="send_hotlist" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="fax" type="VARCHAR(50)"/>
+            <column name="industry" type="VARCHAR(100)"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="VARCHAR(100)"/>
+            <column name="primary_owner_id" type="BIGINT"/>
+            <column name="ownership" type="VARCHAR(100)"/>
+            <column name="client_lead_id" type="BIGINT"/>
+            <column name="allow_access_to_all_users" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="display_on_job" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="payment_terms_id" type="BIGINT"/>
+            <column name="practice" type="VARCHAR(100)"/>
+            <column name="about_company" type="VARCHAR(4000)"/>
+            <column name="stop_submit_email_notification" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="default_address_for_jobs" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="client_short_name" type="VARCHAR(100)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ats_clients" indexName="idx_ats_client_tenant_status">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="ats_clients" indexName="idx_ats_client_tenant_name">
+            <column name="tenant_id"/>
+            <column name="client_name"/>
+        </createIndex>
+        <createIndex tableName="ats_clients" indexName="idx_ats_client_tenant_created">
+            <column name="tenant_id"/>
+            <column name="created_at"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="ats_clients" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_client_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_clients" baseColumnNames="primary_business_unit_id" referencedTableName="ats_business_units" referencedColumnNames="id" constraintName="fk_ats_client_primary_bu"/>
+        <addForeignKeyConstraint baseTableName="ats_clients" baseColumnNames="parent_client_id" referencedTableName="ats_clients" referencedColumnNames="id" constraintName="fk_ats_client_parent"/>
+        <addForeignKeyConstraint baseTableName="ats_clients" baseColumnNames="country_id" referencedTableName="ats_countries" referencedColumnNames="id" constraintName="fk_ats_client_country"/>
+        <addForeignKeyConstraint baseTableName="ats_clients" baseColumnNames="state_id" referencedTableName="ats_states" referencedColumnNames="id" constraintName="fk_ats_client_state"/>
+        <addForeignKeyConstraint baseTableName="ats_clients" baseColumnNames="primary_owner_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_client_primary_owner"/>
+        <addForeignKeyConstraint baseTableName="ats_clients" baseColumnNames="client_lead_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_client_client_lead"/>
+        <addForeignKeyConstraint baseTableName="ats_clients" baseColumnNames="payment_terms_id" referencedTableName="ats_payment_terms" referencedColumnNames="id" constraintName="fk_ats_client_payment_terms"/>
+
+        <!-- 2. ats_client_contacts -->
+        <createTable tableName="ats_client_contacts">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="first_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name" type="VARCHAR(100)"/>
+            <column name="designation" type="VARCHAR(150)"/>
+            <column name="office_number" type="VARCHAR(30)"/>
+            <column name="office_extension" type="VARCHAR(10)"/>
+            <column name="mobile_number" type="VARCHAR(30)"/>
+            <column name="email_id" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="secondary_email_id" type="VARCHAR(150)"/>
+            <column name="primary_owner_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ownership" type="VARCHAR(100)"/>
+            <column name="allow_access_to_all_users" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="address_1" type="VARCHAR(250)"/>
+            <column name="address_2" type="VARCHAR(250)"/>
+            <column name="country_id" type="BIGINT"/>
+            <column name="state_id" type="BIGINT"/>
+            <column name="city" type="VARCHAR(100)"/>
+            <column name="zip_code" type="VARCHAR(20)"/>
+            <column name="linkedin_profile_url" type="VARCHAR(500)"/>
+            <column name="facebook_profile_url" type="VARCHAR(500)"/>
+            <column name="twitter_profile_url" type="VARCHAR(500)"/>
+            <column name="google_plus_profile_url" type="VARCHAR(500)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="client_group" type="VARCHAR(100)"/>
+            <column name="about_the_contact" type="VARCHAR(2000)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ats_client_contacts" indexName="idx_ats_client_contact_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="ats_client_contacts" indexName="idx_ats_client_contact_client">
+            <column name="client_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="ats_client_contacts" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_client_contact_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_client_contacts" baseColumnNames="client_id" referencedTableName="ats_clients" referencedColumnNames="id" constraintName="fk_ats_client_contact_client"/>
+        <addForeignKeyConstraint baseTableName="ats_client_contacts" baseColumnNames="primary_owner_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_client_contact_owner"/>
+        <addForeignKeyConstraint baseTableName="ats_client_contacts" baseColumnNames="country_id" referencedTableName="ats_countries" referencedColumnNames="id" constraintName="fk_ats_client_contact_country"/>
+        <addForeignKeyConstraint baseTableName="ats_client_contacts" baseColumnNames="state_id" referencedTableName="ats_states" referencedColumnNames="id" constraintName="fk_ats_client_contact_state"/>
+
+        <!-- 3. ats_client_notes -->
+        <createTable tableName="ats_client_notes">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="action_id" type="BIGINT"/>
+            <column name="notes_priority" type="VARCHAR(50)"/>
+            <column name="note_body" type="TEXT"/>
+            <column name="remind_me" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="created_by_id" type="BIGINT"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ats_client_notes" indexName="idx_ats_client_note_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="ats_client_notes" indexName="idx_ats_client_note_client">
+            <column name="client_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="ats_client_notes" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_client_note_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_client_notes" baseColumnNames="client_id" referencedTableName="ats_clients" referencedColumnNames="id" constraintName="fk_ats_client_note_client"/>
+        <addForeignKeyConstraint baseTableName="ats_client_notes" baseColumnNames="action_id" referencedTableName="ats_actions" referencedColumnNames="id" constraintName="fk_ats_client_note_action"/>
+        <addForeignKeyConstraint baseTableName="ats_client_notes" baseColumnNames="created_by_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_client_note_created_by"/>
+
+        <!-- 4. ats_client_note_notifications -->
+        <createTable tableName="ats_client_note_notifications">
+            <column name="note_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="employee_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="ats_client_note_notifications" columnNames="note_id, employee_id" constraintName="pk_ats_client_note_notif"/>
+        <addForeignKeyConstraint baseTableName="ats_client_note_notifications" baseColumnNames="note_id" referencedTableName="ats_client_notes" referencedColumnNames="id" constraintName="fk_ats_cn_notification_note"/>
+        <addForeignKeyConstraint baseTableName="ats_client_note_notifications" baseColumnNames="employee_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_cn_notification_emp"/>
+
+        <!-- 5. ats_client_documents -->
+        <createTable tableName="ats_client_documents">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_type_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_name" type="VARCHAR(300)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_path" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_size" type="BIGINT"/>
+            <column name="mime_type" type="VARCHAR(100)"/>
+            <column name="description" type="VARCHAR(2000)"/>
+            <column name="uploaded_by_id" type="BIGINT"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ats_client_documents" indexName="idx_ats_client_doc_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="ats_client_documents" indexName="idx_ats_client_doc_client">
+            <column name="client_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="ats_client_documents" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_client_doc_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_client_documents" baseColumnNames="client_id" referencedTableName="ats_clients" referencedColumnNames="id" constraintName="fk_ats_client_doc_client"/>
+        <addForeignKeyConstraint baseTableName="ats_client_documents" baseColumnNames="document_type_id" referencedTableName="ats_document_types" referencedColumnNames="id" constraintName="fk_ats_client_doc_type"/>
+        <addForeignKeyConstraint baseTableName="ats_client_documents" baseColumnNames="uploaded_by_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_client_doc_uploaded_by"/>
+
+        <!-- 6. ats_client_guidelines -->
+        <createTable tableName="ats_client_guidelines">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="submission_guidelines" type="TEXT"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ats_client_guidelines" indexName="idx_ats_client_guideline_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="ats_client_guidelines" indexName="idx_ats_client_guideline_client">
+            <column name="client_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="ats_client_guidelines" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_client_guideline_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_client_guidelines" baseColumnNames="client_id" referencedTableName="ats_clients" referencedColumnNames="id" constraintName="fk_ats_client_guideline_client"/>
+
+        <!-- 7. ats_client_guideline_documents -->
+        <createTable tableName="ats_client_guideline_documents">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="guideline_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_source" type="VARCHAR(50)"/>
+            <column name="document_title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(2000)"/>
+            <column name="file_name" type="VARCHAR(300)"/>
+            <column name="file_path" type="VARCHAR(2048)"/>
+            <column name="file_size" type="BIGINT"/>
+            <column name="mime_type" type="VARCHAR(100)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ats_client_guideline_documents" indexName="idx_ats_client_gd_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="ats_client_guideline_documents" indexName="idx_ats_client_gd_guideline">
+            <column name="guideline_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="ats_client_guideline_documents" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_client_gd_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_client_guideline_documents" baseColumnNames="guideline_id" referencedTableName="ats_client_guidelines" referencedColumnNames="id" constraintName="fk_ats_client_gd_guideline"/>
+
+        <!-- 8. ats_client_submission_formats -->
+        <createTable tableName="ats_client_submission_formats">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mailing_subject" type="VARCHAR(500)"/>
+            <column name="body" type="TEXT"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ats_client_submission_formats" indexName="idx_ats_client_sub_format_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="ats_client_submission_formats" indexName="idx_ats_client_sub_format_client">
+            <column name="client_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="ats_client_submission_formats" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_client_sub_format_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_client_submission_formats" baseColumnNames="client_id" referencedTableName="ats_clients" referencedColumnNames="id" constraintName="fk_ats_client_sub_format_client"/>
+
+        <!-- Excel fields join table for submission format -->
+        <createTable tableName="ats_client_submission_excel_fields">
+            <column name="submission_format_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="field_name" type="VARCHAR(100)"/>
+            <column name="sort_order" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="ats_client_submission_excel_fields" baseColumnNames="submission_format_id" referencedTableName="ats_client_submission_formats" referencedColumnNames="id" constraintName="fk_ats_csef_format"/>
+
+        <!-- 9. ats_client_accounts -->
+        <createTable tableName="ats_client_accounts">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contact_person" type="VARCHAR(150)"/>
+            <column name="mobile_number" type="VARCHAR(30)"/>
+            <column name="office_number" type="VARCHAR(30)"/>
+            <column name="office_extension" type="VARCHAR(10)"/>
+            <column name="email_id" type="VARCHAR(150)"/>
+            <column name="designation" type="VARCHAR(100)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ats_client_accounts" indexName="idx_ats_client_acc_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="ats_client_accounts" indexName="idx_ats_client_acc_client">
+            <column name="client_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="ats_client_accounts" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_client_account_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_client_accounts" baseColumnNames="client_id" referencedTableName="ats_clients" referencedColumnNames="id" constraintName="fk_ats_client_account_client"/>
+
+        <!-- 10. ats_client_assignments -->
+        <createTable tableName="ats_client_assignments">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sales_manager_id" type="BIGINT"/>
+            <column name="account_manager_id" type="BIGINT"/>
+            <column name="recruitment_manager_id" type="BIGINT"/>
+            <column name="secondary_sales_manager_id" type="BIGINT"/>
+            <column name="secondary_recruitment_manager_id" type="BIGINT"/>
+            <column name="default_tat_days" type="INT"/>
+            <column name="default_tax_term" type="VARCHAR(100)"/>
+            <column name="default_work_authorization" type="VARCHAR(100)"/>
+            <column name="default_pay_rate_tax_term" type="VARCHAR(100)"/>
+            <column name="default_bill_rate_tax_term" type="VARCHAR(100)"/>
+            <column name="post_job_in_career_portal" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="make_references_mandatory" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="max_submissions" type="INT"/>
+            <column name="number_of_positions" type="INT"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ats_client_assignments" indexName="idx_ats_client_assignment_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="ats_client_assignments" indexName="idx_ats_client_assignment_client">
+            <column name="client_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="ats_client_assignments" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_client_assignment_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_client_assignments" baseColumnNames="client_id" referencedTableName="ats_clients" referencedColumnNames="id" constraintName="fk_ats_client_assignment_client"/>
+        <addForeignKeyConstraint baseTableName="ats_client_assignments" baseColumnNames="sales_manager_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_ca_sales_mgr"/>
+        <addForeignKeyConstraint baseTableName="ats_client_assignments" baseColumnNames="account_manager_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_ca_acct_mgr"/>
+        <addForeignKeyConstraint baseTableName="ats_client_assignments" baseColumnNames="recruitment_manager_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_ca_rec_mgr"/>
+        <addForeignKeyConstraint baseTableName="ats_client_assignments" baseColumnNames="secondary_sales_manager_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_ca_sec_sales_mgr"/>
+        <addForeignKeyConstraint baseTableName="ats_client_assignments" baseColumnNames="secondary_recruitment_manager_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_ca_sec_rec_mgr"/>
+
+        <!-- Join tables for assignment -->
+        <createTable tableName="ats_client_assignment_users">
+            <column name="assignment_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="employee_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="ats_client_assignment_users" columnNames="assignment_id, employee_id" constraintName="pk_ats_client_assignment_usr"/>
+        <addForeignKeyConstraint baseTableName="ats_client_assignment_users" baseColumnNames="assignment_id" referencedTableName="ats_client_assignments" referencedColumnNames="id" constraintName="fk_ats_cau_assignment"/>
+        <addForeignKeyConstraint baseTableName="ats_client_assignment_users" baseColumnNames="employee_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_cau_employee"/>
+
+        <createTable tableName="ats_client_assignment_tat_recipients">
+            <column name="assignment_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="employee_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="ats_client_assignment_tat_recipients" columnNames="assignment_id, employee_id" constraintName="pk_ats_client_assignment_tat"/>
+        <addForeignKeyConstraint baseTableName="ats_client_assignment_tat_recipients" baseColumnNames="assignment_id" referencedTableName="ats_client_assignments" referencedColumnNames="id" constraintName="fk_ats_catr_assignment"/>
+        <addForeignKeyConstraint baseTableName="ats_client_assignment_tat_recipients" baseColumnNames="employee_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_catr_employee"/>
+
+        <!-- 11. Joint tables for AtsClient -->
+        <createTable tableName="ats_client_business_units">
+            <column name="client_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="business_unit_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="ats_client_business_units" columnNames="client_id, business_unit_id" constraintName="pk_ats_client_bus"/>
+        <addForeignKeyConstraint baseTableName="ats_client_business_units" baseColumnNames="client_id" referencedTableName="ats_clients" referencedColumnNames="id" constraintName="fk_ats_cbu_client"/>
+        <addForeignKeyConstraint baseTableName="ats_client_business_units" baseColumnNames="business_unit_id" referencedTableName="ats_business_units" referencedColumnNames="id" constraintName="fk_ats_cbu_bu"/>
+
+        <createTable tableName="ats_client_required_documents">
+            <column name="client_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_type_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="ats_client_required_documents" columnNames="client_id, document_type_id" constraintName="pk_ats_client_req_doc"/>
+        <addForeignKeyConstraint baseTableName="ats_client_required_documents" baseColumnNames="client_id" referencedTableName="ats_clients" referencedColumnNames="id" constraintName="fk_ats_crd_client"/>
+        <addForeignKeyConstraint baseTableName="ats_client_required_documents" baseColumnNames="document_type_id" referencedTableName="ats_document_types" referencedColumnNames="id" constraintName="fk_ats_crd_doc_type"/>
+    </changeSet>
+
+    <changeSet id="create-ats-client-tasks" author="antigravity">
+        <!-- 12. ats_client_tasks -->
+        <createTable tableName="ats_client_tasks">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="task_title" type="VARCHAR(300)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="task_description" type="VARCHAR(2000)"/>
+            <column name="task_status" type="VARCHAR(50)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="VARCHAR(50)" defaultValue="MEDIUM">
+                <constraints nullable="false"/>
+            </column>
+            <column name="due_date" type="DATE"/>
+            <column name="assigned_to_id" type="BIGINT"/>
+            <column name="completed_at" type="DATETIME"/>
+            <column name="created_by_id" type="BIGINT"/>
+            <column name="task_type" type="VARCHAR(100)"/>
+            <column name="task_category" type="VARCHAR(100)"/>
+            <column name="escalate_to_id" type="BIGINT"/>
+            <column name="ownership_id" type="BIGINT"/>
+            <column name="reminder" type="VARCHAR(100)"/>
+            <column name="meeting_link" type="VARCHAR(1000)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ats_client_tasks" indexName="idx_ats_client_task_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="ats_client_tasks" indexName="idx_ats_client_task_client">
+            <column name="client_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="ats_client_tasks" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_client_task_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_client_tasks" baseColumnNames="client_id" referencedTableName="ats_clients" referencedColumnNames="id" constraintName="fk_ats_client_task_client"/>
+        <addForeignKeyConstraint baseTableName="ats_client_tasks" baseColumnNames="assigned_to_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_client_task_assigned_to"/>
+        <addForeignKeyConstraint baseTableName="ats_client_tasks" baseColumnNames="created_by_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_client_task_created_by"/>
+        <addForeignKeyConstraint baseTableName="ats_client_tasks" baseColumnNames="escalate_to_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_client_task_escalate_to"/>
+        <addForeignKeyConstraint baseTableName="ats_client_tasks" baseColumnNames="ownership_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_client_task_ownership"/>
+    </changeSet>
+</databaseChangeLog>

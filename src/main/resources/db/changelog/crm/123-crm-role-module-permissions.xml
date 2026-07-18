@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="123-create-crm-role-module-permissions" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_role_module_permissions">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="role_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="module" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="can_view" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="can_create" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="can_update" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="can_delete" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="can_export" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="can_import" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="can_change_owner" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="can_send_email" type="BOOLEAN" defaultValueBoolean="false"/>
+        </createTable>
+
+        <addUniqueConstraint tableName="crm_role_module_permissions"
+                             columnNames="role_id, module"
+                             constraintName="uk_role_module"/>
+
+        <addForeignKeyConstraint baseTableName="crm_role_module_permissions"
+                                 baseColumnNames="role_id"
+                                 referencedTableName="roles"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_rmp_role"/>
+    </changeSet>
+
+</databaseChangeLog>

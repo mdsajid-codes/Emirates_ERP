@@ -1,0 +1,51 @@
+src/main/java/com/example/multi_tanent/
+├── master/                  # SUPER-ADMIN/SYSTEM-LEVEL: Manages tenants
+│   ├── controller/          # REST APIs for tenant provisioning
+│   ├── dto/                 # DTOs for tenant creation requests
+│   ├── entity/              # MasterTenant entity (in master DB)
+│   ├── repository/          # JPA repo for MasterTenant
+│   └── service/             # TenantProvisioningService
+│
+├── core/                    # SHARED KERNEL: Code shared by ALL modules
+│   ├── config/              # Core configs (WebSecurity, Tenant-aware beans)
+│   ├── entity/              # <-- Renamed from 'spersusers.enitity'
+│   │   ├── User.java        # Central user model
+│   │   ├── Employee.java    # Central employee model
+│   │   ├── Tenant.java      # Tenant info *within* its own DB
+│   │   └── Store.java       # Store info *within* its own DB
+│   ├── enums/               # Shared enums (e.g., Role)
+│   ├── exception/           # Global exception handlers
+│   └── repository/          # Repositories for core entities (User, Employee, etc.)
+│
+├── modules/                 # PARENT PACKAGE FOR ALL BUSINESS MODULES
+│   │
+│   ├── pos/                 # --- POINT OF SALE MODULE ---
+│   │   ├── controller/
+│   │   ├── dto/
+│   │   ├── entity/          # (e.g., Product, Sale, Inventory)
+│   │   ├── repository/
+│   │   └── service/         # (e.g., BarcodeService, FileStorageService)
+│   │
+│   ├── hrms/                # --- HRMS MODULE (Container) ---
+│   │   ├── attendance/
+│   │   │   ├── controller/
+│   │   │   ├── entity/
+│   │   │   └── service/
+│   │   ├── leave/
+│   │   │   ├── controller/
+│   │   │   ├── entity/
+│   │   │   └── service/
+│   │   └── payroll/
+│   │       ├── controller/
+│   │       ├── entity/
+│   │       └── service/
+│   │
+│   └── crm/                 # <-- EXAMPLE: NEW CRM MODULE
+│       ├── controller/
+│       ├── dto/
+│       ├── entity/          # (e.g., Lead, Contact, Opportunity)
+│       ├── enums/           # (e.g., LeadStatus)
+│       ├── repository/
+│       └── service/
+│
+└── MultiTanentApplication.java

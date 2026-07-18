@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20240226-014-add-qc-scrap-fields" author="Antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="hng_qc_log">
+            <column name="scrap_reason_code" type="VARCHAR(30)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="material_weight_lost" type="DECIMAL(10,3)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="test_type" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="measured_value" type="DECIMAL(10,3)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

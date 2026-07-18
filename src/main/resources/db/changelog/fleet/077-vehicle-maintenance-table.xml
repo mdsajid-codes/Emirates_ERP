@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-vehicle-maintenance-table" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="fleet_vehicle_maintenance">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="vehicle_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_vehicle_maint_vehicle" referencedTableName="fleet_vehicles" referencedColumnNames="id"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="maintenance_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="service_category" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requested_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scheduled_date" type="DATE"/>
+            <column name="completed_date" type="DATE"/>
+            <column name="garage" type="VARCHAR(255)"/>
+            <column name="odometer_at_service" type="DOUBLE"/>
+            <column name="estimated_cost" type="DECIMAL(19, 2)"/>
+            <column name="actual_cost" type="DECIMAL(19, 2)"/>
+            <column name="status" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="service_notes" type="VARCHAR(1000)"/>
+            <column name="invoice_path" type="VARCHAR(255)"/>
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

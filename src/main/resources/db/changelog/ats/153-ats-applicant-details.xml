@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-ats-applicant-detail-tables" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <!-- Applicant Certifications Table -->
+        <createTable tableName="ats_applicant_certifications">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="applicant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="certification_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_date" type="DATE"/>
+            <column name="comments" type="VARCHAR(2000)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Applicant Languages Table -->
+        <createTable tableName="ats_applicant_languages">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="applicant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="language_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="can_read" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="can_speak" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="can_write" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Applicant Work Experience Table -->
+        <createTable tableName="ats_applicant_work_experiences">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="applicant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="employer_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_date" type="DATE"/>
+            <column name="is_current" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location" type="VARCHAR(255)"/>
+            <column name="description" type="VARCHAR(4000)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes -->
+        <createIndex tableName="ats_applicant_certifications" indexName="idx_ats_app_cert_tenant_app">
+            <column name="tenant_id"/>
+            <column name="applicant_id"/>
+        </createIndex>
+
+        <createIndex tableName="ats_applicant_languages" indexName="idx_ats_app_lang_tenant_app">
+            <column name="tenant_id"/>
+            <column name="applicant_id"/>
+        </createIndex>
+
+        <createIndex tableName="ats_applicant_work_experiences" indexName="idx_ats_app_exp_tenant_app">
+            <column name="tenant_id"/>
+            <column name="applicant_id"/>
+        </createIndex>
+
+        <!-- Foreign Keys -->
+        <addForeignKeyConstraint baseTableName="ats_applicant_certifications" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_applicant_cert_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_applicant_certifications" baseColumnNames="applicant_id" referencedTableName="ats_applicants" referencedColumnNames="id" constraintName="fk_ats_applicant_cert_applicant"/>
+
+        <addForeignKeyConstraint baseTableName="ats_applicant_languages" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_applicant_lang_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_applicant_languages" baseColumnNames="applicant_id" referencedTableName="ats_applicants" referencedColumnNames="id" constraintName="fk_ats_applicant_lang_applicant"/>
+
+        <addForeignKeyConstraint baseTableName="ats_applicant_work_experiences" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_applicant_exp_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_applicant_work_experiences" baseColumnNames="applicant_id" referencedTableName="ats_applicants" referencedColumnNames="id" constraintName="fk_ats_applicant_exp_applicant"/>
+    </changeSet>
+
+</databaseChangeLog>

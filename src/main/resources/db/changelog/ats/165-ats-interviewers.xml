@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-ats-interviewers-table" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+
+        <createTable tableName="ats_interviewers">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="first_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_title" type="VARCHAR(150)"/>
+            <column name="mobile_number" type="VARCHAR(30)"/>
+            <column name="technology" type="VARCHAR(100)"/>
+            <column name="business_unit_id" type="BIGINT"/>
+            <column name="calendar_sync_notification" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="working_hours_start" type="VARCHAR(10)"/>
+            <column name="working_hours_end" type="VARCHAR(10)"/>
+            <column name="working_hours_apply_weekends" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="created_by" type="VARCHAR(150)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ats_interviewers" indexName="idx_ats_interviewer_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="ats_interviewers" indexName="idx_ats_interviewer_email">
+            <column name="tenant_id"/>
+            <column name="email"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="ats_interviewers" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_interviewer_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_interviewers" baseColumnNames="business_unit_id" referencedTableName="ats_business_units" referencedColumnNames="id" constraintName="fk_ats_interviewer_bu"/>
+    </changeSet>
+</databaseChangeLog>

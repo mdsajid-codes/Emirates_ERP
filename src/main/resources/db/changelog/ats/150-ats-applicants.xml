@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-ats-applicants" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="ats_applicants">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT"/>
+
+            <!-- Personal Details -->
+            <column name="salutation" type="VARCHAR(20)"/>
+            <column name="first_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="middle_name" type="VARCHAR(100)"/>
+            <column name="last_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="nick_name" type="VARCHAR(100)"/>
+
+            <!-- Contact -->
+            <column name="email" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="alternate_email" type="VARCHAR(150)"/>
+            <column name="home_phone" type="VARCHAR(30)"/>
+            <column name="mobile_number" type="VARCHAR(30)"/>
+            <column name="work_phone" type="VARCHAR(30)"/>
+            <column name="other_phone" type="VARCHAR(30)"/>
+            <column name="skype_id" type="VARCHAR(100)"/>
+
+            <!-- Socials -->
+            <column name="linkedin_url" type="VARCHAR(500)"/>
+            <column name="facebook_url" type="VARCHAR(500)"/>
+            <column name="twitter_url" type="VARCHAR(500)"/>
+            <column name="video_reference" type="VARCHAR(500)"/>
+
+            <!-- Work Auth -->
+            <column name="work_authorization" type="VARCHAR(50)"/>
+            <column name="work_auth_expiry" type="DATE"/>
+            <column name="has_clearance" type="BOOLEAN" defaultValueBoolean="false"/>
+
+            <!-- Embedded Address -->
+            <column name="address" type="VARCHAR(1000)"/>
+            <column name="city" type="VARCHAR(100)"/>
+            <column name="state" type="VARCHAR(100)"/>
+            <column name="zip_code" type="VARCHAR(20)"/>
+            <column name="country" type="VARCHAR(100)"/>
+
+            <!-- Extended / Recruitment -->
+            <column name="source" type="VARCHAR(50)"/>
+            <column name="experience_years" type="INT"/>
+            <column name="experience_months" type="INT"/>
+            <column name="referred_by" type="VARCHAR(200)"/>
+            <column name="applicant_status" type="VARCHAR(50)" defaultValue="NEW_LEAD">
+                <constraints nullable="false"/>
+            </column>
+            <column name="applicant_group" type="VARCHAR(200)"/>
+            <column name="owner_id" type="BIGINT"/>
+
+            <!-- Job details -->
+            <column name="job_title" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expected_pay_amount" type="DECIMAL(15,2)"/>
+            <column name="expected_pay_currency" type="VARCHAR(10)"/>
+            <column name="expected_pay_period" type="VARCHAR(20)"/>
+
+            <column name="additional_comments" type="VARCHAR(4000)"/>
+            <column name="willing_to_relocate" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="primary_skills" type="VARCHAR(2000)"/>
+            <column name="technology" type="VARCHAR(300)"/>
+            <column name="tax_terms" type="VARCHAR(50)"/>
+            <column name="notice_period" type="VARCHAR(50)"/>
+            <column name="gpa" type="DECIMAL(4,2)"/>
+            <column name="aadhar_number" type="VARCHAR(20)"/>
+            <column name="nationality" type="VARCHAR(100)"/>
+            <column name="reference_id" type="VARCHAR(100)"/>
+            <column name="photo_url" type="VARCHAR(500)"/>
+            <column name="is_blacklisted" type="BOOLEAN" defaultValueBoolean="false"/>
+
+            <!-- EEO Details -->
+            <column name="gender" type="VARCHAR(30)"/>
+            <column name="race_ethnicity" type="VARCHAR(100)"/>
+            <column name="veteran_status" type="VARCHAR(50)"/>
+            <column name="disability" type="VARCHAR(50)"/>
+
+            <!-- Audit -->
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by_id" type="BIGINT"/>
+        </createTable>
+
+        <createIndex tableName="ats_applicants" indexName="idx_ats_applicant_tenant_email">
+            <column name="tenant_id"/>
+            <column name="email"/>
+        </createIndex>
+
+        <createIndex tableName="ats_applicants" indexName="idx_ats_applicant_tenant_status">
+            <column name="tenant_id"/>
+            <column name="applicant_status"/>
+        </createIndex>
+
+        <createIndex tableName="ats_applicants" indexName="idx_ats_applicant_tenant_created">
+            <column name="tenant_id"/>
+            <column name="created_at"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="ats_applicants" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_applicant_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_applicants" baseColumnNames="owner_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_applicant_owner"/>
+        <addForeignKeyConstraint baseTableName="ats_applicants" baseColumnNames="created_by_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_ats_applicant_created_by"/>
+        <addForeignKeyConstraint baseTableName="ats_applicants" baseColumnNames="user_id" referencedTableName="users" referencedColumnNames="id" constraintName="fk_ats_applicant_user"/>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="seed-default-navy-blue-theme" author="system">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM themes;
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            INSERT INTO themes (
+                tenant_id, name, is_active, 
+                primary_color, secondary_color, accent_color, background_color, text_color, 
+                sidebar_bg_color, sidebar_text_color, sidebar_active_color, sidebar_hover_color, 
+                header_bg_color, header_text_color, footer_bg_color, footer_text_color, 
+                surface_color, border_color, hover_color, link_color, 
+                error_color, success_color, warning_color, info_color, 
+                font_family, font_url, border_radius, dark_mode, 
+                created_at, updated_at
+            )
+            SELECT 
+                id, 'Navy Blue', true, 
+                '#1a237e', '#ffffff', '#1e3a8a', '#f1f5f9', '#0f172a', 
+                '#1e293b', '#f8fafc', '#334155', '#475569', 
+                '#ffffff', '#0f172a', '#ffffff', '#64748b', 
+                '#ffffff', '#e2e8f0', '#f8fafc', '#2563eb', 
+                '#ef4444', '#22c55e', '#f59e0b', '#3b82f6', 
+                'Inter', 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap', '0.5rem', false, 
+                CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            FROM tenants
+            WHERE NOT EXISTS (
+                SELECT 1 FROM themes WHERE themes.tenant_id = tenants.id
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

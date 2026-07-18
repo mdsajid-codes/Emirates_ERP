@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="078-seed-acc-cash-flow-items" author="system">
+        <!-- OPERATING -->
+        <insert tableName="acc_cash_flow_items">
+            <column name="name" value="Cash Receipts from Customers"/>
+            <column name="category" value="OPERATING"/>
+            <column name="display_order" valueNumeric="10"/>
+            <column name="is_inflow" valueBoolean="true"/>
+            <column name="tenant_id" value="DEFAULT"/>
+        </insert>
+        <insert tableName="acc_cash_flow_items">
+            <column name="name" value="Cash Payments to Suppliers"/>
+            <column name="category" value="OPERATING"/>
+            <column name="display_order" valueNumeric="20"/>
+            <column name="is_inflow" valueBoolean="false"/>
+            <column name="tenant_id" value="DEFAULT"/>
+        </insert>
+        <insert tableName="acc_cash_flow_items">
+            <column name="name" value="Cash Paid to Employees"/>
+            <column name="category" value="OPERATING"/>
+            <column name="display_order" valueNumeric="30"/>
+            <column name="is_inflow" valueBoolean="false"/>
+            <column name="tenant_id" value="DEFAULT"/>
+        </insert>
+        <insert tableName="acc_cash_flow_items">
+            <column name="name" value="Cash from Other Operating Income"/>
+            <column name="category" value="OPERATING"/>
+            <column name="display_order" valueNumeric="40"/>
+            <column name="is_inflow" valueBoolean="true"/>
+            <column name="tenant_id" value="DEFAULT"/>
+        </insert>
+        <insert tableName="acc_cash_flow_items">
+            <column name="name" value="Cash Paid for Operating Expenses"/>
+            <column name="category" value="OPERATING"/>
+            <column name="display_order" valueNumeric="50"/>
+            <column name="is_inflow" valueBoolean="false"/>
+            <column name="tenant_id" value="DEFAULT"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

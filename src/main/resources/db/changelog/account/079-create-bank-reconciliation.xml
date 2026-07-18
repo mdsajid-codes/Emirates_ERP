@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="079-create-bank-reconciliation" author="system">
+        <createTable tableName="acc_bank_reconciliations">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="bank_account_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="statement_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="statement_balance" type="DECIMAL(18,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="gl_balance" type="DECIMAL(18,2)"/>
+            <column name="status" type="VARCHAR(50)" defaultValue="DRAFT"/>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="acc_bank_statement_lines">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="reconciliation_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transaction_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DECIMAL(18,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="is_reconciled" type="BOOLEAN" defaultValue="FALSE"/>
+            <column name="linked_journal_id" type="BIGINT"/>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,1090 @@
+﻿{
+    "variable":  [
+                     {
+                         "key":  "baseUrl",
+                         "type":  "string",
+                         "value":  "http://localhost:8080"
+                     },
+                     {
+                         "key":  "token",
+                         "type":  "string",
+                         "value":  ""
+                     }
+                 ],
+    "info":  {
+                 "description":  "Postman collection for GTR Service Backend Accounting Module and Authentication",
+                 "name":  "GTR Service Backend - Accounts \u0026 Auth",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+             },
+    "item":  [
+                 {
+                     "name":  "Authentication",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "url":  {
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "raw":  "{{baseUrl}}/api/master/auth/login",
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "master",
+                                                                               "auth",
+                                                                               "login"
+                                                                           ]
+                                                              },
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "raw":  "{ \"username\": \"masteradmin\", \"password\": \"password123\" }",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "Login (Master Admin/Tenant)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "var jsonData = pm.response.json();",
+                                                                                    "if (jsonData.token) {",
+                                                                                    "    pm.collectionVariables.set(\u0027token\u0027, jsonData.token);",
+                                                                                    "    console.log(\u0027Token updated automatically\u0027);",
+                                                                                    "}"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Register Tenant Request",
+                                      "request":  {
+                                                      "url":  {
+                                                                  "host":  [
+                                                                               "{{baseUrl}}"
+                                                                           ],
+                                                                  "raw":  "{{baseUrl}}/api/master/tenant-requests/register",
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "master",
+                                                                               "tenant-requests",
+                                                                               "register"
+                                                                           ]
+                                                              },
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "raw":  "{\r\n  \"tenantId\": \"demo-tenant-postman\",\r\n  \"companyName\": \"Demo Company Postman\",\r\n  \"adminEmail\": \"admin@demo-postman.com\",\r\n  \"adminPassword\": \"password123\",\r\n  \"serviceModules\": [\"ACCOUNTS\"]\r\n}",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Accounts",
+                     "item":  [
+                                  {
+                                      "name":  "Chart of Accounts",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Get All Accounts",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Active Accounts",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/active",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "active"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Account Tree",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/tree",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "tree"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Account Tree (Filtered)",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "query":  [
+                                                                                                 {
+                                                                                                     "key":  "code",
+                                                                                                     "value":  "1001"
+                                                                                                 },
+                                                                                                 {
+                                                                                                     "key":  "description",
+                                                                                                     "value":  "Cash"
+                                                                                                 }
+                                                                                             ],
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/tree?code=1001\u0026description=Cash",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "tree"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Create Account",
+                                                       "request":  {
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts"
+                                                                                            ]
+                                                                               },
+                                                                       "method":  "POST",
+                                                                       "body":  {
+                                                                                    "raw":  "{\r\n  \"accountCode\": \"1001\",\r\n  \"name\": \"Cash on Hand\",\r\n  \"type\": \"ASSET\",\r\n  \"parentAccountCode\": null,\r\n  \"section\": \"BS Assets\",\r\n  \"isActive\": true\r\n}",
+                                                                                    "mode":  "raw"
+                                                                                },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      },
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Account By ID",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/1",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "1"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Account By Code",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/code/1001",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "code",
+                                                                                                "1001"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Accounts By Section",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/section/BS Assets",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "section",
+                                                                                                "BS Assets"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Accounts By Parent Group",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/parent-group/Assets",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "parent-group",
+                                                                                                "Assets"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Descriptions By Parent Group",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/descriptions/parent-group/Assets",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "descriptions",
+                                                                                                "parent-group",
+                                                                                                "Assets"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Dropdown Options: Parent Groups",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/dropdown/parent-groups",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "dropdown",
+                                                                                                "parent-groups"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Dropdown Options: Sections",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/dropdown/sections",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "dropdown",
+                                                                                                "sections"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Update Account",
+                                                       "request":  {
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/1",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "1"
+                                                                                            ]
+                                                                               },
+                                                                       "method":  "PUT",
+                                                                       "body":  {
+                                                                                    "raw":  "{\r\n  \"accountCode\": \"1001\",\r\n  \"name\": \"Cash on Hand Updated\",\r\n  \"type\": \"ASSET\",\r\n  \"isActive\": true\r\n}",
+                                                                                    "mode":  "raw"
+                                                                                },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Content-Type",
+                                                                                          "value":  "application/json"
+                                                                                      },
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Activate Account",
+                                                       "request":  {
+                                                                       "method":  "PATCH",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/1/activate",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "1",
+                                                                                                "activate"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Deactivate Account",
+                                                       "request":  {
+                                                                       "method":  "PATCH",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/1/deactivate",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "1",
+                                                                                                "deactivate"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Delete Account",
+                                                       "request":  {
+                                                                       "method":  "DELETE",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/1",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "1"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Accounts For Dimension",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/chart-of-accounts/dimension/WAREHOUSE",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "chart-of-accounts",
+                                                                                                "dimension",
+                                                                                                "WAREHOUSE"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "Journal Entries",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Get All Journal Entries",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/journal-entries",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "journal-entries"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Pending Journal Entries",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/journal-entries/pending",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "journal-entries",
+                                                                                                "pending"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Posted Journal Entries",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/journal-entries/posted",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "journal-entries",
+                                                                                                "posted"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "Items",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Get All Items",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/items",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "items"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Active Items",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/items/active",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "items",
+                                                                                                "active"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "Expense Items",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Get All Expense Items",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/expense-items",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "expense-items"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Active Expense Items",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/expense-items/active",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "expense-items",
+                                                                                                "active"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "Income Items",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Get All Income Items",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/income-items",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "income-items"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Active Income Items",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/income-items/active",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "income-items",
+                                                                                                "active"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "Invoices",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Get All Invoices",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/invoices",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "invoices"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Pending Invoices",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/invoices/pending",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "invoices",
+                                                                                                "pending"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Get Paid Invoices",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/invoices/paid",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "invoices",
+                                                                                                "paid"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "Reports",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Cash Flow Statement",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "query":  [
+                                                                                                 {
+                                                                                                     "key":  "startDate",
+                                                                                                     "value":  "2024-01-01"
+                                                                                                 },
+                                                                                                 {
+                                                                                                     "key":  "endDate",
+                                                                                                     "value":  "2024-12-31"
+                                                                                                 }
+                                                                                             ],
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/cash-flow-statement?startDate=2024-01-01\u0026endDate=2024-12-31",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "cash-flow-statement"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Equity Statement",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "query":  [
+                                                                                                 {
+                                                                                                     "key":  "year",
+                                                                                                     "value":  "2024"
+                                                                                                 }
+                                                                                             ],
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/equity-statement?year=2024",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "equity-statement"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   }
+                                               ]
+                                  },
+                                  {
+                                      "name":  "Other",
+                                      "item":  [
+                                                   {
+                                                       "name":  "Cash Equivalents",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/cash-equivalents",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "cash-equivalents"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Cash Flow Items",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/cash-flow-items",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "cash-flow-items"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Cash Flow Transactions",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/cash-flow-transactions",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "cash-flow-transactions"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Expense Item Types",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/expense-item-types",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "expense-item-types"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Item GL Accounts",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/item-gl-accounts",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "item-gl-accounts"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Audit Logs",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/audit-logs",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "audit-logs"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   },
+                                                   {
+                                                       "name":  "Company Info",
+                                                       "request":  {
+                                                                       "method":  "GET",
+                                                                       "url":  {
+                                                                                   "host":  [
+                                                                                                "{{baseUrl}}"
+                                                                                            ],
+                                                                                   "raw":  "{{baseUrl}}/api/accounts/company",
+                                                                                   "path":  [
+                                                                                                "api",
+                                                                                                "accounts",
+                                                                                                "company"
+                                                                                            ]
+                                                                               },
+                                                                       "header":  [
+                                                                                      {
+                                                                                          "key":  "Authorization",
+                                                                                          "value":  "Bearer {{token}}"
+                                                                                      }
+                                                                                  ]
+                                                                   }
+                                                   }
+                                               ]
+                                  }
+                              ]
+                 }
+             ]
+}

@@ -1,0 +1,489 @@
+{
+    "info": {
+        "name": "Payment GL Accounts - Test Collection",
+        "description": "Test collection for Cash/Bank/Cheque GL account operations",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Setup - Get GL Accounts",
+            "item": [
+                {
+                    "name": "Get All GL Accounts",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/accounts/chart-of-accounts",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "chart-of-accounts"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Cash Accounts",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/accounts/chart-of-accounts/parent-group/Cash",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "chart-of-accounts",
+                                "parent-group",
+                                "Cash"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Bank Accounts",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/accounts/chart-of-accounts/parent-group/Bank Accounts",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "chart-of-accounts",
+                                "parent-group",
+                                "Bank Accounts"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "2. Create Customer with Payment GL Accounts",
+            "item": [
+                {
+                    "name": "Create Customer with All Payment Accounts",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 201\", function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Response has payment GL accounts\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.glAccounts).to.not.be.null;",
+                                    "    pm.expect(jsonData.glAccounts.cashAccountId).to.not.be.null;",
+                                    "    pm.expect(jsonData.glAccounts.bankAccountId).to.not.be.null;",
+                                    "    pm.expect(jsonData.glAccounts.chequeAccountId).to.not.be.null;",
+                                    "});",
+                                    "",
+                                    "// Save company ID for later tests",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.environment.set(\"customerId\", jsonData.companyId);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"CUST-PAY-001\",\n  \"name\": \"Test Customer with Payment Accounts\",\n  \"fullDescription\": \"Customer for testing payment GL accounts\",\n  \"companyType\": \"CUSTOMER\",\n  \"taxId\": \"TAX123456\",\n  \"legalAddress\": \"123 Main St\",\n  \"deliveryAddress\": \"123 Main St\",\n  \"contactPerson\": \"John Doe\",\n  \"bankAccount\": \"ACC-123456\",\n  \"isVATTaxpayer\": true,\n  \"pricesIncludeVAT\": false,\n  \"glAccounts\": {\n    \"accountsReceivableId\": 1,\n    \"cashAccountId\": 2,\n    \"bankAccountId\": 3,\n    \"chequeAccountId\": 4\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/accounts/companies",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "companies"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Customer with Only Cash Account",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"CUST-CASH-001\",\n  \"name\": \"Cash Only Customer\",\n  \"fullDescription\": \"Customer accepting only cash payments\",\n  \"companyType\": \"CUSTOMER\",\n  \"taxId\": \"TAX789012\",\n  \"legalAddress\": \"456 Oak Ave\",\n  \"contactPerson\": \"Jane Smith\",\n  \"isVATTaxpayer\": false,\n  \"pricesIncludeVAT\": false,\n  \"glAccounts\": {\n    \"accountsReceivableId\": 1,\n    \"cashAccountId\": 2,\n    \"bankAccountId\": null,\n    \"chequeAccountId\": null\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/accounts/companies",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "companies"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "3. Create Supplier with Payment GL Accounts",
+            "item": [
+                {
+                    "name": "Create Supplier with All Payment Accounts",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 201\", function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Response has payment GL accounts\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.glAccounts).to.not.be.null;",
+                                    "    pm.expect(jsonData.glAccounts.cashAccountId).to.not.be.null;",
+                                    "    pm.expect(jsonData.glAccounts.bankAccountId).to.not.be.null;",
+                                    "    pm.expect(jsonData.glAccounts.chequeAccountId).to.not.be.null;",
+                                    "});",
+                                    "",
+                                    "// Save supplier ID for later tests",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.environment.set(\"supplierId\", jsonData.companyId);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"SUPP-PAY-001\",\n  \"name\": \"Test Supplier with Payment Accounts\",\n  \"fullDescription\": \"Supplier for testing payment GL accounts\",\n  \"companyType\": \"SUPPLIER\",\n  \"taxId\": \"SUPP-TAX-123\",\n  \"legalAddress\": \"789 Industrial Rd\",\n  \"deliveryAddress\": \"789 Industrial Rd\",\n  \"contactPerson\": \"Bob Johnson\",\n  \"bankAccount\": \"SUPP-ACC-789\",\n  \"isVATTaxpayer\": true,\n  \"pricesIncludeVAT\": true,\n  \"glAccounts\": {\n    \"accountsPayableId\": 5,\n    \"cashAccountId\": 2,\n    \"bankAccountId\": 3,\n    \"chequeAccountId\": 4\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/accounts/companies",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "companies"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Supplier with Bank Transfer Only",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"SUPP-BANK-001\",\n  \"name\": \"Bank Transfer Only Supplier\",\n  \"fullDescription\": \"Supplier accepting only bank transfers\",\n  \"companyType\": \"SUPPLIER\",\n  \"taxId\": \"SUPP-TAX-456\",\n  \"legalAddress\": \"321 Commerce Blvd\",\n  \"contactPerson\": \"Alice Brown\",\n  \"isVATTaxpayer\": true,\n  \"pricesIncludeVAT\": false,\n  \"glAccounts\": {\n    \"accountsPayableId\": 5,\n    \"cashAccountId\": null,\n    \"bankAccountId\": 3,\n    \"chequeAccountId\": null\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/accounts/companies",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "companies"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "4. Retrieve Companies with Payment GL Accounts",
+            "item": [
+                {
+                    "name": "Get Customer by ID",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Payment GL accounts are returned\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.glAccounts).to.not.be.null;",
+                                    "    pm.expect(jsonData.glAccounts.cashAccountCode).to.not.be.null;",
+                                    "    pm.expect(jsonData.glAccounts.bankAccountCode).to.not.be.null;",
+                                    "    pm.expect(jsonData.glAccounts.chequeAccountCode).to.not.be.null;",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/accounts/companies/{{customerId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "companies",
+                                "{{customerId}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Supplier by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/accounts/companies/{{supplierId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "companies",
+                                "{{supplierId}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get All Customers",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/accounts/companies/type/CUSTOMER",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "companies",
+                                "type",
+                                "CUSTOMER"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get All Suppliers",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/accounts/companies/type/SUPPLIER",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "companies",
+                                "type",
+                                "SUPPLIER"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "5. Update Payment GL Accounts",
+            "item": [
+                {
+                    "name": "Update Customer Payment Accounts",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Payment GL accounts are updated\", function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.glAccounts).to.not.be.null;",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"CUST-PAY-001\",\n  \"name\": \"Test Customer with Updated Payment Accounts\",\n  \"fullDescription\": \"Customer with updated payment GL accounts\",\n  \"companyType\": \"CUSTOMER\",\n  \"taxId\": \"TAX123456\",\n  \"legalAddress\": \"123 Main St\",\n  \"deliveryAddress\": \"123 Main St\",\n  \"contactPerson\": \"John Doe\",\n  \"bankAccount\": \"ACC-123456-UPDATED\",\n  \"isVATTaxpayer\": true,\n  \"pricesIncludeVAT\": false,\n  \"glAccounts\": {\n    \"accountsReceivableId\": 1,\n    \"cashAccountId\": 2,\n    \"bankAccountId\": 6,\n    \"chequeAccountId\": 7\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/accounts/companies/{{customerId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "companies",
+                                "{{customerId}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Remove Payment Accounts from Supplier",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"SUPP-PAY-001\",\n  \"name\": \"Test Supplier without Payment Accounts\",\n  \"fullDescription\": \"Supplier with removed payment GL accounts\",\n  \"companyType\": \"SUPPLIER\",\n  \"taxId\": \"SUPP-TAX-123\",\n  \"legalAddress\": \"789 Industrial Rd\",\n  \"deliveryAddress\": \"789 Industrial Rd\",\n  \"contactPerson\": \"Bob Johnson\",\n  \"bankAccount\": \"SUPP-ACC-789\",\n  \"isVATTaxpayer\": true,\n  \"pricesIncludeVAT\": true,\n  \"glAccounts\": {\n    \"accountsPayableId\": 5,\n    \"cashAccountId\": null,\n    \"bankAccountId\": null,\n    \"chequeAccountId\": null\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/accounts/companies/{{supplierId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "companies",
+                                "{{supplierId}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "6. Validation Tests",
+            "item": [
+                {
+                    "name": "Create with Invalid Cash Account ID",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test(\"Status code is 404 or 400\", function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"CUST-INVALID-001\",\n  \"name\": \"Customer with Invalid Cash Account\",\n  \"companyType\": \"CUSTOMER\",\n  \"glAccounts\": {\n    \"accountsReceivableId\": 1,\n    \"cashAccountId\": 99999,\n    \"bankAccountId\": 3,\n    \"chequeAccountId\": 4\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/accounts/companies",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "companies"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8080",
+            "type": "string"
+        }
+    ]
+}

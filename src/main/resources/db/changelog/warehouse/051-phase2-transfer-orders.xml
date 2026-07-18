@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="wms-phase2-transfer-orders" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="wms_transfer_order"/></not>
+        </preConditions>
+        <createTable tableName="wms_transfer_order">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_wms_transfer_order"/>
+            </column>
+            <column name="transfer_number" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uc_wms_transfer_order_number"/>
+            </column>
+            <column name="source_warehouse_id" type="BIGINT">
+                <constraints nullable="false" referencedTableName="wms_warehouse" referencedColumnNames="id" foreignKeyName="fk_wms_transfer_source_wh"/>
+            </column>
+            <column name="destination_warehouse_id" type="BIGINT">
+                <constraints nullable="false" referencedTableName="wms_warehouse" referencedColumnNames="id" foreignKeyName="fk_wms_transfer_dest_wh"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requested_date" type="DATE"/>
+            <column name="dispatched_date" type="TIMESTAMP"/>
+            <column name="received_date" type="TIMESTAMP"/>
+            <column name="remarks" type="TEXT"/>
+            
+            <column name="created_by" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="approved_by" type="BIGINT"/>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" referencedTableName="tenants" referencedColumnNames="id" foreignKeyName="fk_wms_transfer_tenant"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="wms-phase2-transfer-order-items" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="wms_transfer_order_item"/></not>
+        </preConditions>
+        <createTable tableName="wms_transfer_order_item">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_wms_transfer_order_item"/>
+            </column>
+            <column name="transfer_order_id" type="BIGINT">
+                <constraints nullable="false" referencedTableName="wms_transfer_order" referencedColumnNames="id" foreignKeyName="fk_wms_transfer_item_order"/>
+            </column>
+            <column name="product_id" type="BIGINT">
+                <constraints nullable="false" referencedTableName="ware_products" referencedColumnNames="id" foreignKeyName="fk_wms_transfer_item_product"/>
+            </column>
+            <column name="batch_id" type="BIGINT">
+                <constraints nullable="true" referencedTableName="ware_product_batches" referencedColumnNames="id" foreignKeyName="fk_wms_transfer_item_batch"/>
+            </column>
+            <column name="requested_qty" type="DECIMAL(19, 6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="dispatched_qty" type="DECIMAL(19, 6)"/>
+            <column name="received_qty" type="DECIMAL(19, 6)"/>
+            
+            <column name="source_bin_id" type="BIGINT">
+                <constraints nullable="true" referencedTableName="wms_bin" referencedColumnNames="id" foreignKeyName="fk_wms_transfer_item_src_bin"/>
+            </column>
+            <column name="destination_bin_id" type="BIGINT">
+                <constraints nullable="true" referencedTableName="wms_bin" referencedColumnNames="id" foreignKeyName="fk_wms_transfer_item_dest_bin"/>
+            </column>
+            <column name="remarks" type="TEXT"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

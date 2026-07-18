@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="ats-vendor-bank-accounts" author="antigravity">
+        <createTable tableName="ats_vendor_bank_accounts">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vendor_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="beneficiary_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bank_name" type="VARCHAR(255)"/>
+            <column name="account_type" type="VARCHAR(100)"/>
+            <column name="ifsc_routing" type="VARCHAR(100)"/>
+            <column name="account_number" type="VARCHAR(100)"/>
+            <column name="deposit_amount" type="VARCHAR(100)"/>
+            <column name="priority" type="VARCHAR(100)"/>
+            <column name="comments" type="VARCHAR(1000)"/>
+            <column name="address_line1" type="VARCHAR(250)"/>
+            <column name="address_line2" type="VARCHAR(250)"/>
+            <column name="country_id" type="BIGINT"/>
+            <column name="state_id" type="BIGINT"/>
+            <column name="city" type="VARCHAR(100)"/>
+            <column name="zip_code" type="VARCHAR(20)"/>
+            <column name="cancelled_cheque_path" type="VARCHAR(2048)"/>
+            <column name="cancelled_cheque_name" type="VARCHAR(255)"/>
+            <column name="record_status" type="VARCHAR(100)"/>
+            <column name="attachment_path" type="VARCHAR(2048)"/>
+            <column name="attachment_name" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="ats_vendor_bank_accounts" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_vendor_bank_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_vendor_bank_accounts" baseColumnNames="vendor_id" referencedTableName="ats_vendors" referencedColumnNames="id" constraintName="fk_ats_vendor_bank_vendor"/>
+        <addForeignKeyConstraint baseTableName="ats_vendor_bank_accounts" baseColumnNames="country_id" referencedTableName="ats_countries" referencedColumnNames="id" constraintName="fk_ats_vendor_bank_country"/>
+        <addForeignKeyConstraint baseTableName="ats_vendor_bank_accounts" baseColumnNames="state_id" referencedTableName="ats_states" referencedColumnNames="id" constraintName="fk_ats_vendor_bank_state"/>
+    </changeSet>
+</databaseChangeLog>

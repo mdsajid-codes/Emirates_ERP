@@ -1,0 +1,150 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "4",
+        "author": "antigravity",
+        "context": "FIXED_ASSETS",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "bank_accounts",
+              "columns": [
+                {
+                  "column": {
+                    "autoIncrement": true,
+                    "constraints": {
+                      "primaryKey": true,
+                      "nullable": false
+                    },
+                    "name": "id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "account_owner",
+                    "type": "VARCHAR(200)"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "account_no",
+                    "type": "VARCHAR(50)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "currency",
+                    "type": "VARCHAR(10)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "iban",
+                    "type": "VARCHAR(50)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "beneficiary",
+                    "type": "VARCHAR(200)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "bank_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "swift",
+                    "type": "VARCHAR(20)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "branch_name",
+                    "type": "VARCHAR(150)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "use_for_wps",
+                    "type": "BOOLEAN"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "reconcile_bank_statements",
+                    "type": "BOOLEAN"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "reconciliation_start_date",
+                    "type": "DATE"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "opening_date",
+                    "type": "DATE"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "closing_date",
+                    "type": "DATE"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "permit_number",
+                    "type": "VARCHAR(50)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "presentation",
+                    "type": "VARCHAR(100)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "tenant_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "created_at",
+                    "type": "TIMESTAMP",
+                    "defaultValueComputed": "CURRENT_TIMESTAMP"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "updated_at",
+                    "type": "TIMESTAMP",
+                    "defaultValueComputed": "CURRENT_TIMESTAMP"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

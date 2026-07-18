@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- =================================================================================== -->
+    <!-- Dictionaries / Lookup Tables -->
+    <!-- =================================================================================== -->
+
+    <changeSet id="create-crm-lead-sources" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_lead_sources">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="crm_lead_sources" columnNames="tenant_id, name" constraintName="uk_lead_source_tenant_name"/>
+    </changeSet>
+
+    <changeSet id="create-crm-lead-stages" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_lead_stages">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sort_order" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_default" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_converted" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_won" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_mql" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_sql" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="probability" type="DOUBLE"/>
+            <column name="assign_to" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="move_to" type="VARCHAR(50)"/>
+        </createTable>
+        <addUniqueConstraint tableName="crm_lead_stages" columnNames="tenant_id, name" constraintName="uk_lead_stage_tenant_name"/>
+    </changeSet>
+
+
+
+    <changeSet id="create-company-types" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="company_types">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="company_types" columnNames="tenant_id, name" constraintName="uk_company_type_tenant_name"/>
+    </changeSet>
+
+    <!-- =================================================================================== -->
+    <!-- Core CRM Entities -->
+    <!-- =================================================================================== -->
+
+    <changeSet id="create-crm-companies" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_companies">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="company_type_id" type="BIGINT"/>
+            <column name="industry_id" type="BIGINT"/>
+            <column name="phone" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="website" type="VARCHAR(255)"/>
+            <column name="company_owner" type="VARCHAR(255)"/>
+            <column name="parent_company_id" type="BIGINT"/>
+            
+            <!-- Billing -->
+            <column name="billing_street" type="VARCHAR(255)"/>
+            <column name="billing_city" type="VARCHAR(255)"/>
+            <column name="billing_zip" type="VARCHAR(255)"/>
+            <column name="billing_state" type="VARCHAR(255)"/>
+            <column name="billing_country" type="VARCHAR(255)"/>
+
+            <!-- Shipping -->
+            <column name="shipping_street" type="VARCHAR(255)"/>
+            <column name="shipping_city" type="VARCHAR(255)"/>
+            <column name="shipping_zip" type="VARCHAR(255)"/>
+            <column name="shipping_state" type="VARCHAR(255)"/>
+            <column name="shipping_country" type="VARCHAR(255)"/>
+
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="crm_companies" columnNames="tenant_id, name" constraintName="uk_company_tenant_name"/>
+        <addForeignKeyConstraint baseTableName="crm_companies" baseColumnNames="parent_company_id" referencedTableName="crm_companies" referencedColumnNames="id" constraintName="fk_company_parent"/>
+    </changeSet>
+
+
+
+    <changeSet id="create-crm-contacts" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_contacts">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Lead ID FK added later since leads created after? No, leads usually created first, checking loop -->
+            <!-- Contact can exist without lead? The Entity says optional lead_id. -->
+            <!-- But Lead refers to Contact sometimes? Lead refers to names. -->
+            <column name="lead_id" type="BIGINT"/>
+            
+            <column name="first_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)">
+                <constraints unique="true"/>
+            </column>
+            <column name="phone" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+    <!-- =================================================================================== -->
+    <!-- Main Entity: CrmLead -->
+    <!-- =================================================================================== -->
+
+    <changeSet id="create-crm-leads" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_leads">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="lead_no" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="company_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="industry_id" type="BIGINT"/>
+            
+            <column name="first_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="designation" type="VARCHAR(255)"/>
+            <column name="phone" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="website" type="VARCHAR(255)"/>
+            
+            <column name="requirements" type="VARCHAR(4000)"/>
+            <column name="lead_source_id" type="BIGINT"/>
+            
+            <!-- Address Embedded -->
+            <column name="street" type="VARCHAR(255)"/>
+            <column name="city" type="VARCHAR(255)"/>
+            <column name="state" type="VARCHAR(255)"/>
+            <column name="zip_code" type="VARCHAR(255)"/>
+            <column name="country" type="VARCHAR(255)"/>
+
+            <column name="notes" type="VARCHAR(4000)"/>
+            <column name="owner_id" type="BIGINT"/>
+            <column name="current_stage_id" type="BIGINT"/>
+            <column name="status" type="VARCHAR(50)"/>
+            
+            <column name="forecast_category" type="VARCHAR(30)"/>
+            <column name="expected_close_date" type="DATE"/>
+            <column name="amount" type="DECIMAL(18, 2)"/>
+
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="crm_leads" indexName="idx_lead_tenant_created">
+            <column name="tenant_id"/>
+            <column name="created_at"/>
+        </createIndex>
+        <createIndex tableName="crm_leads" indexName="idx_lead_tenant_company">
+            <column name="tenant_id"/>
+            <column name="company_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="crm_leads" baseColumnNames="company_id" referencedTableName="crm_companies" referencedColumnNames="id" constraintName="fk_lead_company"/>
+        <addForeignKeyConstraint baseTableName="crm_leads" baseColumnNames="industry_id" referencedTableName="crm_industries" referencedColumnNames="id" constraintName="fk_lead_industry"/>
+        <addForeignKeyConstraint baseTableName="crm_leads" baseColumnNames="lead_source_id" referencedTableName="crm_lead_sources" referencedColumnNames="id" constraintName="fk_lead_source"/>
+        <addForeignKeyConstraint baseTableName="crm_leads" baseColumnNames="current_stage_id" referencedTableName="crm_lead_stages" referencedColumnNames="id" constraintName="fk_lead_stage"/>
+        
+        <!-- Add FK to Contact NOW that Leads exists -->
+        <addForeignKeyConstraint baseTableName="crm_contacts" baseColumnNames="lead_id" referencedTableName="crm_leads" referencedColumnNames="id" constraintName="fk_contact_lead"/>
+    </changeSet>
+
+    <changeSet id="create-crm-lead-products" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_lead_products">
+            <column name="lead_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="crm_lead_products" columnNames="lead_id, product_id"/>
+        <addForeignKeyConstraint baseTableName="crm_lead_products" baseColumnNames="lead_id" referencedTableName="crm_leads" referencedColumnNames="id" constraintName="fk_clp_lead"/>
+        <addForeignKeyConstraint baseTableName="crm_lead_products" baseColumnNames="product_id" referencedTableName="crm_products" referencedColumnNames="id" constraintName="fk_clp_product"/>
+    </changeSet>
+
+    <!-- =================================================================================== -->
+    <!-- Activities -->
+    <!-- =================================================================================== -->
+
+    <changeSet id="create-crm-tasks" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_tasks">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subject" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="comments" type="TEXT"/>
+            <column name="due_date" type="DATE"/>
+            <column name="call_time" type="TIME"/>
+            <column name="lead_id" type="BIGINT"/>
+            <column name="assigned_to_id" type="BIGINT"/>
+            <column name="status" type="VARCHAR(30)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="crm_tasks" indexName="idx_crm_tasks_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseTableName="crm_tasks" baseColumnNames="lead_id" referencedTableName="crm_leads" referencedColumnNames="id" constraintName="fk_crm_task_lead"/>
+    </changeSet>
+
+    <changeSet id="create-crm-task-employees" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_task_employees">
+            <column name="task_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="employee_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="crm_task_employees" columnNames="task_id, employee_id"/>
+        <addForeignKeyConstraint baseTableName="crm_task_employees" baseColumnNames="task_id" referencedTableName="crm_tasks" referencedColumnNames="id" constraintName="fk_cte_task"/>
+    </changeSet>
+
+    <changeSet id="create-crm-task-contacts" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_task_contacts">
+            <column name="task_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contact_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="crm_task_contacts" columnNames="task_id, contact_id"/>
+        <addForeignKeyConstraint baseTableName="crm_task_contacts" baseColumnNames="task_id" referencedTableName="crm_tasks" referencedColumnNames="id" constraintName="fk_ctc_task"/>
+        <addForeignKeyConstraint baseTableName="crm_task_contacts" baseColumnNames="contact_id" referencedTableName="crm_contacts" referencedColumnNames="id" constraintName="fk_ctc_contact"/>
+    </changeSet>
+
+    <changeSet id="create-crm-events" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_events">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subject" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="same_start_end" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="from_time" type="TIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="to_time" type="TIME"/>
+            <column name="primary_contact_id" type="BIGINT"/>
+            <column name="lead_id" type="BIGINT"/>
+            <column name="status" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="meeting_type" type="VARCHAR(20)"/>
+            <column name="meeting_with" type="VARCHAR(120)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="crm_events" baseColumnNames="lead_id" referencedTableName="crm_leads" referencedColumnNames="id" constraintName="fk_crm_event_lead"/>
+        <addForeignKeyConstraint baseTableName="crm_events" baseColumnNames="primary_contact_id" referencedTableName="crm_contacts" referencedColumnNames="id" constraintName="fk_crm_event_contact"/>
+    </changeSet>
+
+     <changeSet id="create-crm-event-employees" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_event_employees">
+            <column name="event_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="employee_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="crm_event_employees" columnNames="event_id, employee_id"/>
+        <addForeignKeyConstraint baseTableName="crm_event_employees" baseColumnNames="event_id" referencedTableName="crm_events" referencedColumnNames="id" constraintName="fk_cee_event"/>
+    </changeSet>
+
+    <changeSet id="create-crm-event-contacts" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_event_contacts">
+            <column name="event_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contact_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="crm_event_contacts" columnNames="event_id, contact_id"/>
+        <addForeignKeyConstraint baseTableName="crm_event_contacts" baseColumnNames="event_id" referencedTableName="crm_events" referencedColumnNames="id" constraintName="fk_cec_event"/>
+        <addForeignKeyConstraint baseTableName="crm_event_contacts" baseColumnNames="contact_id" referencedTableName="crm_contacts" referencedColumnNames="id" constraintName="fk_cec_contact"/>
+    </changeSet>
+
+    <!-- Others: Call Logs, Todos -->
+    <changeSet id="create-crm-call-logs" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_call_logs">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="employee_id" type="BIGINT"/>
+            <column name="lead_id" type="BIGINT"/>
+            <column name="contact_id" type="BIGINT"/>
+            <column name="comments" type="TEXT"/>
+            <column name="call_date" type="DATE"/>
+            <column name="call_time" type="TIME"/>
+            <column name="remind_me_before" type="BOOLEAN"/>
+            <column name="reminder_time" type="TIME"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-crm-todos" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_todos">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subject" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="due_date" type="DATE"/>
+            <column name="from_time" type="TIME"/>
+            <column name="to_time" type="TIME"/>
+            <column name="status" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="VARCHAR(15)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="customer_contact_name" type="VARCHAR(200)"/>
+            <column name="lead_id" type="BIGINT"/>
+            <column name="assigned_to_id" type="BIGINT"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="crm_todos" baseColumnNames="lead_id" referencedTableName="crm_leads" referencedColumnNames="id" constraintName="fk_crm_todo_lead"/>
+    </changeSet>
+
+    <!-- Missing Tables appended below -->
+
+    <changeSet id="create-crm-emails" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_emails">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="lead_id" type="BIGINT"/>
+            <column name="contact_id" type="BIGINT"/>
+            <column name="sent_by_employee_id" type="BIGINT"/>
+            <column name="from_address" type="VARCHAR(255)"/>
+            <column name="to_address" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="cc_address" type="VARCHAR(255)"/>
+            <column name="subject" type="VARCHAR(255)"/>
+            <column name="body" type="TEXT"/>
+            <column name="status" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="created_at" type="DATETIME"><constraints nullable="false"/></column>
+            <column name="updated_at" type="DATETIME"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-crm-kpis" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_kpis">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="data_type" type="VARCHAR(255)"/>
+            <column name="type" type="VARCHAR(255)"/>
+        </createTable>
+
+        <createTable tableName="crm_kpi_employees">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="kpi_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="target_value" type="DECIMAL(15, 2)"/>
+        </createTable>
+        <addUniqueConstraint tableName="crm_kpi_employees" columnNames="kpi_id, employee_id" constraintName="uk_crm_kpi_employee"/>
+
+        <createTable tableName="crm_kpi_ranges">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="kpi_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="min_value" type="DECIMAL(19, 2)"><constraints nullable="false"/></column>
+            <column name="max_value" type="DECIMAL(19, 2)"><constraints nullable="false"/></column>
+            <column name="color_hex" type="VARCHAR(7)"/>
+            <column name="label" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-crm-roles" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="roles">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="name" type="VARCHAR(120)"><constraints nullable="false"/></column>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="cloned_from_id" type="BIGINT"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+        <addUniqueConstraint tableName="roles" columnNames="tenant_id, name" constraintName="uk_role_tenant_name"/>
+
+        <createTable tableName="crm_permissions">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="code" type="VARCHAR(80)"><constraints nullable="false" unique="true"/></column>
+            <column name="name" type="VARCHAR(150)"/>
+            <column name="description" type="VARCHAR(500)"/>
+        </createTable>
+
+        <createTable tableName="role_permissions">
+            <column name="role_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="permission_id" type="BIGINT"><constraints nullable="false"/></column>
+        </createTable>
+        <addPrimaryKey tableName="role_permissions" columnNames="role_id, permission_id"/>
+    </changeSet>
+
+    <changeSet id="create-crm-task-stages" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_task_stages">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="status_name" type="VARCHAR(150)"><constraints nullable="false"/></column>
+            <column name="completed" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="is_default" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="sort_order" type="INT" defaultValueNumeric="0"><constraints nullable="false"/></column>
+        </createTable>
+        <addUniqueConstraint tableName="crm_task_stages" columnNames="tenant_id, status_name" constraintName="crm_task_stages_name"/>
+    </changeSet>
+
+
+
+    <changeSet id="create-crm-todo-labels" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_todo_labels">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="name" type="VARCHAR(100)"><constraints nullable="false"/></column>
+            <column name="color_hex" type="VARCHAR(7)"/>
+            <column name="starred" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+        </createTable>
+        <addUniqueConstraint tableName="crm_todo_labels" columnNames="tenant_id, name" constraintName="uk_todo_label_name_per_tenant"/>
+    </changeSet>
+
+    <changeSet id="create-crm-notification-settings" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="notif_module_settings">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="module" type="VARCHAR(60)"><constraints nullable="false"/></column>
+            <column name="meta_response_enabled" type="BOOLEAN" defaultValueBoolean="false"/>
+        </createTable>
+        <addUniqueConstraint tableName="notif_module_settings" columnNames="tenant_id, module" constraintName="uk_mod_setting_tenant_module"/>
+    </changeSet>
+
+    <changeSet id="create-crm-notification-templates" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="notif_templates">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="module" type="VARCHAR(60)"><constraints nullable="false"/></column>
+            <column name="event" type="VARCHAR(60)"><constraints nullable="false"/></column>
+            <column name="message_type" type="VARCHAR(80)"/>
+            <column name="message_body" type="LONGTEXT"/>
+            <column name="bell" type="BOOLEAN"/>
+            <column name="email" type="BOOLEAN"/>
+            <column name="whatsapp" type="BOOLEAN"/>
+            <column name="sms" type="BOOLEAN"/>
+            <column name="telegram" type="BOOLEAN"/>
+            <column name="screen_popup" type="BOOLEAN"/>
+            <column name="provider_template_id" type="VARCHAR(120)"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+        <addUniqueConstraint tableName="notif_templates" columnNames="tenant_id, module, event, message_type" constraintName="uk_template_tenant_mod_event_type"/>
+
+        <createTable tableName="notif_template_employees">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="template_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+        </createTable>
+        <addUniqueConstraint tableName="notif_template_employees" columnNames="template_id, employee_id" constraintName="uk_template_employee"/>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-fleet-routes" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>9:ee1452bf7830be6b9072cf0541da38de</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="fleet_routes"/></not>
+        </preConditions>
+        <createTable tableName="fleet_routes">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="route_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="driver_id" type="BIGINT"/>
+            <column name="vehicle_id" type="BIGINT"/>
+            <column name="route_date" type="DATE"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="total_distance_km" type="DOUBLE"/>
+            <column name="estimated_duration_mins" type="INT"/>
+            <column name="tenant_id" type="BIGINT"/>
+            <column name="created_at" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+
+        <createTable tableName="fleet_route_stops">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="route_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="delivery_order_id" type="BIGINT"/>
+            <column name="stop_order" type="INT"/>
+            <column name="customer_name" type="VARCHAR(255)"/>
+            <column name="address" type="VARCHAR(1000)"/>
+            <column name="latitude" type="DOUBLE"/>
+            <column name="longitude" type="DOUBLE"/>
+            <column name="estimated_arrival" type="DATETIME"/>
+            <column name="actual_arrival" type="DATETIME"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="notes" type="TEXT"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="fleet_routes" baseColumnNames="driver_id" constraintName="fk_route_driver" referencedTableName="fleet_drivers" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="fleet_routes" baseColumnNames="vehicle_id" constraintName="fk_route_vehicle" referencedTableName="fleet_vehicles" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="fleet_routes" baseColumnNames="tenant_id" constraintName="fk_route_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint baseTableName="fleet_route_stops" baseColumnNames="route_id" constraintName="fk_stop_route" referencedTableName="fleet_routes" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="add-fk-stop-delivery-order" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="delivery_orders"/>
+            <tableExists tableName="fleet_route_stops"/>
+            <not><foreignKeyConstraintExists foreignKeyTableName="fleet_route_stops" foreignKeyName="fk_stop_delivery_order"/></not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="fleet_route_stops" baseColumnNames="delivery_order_id" constraintName="fk_stop_delivery_order" referencedTableName="delivery_orders" referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

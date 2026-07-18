@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="phase1-warehouse-product-unification" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="ware_products"/>
+            <not><columnExists tableName="ware_products" columnName="source_type"/></not>
+        </preConditions>
+        <addColumn tableName="ware_products">
+            <column name="source_type" type="VARCHAR(20)"/>
+            <column name="crm_product_id" type="BIGINT"/>
+            <column name="raw_material_id" type="BIGINT"/>
+            <column name="semifinished_id" type="BIGINT"/>
+            <column name="finished_good_id" type="BIGINT"/>
+            <column name="warehouse_id" type="BIGINT"/>
+            <column name="min_stock_level" type="DECIMAL(19, 4)"/>
+            <column name="max_stock_level" type="DECIMAL(19, 4)"/>
+            <column name="reorder_point" type="DECIMAL(19, 4)"/>
+        </addColumn>
+
+        <!-- Migration: Default existing products to STANDALONE -->
+        <sql>
+            UPDATE ware_products SET source_type = 'STANDALONE' WHERE source_type IS NULL;
+        </sql>
+    </changeSet>
+
+    <changeSet id="phase1-grn-rejection-handling" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="pur_grn_item"/>
+            <not><columnExists tableName="pur_grn_item" columnName="accepted_quantity"/></not>
+        </preConditions>
+        <addColumn tableName="pur_grn_item">
+            <column name="accepted_quantity" type="DECIMAL(19, 6)"/>
+            <column name="rejected_quantity" type="DECIMAL(19, 6)"/>
+            <column name="rejection_reason" type="VARCHAR(2000)"/>
+        </addColumn>
+
+        <!-- Migration: Set accepted quantity to received quantity for old records -->
+        <sql>
+            UPDATE pur_grn_item SET accepted_quantity = received_quantity WHERE accepted_quantity IS NULL;
+            UPDATE pur_grn_item SET rejected_quantity = 0 WHERE rejected_quantity IS NULL;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-ats-document-tables" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <!-- Document Types Table -->
+        <createTable tableName="ats_document_types">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Applicant Documents Table -->
+        <createTable tableName="ats_applicant_documents">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="applicant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_type_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_name" type="VARCHAR(255)"/>
+            <column name="file_path" type="VARCHAR(2048)"/>
+            <column name="comments" type="VARCHAR(2000)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes -->
+        <createIndex tableName="ats_document_types" indexName="idx_ats_doc_type_tenant_name">
+            <column name="tenant_id"/>
+            <column name="name"/>
+        </createIndex>
+
+        <createIndex tableName="ats_applicant_documents" indexName="idx_ats_app_doc_tenant_app">
+            <column name="tenant_id"/>
+            <column name="applicant_id"/>
+        </createIndex>
+
+        <!-- Foreign Keys -->
+        <addForeignKeyConstraint baseTableName="ats_document_types" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_document_type_tenant"/>
+        
+        <addForeignKeyConstraint baseTableName="ats_applicant_documents" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_applicant_doc_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_applicant_documents" baseColumnNames="applicant_id" referencedTableName="ats_applicants" referencedColumnNames="id" constraintName="fk_ats_applicant_doc_applicant"/>
+        <addForeignKeyConstraint baseTableName="ats_applicant_documents" baseColumnNames="document_type_id" referencedTableName="ats_document_types" referencedColumnNames="id" constraintName="fk_ats_applicant_doc_type"/>
+    </changeSet>
+
+</databaseChangeLog>

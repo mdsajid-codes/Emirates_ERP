@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20240226-015-add-workstation-machine-fields" author="Antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="pro_work_stations">
+            <column name="machine_id" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="machine_type" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20240226-016-create-downtime-log-table" author="Antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="hng_machine_downtime_log">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_downtime_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+            </column>
+            <column name="workstation_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_downtime_workstation" referencedTableName="pro_work_stations" referencedColumnNames="id"/>
+            </column>
+            <column name="batch_id" type="BIGINT">
+                <constraints nullable="true" foreignKeyName="fk_downtime_batch" referencedTableName="hng_production_batch" referencedColumnNames="id"/>
+            </column>
+            <column name="start_time" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_time" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="duration_minutes" type="INT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="downtime_category" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

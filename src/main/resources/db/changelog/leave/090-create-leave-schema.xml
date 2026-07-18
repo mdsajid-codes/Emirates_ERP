@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-leave-schema" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>ANY</validCheckSum>
+
+        <!-- leave_types -->
+        <createTable tableName="leave_types">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="leave_type" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="is_paid" type="BOOLEAN"><constraints nullable="false"/></column>
+            <column name="max_days_per_year" type="INT"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true"><constraints nullable="false"/></column>
+            <column name="start_time" type="TIME"/>
+            <column name="end_time" type="TIME"/>
+        </createTable>
+
+        <!-- leave_policies -->
+        <createTable tableName="leave_policies">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="default_policy" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="applies_to_expression" type="VARCHAR(255)"/>
+        </createTable>
+
+        <!-- leave_type_policies -->
+        <createTable tableName="leave_type_policies">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="policy_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="leave_type_id" type="BIGINT"><constraints nullable="false"/></column>
+            <!-- Annual Quota Options -->
+            <column name="quota_limit_type" type="VARCHAR(32)"><constraints nullable="false"/></column>
+            <column name="quota_days" type="INT"/>
+            <column name="mid_year_join_prorate_policy" type="VARCHAR(32)"/>
+            <column name="join_month_cutoff_day" type="INT"/>
+            <!-- Accrual & Rounding -->
+            <column name="accrual_type" type="VARCHAR(32)"><constraints nullable="false"/></column>
+            <column name="accrual_interval" type="VARCHAR(255)"/>
+            <column name="accrual_amount_days" type="DOUBLE"/>
+            <column name="rounding_policy" type="VARCHAR(32)"><constraints nullable="false"/></column>
+            <!-- Application Settings -->
+            <column name="allow_half_day" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="self_apply_allowed" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="require_comment" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="attachment_if_exceeds_days" type="INT"/>
+            <column name="prior_notice_threshold_calendar_days" type="INT"/>
+            <column name="prior_notice_calendar_days" type="INT"/>
+            <column name="working_day_requirement_mode" type="VARCHAR(32)"/>
+            <column name="working_day_requirement_min_days" type="INT"/>
+            <column name="earliest_apply_window_days" type="INT"/>
+            <column name="allow_backdated_application" type="BOOLEAN"/>
+            <column name="backdated_max_days" type="INT"/>
+            <!-- Restriction Settings -->
+            <column name="eligibility_anchor" type="VARCHAR(32)"/>
+            <column name="eligibility_after_days" type="INT"/>
+            <column name="limit_consecutive_days" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="max_consecutive_days" type="INT"/>
+            <column name="limit_monthly_usage" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="max_monthly_days" type="INT"/>
+            <column name="allowed_in_notice_period" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="min_gap_between_requests_days" type="INT"/>
+            <column name="max_requests_per_year" type="INT"/>
+            <column name="max_requests_per_month" type="INT"/>
+            <!-- Sandwich Rules -->
+            <column name="holiday_adjacency_policy" type="VARCHAR(32)"/>
+            <column name="week_off_adjacency_policy" type="VARCHAR(32)"/>
+            <!-- Approval Flow -->
+            <column name="approval_required" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="levels" type="INT"/>
+            <column name="selection_mode" type="VARCHAR(32)"/>
+            <!-- Year End Processing -->
+            <column name="positive_balance_action" type="VARCHAR(32)"/>
+            <column name="carry_forward_expires" type="BOOLEAN"/>
+            <column name="carry_forward_expiry_days" type="INT"/>
+            <column name="negative_balance_policy" type="VARCHAR(32)"/>
+            <!-- Annual Entitlement Rules -->
+            <column name="min_years_for_full_quota" type="INT"/>
+            <column name="full_quota_days" type="INT"/>
+            <column name="months_for_monthly_cap" type="INT"/>
+            <column name="days_per_month_to_cap" type="INT"/>
+        </createTable>
+        <addUniqueConstraint tableName="leave_type_policies" columnNames="policy_id, leave_type_id" constraintName="uk_leave_type_policies"/>
+
+        <!-- approval_levels -->
+        <createTable tableName="approval_levels">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="leave_type_policy_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="level_order" type="INT"><constraints nullable="false"/></column>
+            <column name="selection_mode" type="VARCHAR(32)"/>
+            <column name="role_key" type="VARCHAR(255)"/>
+            <column name="employee_id" type="BIGINT"/>
+        </createTable>
+
+        <!-- leave_requests -->
+        <createTable tableName="leave_requests">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="leave_type_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="from_date" type="DATE"/>
+            <column name="to_date" type="DATE"/>
+            <column name="days_requested" type="DECIMAL(15, 2)"/>
+            <column name="partial_day_info" type="VARCHAR(255)"/>
+            <column name="reason" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="current_approver_user_id" type="BIGINT"/>
+            <column name="days_approved" type="DECIMAL(15, 2)"/>
+            <column name="created_by_user_id" type="BIGINT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_by_user_id" type="BIGINT"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="admin_notes" type="VARCHAR(255)"/>
+        </createTable>
+        <createIndex tableName="leave_requests" indexName="idx_leave_request_employee">
+            <column name="employee_id"/>
+        </createIndex>
+
+        <!-- leave_approvals -->
+        <createTable tableName="leave_approvals">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="leave_request_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="approver_user_id" type="BIGINT"/>
+            <column name="action" type="VARCHAR(255)"/>
+            <column name="comment" type="VARCHAR(1000)"/>
+            <column name="action_at" type="DATETIME"/>
+        </createTable>
+        <createIndex tableName="leave_approvals" indexName="idx_leave_approval_request">
+            <column name="leave_request_id"/>
+        </createIndex>
+
+        <!-- leave_balances -->
+        <createTable tableName="leave_balances">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="leave_type_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="year" type="INT"/>
+            <column name="as_of_date" type="DATE"/>
+            <column name="total_allocated" type="DECIMAL(5, 2)" defaultValueNumeric="0.00"/>
+            <column name="used" type="DECIMAL(5, 2)" defaultValueNumeric="0.00"/>
+            <column name="pending" type="DECIMAL(5, 2)" defaultValueNumeric="0.00"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="updated_by_user_id" type="BIGINT"/>
+        </createTable>
+        <addUniqueConstraint tableName="leave_balances" columnNames="employee_id, leave_type_id, year" constraintName="uk_leave_balances"/>
+
+        <!-- leave_allocations -->
+        <createTable tableName="leave_allocations">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="leave_type_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="allocated_days" type="DECIMAL(15, 2)"/>
+            <column name="period_start" type="DATE"/>
+            <column name="period_end" type="DATE"/>
+            <column name="source" type="VARCHAR(255)"/>
+            <column name="created_by_user_id" type="BIGINT"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+        <addUniqueConstraint tableName="leave_allocations" columnNames="employee_id, leave_type_id, period_start, period_end" constraintName="uk_leave_allocations"/>
+
+        <!-- leave_encashment_requests -->
+        <createTable tableName="leave_encashment_requests">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="employee_id" type="BIGINT"/>
+            <column name="leave_type_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="days_requested" type="DECIMAL(15, 2)"/>
+            <column name="amount_calculated" type="DECIMAL(15, 2)"/>
+            <column name="status" type="VARCHAR(255)"/>
+            <column name="requested_at" type="DATETIME"/>
+            <column name="requested_by_user_id" type="BIGINT"/>
+            <column name="processed_at" type="DATETIME"/>
+            <column name="processed_by_user_id" type="BIGINT"/>
+        </createTable>
+
+    </changeSet>
+
+    <changeSet id="rename-leave-encashment-leave-type-column" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="leave_encashment_requests" columnName="leave_type"/>
+        </preConditions>
+        <renameColumn tableName="leave_encashment_requests"
+                      oldColumnName="leave_type"
+                      newColumnName="leave_type_id"
+                      columnDataType="BIGINT"/>
+    </changeSet>
+
+</databaseChangeLog>

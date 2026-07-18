@@ -1,0 +1,48 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "004-create-journal-entry-lines",
+        "author": "dev-a",
+        "context": "ACCOUNTS",
+        "preConditions": [
+          {
+            "onFail": "MARK_RAN",
+            "not": {
+              "tableExists": {
+                "tableName": "journal_entry_lines"
+              }
+            }
+          }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "journal_entry_lines",
+              "columns": [
+                {"column": {"name": "line_id", "type": "BIGINT", "autoIncrement": true, "constraints": {"primaryKey": true, "nullable": false}}},
+                {"column": {"name": "journal_entry_id", "type": "BIGINT", "constraints": {"nullable": false, "foreignKeyName": "fk_line_entry", "referencedTableName": "journal_entries", "referencedColumnNames": "journal_entry_id"}}},
+                {"column": {"name": "line_number", "type": "INT", "constraints": {"nullable": false}}},
+                {"column": {"name": "account_id", "type": "BIGINT", "constraints": {"nullable": false, "foreignKeyName": "fk_line_account", "referencedTableName": "chart_of_accounts", "referencedColumnNames": "account_id"}}},
+                {"column": {"name": "debit_amount", "type": "DECIMAL(19,2)", "defaultValueNumeric": 0.00}},
+                {"column": {"name": "credit_amount", "type": "DECIMAL(19,2)", "defaultValueNumeric": 0.00}},
+                {"column": {"name": "quantity", "type": "DECIMAL(19,4)"}},
+                {"column": {"name": "description", "type": "VARCHAR(500)"}},
+                {"column": {"name": "dim_item_id", "type": "BIGINT"}},
+                {"column": {"name": "dim_warehouse", "type": "VARCHAR(100)"}},
+                {"column": {"name": "dim_company_id", "type": "BIGINT"}},
+                {"column": {"name": "dim_contract", "type": "VARCHAR(100)"}},
+                {"column": {"name": "dim_employee_id", "type": "BIGINT"}},
+                {"column": {"name": "dim_expense_item_id", "type": "BIGINT"}},
+                {"column": {"name": "dim_income_item_id", "type": "BIGINT"}},
+                {"column": {"name": "dim_bank_account_id", "type": "BIGINT"}},
+                {"column": {"name": "dim_tax_type_id", "type": "BIGINT"}},
+                {"column": {"name": "dim_cash_flow_item_id", "type": "BIGINT"}}
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

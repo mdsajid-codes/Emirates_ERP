@@ -1,0 +1,219 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "1",
+        "author": "antigravity",
+        "context": "FIXED_ASSETS",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "fixed_asset_categories",
+              "columns": [
+                {
+                  "column": {
+                    "autoIncrement": true,
+                    "constraints": {
+                      "primaryKey": true,
+                      "nullable": false
+                    },
+                    "name": "category_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "name",
+                    "type": "VARCHAR(100)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "description",
+                    "type": "TEXT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "useful_life_default",
+                    "type": "INT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "depreciation_method_default",
+                    "type": "VARCHAR(50)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "tenant_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "defaultValueComputed": "CURRENT_TIMESTAMP",
+                    "name": "created_at",
+                    "type": "TIMESTAMP"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "defaultValueComputed": "CURRENT_TIMESTAMP",
+                    "name": "updated_at",
+                    "type": "TIMESTAMP"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "2",
+        "author": "antigravity",
+        "context": "FIXED_ASSETS",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "fixed_assets",
+              "columns": [
+                {
+                  "column": {
+                    "autoIncrement": true,
+                    "constraints": {
+                      "primaryKey": true,
+                      "nullable": false
+                    },
+                    "name": "fixed_asset_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false,
+                      "unique": true
+                    },
+                    "name": "asset_number",
+                    "type": "VARCHAR(50)"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "description",
+                    "type": "VARCHAR(200)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "serial_number",
+                    "type": "VARCHAR(100)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "category_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "location",
+                    "type": "VARCHAR(100)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "purchase_date",
+                    "type": "DATE"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "purchase_price",
+                    "type": "DECIMAL(19,4)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "salvage_value",
+                    "type": "DECIMAL(19,4)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "useful_life_years",
+                    "type": "INT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "depreciation_method",
+                    "type": "VARCHAR(50)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "asset_status",
+                    "type": "VARCHAR(50)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "tenant_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "defaultValueComputed": "CURRENT_TIMESTAMP",
+                    "name": "created_at",
+                    "type": "TIMESTAMP"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "defaultValueComputed": "CURRENT_TIMESTAMP",
+                    "name": "updated_at",
+                    "type": "TIMESTAMP"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseColumnNames": "category_id",
+              "baseTableName": "fixed_assets",
+              "constraintName": "fk_fixed_asset_category",
+              "referencedColumnNames": "category_id",
+              "referencedTableName": "fixed_asset_categories"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

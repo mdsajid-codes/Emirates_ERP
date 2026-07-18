@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-ats-education-tables" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <!-- Countries Table -->
+        <createTable tableName="ats_countries">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="iso_code" type="VARCHAR(10)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- States Table -->
+        <createTable tableName="ats_states">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="country_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="state_code" type="VARCHAR(10)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Degrees Table -->
+        <createTable tableName="ats_degrees">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Applicant Education Details Table -->
+        <createTable tableName="ats_applicant_educations">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="applicant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="degree_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="school_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="year_completed" type="INT"/>
+            <column name="major_study" type="VARCHAR(255)"/>
+            <column name="minor_study" type="VARCHAR(255)"/>
+            <column name="gpa" type="DECIMAL(4,2)"/>
+            <column name="country_id" type="BIGINT"/>
+            <column name="state_id" type="BIGINT"/>
+            <column name="city" type="VARCHAR(100)"/>
+            <column name="higher_education" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes -->
+        <createIndex tableName="ats_countries" indexName="idx_ats_country_tenant_name">
+            <column name="tenant_id"/>
+            <column name="name"/>
+        </createIndex>
+
+        <createIndex tableName="ats_states" indexName="idx_ats_state_tenant_country">
+            <column name="tenant_id"/>
+            <column name="country_id"/>
+        </createIndex>
+
+        <createIndex tableName="ats_degrees" indexName="idx_ats_degree_tenant_name">
+            <column name="tenant_id"/>
+            <column name="name"/>
+        </createIndex>
+
+        <createIndex tableName="ats_applicant_educations" indexName="idx_ats_app_edu_tenant_app">
+            <column name="tenant_id"/>
+            <column name="applicant_id"/>
+        </createIndex>
+
+        <!-- Foreign Keys -->
+        <addForeignKeyConstraint baseTableName="ats_countries" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_country_tenant"/>
+
+        <addForeignKeyConstraint baseTableName="ats_states" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_state_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_states" baseColumnNames="country_id" referencedTableName="ats_countries" referencedColumnNames="id" constraintName="fk_ats_state_country"/>
+
+        <addForeignKeyConstraint baseTableName="ats_degrees" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_degree_tenant"/>
+
+        <addForeignKeyConstraint baseTableName="ats_applicant_educations" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_applicant_edu_tenant"/>
+        <addForeignKeyConstraint baseTableName="ats_applicant_educations" baseColumnNames="applicant_id" referencedTableName="ats_applicants" referencedColumnNames="id" constraintName="fk_ats_applicant_edu_applicant"/>
+        <addForeignKeyConstraint baseTableName="ats_applicant_educations" baseColumnNames="degree_id" referencedTableName="ats_degrees" referencedColumnNames="id" constraintName="fk_ats_applicant_edu_degree"/>
+        <addForeignKeyConstraint baseTableName="ats_applicant_educations" baseColumnNames="country_id" referencedTableName="ats_countries" referencedColumnNames="id" constraintName="fk_ats_applicant_edu_country"/>
+        <addForeignKeyConstraint baseTableName="ats_applicant_educations" baseColumnNames="state_id" referencedTableName="ats_states" referencedColumnNames="id" constraintName="fk_ats_applicant_edu_state"/>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260611-add-linked-invoice-je-id" author="antigravity">
+        <addColumn tableName="journal_entries">
+            <column name="linked_invoice_je_id" type="BIGINT">
+                <constraints nullable="true" 
+                             foreignKeyName="fk_je_linked_invoice" 
+                             referencedTableName="journal_entries" 
+                             referencedColumnNames="journal_entry_id"/>
+            </column>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

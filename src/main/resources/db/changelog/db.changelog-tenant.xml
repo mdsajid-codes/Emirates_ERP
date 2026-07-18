@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Include the common changelog which contains all app tables for tenants -->
+    <include file="db/changelog/db.changelog-common.json"/>
+
+    <!-- Core Infrastructure -->
+    <include file="db/changelog/tenant/067-create-infra-tables.xml"/>
+    <include file="db/changelog/tenant/068-update-themes-colors.xml"/>
+    <include file="db/changelog/tenant/069-seed-default-navy-blue-theme.xml"/>
+
+    <!-- Universal Notification System -->
+    <include file="db/changelog/tenant/110-create-notification-schema.xml"/>
+    <include file="db/changelog/tenant/111-seed-notification-templates.xml"/>
+    <include file="db/changelog/tenant/112-seed-whatsapp-test-template.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/tenant/113-add-language-code-to-whatsapp-templates.xml" relativeToChangelogFile="false"/>
+
+    <!-- Base Module (Foundational Lookup Tables) -->
+    <include file="db/changelog/base/080-create-base-schema.xml"/>
+
+    <!-- Attendance Module (Policies) -->
+    <include file="db/changelog/attendance/070-create-attendance-schema.xml"/>
+    <include file="db/changelog/attendance/105-alter-attendance-schema.xml"/>
+    <include file="db/changelog/attendance/106-biometric-integration-phase1.xml"/>
+    <include file="db/changelog/attendance/107-biometric-agents-schema.xml"/>
+    <include file="db/changelog/attendance/108-biometric-commands-schema.xml"/>
+    <include file="db/changelog/attendance/110-biometric-device-name-machine-number.xml"/>
+
+    <!-- Employee Module -->
+    <include file="db/changelog/employee/075-create-employee-schema.xml"/>
+
+    <!-- Base Module (Foundational Lookup Tables) - Continued -->
+    <include file="db/changelog/base/081-create-work-schedule-schema.xml"/>
+    <include file="db/changelog/base/082-add-calendar-exceptions-schema.xml"/>
+
+    <!-- CRM Module -->
+    <include file="db/changelog/crm/050-create-crm-schema.xml"/>
+    <include file="db/changelog/crm/120-create-crm-reminders.xml"/>
+    <include file="db/changelog/crm/121-crm-reminder-channels.xml"/>
+    <include file="db/changelog/crm/122-crm-lead-attachments.xml"/>
+    <include file="db/changelog/crm/123-crm-role-module-permissions.xml"/>
+    <include file="db/changelog/crm/124-crm-user-role-assignments.xml"/>
+    <include file="db/changelog/crm/125-crm-role-owner-only.xml"/>
+    <include file="db/changelog/crm/126-crm-audit-log.xml"/>
+    <include file="db/changelog/tenant/114-seed-crm-reminder-templates.xml"/>
+
+    <!-- Materials Module -->
+    <include file="db/changelog/materials/materials-schema.xml"/>
+
+    <!-- POS Module -->
+    <include file="db/changelog/pos/pos-schema.xml"/>
+
+    <!-- Purchases Module -->
+    <include file="db/changelog/purchases/purchases-schema.xml"/>
+    <include file="db/changelog/purchases/002-create-supplier-tendering-tables.xml"/>
+    <include file="db/changelog/purchases/003-create-rfq-tables.xml"/>
+    <include file="db/changelog/purchases/004-create-additional-expense-tables.xml"/>
+    <include file="db/changelog/purchases/005-rename-expense-account-to-product.xml"/>
+    <include file="db/changelog/purchases/006-add-unit-id-to-pur-additional-expense-line.xml"/>
+
+    <!-- Warehouse Module -->
+    <include file="db/changelog/warehouse/048-create-warehouse-schema.xml"/>
+    <include file="db/changelog/warehouse/050-fix-inventory-improvement-nullable-columns.xml"/>
+    <include file="db/changelog/warehouse/050-phase1-warehouse-enhancements.xml"/>
+    <include file="db/changelog/warehouse/051-phase2-transfer-orders.xml"/>
+    <include file="db/changelog/warehouse/053-add-stock-quantity-to-products.xml"/>
+
+    <!-- Production Module -->
+    <include file="db/changelog/production/production-schema.xml"/>
+    <include file="db/changelog/production/002-add-capacity-to-workstations.xml"/>
+
+    <!-- Trip Management Module -->
+    <include file="db/changelog/trip/001-create-trip-management-schema.xml"/>
+
+    <!-- Fleet Management Module -->
+    <include file="db/changelog/fleet/001-create-fleet-schema.xml"/>
+
+    <!-- Fleet Management Module (Continued) -->
+    <include file="db/changelog/fleet/072-create-route-planning-schema.xml"/>
+    <include file="db/changelog/fleet/073-driver-add-user-relation.xml"/>
+    <include file="db/changelog/fleet/074-driver-add-compliance-fields.xml"/>
+    <include file="db/changelog/fleet/075-vehicle-add-operational-fields.xml"/>
+    <include file="db/changelog/fleet/076-vehicle-documents-table.xml"/>
+    <include file="db/changelog/fleet/077-vehicle-maintenance-table.xml"/>
+    <include file="db/changelog/fleet/078-fuel-entries-table.xml"/>
+    <include file="db/changelog/fleet/079-maintenance-add-spare-parts.xml"/>
+
+    <include file="db/changelog/fleet/080-create-complaint-incident-schema.xml"/>
+    <include file="db/changelog/fleet/081-create-driver-performance-schema.xml"/>
+    <include file="db/changelog/fleet/082-fuel-entry-add-trip-link.xml"/>
+    <include file="db/changelog/fleet/083-trip-add-route-link.xml"/>
+    <include file="db/changelog/fleet/084-maintenance-add-trip-link.xml"/>
+    <include file="db/changelog/fleet/085-create-trip-stops-table.xml"/>
+    <include file="db/changelog/fleet/086-create-driver-documents-table.xml"/>
+    <include file="db/changelog/fleet/087-enhanced-customer-schema.xml"/>
+
+    <!-- Trip Extensions (Post-Fleet due to circular FKs) -->
+    <include file="db/changelog/trip/002-trip-add-missing-fields.xml"/>
+    <include file="db/changelog/trip/003-invoice-add-due-date.xml"/>
+    <include file="db/changelog/trip/004-customer-add-contract-fields.xml"/>
+    <include file="db/changelog/trip/005-update-driver-fk.xml"/>
+    <include file="db/changelog/trip/006-trip-update-time-to-datetime.xml"/>
+
+    <!-- Dispatch Module -->
+    <include file="db/changelog/dispatch/001-create-dispatch-schema.xml"/>
+
+    <!-- Sales and Customer Base Schema -->
+    <include file="db/changelog/sales/063-create-sales-customer-schema.xml"/>
+    <include file="db/changelog/sales/064-sales-schema-orders-quotations.xml"/>
+    <include file="db/changelog/sales/065-sales-schema-invoices-notes.xml"/>
+    <include file="db/changelog/sales/066-sales-schema-rentals-docs.xml"/>
+    <include file="db/changelog/sales/068-sales-schema-delivery-items-update.xml"/>
+    <include file="db/changelog/sales/069-sales-schema-invoice-items-update.xml"/>
+    <include file="db/changelog/sales/070-sales-schema-delivery-fleet-enhancements.xml"/>
+    <include file="db/changelog/sales/071-sales-schema-proof-of-delivery.xml"/>
+    <include file="db/changelog/sales/072-create-additional-expense-tables.xml"/>
+
+    <!-- Payroll Module -->
+    <include file="db/changelog/payroll/100-create-payroll-schema.xml"/>
+
+    <!-- Leave Module -->
+    <include file="db/changelog/leave/090-create-leave-schema.xml"/>
+    <include file="db/changelog/leave/091-create-sick-leave-schema.xml"/>
+
+    <!-- Account Module: DDL (schema) -->
+    <include file="db/changelog/account/001-create-chart-of-accounts.json"/>
+    <include file="db/changelog/account/002-create-account-dimensions.json"/>
+    <include file="db/changelog/account/003-create-journal-entries.json"/>
+    <include file="db/changelog/account/004-create-journal-entry-lines.json"/>
+    <include file="db/changelog/account/005-create-accounting-audit-log.json"/>
+    <include file="db/changelog/account/010-update-chart-of-accounts.xml"/>
+    <include file="db/changelog/account/011-update-journal-entries.xml"/>
+    <include file="db/changelog/account/012-add-fleet-journal-links.xml"/>
+    
+    <include file="db/changelog/item/013-create-item-gl-accounts-table.json"/>
+    <include file="db/changelog/account/013-add-tenant-to-item-gl.xml"/>
+    <include file="db/changelog/account/014-create-company-gl-accounts.xml"/>
+    <include file="db/changelog/account/015-add-timestamps-to-item-gl.xml"/>
+    <include file="db/changelog/account/016-recreate-company-gl-accounts.xml"/>
+    <include file="db/changelog/account/017-create-party-gl-accounts.xml"/>
+    <include file="db/changelog/account/018-drop-item-gl-accounts-fk.xml"/>
+    <include file="db/changelog/account/019-add-due-date-to-journal-entries.xml"/>
+    <include file="db/changelog/account/020-add-linked-invoice-to-journal.xml"/>
+    <include file="db/changelog/account/021-create-bank-gl-accounts.xml"/>
+    <include file="db/changelog/account/022-make-audit-log-entity-id-nullable.xml"/>
+    <include file="db/changelog/account/023-create-employee-gl-accounts.xml"/>
+    <include file="db/changelog/account/024-create-fixed-asset-gl-accounts.xml"/>
+    <include file="db/changelog/fixedasset/081-create-banks-table.json"/>
+    <include file="db/changelog/fixedasset/082-create-bank-accounts-table.json"/>
+    <include file="db/changelog/fixedasset/083-create-cash-flow-items-table.json"/>
+
+    <!-- Account Module: Seed data (Chart of Accounts, Dimensions, etc.) -->
+    <include file="db/changelog/account/006-seed-coa-balance-sheet-assets.xml"/>
+    <include file="db/changelog/account/007-seed-coa-liabilities-equity.xml"/>
+    <include file="db/changelog/account/008-seed-coa-income-statement.xml"/>
+    <include file="db/changelog/account/009-seed-coa-dimensions.xml"/>
+    <include file="db/changelog/account/070-create-acc-banks.xml"/>
+    <include file="db/changelog/account/071-create-acc-bank-accounts.xml"/>
+    <include file="db/changelog/account/072-create-acc-payments.xml"/>
+    <include file="db/changelog/account/073-create-acc-post-dated-cheques.xml"/>
+    <include file="db/changelog/account/074-create-acc-cash-equivalents.xml"/>
+    <include file="db/changelog/account/075-create-acc-cash-flow-items.xml"/>
+    <include file="db/changelog/account/076-create-acc-cash-flow-transactions.xml"/>
+    <include file="db/changelog/account/077-create-acc-mutual-settlements.xml"/>
+    <include file="db/changelog/account/078-seed-acc-cash-flow-items.xml"/>
+    <include file="db/changelog/account/079-create-bank-reconciliation.xml"/>
+    <include file="db/changelog/account/080-create-vat-groups.xml"/>
+    <include file="db/changelog/account/081-create-vat-types.xml"/>
+    <include file="db/changelog/account/082-create-vat-rates.xml"/>
+    <include file="db/changelog/account/083-create-tax-transactions.xml"/>
+
+    <!-- Cross-Module Integrations -->
+    <include file="db/changelog/sales/073-sales-gl-integration.xml"/>
+
+    <!-- Hanger Manufacturing Module (Phase 1 — Foundation) -->
+    <include file="db/changelog/hanger/001-create-hanger-foundation-schema.xml"/>
+    <!-- Hanger Manufacturing Module (Phase 2 — GRN Coil Fields) -->
+    <include file="db/changelog/hanger/002-hanger-grn-coil-fields.xml"/>
+    <!-- Hanger Manufacturing Module (Phase 3 — Production Order & Material Issue) -->
+    <include file="db/changelog/hanger/003-hanger-mo-material-issue-extension.xml"/>
+    <!-- Hanger Manufacturing Module (Phase 4 — Production Batch Management) -->
+    <include file="db/changelog/hanger/004-hanger-batch-management.xml"/>
+    <!-- Hanger Manufacturing Module (Phase 5 — Wire Cutting Process) -->
+    <include file="db/changelog/hanger/005-hanger-wire-cutting.xml"/>
+    <!-- Hanger Manufacturing Module (Phase 6 — Bending / Forming / Job Card) -->
+    <include file="db/changelog/hanger/006-hanger-job-card.xml"/>
+    <!-- Hanger Manufacturing Module (Phase 7 — Coating / Painting) -->
+    <include file="db/changelog/hanger/007-hanger-coating.xml"/>
+    <!-- Hanger Manufacturing Module (Phase 8 — Final QC Inspection) -->
+    <include file="db/changelog/hanger/008-hanger-qc-inspection.xml"/>
+    <!-- Hanger Manufacturing Module (Phase 9 — Packing & Finished Goods) -->
+    <include file="db/changelog/hanger/009-hanger-packing.xml"/>
+
+    <!-- Hanger Manufacturing Module (Phase 10 — Field Additions) -->
+    <include file="db/changelog/hanger/010-hanger-field-additions.xml"/>
+
+    <!-- Hanger Manufacturing Module (Phase 11 — Rework Management) -->
+    <include file="db/changelog/hanger/011-hanger-rework.xml"/>
+
+    <include file="db/changelog/hanger/012-hanger-cost-rate.xml"/>
+    <!-- Phase 12: Production Reporting Fields (Phase 1) -->
+    <include file="db/changelog/hanger/013-hanger-batch-production-fields.xml"/>
+    <!-- Phase 12: Production Reporting Fields (Phase 2) -->
+    <include file="db/changelog/hanger/014-hanger-qc-scrap-fields.xml"/>
+    <!-- Phase 12: Production Reporting Fields (Phase 3) -->
+    <include file="db/changelog/hanger/015-hanger-machine-downtime.xml"/>
+    <!-- Phase 12: Production Reporting Fields (Phase 4 - Rework Updates) -->
+    <include file="db/changelog/hanger/016-hanger-rework-updates.xml"/>
+
+    <!-- Professional Complaint Module Upgrade -->
+    <include file="db/changelog/fleet/088-add-complaint-code.xml"/>
+    <!-- Fixed Asset Module -->
+    <include file="db/changelog/fixedasset/080-create-fixed-assets-schema.json"/>
+    <include file="db/changelog/fixedasset/084-update-fixed-assets-schema.json"/>
+
+    <!-- ATS (Applicant Tracking System) Module -->
+    <include file="db/changelog/ats/150-ats-applicants.xml"/>
+    <include file="db/changelog/ats/151-ats-applicant-documents.xml"/>
+    <include file="db/changelog/ats/152-ats-applicant-education.xml"/>
+    <include file="db/changelog/ats/153-ats-applicant-details.xml"/>
+    <include file="db/changelog/ats/154-ats-ai-providers.xml"/>
+    <include file="db/changelog/ats/155-ats-vendors.xml"/>
+    <include file="db/changelog/ats/156-ats-business-units.xml"/>
+    <include file="db/changelog/ats/158-ats-payment-terms.xml"/>
+    <include file="db/changelog/ats/159-ats-vendor-contacts-expansion.xml"/>
+    <include file="db/changelog/ats/160-ats-vendor-documents-expansion.xml"/>
+    <include file="db/changelog/ats/161-ats-vendor-bank-accounts.xml"/>
+    <include file="db/changelog/ats/162-ats-vendor-tasks-expansion.xml"/>
+    <include file="db/changelog/ats/163-ats-applicant-employer.xml"/>
+    <include file="db/changelog/ats/164-ats-clients.xml"/>
+    <include file="db/changelog/ats/165-ats-interviewers.xml"/>
+    <include file="db/changelog/ats/166-ats-blacklist-extensions.xml"/>
+    <include file="db/changelog/ats/167-ats-applicant-consents.xml"/>
+    <include file="db/changelog/ats/168-ats-document-verification.xml"/>
+    <include file="db/changelog/tenant/125-journal-multicurrency.xml"/>
+</databaseChangeLog>

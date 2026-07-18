@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-payroll-schema" author="system">
+        <validCheckSum>ANY</validCheckSum>
+
+        <!-- benefit_types -->
+        <createTable tableName="benefit_types">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="code" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true"><constraints nullable="false"/></column>
+            <column name="calculation_type" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="value_for_accrual" type="DECIMAL(15, 2)"/>
+        </createTable>
+
+        <!-- statutory_rules -->
+        <createTable tableName="statutory_rules">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="rule_name" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="employee_contribution_rate" type="DECIMAL(5, 2)"/>
+            <column name="employer_contribution_rate" type="DECIMAL(5, 2)"/>
+            <column name="contribution_cap" type="DECIMAL(15, 2)"/>
+            <column name="tax_slabs_json" type="LONGTEXT"/>
+            <column name="is_active" type="BOOLEAN"><constraints nullable="false"/></column>
+        </createTable>
+
+        <!-- loan_products -->
+        <createTable tableName="loan_products">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="product_name" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="interest_rate" type="DECIMAL(5, 2)"/>
+            <column name="max_installments" type="INT"/>
+            <column name="max_loan_amount" type="DECIMAL(15, 2)"/>
+            <column name="is_active" type="BOOLEAN"><constraints nullable="false"/></column>
+            <column name="availability_start_date" type="DATE"/>
+            <column name="availability_end_date" type="DATE"/>
+            <column name="deduct_from_salary" type="BOOLEAN" defaultValueBoolean="true"><constraints nullable="false"/></column>
+        </createTable>
+
+        <!-- salary_components -->
+        <createTable tableName="salary_components">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="code" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="type" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="calculation_type" type="VARCHAR(255)"/>
+            <column name="is_taxable" type="BOOLEAN"/>
+            <column name="is_part_of_gross_salary" type="BOOLEAN"/>
+            <column name="display_order" type="INT"/>
+            <column name="is_wps_included" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="is_variable" type="BOOLEAN" defaultValueBoolean="false"/>
+        </createTable>
+
+        <!-- employee_bank_accounts -->
+        <createTable tableName="employee_bank_accounts">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false" unique="true"/></column>
+            <column name="bank_name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="account_number" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="ifsc_code" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="iban" type="VARCHAR(34)"/>
+            <column name="routing_code" type="VARCHAR(255)"/>
+            <column name="account_holder_name" type="VARCHAR(255)"/>
+            <column name="is_primary" type="BOOLEAN"><constraints nullable="false"/></column>
+        </createTable>
+
+        <!-- salary_structures -->
+        <createTable tableName="salary_structures">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="employee_id" type="BIGINT"><constraints unique="true"/></column>
+            <column name="structure_name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="effective_date" type="DATE"/>
+        </createTable>
+
+        <!-- salary_structure_components -->
+        <createTable tableName="salary_structure_components">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="salary_structure_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="salary_component_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="value" type="DECIMAL(15, 2)"/>
+            <column name="formula" type="VARCHAR(255)"/>
+        </createTable>
+
+        <!-- bonuses -->
+        <createTable tableName="bonuses">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="bonus_type" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="amount" type="DECIMAL(15, 2)"><constraints nullable="false"/></column>
+            <column name="pay_date" type="DATE"><constraints nullable="false"/></column>
+            <column name="remarks" type="VARCHAR(1000)"/>
+        </createTable>
+
+        <!-- employee_loans -->
+        <createTable tableName="employee_loans">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="loan_product_id" type="BIGINT"/>
+            <column name="loan_amount" type="DECIMAL(15, 2)"><constraints nullable="false"/></column>
+            <column name="emi_amount" type="DECIMAL(15, 2)"><constraints nullable="false"/></column>
+            <column name="total_installments" type="INT"><constraints nullable="false"/></column>
+            <column name="remaining_installments" type="INT"><constraints nullable="false"/></column>
+            <column name="start_date" type="DATE"/>
+            <column name="status" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="requested_at" type="DATETIME"/>
+            <column name="processed_at" type="DATETIME"/>
+            <column name="processed_by_user_id" type="BIGINT"/>
+        </createTable>
+
+        <!-- end_of_service -->
+        <createTable tableName="end_of_service">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false" unique="true"/></column>
+            <column name="joining_date" type="DATE"><constraints nullable="false"/></column>
+            <column name="last_working_day" type="DATE"><constraints nullable="false"/></column>
+            <column name="total_years_of_service" type="DECIMAL(10, 4)"><constraints nullable="false"/></column>
+            <column name="last_basic_salary" type="DECIMAL(15, 2)"><constraints nullable="false"/></column>
+            <column name="gratuity_amount" type="DECIMAL(15, 2)"><constraints nullable="false"/></column>
+            <column name="calculation_details" type="VARCHAR(1000)"/>
+            <column name="termination_reason" type="VARCHAR(255)"/>
+            <column name="is_paid" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="payment_date" type="DATE"/>
+            <column name="calculated_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- expenses -->
+        <createTable tableName="expenses">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="expense_date" type="DATE"><constraints nullable="false"/></column>
+            <column name="category" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="amount" type="DECIMAL(15, 2)"><constraints nullable="false"/></column>
+            <column name="bill_number" type="VARCHAR(100)"/>
+            <column name="merchant_name" type="VARCHAR(100)"/>
+            <column name="description" type="VARCHAR(1000)"/>
+            <column name="status" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="submitted_at" type="DATETIME"/>
+            <column name="payment_method" type="VARCHAR(255)"/>
+            <column name="paid_out_date" type="DATE"/>
+            <column name="payment_details" type="VARCHAR(500)"/>
+            <column name="processed_at" type="DATETIME"/>
+            <column name="processed_by_user_id" type="BIGINT"/>
+        </createTable>
+
+        <!-- expense_files -->
+        <createTable tableName="expense_files">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="expense_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="file_path" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="original_filename" type="VARCHAR(255)"><constraints nullable="false"/></column>
+        </createTable>
+
+        <!-- employee_benefit_provisions -->
+        <createTable tableName="employee_benefit_provisions">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="benefit_type_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="accrued_amount" type="DECIMAL(15, 2)"><constraints nullable="false"/></column>
+            <column name="cycle_start_date" type="DATE"><constraints nullable="false"/></column>
+            <column name="cycle_end_date" type="DATE"><constraints nullable="false"/></column>
+            <column name="status" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="payment_method" type="VARCHAR(255)"/>
+            <column name="paid_amount" type="DECIMAL(15, 2)"/>
+            <column name="paid_out_date" type="DATE"/>
+            <column name="payment_details" type="VARCHAR(500)"/>
+        </createTable>
+
+        <!-- benefit_payout_files -->
+        <createTable tableName="benefit_payout_files">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="provision_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="file_path" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="original_filename" type="VARCHAR(255)"><constraints nullable="false"/></column>
+        </createTable>
+
+        <!-- payroll_settings -->
+        <createTable tableName="payroll_settings">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="pay_frequency" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="pay_cycle_day" type="INT"><constraints nullable="false"/></column>
+            <column name="payslip_generation_day" type="INT"><constraints nullable="false"/></column>
+            <column name="include_holidays_in_payslip" type="BOOLEAN"><constraints nullable="false"/></column>
+            <column name="include_leave_balance_in_payslip" type="BOOLEAN"><constraints nullable="false"/></column>
+        </createTable>
+
+        <!-- payroll_runs -->
+        <createTable tableName="payroll_runs">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="year" type="INT"><constraints nullable="false"/></column>
+            <column name="month" type="INT"><constraints nullable="false"/></column>
+            <column name="pay_period_start" type="DATE"/>
+            <column name="pay_period_end" type="DATE"/>
+            <column name="pay_date" type="DATE"/>
+            <column name="status" type="VARCHAR(255)"/>
+            <column name="executed_at" type="DATETIME"/>
+            <column name="executed_by_user_id" type="BIGINT"/>
+        </createTable>
+
+        <!-- payroll_payslip_templates -->
+        <createTable tableName="payroll_payslip_templates">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="template_content" type="TEXT"><constraints nullable="false"/></column>
+            <column name="is_default" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+        <addUniqueConstraint tableName="payroll_payslip_templates" columnNames="tenant_id, name" constraintName="uk_payroll_payslip_templates"/>
+
+        <!-- payslips -->
+        <createTable tableName="payslips">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="payroll_run_id" type="BIGINT"/>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="year" type="INT"><constraints nullable="false"/></column>
+            <column name="month" type="INT"><constraints nullable="false"/></column>
+            <column name="pay_date" type="DATE"><constraints nullable="false"/></column>
+            <column name="gross_earnings" type="DECIMAL(15, 2)"><constraints nullable="false"/></column>
+            <column name="total_deductions" type="DECIMAL(15, 2)"><constraints nullable="false"/></column>
+            <column name="net_salary" type="DECIMAL(15, 2)"><constraints nullable="false"/></column>
+            <column name="work_expenses" type="DECIMAL(15, 2)" defaultValueNumeric="0.00"/>
+            <column name="net_additions" type="DECIMAL(15, 2)" defaultValueNumeric="0.00"/>
+            <column name="arrears_addition" type="DECIMAL(15, 2)" defaultValueNumeric="0.00"/>
+            <column name="arrears_deduction" type="DECIMAL(15, 2)" defaultValueNumeric="0.00"/>
+            <column name="status" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="total_days_in_month" type="INT"/>
+            <column name="payable_days" type="DECIMAL(15, 2)"/>
+            <column name="loss_of_pay_days" type="DECIMAL(15, 2)"/>
+            <column name="leave_balance_summary" type="VARCHAR(1000)"/>
+        </createTable>
+        <createIndex tableName="payslips" indexName="idx_payslip_employee_period">
+            <column name="employee_id"/>
+            <column name="year"/>
+            <column name="month"/>
+        </createIndex>
+
+        <!-- payslip_components -->
+        <createTable tableName="payslip_components">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="payslip_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="salary_component_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="amount" type="DECIMAL(15, 2)"><constraints nullable="false"/></column>
+            <column name="remarks" type="VARCHAR(255)"/>
+        </createTable>
+
+    </changeSet>
+
+</databaseChangeLog>

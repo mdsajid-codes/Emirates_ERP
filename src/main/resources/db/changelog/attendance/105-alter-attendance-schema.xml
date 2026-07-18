@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="alter-time-types-phase2" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="time_types">
+            <column name="numeric_code" type="VARCHAR(20)"/>
+            <column name="is_working_time" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="is_unpaid_time" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="alter-shift-type-phase2" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="shift_type">
+            <column name="break_minutes" type="INT" defaultValueNumeric="0"/>
+            <column name="is_night_shift" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="alter-shift-policy-phase2" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="shift_policy">
+            <column name="break_minutes" type="INT" defaultValueNumeric="0"/>
+            <column name="is_night_shift" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="create-employee-shift-assignments" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="employee_shift_assignments">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="employee_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="shift_type_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assigned_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="VARCHAR(500)"/>
+        </createTable>
+        <addUniqueConstraint tableName="employee_shift_assignments"
+                             columnNames="employee_id, assigned_date"
+                             constraintName="uk_emp_shift_assignment_date"/>
+        <addForeignKeyConstraint baseTableName="employee_shift_assignments"
+                                 baseColumnNames="employee_id"
+                                 constraintName="fk_emp_shift_assignment_emp"
+                                 referencedTableName="employees"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="employee_shift_assignments"
+                                 baseColumnNames="shift_type_id"
+                                 constraintName="fk_emp_shift_assignment_shift"
+                                 referencedTableName="shift_type"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

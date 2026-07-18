@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-sick-leave-schema" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>9:a924dc97334a06e5d1b33eb648b3d7db</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="sick_leave_types"/></not>
+        </preConditions>
+        <createTable tableName="sick_leave_types">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="work_time_type_id" type="BIGINT"/>
+            <column name="earnings_type_id" type="BIGINT"/>
+            <column name="calculation_method" type="VARCHAR(32)"><constraints nullable="false"/></column>
+            <column name="daily_earning_base" type="VARCHAR(32)"><constraints nullable="false"/></column>
+            <column name="averaging_period_months" type="INT" defaultValueNumeric="1"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true"><constraints nullable="false"/></column>
+        </createTable>
+
+        <createTable tableName="sick_leave_intervals">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="sick_leave_type_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="from_day" type="INT"><constraints nullable="false"/></column>
+            <column name="to_day" type="INT"><constraints nullable="false"/></column>
+            <column name="payment_percent" type="DECIMAL(5, 2)"><constraints nullable="false"/></column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="sick_leave_intervals" baseColumnNames="sick_leave_type_id"
+                                 constraintName="fk_sick_leave_intervals_type"
+                                 referencedTableName="sick_leave_types" referencedColumnNames="id"/>
+        
+        <addForeignKeyConstraint baseTableName="sick_leave_types" baseColumnNames="work_time_type_id"
+                                 constraintName="fk_sick_leave_types_time_type"
+                                 referencedTableName="time_types" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="add-fk-sick-leave-types-earnings" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="salary_components"/>
+            <tableExists tableName="sick_leave_types"/>
+            <not><foreignKeyConstraintExists foreignKeyTableName="sick_leave_types" foreignKeyName="fk_sick_leave_types_earnings"/></not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="sick_leave_types" baseColumnNames="earnings_type_id"
+                                 constraintName="fk_sick_leave_types_earnings"
+                                 referencedTableName="salary_components" referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

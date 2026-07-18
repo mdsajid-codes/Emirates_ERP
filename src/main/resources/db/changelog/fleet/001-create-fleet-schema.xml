@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-fleet-tables" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        
+        <!-- fleet_drivers -->
+        <createTable tableName="fleet_drivers">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="employee_code" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="phone" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="address" type="VARCHAR(255)"/>
+            <column name="date_of_birth" type="DATE"/>
+            <column name="joining_date" type="DATE"/>
+            <column name="emergency_contact" type="VARCHAR(255)"/>
+            <column name="license_number" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="license_type" type="VARCHAR(50)"/>
+            <column name="license_expiry" type="DATE"/>
+            <column name="profile_image_url" type="VARCHAR(500)"/>
+            <column name="status" type="VARCHAR(50)" defaultValue="AVAILABLE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assigned_vehicle_id" type="BIGINT"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- fleet_vehicles -->
+        <createTable tableName="fleet_vehicles">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="plate_number" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vehicle_type" type="VARCHAR(100)"/>
+            <column name="make" type="VARCHAR(255)"/>
+            <column name="model" type="VARCHAR(255)"/>
+            <column name="year" type="INT"/>
+            <column name="color" type="VARCHAR(50)"/>
+            <column name="vin_number" type="VARCHAR(255)"/>
+            <column name="fuel_type" type="VARCHAR(50)"/>
+            <column name="capacity_weight" type="DOUBLE"/>
+            <column name="capacity_volume" type="DOUBLE"/>
+            <column name="odometer_reading" type="DOUBLE"/>
+            <column name="insurance_number" type="VARCHAR(255)"/>
+            <column name="insurance_expiry" type="DATE"/>
+            <column name="registration_expiry" type="DATE"/>
+            <column name="assigned_driver_id" type="BIGINT"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- Foreign Keys and Unique Constraints -->
+        <addForeignKeyConstraint baseTableName="fleet_drivers" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_driver_tenant"/>
+        <addForeignKeyConstraint baseTableName="fleet_vehicles" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_vehicle_tenant"/>
+
+        <!-- Circular references need to be added after tables exist -->
+        <addForeignKeyConstraint baseTableName="fleet_drivers" baseColumnNames="assigned_vehicle_id" referencedTableName="fleet_vehicles" referencedColumnNames="id" constraintName="fk_driver_vehicle"/>
+        <addForeignKeyConstraint baseTableName="fleet_vehicles" baseColumnNames="assigned_driver_id" referencedTableName="fleet_drivers" referencedColumnNames="id" constraintName="fk_vehicle_driver"/>
+
+        <addUniqueConstraint tableName="fleet_drivers" columnNames="tenant_id, employee_code" constraintName="uq_driver_employee_code"/>
+        <addUniqueConstraint tableName="fleet_drivers" columnNames="tenant_id, license_number" constraintName="uq_driver_license_number"/>
+        <addUniqueConstraint tableName="fleet_vehicles" columnNames="tenant_id, plate_number" constraintName="uq_vehicle_plate_number"/>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-base-schema" author="system">
+        <validCheckSum>ANY</validCheckSum>
+
+        <!-- base_categories -->
+        <createTable tableName="base_categories">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="code" type="VARCHAR(255)"/>
+        </createTable>
+
+        <!-- departments -->
+        <createTable tableName="departments">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="code" type="VARCHAR(255)"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- designations -->
+        <createTable tableName="designations">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="department_id" type="BIGINT"/>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="level" type="VARCHAR(255)"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- document_types -->
+        <createTable tableName="document_types">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="VARCHAR(255)"/>
+        </createTable>
+
+        <!-- holiday_policies -->
+        <createTable tableName="holiday_policies">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="VARCHAR(100)"><constraints nullable="false" unique="true"/></column>
+            <column name="year" type="INT"><constraints nullable="false"/></column>
+        </createTable>
+
+        <!-- holidays -->
+        <createTable tableName="holidays">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="VARCHAR(100)"><constraints nullable="false"/></column>
+            <column name="date" type="DATE"><constraints nullable="false"/></column>
+            <column name="is_optional" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="is_paid" type="BOOLEAN" defaultValueBoolean="true"><constraints nullable="false"/></column>
+            <column name="policy_id" type="BIGINT"><constraints nullable="false"/></column>
+        </createTable>
+
+        <!-- job_bands -->
+        <createTable tableName="job_bands">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="designation_id" type="BIGINT"><constraints unique="true"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="level" type="INT"/>
+            <column name="min_salary" type="BIGINT"/>
+            <column name="max_salary" type="BIGINT"/>
+            <column name="notes" type="VARCHAR(255)"/>
+        </createTable>
+
+        <!-- leave_group -->
+        <createTable tableName="leave_group">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="code" type="VARCHAR(50)"><constraints nullable="false" unique="true"/></column>
+            <column name="name" type="VARCHAR(150)"><constraints nullable="false"/></column>
+        </createTable>
+
+        <!-- nationalities -->
+        <createTable tableName="nationalities">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="iso_code" type="VARCHAR(255)"/>
+        </createTable>
+
+        <!-- shift_type -->
+        <createTable tableName="shift_type">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="code" type="VARCHAR(50)"><constraints nullable="false" unique="true"/></column>
+            <column name="name" type="VARCHAR(150)"><constraints nullable="false"/></column>
+            <column name="start_time" type="TIME"/>
+            <column name="end_time" type="TIME"/>
+        </createTable>
+
+        <!-- time_types -->
+        <createTable tableName="time_types">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="code" type="VARCHAR(50)"><constraints nullable="false" unique="true"/></column>
+            <column name="name" type="VARCHAR(150)"><constraints nullable="false"/></column>
+        </createTable>
+
+        <!-- weekly_off_policy -->
+        <createTable tableName="weekly_off_policy">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="code" type="VARCHAR(50)"><constraints nullable="false" unique="true"/></column>
+            <column name="name" type="VARCHAR(150)"><constraints nullable="false"/></column>
+            <column name="rotate" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+        </createTable>
+
+        <!-- weekly_off_policy_off_days -->
+        <createTable tableName="weekly_off_policy_off_days">
+            <column name="weekly_off_policy_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="weekday" type="VARCHAR(255)"/>
+        </createTable>
+
+        <!-- work_type -->
+        <createTable tableName="work_type">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="code" type="VARCHAR(50)"><constraints nullable="false" unique="true"/></column>
+            <column name="name" type="VARCHAR(150)"><constraints nullable="false"/></column>
+        </createTable>
+
+    </changeSet>
+
+</databaseChangeLog>

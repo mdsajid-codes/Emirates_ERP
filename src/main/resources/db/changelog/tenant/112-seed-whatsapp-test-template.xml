@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="112-seed-whatsapp-test-template" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <insert tableName="notif_whatsapp_templates">
+            <column name="tenant_id" valueNumeric="1"/>
+            <column name="template_id" value="test_hello"/>
+            <column name="name" value="Test Hello Template"/>
+            <column name="whatsapp_template_id" value="hello_world"/>
+            <column name="body" value="Hello World! This is a test message from Meta Cloud API."/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="created_at" valueDate="now()"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

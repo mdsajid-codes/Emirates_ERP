@@ -1,0 +1,1 @@
+import{a as e}from"./vendor-axios-B9ygI19o.js";const s="/api/accounts/sub-ledger/fixed-assets",a={getFixedAssetRegister:()=>e.get(s),getAssetMovement:(t,i)=>e.get(`${s}/${t}`,{params:i})};export{a as f};

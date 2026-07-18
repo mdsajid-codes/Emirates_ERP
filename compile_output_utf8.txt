@@ -1,0 +1,103 @@
+﻿[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------------< com.example:multi_tanent >----------------------
+[INFO] Building multi_tanent 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.4.1:clean (default-clean) @ multi_tanent ---
+[INFO] Deleting C:\PROJECTS\sajid\2-1-26\backend\GTRService_Backend\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ multi_tanent ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 54 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ multi_tanent ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 1554 source files with javac [debug parameters release 21] to target\classes
+[INFO] -------------------------------------------------------------
+[WARNING] COMPILATION WARNING : 
+[INFO] -------------------------------------------------------------
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/production/entity/ToolParameter.java:[38,38] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseInvoice.java:[82,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseInvoice.java:[95,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseInvoice.java:[98,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseInvoice.java:[101,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseInvoice.java:[104,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseInvoice.java:[107,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseInvoice.java:[110,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseInvoice.java:[114,48] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseInvoice.java:[117,48] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseInvoice.java:[122,42] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/production/entity/ProWorkGroup.java:[43,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/production/entity/ProWorkGroup.java:[46,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/production/entity/ProWorkGroup.java:[54,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/crm/entity/CrmNotificationTemplate.java:[59,19] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/crm/entity/CrmNotificationTemplate.java:[69,49] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/crm/entity/CrmEvent.java:[75,27] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/crm/entity/CrmEvent.java:[84,26] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/production/entity/ProTools.java:[56,34] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/production/entity/ProTools.java:[59,33] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/production/entity/ProInventoryType.java:[38,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/sales/entity/CreditNotes.java:[86,26] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/pos/entity/Inventory.java:[29,18] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/production/entity/ProManageTask.java:[71,27] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/production/entity/ProWorkStation.java:[50,28] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurDebitNote.java:[89,26] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurDebitNote.java:[92,36] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/crm/dto/CrmTodoFilterRequest.java:[28,22] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/crm/dto/CrmTodoFilterRequest.java:[38,20] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/crm/dto/CrmTodoFilterRequest.java:[39,23] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurGrnItem.java:[94,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseOrderItem.java:[101,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseOrderItem.java:[109,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseOrderItem.java:[115,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/crm/dto/CrmKpiResponse.java:[19,38] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/crm/dto/CrmKpiResponse.java:[20,41] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseOrder.java:[129,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseOrder.java:[132,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseOrder.java:[135,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseOrder.java:[138,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseOrder.java:[141,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseOrder.java:[146,40] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/entity/PurPurchaseOrder.java:[150,46] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/crm/entity/CrmNotificationModuleSetting.java:[30,19] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[INFO] 44 warnings 
+[INFO] -------------------------------------------------------------
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/controller/PurRequestForQuotationController.java:[3,46] cannot find symbol
+  symbol:   class PurRequestForQuotationRequest
+  location: package com.example.multi_tanent.purchases.dto
+[ERROR] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/controller/PurRequestForQuotationController.java:[24,26] cannot find symbol
+  symbol:   class PurRequestForQuotationRequest
+  location: class com.example.multi_tanent.purchases.controller.PurRequestForQuotationController
+[ERROR] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/service/PurRequestForQuotationService.java:[27,50] cannot find symbol
+  symbol:   class PurRequestForQuotationRequest
+  location: class com.example.multi_tanent.purchases.service.PurRequestForQuotationService
+[INFO] 3 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  45.770 s
+[INFO] Finished at: 2026-03-15T23:30:51+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.0:compile (default-compile) on project multi_tanent: Compilation failure: Compilation failure: 
+[ERROR] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/controller/PurRequestForQuotationController.java:[3,46] cannot find symbol
+[ERROR]   symbol:   class PurRequestForQuotationRequest
+[ERROR]   location: package com.example.multi_tanent.purchases.dto
+[ERROR] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/controller/PurRequestForQuotationController.java:[24,26] cannot find symbol
+[ERROR]   symbol:   class PurRequestForQuotationRequest
+[ERROR]   location: class com.example.multi_tanent.purchases.controller.PurRequestForQuotationController
+[ERROR] /C:/PROJECTS/sajid/2-1-26/backend/GTRService_Backend/src/main/java/com/example/multi_tanent/purchases/service/PurRequestForQuotationService.java:[27,50] cannot find symbol
+[ERROR]   symbol:   class PurRequestForQuotationRequest
+[ERROR]   location: class com.example.multi_tanent.purchases.service.PurRequestForQuotationService
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

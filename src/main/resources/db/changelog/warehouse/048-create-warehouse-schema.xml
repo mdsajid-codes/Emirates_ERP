@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-warehouse-tables" author="system">
+        <validCheckSum>ANY</validCheckSum>
+
+        <!-- wms_warehouse -->
+        <createTable tableName="wms_warehouse">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="code" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="address" type="VARCHAR(255)"/>
+            <column name="contact_person" type="VARCHAR(255)"/>
+            <column name="contact_phone" type="VARCHAR(255)"/>
+            <column name="contact_email" type="VARCHAR(255)"/>
+            <column name="qc_required" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="bin_tracking_enabled" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="warehouse_type" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="default_pick_strategy" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="allow_negative_stock" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="open_time" type="TIME"/>
+            <column name="close_time" type="TIME"/>
+            <column name="latitude" type="DOUBLE"/>
+            <column name="longitude" type="DOUBLE"/>
+            <column name="total_capacity_weight" type="DOUBLE"/>
+            <column name="total_capacity_volume" type="DOUBLE"/>
+            <column name="location_id" type="BIGINT"/>
+            <column name="tenant_id" type="BIGINT"/>
+        </createTable>
+
+        <!-- wms_floor -->
+        <createTable tableName="wms_floor">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="code" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="level_no" type="INT"><constraints nullable="false"/></column>
+            <column name="length" type="DOUBLE"/>
+            <column name="width" type="DOUBLE"/>
+            <column name="height" type="DOUBLE"/>
+            <column name="access_type" type="VARCHAR(255)"/>
+            <column name="temperature_controlled" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="min_temp" type="DOUBLE"/>
+            <column name="max_temp" type="DOUBLE"/>
+            <column name="hazardous_allowed" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="restricted_access" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="is_default_floor" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="warehouse_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+        <addUniqueConstraint tableName="wms_floor" columnNames="warehouse_id, code" constraintName="uk_wms_floor_code"/>
+
+        <!-- wms_zone -->
+        <createTable tableName="wms_zone">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="warehouse_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="floor_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="zone_type" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="pick_priority" type="INT" defaultValueNumeric="50"/>
+            <column name="put_away_priority" type="INT" defaultValueNumeric="50"/>
+            <column name="fast_moving_zone" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="temperature_controlled" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="min_temp" type="DOUBLE"/>
+            <column name="max_temp" type="DOUBLE"/>
+            <column name="hazardous_allowed" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="hazard_class" type="VARCHAR(255)"/>
+            <column name="restricted_access" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="max_weight" type="DOUBLE"/>
+            <column name="max_volume" type="DOUBLE"/>
+            <column name="description" type="VARCHAR(255)"/>
+        </createTable>
+        <addUniqueConstraint tableName="wms_zone" columnNames="warehouse_id, name" constraintName="uk_wms_zone_name"/>
+
+        <!-- wms_rack -->
+        <createTable tableName="wms_rack">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="zone_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="rack_code" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="barcode_tag" type="VARCHAR(255)"/>
+            <column name="barcode_image_url" type="VARCHAR(255)"/>
+            <column name="rack_type" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="aisle" type="VARCHAR(255)"/>
+            <column name="pick_sequence" type="INT"/>
+            <column name="max_weight" type="DOUBLE"/>
+            <column name="max_volume" type="DOUBLE"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="description" type="VARCHAR(255)"/>
+        </createTable>
+        <addUniqueConstraint tableName="wms_rack" columnNames="zone_id, rack_code" constraintName="uk_wms_rack_code"/>
+
+        <!-- wms_shelf -->
+        <createTable tableName="wms_shelf">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="rack_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="shelf_code" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="barcode_tag" type="VARCHAR(255)"/>
+            <column name="barcode_image_url" type="VARCHAR(255)"/>
+            <column name="level_no" type="INT"><constraints nullable="false"/></column>
+            <column name="pick_sequence" type="INT"/>
+            <column name="max_weight" type="DOUBLE"/>
+            <column name="max_volume" type="DOUBLE"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="description" type="VARCHAR(255)"/>
+        </createTable>
+        <addUniqueConstraint tableName="wms_shelf" columnNames="rack_id, shelf_code" constraintName="uk_wms_shelf_code"/>
+
+        <!-- wms_bin -->
+        <createTable tableName="wms_bin">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="shelf_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="warehouse_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="bin_code" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="barcode_tag" type="VARCHAR(255)"/>
+            <column name="barcode_image_url" type="VARCHAR(255)"/>
+            <column name="bin_type" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="capacity_qty" type="INT"/>
+            <column name="capacity_weight" type="DOUBLE"/>
+            <column name="capacity_volume" type="DOUBLE"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="is_blocked" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="block_reason" type="VARCHAR(255)"/>
+            <column name="pick_sequence" type="INT"/>
+            <column name="hazardous_allowed" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="min_temp" type="DOUBLE"/>
+            <column name="max_temp" type="DOUBLE"/>
+            <column name="description" type="VARCHAR(255)"/>
+        </createTable>
+        <addUniqueConstraint tableName="wms_bin" columnNames="warehouse_id, bin_code" constraintName="uk_wms_bin_code"/>
+
+        <!-- ware_categories -->
+        <createTable tableName="ware_categories">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="tenant_id" type="BIGINT"/>
+        </createTable>
+
+        <!-- ware_sub_categories -->
+        <createTable tableName="ware_sub_categories">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="category_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="tenant_id" type="BIGINT"/>
+        </createTable>
+
+        <!-- ware_uom -->
+        <createTable tableName="ware_uom">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="short_name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="tenant_id" type="BIGINT"/>
+        </createTable>
+
+        <!-- ware_taxes -->
+        <createTable tableName="ware_taxes">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="percentage" type="DECIMAL(15, 2)"><constraints nullable="false"/></column>
+            <column name="tenant_id" type="BIGINT"/>
+        </createTable>
+
+        <!-- ware_products -->
+        <createTable tableName="ware_products">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="sku" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="barcode" type="VARCHAR(255)"/>
+            <column name="barcode_image_url" type="VARCHAR(255)"/>
+            <column name="image_url" type="VARCHAR(255)"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="category_id" type="BIGINT"/>
+            <column name="subcategory_id" type="BIGINT"/>
+            <column name="brand" type="VARCHAR(255)"/>
+            <column name="model" type="VARCHAR(255)"/>
+            <column name="purchase_price" type="DECIMAL(19, 2)"/>
+            <column name="sale_price" type="DECIMAL(19, 2)"/>
+            <column name="tax_inclusive" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="batch_tracking" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="serial_tracking" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="expiry_tracking" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="uom_id" type="BIGINT"/>
+            <column name="tax_id" type="BIGINT"/>
+            <column name="tenant_id" type="BIGINT"/>
+            <column name="location_id" type="BIGINT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- ware_product_batches -->
+        <createTable tableName="ware_product_batches">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="batch_number" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="mfg_date" type="DATE"/>
+            <column name="expiry_date" type="DATE"/>
+            <column name="product_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- ware_product_serials -->
+        <createTable tableName="ware_product_serials">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="serial_number" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="batch_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- wms_inventory_improvement -->
+        <createTable tableName="wms_inventory_improvement">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="movement_no" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="type" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="status" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="previous_status" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="new_status" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <!-- Product Relations -->
+            <column name="product_id" type="BIGINT"/>
+            <column name="raw_material_id" type="BIGINT"/>
+            <column name="semifinished_id" type="BIGINT"/>
+            <column name="finished_good_id" type="BIGINT"/>
+            <column name="batch_id" type="BIGINT"/>
+            <column name="serial_id" type="BIGINT"/>
+            <!-- Traceability & Warehouse -->
+            <column name="warehouse_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="source_warehouse_id" type="BIGINT"/>
+            <column name="destination_warehouse_id" type="BIGINT"/>
+            <column name="bin_id" type="BIGINT"/>
+            <column name="source_bin_id" type="BIGINT"/>
+            <column name="destination_bin_id" type="BIGINT"/>
+            <!-- Quantity & UoM -->
+            <column name="uom_id" type="BIGINT"/>
+            <column name="quantity" type="DOUBLE"><constraints nullable="false"/></column>
+            <column name="qty_before" type="DOUBLE"/>
+            <column name="qty_after" type="DOUBLE"/>
+            <!-- Value & Costing -->
+            <column name="unit_cost" type="DOUBLE"/>
+            <column name="total_cost" type="DOUBLE"/>
+            <!-- Reference -->
+            <column name="reference_type" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="reference_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="remarks" type="VARCHAR(255)"/>
+            <!-- Audit -->
+            <column name="created_by" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="approved_by" type="BIGINT"/>
+            <column name="movement_at" type="DATETIME"><constraints nullable="false"/></column>
+            <column name="created_at" type="DATETIME"><constraints nullable="false"/></column>
+            <column name="approved_at" type="DATETIME"/>
+            <column name="device_id" type="VARCHAR(255)"/>
+            <column name="client_time" type="DATETIME"/>
+            <column name="sync_status" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="tenant_id" type="BIGINT"/>
+            <column name="location_id" type="BIGINT"/>
+        </createTable>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="107-create-biometric-agents" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="biometric_agents">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="agent_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_seen" type="DATETIME"/>
+            <column name="version" type="VARCHAR(50)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="OFFLINE"/>
+            <column name="ip_address" type="VARCHAR(50)"/>
+            <column name="created_at" type="DATETIME" defaultValueComputed="now()"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="driver-add-compliance-fields" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="fleet_drivers">
+            <column name="emirates_id" type="VARCHAR(30)"/>
+            <column name="emirates_id_expiry" type="DATE"/>
+            <column name="nationality" type="VARCHAR(50)"/>
+            <column name="visa_expiry" type="DATE"/>
+        </addColumn>
+        <addUniqueConstraint tableName="fleet_drivers" columnNames="tenant_id, emirates_id" constraintName="uq_driver_emirates_id"/>
+    </changeSet>
+
+</databaseChangeLog>

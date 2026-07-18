@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-proof-of-delivery" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="proof_of_delivery">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="delivery_order_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="signature_url" type="VARCHAR(500)"/>
+            <column name="photo_url" type="VARCHAR(500)"/>
+            <column name="received_by_name" type="VARCHAR(255)"/>
+            <column name="received_by_phone" type="VARCHAR(50)"/>
+            <column name="gps_latitude" type="DOUBLE"/>
+            <column name="gps_longitude" type="DOUBLE"/>
+            <column name="delivered_at" type="DATETIME"/>
+            <column name="remarks" type="TEXT"/>
+            <column name="rejection_reason" type="TEXT"/>
+            <column name="created_at" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="proof_of_delivery" baseColumnNames="delivery_order_id" constraintName="fk_pod_delivery_order" referencedTableName="delivery_orders" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="proof_of_delivery" baseColumnNames="tenant_id" constraintName="fk_pod_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+        
+        <addUniqueConstraint tableName="proof_of_delivery" columnNames="delivery_order_id" constraintName="uq_pod_delivery_order"/>
+    </changeSet>
+
+</databaseChangeLog>

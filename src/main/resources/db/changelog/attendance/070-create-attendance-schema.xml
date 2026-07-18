@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-attendance-schema" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>ANY</validCheckSum>
+
+        <!-- shift_policy -->
+        <createTable tableName="shift_policy">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="policy_name" type="VARCHAR(100)"><constraints nullable="false" unique="true"/></column>
+            <column name="shift_start_time" type="TIME"><constraints nullable="false"/></column>
+            <column name="shift_end_time" type="TIME"><constraints nullable="false"/></column>
+            <column name="is_default" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="description" type="VARCHAR(500)"/>
+        </createTable>
+
+        <!-- attendance_capturing_policies -->
+        <createTable tableName="attendance_capturing_policies">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="policy_name" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="grace_time_minutes" type="INT"/>
+            <column name="half_day_threshold_minutes" type="INT"/>
+            <column name="allow_multiple_punches" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="late_mark_rules" type="VARCHAR(255)"/>
+        </createTable>
+
+        <!-- attendance_policies -->
+        <createTable tableName="attendance_policies">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="policy_name" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="is_default" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="effective_from" type="DATE"/>
+            <column name="shift_policy_id" type="BIGINT"/>
+            <column name="capturing_policy_id" type="BIGINT"/>
+        </createTable>
+
+        <!-- leave_deduction_configs -->
+        <createTable tableName="leave_deduction_configs">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="policy_id" type="BIGINT"><constraints unique="true"/></column>
+            <column name="deduct_missing_attendance" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="penalize_late_arrival" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="deduct_for_work_hours_shortage" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="deduct_for_missing_swipes" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="penalize_early_going" type="BOOLEAN" defaultValueBoolean="false"/>
+        </createTable>
+
+        <!-- attendance_record -->
+        <createTable tableName="attendance_record">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="attendance_date" type="DATE"><constraints nullable="false"/></column>
+            <column name="check_in" type="TIME"/>
+            <column name="check_out" type="TIME"/>
+            <column name="status" type="VARCHAR(20)"/>
+            <column name="attendance_policy_id" type="BIGINT"/>
+            <column name="is_late" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="overtime_minutes" type="INT" defaultValueNumeric="0"/>
+            <column name="remarks" type="VARCHAR(500)"/>
+            <column name="payable_days" type="DECIMAL(3, 2)" defaultValueNumeric="1.00"/>
+        </createTable>
+        <addUniqueConstraint tableName="attendance_record" columnNames="employee_id, attendance_date" constraintName="uk_attendance_record_employee_date"/>
+
+        <!-- attendance_settings -->
+        <createTable tableName="attendance_settings">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="method" type="VARCHAR(255)"/>
+            <column name="default_grace_minutes" type="INT"/>
+            <column name="auto_mark_absent_after" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="absent_after_minutes" type="INT"/>
+        </createTable>
+
+        <!-- biometric_devices -->
+        <createTable tableName="biometric_devices">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="device_identifier" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="device_type" type="VARCHAR(255)"/>
+            <column name="ip_address" type="VARCHAR(255)"/>
+            <column name="port" type="INT"/>
+            <column name="site_lattitude" type="VARCHAR(255)"/>
+            <column name="site_longitude" type="VARCHAR(255)"/>
+            <column name="location" type="VARCHAR(255)"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="false"/>
+        </createTable>
+
+        <!-- employee_biometric_mappings -->
+        <createTable tableName="employee_biometric_mappings">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="device_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="biometric_identifier" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="identifier_type" type="VARCHAR(255)"><constraints nullable="false"/></column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="external_reference" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- missing_attendance_requests -->
+        <createTable tableName="missing_attendance_requests">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="employee_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="attendance_date" type="DATE"><constraints nullable="false"/></column>
+            <column name="requested_check_in" type="TIME"/>
+            <column name="requested_check_out" type="TIME"/>
+            <column name="reason" type="VARCHAR(500)"><constraints nullable="false"/></column>
+            <column name="status" type="VARCHAR(20)"><constraints nullable="false"/></column>
+            <column name="request_date" type="DATETIME"/>
+            <column name="approver_id" type="BIGINT"/>
+            <column name="approval_date" type="DATETIME"/>
+            <column name="approver_remarks" type="VARCHAR(500)"/>
+            <column name="attachment_path" type="VARCHAR(255)"/>
+        </createTable>
+
+    </changeSet>
+
+    <changeSet id="rename-capturing-policy-column" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="attendance_policies" columnName="capturing_policy"/>
+        </preConditions>
+        <renameColumn tableName="attendance_policies"
+                      oldColumnName="capturing_policy"
+                      newColumnName="capturing_policy_id"
+                      columnDataType="BIGINT"/>
+    </changeSet>
+
+</databaseChangeLog>

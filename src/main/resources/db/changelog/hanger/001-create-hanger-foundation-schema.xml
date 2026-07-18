@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Phase 1 — Hanger Manufacturing ERP Foundation Schema
+        Tables: hng_hanger_types, hng_coil_stock
+        These tables exist in all tenant schemas but are only accessible
+        when the tenant has HANGER_MANUFACTURING in their service_modules.
+    -->
+
+    <changeSet id="create-hng-hanger-types" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="hng_hanger_types">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_ht_tenant" references="tenants(id)"/>
+            </column>
+            <!-- ADULT / CHILD / HEAVY_DUTY -->
+            <column name="type_name" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Weight of one hanger in grams — drives wire requirement calc -->
+            <column name="unit_weight_grams" type="DECIMAL(10,4)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Standard production dimensions -->
+            <column name="standard_width_cm" type="DECIMAL(8,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="standard_hook_cm" type="DECIMAL(8,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tolerance_mm" type="DECIMAL(6,2)" defaultValueNumeric="1.00"/>
+            <!-- QC limits -->
+            <column name="max_defect_pct" type="DECIMAL(5,2)" defaultValueNumeric="2.00"/>
+            <column name="min_qc_sample_size" type="INT" defaultValueNumeric="300"/>
+            <!-- Packing defaults -->
+            <column name="default_bundle_size" type="INT" defaultValueNumeric="100"/>
+            <!-- Load test requirement -->
+            <column name="min_load_test_kg" type="DECIMAL(8,2)" defaultValueNumeric="3.00"/>
+            <!-- Wire this type typically uses -->
+            <column name="standard_wire_gauge_mm" type="DECIMAL(6,2)"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="description" type="TEXT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+        <addUniqueConstraint
+            tableName="hng_hanger_types"
+            columnNames="tenant_id, type_name"
+            constraintName="uk_hng_hanger_type_tenant"/>
+    </changeSet>
+
+    <changeSet id="create-hng-coil-stock" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="hng_coil_stock">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_cs_tenant" references="tenants(id)"/>
+            </column>
+            <!-- Unique coil identifier, e.g. COIL-2024-001 -->
+            <column name="coil_no" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_hng_coil_no"/>
+            </column>
+            <!-- Back-reference to GRN item this coil was created from -->
+            <column name="grn_item_id" type="BIGINT"/>
+            <!-- Supplier traceability fields -->
+            <column name="lot_no" type="VARCHAR(100)"/>
+            <column name="heat_no" type="VARCHAR(100)"/>
+            <column name="supplier_name" type="VARCHAR(255)"/>
+            <!-- Wire specification -->
+            <column name="material_type" type="VARCHAR(20)"/>
+            <column name="wire_gauge_mm" type="DECIMAL(6,2)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Weight tracking — core coil balance -->
+            <column name="total_weight_kg" type="DECIMAL(12,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="remaining_weight_kg" type="DECIMAL(12,4)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Costing -->
+            <column name="rate_per_kg" type="DECIMAL(12,4)"/>
+            <!-- Location and QC -->
+            <column name="warehouse_location" type="VARCHAR(200)"/>
+            <column name="inspection_status" type="VARCHAR(20)" defaultValue="PENDING"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="AVAILABLE"/>
+            <!-- Barcode and attachments -->
+            <column name="barcode_qr" type="VARCHAR(500)"/>
+            <column name="mill_certificate_url" type="VARCHAR(500)"/>
+            <!-- Dates -->
+            <column name="received_date" type="DATE"/>
+            <column name="qc_remarks" type="TEXT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- Index for fast coil lookup by gauge (used in Material Issue suggestions) -->
+        <createIndex tableName="hng_coil_stock" indexName="idx_hng_coil_gauge_status">
+            <column name="tenant_id"/>
+            <column name="wire_gauge_mm"/>
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

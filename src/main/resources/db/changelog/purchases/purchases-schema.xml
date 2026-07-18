@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-purchases-schema-1" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>9:04c99d502f86f807695a454726673342</validCheckSum>
+        
+        <!-- pur_purchase_order -->
+        <createTable tableName="pur_purchase_order">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="order_category" type="VARCHAR(50)"><constraints nullable="false"/></column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="project_number" type="VARCHAR(100)"/>
+            <column name="supplier_id" type="BIGINT"/>
+            <column name="po_number" type="VARCHAR(100)"><constraints unique="true"/></column>
+            <column name="reference" type="VARCHAR(255)"/>
+            <column name="po_date" type="DATE"><constraints nullable="false"/></column>
+            <column name="discount_mode" type="VARCHAR(50)"/>
+            <column name="currency" type="VARCHAR(10)"/>
+            <column name="remark" type="VARCHAR(2000)"/>
+            <column name="deliver_to_type" type="VARCHAR(50)"/>
+            <column name="deliver_to_id" type="BIGINT"/>
+            <column name="deliver_to_address" type="VARCHAR(2000)"/>
+            <column name="template" type="VARCHAR(50)"/>
+            <column name="email_to" type="VARCHAR(255)"/>
+            <column name="terms_and_conditions" type="TEXT"/>
+            <column name="notes" type="VARCHAR(2000)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="tenant_id" type="BIGINT"/>
+            <column name="created_by" type="VARCHAR(100)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="sub_total" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="total_discount" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="total_tax" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="other_charges" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="total_amount" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+        </createTable>
+
+        <!-- pur_purchase_order_item -->
+        <createTable tableName="pur_purchase_order_item">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="line_number" type="INT"><constraints nullable="false"/></column>
+            <column name="purchase_order_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="category_id" type="BIGINT"/>
+            <column name="sub_category_id" type="BIGINT"/>
+            <column name="item_id" type="BIGINT"/>
+            <column name="description" type="VARCHAR(2000)"/>
+            <column name="quantity" type="DECIMAL(19, 6)"><constraints nullable="false"/></column>
+            <column name="unit_id" type="BIGINT"/>
+            <column name="rate" type="DECIMAL(19, 4)"/>
+            <column name="amount" type="DECIMAL(19, 4)"/>
+            <column name="tax_id" type="BIGINT"/>
+            <column name="tax_exempt" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="tax_percent" type="DECIMAL(7, 4)"/>
+            <column name="line_discount" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="discount_percent" type="DECIMAL(7, 4)"/>
+            <column name="received_quantity" type="DECIMAL(19, 6)" defaultValueNumeric="0"/>
+        </createTable>
+        <addUniqueConstraint tableName="pur_purchase_order_item" columnNames="purchase_order_id, line_number" constraintName="uk_pur_poi_po_line"/>
+
+        <!-- pur_purchase_order_attachment -->
+        <createTable tableName="pur_purchase_order_attachment">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="purchase_order_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="file_name" type="VARCHAR(255)"/>
+            <column name="file_path" type="VARCHAR(1024)"/>
+            <column name="uploaded_by" type="VARCHAR(100)"/>
+            <column name="uploaded_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- pur_grn -->
+        <createTable tableName="pur_grn">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="grn_number" type="VARCHAR(100)"/>
+            <column name="grn_date" type="DATE"/>
+            <column name="purchase_order_id" type="BIGINT"/>
+            <column name="remark" type="VARCHAR(2000)"/>
+            <column name="created_by" type="VARCHAR(100)"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- pur_grn_item -->
+        <createTable tableName="pur_grn_item">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="grn_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="purchase_order_item_id" type="BIGINT"/>
+            <column name="received_quantity" type="DECIMAL(19, 6)" defaultValueNumeric="0"/>
+            <column name="rate" type="DECIMAL(19, 4)"/>
+            <column name="unit_id" type="BIGINT"/>
+        </createTable>
+
+        <!-- purchase_invoice -->
+        <createTable tableName="purchase_invoice">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="bill_ledger" type="VARCHAR(100)"/>
+            <column name="supplier_id" type="BIGINT"/>
+            <column name="bill_number" type="VARCHAR(100)"/>
+            <column name="order_number" type="VARCHAR(100)"/>
+            <column name="bill_date" type="DATE"><constraints nullable="false"/></column>
+            <column name="due_date" type="DATE"/>
+            <column name="bill_type" type="VARCHAR(50)"/>
+            <column name="gross_net_enabled" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="tenant_id" type="BIGINT"/>
+            <column name="notes" type="VARCHAR(2000)"/>
+            <column name="sub_total" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="total_discount" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="gross_total" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="total_tax" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="other_charges" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="net_total" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="created_by" type="VARCHAR(100)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="template" type="VARCHAR(100)"/>
+        </createTable>
+
+        <!-- purchase_invoice_item -->
+        <createTable tableName="purchase_invoice_item">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="purchase_invoice_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="line_number" type="INT"><constraints nullable="false"/></column>
+            <column name="category_id" type="BIGINT"/>
+            <column name="sub_category_id" type="BIGINT"/>
+            <column name="item_id" type="BIGINT"/>
+            <column name="description" type="VARCHAR(2000)"/>
+            <column name="quantity_gross" type="DECIMAL(19, 6)"/>
+            <column name="quantity_net" type="DECIMAL(19, 6)"/>
+            <column name="unit_id" type="BIGINT"/>
+            <column name="rate" type="DECIMAL(19, 6)"/>
+            <column name="amount" type="DECIMAL(19, 4)"/>
+            <column name="tax_id" type="BIGINT"/>
+            <column name="tax_percent" type="DECIMAL(7, 4)"/>
+            <column name="line_discount" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="discount_percent" type="DECIMAL(7, 4)"/>
+        </createTable>
+        <addUniqueConstraint tableName="purchase_invoice_item" columnNames="purchase_invoice_id, line_number" constraintName="uk_pur_inv_idx"/>
+
+        <!-- purchase_invoice_attachment -->
+        <createTable tableName="purchase_invoice_attachment">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="purchase_invoice_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="file_name" type="VARCHAR(255)"/>
+            <column name="file_path" type="VARCHAR(1024)"/>
+            <column name="uploaded_by" type="VARCHAR(100)"/>
+            <column name="uploaded_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- pur_debit_notes -->
+        <createTable tableName="pur_debit_notes">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="supplier_id" type="BIGINT"/>
+            <column name="debit_note_number" type="VARCHAR(255)"/>
+            <column name="bill_number" type="VARCHAR(255)"/>
+            <column name="debit_note_date" type="DATE"/>
+            <column name="debit_note_due_date" type="DATE"/>
+            <column name="amount" type="DECIMAL(19, 2)"/>
+            <column name="tax_percentage" type="DECIMAL(19, 4)"/>
+            <column name="terms_and_conditions" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="template" type="VARCHAR(255)"/>
+            <column name="email_to" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="balance_due" type="DECIMAL(19, 4)"/>
+            <column name="other_references" type="VARCHAR(255)"/>
+            <column name="bill_of_lading" type="VARCHAR(255)"/>
+            <column name="motor_vehicle_no" type="VARCHAR(255)"/>
+            <column name="bill_ledger" type="VARCHAR(255)"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- pur_debit_note_attachments -->
+        <createTable tableName="pur_debit_note_attachments">
+            <column name="debit_note_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="attachment_url" type="VARCHAR(255)"/>
+        </createTable>
+
+        <!-- pur_debit_note_items -->
+        <createTable tableName="pur_debit_note_items">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="debit_note_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="item_id" type="BIGINT"/>
+            <column name="location_id" type="BIGINT"/>
+            <column name="quantity" type="DOUBLE"/>
+            <column name="rate" type="DECIMAL(19, 4)"/>
+            <column name="discount" type="DECIMAL(19, 4)"/>
+            <column name="amount" type="DECIMAL(19, 4)"/>
+            <column name="tax_id" type="BIGINT"/>
+            <column name="tax_value" type="DECIMAL(19, 4)"/>
+            <column name="tax_amount" type="DECIMAL(19, 4)"/>
+        </createTable>
+
+        <!-- purchase_payment -->
+        <createTable tableName="purchase_payment">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="supplier_id" type="BIGINT"/>
+            <column name="amount" type="DECIMAL(19, 4)" defaultValueNumeric="0"><constraints nullable="false"/></column>
+            <column name="pay_full_amount" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="tax_deducted" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="tds_amount" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="tds_section" type="VARCHAR(50)"/>
+            <column name="payment_date" type="DATE"><constraints nullable="false"/></column>
+            <column name="payment_mode" type="VARCHAR(100)"/>
+            <column name="paid_through" type="VARCHAR(200)"/>
+            <column name="reference" type="VARCHAR(200)"/>
+            <column name="cheque_number" type="VARCHAR(100)"/>
+            <column name="tenant_id" type="BIGINT"/>
+            <column name="amount_paid" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="amount_used_for_payments" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="amount_refunded" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="amount_in_excess" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="notes" type="VARCHAR(2000)"/>
+            <column name="created_by" type="VARCHAR(100)"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- purchase_payment_allocation -->
+        <createTable tableName="purchase_payment_allocation">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="purchase_payment_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="invoice_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="allocated_amount" type="DECIMAL(19, 4)" defaultValueNumeric="0"><constraints nullable="false"/></column>
+            <column name="allocation_note" type="VARCHAR(500)"/>
+        </createTable>
+        <addUniqueConstraint tableName="purchase_payment_allocation" columnNames="purchase_payment_id, invoice_id" constraintName="uk_pur_pay_alloc_inv"/>
+
+        <!-- purchase_payment_attachment -->
+        <createTable tableName="purchase_payment_attachment">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="purchase_payment_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="file_name" type="VARCHAR(255)"/>
+            <column name="file_path" type="VARCHAR(1024)"/>
+            <column name="uploaded_by" type="VARCHAR(100)"/>
+            <column name="uploaded_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- pur_requisition -->
+        <createTable tableName="pur_requisition">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="requisition_number" type="VARCHAR(100)"><constraints unique="true"/></column>
+            <column name="requisition_date" type="DATE"/>
+            <column name="requested_by" type="VARCHAR(255)"/>
+            <column name="recipient" type="VARCHAR(255)"/>
+            <column name="required_date" type="DATE"/>
+            <column name="entity" type="VARCHAR(100)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="basis" type="VARCHAR(50)"/>
+            <column name="comment" type="VARCHAR(2000)"/>
+            <column name="tenant_id" type="BIGINT"/>
+            <column name="created_by" type="VARCHAR(100)"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- pur_requisition_item -->
+        <createTable tableName="pur_requisition_item">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="requisition_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="line_number" type="INT"/>
+            <column name="item_id" type="BIGINT"/>
+            <column name="description" type="VARCHAR(2000)"/>
+            <column name="quantity" type="DECIMAL(19, 6)"/>
+            <column name="unit_id" type="BIGINT"/>
+            <column name="rate" type="DECIMAL(19, 4)"/>
+            <column name="amount" type="DECIMAL(19, 4)"/>
+        </createTable>
+
+    </changeSet>
+
+    <changeSet id="add-tendering-id-to-po" author="system">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="pur_purchase_order"/>
+            <not><columnExists tableName="pur_purchase_order" columnName="tendering_id"/></not>
+        </preConditions>
+        <addColumn tableName="pur_purchase_order">
+            <column name="tendering_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

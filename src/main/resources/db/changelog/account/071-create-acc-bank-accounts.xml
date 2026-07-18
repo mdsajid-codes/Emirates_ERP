@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="071-create-acc-bank-accounts" author="system">
+        <createTable tableName="acc_bank_accounts">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="bank_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_number" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="account_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency_id" type="BIGINT"/>
+            <column name="gl_account_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="opening_balance" type="DECIMAL(18,2)" defaultValueNumeric="0.00"/>
+            <column name="opening_date" type="DATE"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

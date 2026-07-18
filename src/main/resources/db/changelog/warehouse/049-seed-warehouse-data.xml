@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="seed-warehouse-default-data" author="generated">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="wms_warehouse"/>
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM wms_warehouse</sqlCheck>
+        </preConditions>
+        <insert tableName="wms_warehouse">
+            <column name="code" value="WH-MAIN-001"/>
+            <column name="name" value="Main Warehouse"/>
+            <column name="description" value="Default main warehouse"/>
+            <column name="warehouse_type" value="NORMAL"/>
+            <column name="default_pick_strategy" value="FEFO"/> <!-- First Expired First Out -->
+            <column name="is_active" valueBoolean="true"/>
+            <column name="qc_required" valueBoolean="true"/>
+            <column name="bin_tracking_enabled" valueBoolean="true"/>
+            <column name="allow_negative_stock" valueBoolean="false"/>
+            <column name="created_at" valueDate="NOW()"/>
+            <column name="updated_at" valueDate="NOW()"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

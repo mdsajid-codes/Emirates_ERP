@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="hng-batch-wire-processing-scrap-v1" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="hng_batch_wire_processing">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_wire_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+            </column>
+            <column name="batch_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_wire_batch" referencedTableName="hng_production_batch" referencedColumnNames="id"/>
+            </column>
+            <column name="work_station_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_wire_ws" referencedTableName="pro_work_stations" referencedColumnNames="id"/>
+            </column>
+            <column name="operator_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_wire_operator" referencedTableName="employees" referencedColumnNames="id"/>
+            </column>
+            <column name="shift" type="varchar(20)"/>
+            <column name="cutting_length_cm" type="decimal(8,2)"/>
+            <column name="planned_qty" type="INT"/>
+            <column name="produced_qty" type="INT"/>
+            <column name="scrap_qty" type="INT"/>
+            <column name="scrap_weight_kg" type="decimal(10,3)"/>
+            <column name="scrap_pct" type="decimal(5,2)"/>
+            <column name="productivity_pcs_per_hour" type="decimal(8,2)"/>
+            <column name="start_time" type="datetime"/>
+            <column name="end_time" type="datetime"/>
+            <column name="remarks" type="TEXT"/>
+            <column name="created_at" type="datetime" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <createTable tableName="hng_scrap_entry">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_scrap_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+            </column>
+            <column name="batch_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_scrap_batch" referencedTableName="hng_production_batch" referencedColumnNames="id"/>
+            </column>
+            <column name="wire_processing_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_scrap_wire" referencedTableName="hng_batch_wire_processing" referencedColumnNames="id"/>
+            </column>
+            <column name="stage" type="varchar(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scrap_type" type="varchar(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scrap_weight_kg" type="decimal(10,3)"/>
+            <column name="rate_per_kg" type="decimal(10,2)"/>
+            <column name="scrap_value" type="decimal(12,2)"/>
+            <column name="remarks" type="TEXT"/>
+            <column name="created_at" type="datetime" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

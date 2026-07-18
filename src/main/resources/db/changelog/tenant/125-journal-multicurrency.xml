@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="125-add-journal-multicurrency-fields" author="antigravity">
+        <addColumn tableName="journal_entries">
+            <column name="currency_code" type="varchar(3)" defaultValue="AED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="exchange_rate" type="decimal(18,6)" defaultValue="1.000000">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="journal_entry_lines">
+            <column name="original_debit_amount" type="decimal(19,2)"/>
+            <column name="original_credit_amount" type="decimal(19,2)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

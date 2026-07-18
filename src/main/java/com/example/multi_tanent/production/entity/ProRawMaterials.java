@@ -1,0 +1,127 @@
+package com.example.multi_tanent.production.entity;
+
+import com.example.multi_tanent.production.entity.ProInventoryType;
+
+import com.example.multi_tanent.production.enums.ItemType;
+import com.example.multi_tanent.spersusers.enitity.Location;
+import com.example.multi_tanent.spersusers.enitity.Tenant;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
+import lombok.*;
+
+import java.math.BigDecimal;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Entity
+@Table(name = "pro_raw_materials", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_raw_material_tenant_item_code", columnNames = { "tenant_id", "item_code" })
+})
+public class ProRawMaterials {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id", nullable = false)
+    private Tenant tenant;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id") // Optional: to make this material location-specific
+    private Location location;
+
+    /* enums */
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inventory_type_id")
+    private ProInventoryType inventoryType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "item_type", length = 20, nullable = false)
+    @Builder.Default
+    private ItemType itemType = ItemType.PRODUCT; // product or service
+
+    /* flags for purchase/sales */
+    @Column(name = "for_purchase")
+    @Builder.Default
+    private boolean forPurchase = true;
+
+    @Column(name = "for_sales")
+    @Builder.Default
+    private boolean forSales = true;
+
+    /* relationships */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private ProCategory category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sub_category_id")
+    private ProSubCategory subCategory;
+
+    /* identifiers */
+    @NotBlank
+    @Column(name = "item_code", nullable = false, length = 100)
+    private String itemCode;
+
+    @NotBlank
+    @Column(name = "name", nullable = false, length = 255)
+    private String name;
+
+    @Column(name = "barcode", length = 128)
+    private String barcode;
+
+    @Column(name = "barcode_img_url", length = 255)
+    private String barcodeImgUrl;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    /* units & conversion */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "issue_unit_id")
+    private ProUnit issueUnit;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "purchase_unit_id")
+    private ProUnit purchaseUnit;
+
+    @PositiveOrZero
+    @Column(name = "unit_relation", precision = 12, scale = 4)
+    @Builder.Default
+    private BigDecimal unitRelation = BigDecimal.ONE;
+
+    /* inventory & pricing */
+    @Column(name = "reorder_limit", precision = 12, scale = 4)
+    @Builder.Default
+    private BigDecimal reorderLimit = BigDecimal.ZERO;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tax_id")
+    private ProTax tax;
+
+    @Column(name = "purchase_price", precision = 19, scale = 4)
+    @Builder.Default
+    private BigDecimal purchasePrice = BigDecimal.ZERO;
+
+    @Column(name = "sales_price", precision = 19, scale = 4)
+    @Builder.Default
+    private BigDecimal salesPrice = BigDecimal.ZERO;
+
+    @Column(name = "stock_quantity", precision = 19, scale = 4)
+    @Builder.Default
+    private BigDecimal stockQuantity = BigDecimal.ZERO;
+
+    /* UI/operational fields */
+    @Column(name = "discontinued")
+    @Builder.Default
+    private boolean discontinued = false;
+
+    @Column(name = "picture_path", length = 512)
+    private String picturePath; // optional link to picture
+}

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="trip-004-customer-contract-fields" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="trip_customers"/>
+            <not><columnExists tableName="trip_customers" columnName="credit_limit"/></not>
+        </preConditions>
+        <addColumn tableName="trip_customers">
+            <column name="credit_limit" type="DECIMAL(12, 2)"/>
+            <column name="payment_terms_days" type="INT"/>
+            <column name="contract_start_date" type="DATE"/>
+            <column name="contract_end_date" type="DATE"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

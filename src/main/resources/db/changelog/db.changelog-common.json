@@ -1,0 +1,29 @@
+{
+    "databaseChangeLog": [
+        {
+            "include": {
+                "file": "db/changelog/tenant/008-create-tenants-table.json"
+            }
+        },
+        {
+            "include": {
+                "file": "db/changelog/tenant/009-create-audit-logs-table.json"
+            }
+        },
+        {
+            "include": {
+                "file": "db/changelog/item/012-create-items-table.json"
+            }
+        },
+        {
+            "include": {
+                "file": "db/changelog/tenant/014-create-companies-table.json"
+            }
+        },
+        {
+            "include": {
+                "file": "db/changelog/tenant/062-create-superusers-schema.xml"
+            }
+        }
+    ]
+}

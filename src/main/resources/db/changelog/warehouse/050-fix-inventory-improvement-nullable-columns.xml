@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Fix: Make previously NOT NULL columns nullable in wms_inventory_improvement
+        to match actual entity field definitions (no nullable = false on Java side).
+        Also fixes: previous_status, new_status, reference_type, reference_id,
+        created_by, sync_status were NOT NULL in schema but nullable in entity.
+    -->
+    <changeSet id="fix-inventory-improvement-nullable-columns" author="system">
+        <validCheckSum>ANY</validCheckSum>
+
+        <modifyDataType tableName="wms_inventory_improvement"
+                        columnName="previous_status"
+                        newDataType="VARCHAR(255)"/>
+        <dropNotNullConstraint tableName="wms_inventory_improvement"
+                               columnName="previous_status"
+                               columnDataType="VARCHAR(255)"/>
+
+        <modifyDataType tableName="wms_inventory_improvement"
+                        columnName="new_status"
+                        newDataType="VARCHAR(255)"/>
+        <dropNotNullConstraint tableName="wms_inventory_improvement"
+                               columnName="new_status"
+                               columnDataType="VARCHAR(255)"/>
+
+        <modifyDataType tableName="wms_inventory_improvement"
+                        columnName="reference_type"
+                        newDataType="VARCHAR(255)"/>
+        <dropNotNullConstraint tableName="wms_inventory_improvement"
+                               columnName="reference_type"
+                               columnDataType="VARCHAR(255)"/>
+
+        <modifyDataType tableName="wms_inventory_improvement"
+                        columnName="reference_id"
+                        newDataType="BIGINT"/>
+        <dropNotNullConstraint tableName="wms_inventory_improvement"
+                               columnName="reference_id"
+                               columnDataType="BIGINT"/>
+
+        <modifyDataType tableName="wms_inventory_improvement"
+                        columnName="created_by"
+                        newDataType="BIGINT"/>
+        <dropNotNullConstraint tableName="wms_inventory_improvement"
+                               columnName="created_by"
+                               columnDataType="BIGINT"/>
+
+        <modifyDataType tableName="wms_inventory_improvement"
+                        columnName="sync_status"
+                        newDataType="VARCHAR(255)"/>
+        <dropNotNullConstraint tableName="wms_inventory_improvement"
+                               columnName="sync_status"
+                               columnDataType="VARCHAR(255)"/>
+
+    </changeSet>
+
+</databaseChangeLog>

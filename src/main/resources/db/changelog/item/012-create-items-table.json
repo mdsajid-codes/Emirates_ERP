@@ -1,0 +1,143 @@
+{
+    "databaseChangeLog": [
+        {
+            "changeSet": {
+                "id": "012-create-items-table",
+                "author": "system",
+                "changes": [
+                    {
+                        "createTable": {
+                            "tableName": "items",
+                            "columns": [
+                                {
+                                    "column": {
+                                        "name": "item_id",
+                                        "type": "BIGINT",
+                                        "autoIncrement": true,
+                                        "constraints": {
+                                            "primaryKey": true,
+                                            "nullable": false
+                                        }
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "code",
+                                        "type": "VARCHAR(50)",
+                                        "constraints": {
+                                            "nullable": false,
+                                            "unique": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "description",
+                                        "type": "VARCHAR(200)",
+                                        "constraints": {
+                                            "nullable": false
+                                        }
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "full_description",
+                                        "type": "TEXT"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "item_type",
+                                        "type": "VARCHAR(50)",
+                                        "constraints": {
+                                            "nullable": false
+                                        }
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "folder",
+                                        "type": "VARCHAR(100)"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "category",
+                                        "type": "VARCHAR(100)"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "manufacturer",
+                                        "type": "VARCHAR(100)"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "brand",
+                                        "type": "VARCHAR(100)"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "sku",
+                                        "type": "VARCHAR(50)"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "hs_code",
+                                        "type": "VARCHAR(50)"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "unit_of_measure",
+                                        "type": "VARCHAR(20)",
+                                        "defaultValue": "Pcs"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "processing_time_days",
+                                        "type": "INT"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "is_active",
+                                        "type": "BOOLEAN",
+                                        "defaultValueBoolean": true,
+                                        "constraints": {
+                                            "nullable": false
+                                        }
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "created_at",
+                                        "type": "TIMESTAMP",
+                                        "defaultValueComputed": "CURRENT_TIMESTAMP",
+                                        "constraints": {
+                                            "nullable": false
+                                        }
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "updated_at",
+                                        "type": "TIMESTAMP",
+                                        "defaultValueComputed": "CURRENT_TIMESTAMP",
+                                        "constraints": {
+                                            "nullable": false
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

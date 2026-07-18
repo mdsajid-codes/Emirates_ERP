@@ -1,0 +1,49 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "003-create-journal-entries",
+        "author": "dev-a",
+        "context": "ACCOUNTS",
+        "preConditions": [
+          {
+            "onFail": "MARK_RAN",
+            "not": {
+              "tableExists": {
+                "tableName": "journal_entries"
+              }
+            }
+          }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "journal_entries",
+              "columns": [
+                {"column": {"name": "journal_entry_id", "type": "BIGINT", "autoIncrement": true, "constraints": {"primaryKey": true, "nullable": false}}},
+                {"column": {"name": "entry_number", "type": "VARCHAR(50)", "constraints": {"nullable": false, "unique": true}}},
+                {"column": {"name": "entry_date", "type": "DATE", "constraints": {"nullable": false}}},
+                {"column": {"name": "document_type", "type": "VARCHAR(50)", "constraints": {"nullable": false}}},
+                {"column": {"name": "description", "type": "VARCHAR(500)", "constraints": {"nullable": false}}},
+                {"column": {"name": "company_id", "type": "BIGINT"}},
+                {"column": {"name": "reference_number", "type": "VARCHAR(100)"}},
+                {"column": {"name": "reference_id", "type": "BIGINT"}},
+                {"column": {"name": "total_debit", "type": "DECIMAL(19,2)"}},
+                {"column": {"name": "total_credit", "type": "DECIMAL(19,2)"}},
+                {"column": {"name": "status", "type": "VARCHAR(20)", "defaultValue": "DRAFT", "constraints": {"nullable": false}}},
+                {"column": {"name": "reversed_by_id", "type": "BIGINT", "constraints": {"foreignKeyName": "fk_je_reversed_by", "referencedTableName": "journal_entries", "referencedColumnNames": "journal_entry_id"}}},
+                {"column": {"name": "reversal_of_id", "type": "BIGINT", "constraints": {"foreignKeyName": "fk_je_reversal_of", "referencedTableName": "journal_entries", "referencedColumnNames": "journal_entry_id"}}},
+                {"column": {"name": "posted_date", "type": "DATETIME"}},
+                {"column": {"name": "posted_by", "type": "VARCHAR(100)"}},
+                {"column": {"name": "tenant_id", "type": "BIGINT"}},
+                {"column": {"name": "created_by", "type": "VARCHAR(100)"}},
+                {"column": {"name": "created_at", "type": "DATETIME"}},
+                {"column": {"name": "updated_at", "type": "DATETIME"}}
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

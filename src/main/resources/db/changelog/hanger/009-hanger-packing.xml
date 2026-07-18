@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="hng-packing-1" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="hng_batch_packing">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_packing_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+            </column>
+            <column name="batch_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_packing_batch" referencedTableName="hng_production_batch" referencedColumnNames="id"/>
+            </column>
+            <column name="sales_order_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_packing_so" referencedTableName="sales_orders" referencedColumnNames="id"/>
+            </column>
+            <column name="packing_batch_no" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_hng_packing_no"/>
+            </column>
+            <column name="operator_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_packing_op" referencedTableName="employees" referencedColumnNames="id"/>
+            </column>
+            <column name="bundle_size" type="INT"/>
+            <column name="total_bundles" type="INT"/>
+            <column name="packed_qty" type="INT"/>
+            <column name="remainder_qty" type="INT"/>
+            <column name="remainder_disposition" type="VARCHAR(20)"/>
+            <column name="gross_weight_kg" type="DECIMAL(10,3)"/>
+            <column name="total_cartons" type="INT"/>
+            <column name="ware_product_batch_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_packing_ware_batch" referencedTableName="ware_product_batches" referencedColumnNames="id"/>
+            </column>
+            <column name="delivery_order_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_packing_do" referencedTableName="delivery_orders" referencedColumnNames="id"/>
+            </column>
+            <column name="status" type="VARCHAR(20)"/>
+            <column name="remarks" type="TEXT"/>
+            <column name="created_at" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="hng-packing-2" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="hng_packing_carton">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_carton_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+            </column>
+            <column name="packing_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_carton_packing" referencedTableName="hng_batch_packing" referencedColumnNames="id"/>
+            </column>
+            <column name="carton_no" type="VARCHAR(50)"/>
+            <column name="bundles_in_carton" type="INT"/>
+            <column name="qty_in_carton" type="INT"/>
+            <column name="gross_weight_kg" type="DECIMAL(8,3)"/>
+            <column name="seal_status" type="VARCHAR(20)"/>
+            <column name="created_at" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="hng-packing-3" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="hng_hanger_types">
+            <column name="crm_sales_product_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_type_crm_product"
+                             referencedTableName="crm_sales_products" referencedColumnNames="id"/>
+            </column>
+            <column name="pro_finished_good_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_type_finished_good"
+                             referencedTableName="pro_finished_goods" referencedColumnNames="id"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="hng-packing-4" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="delivery_orders">
+            <column name="source" type="VARCHAR(20)" defaultValue="MANUAL"/>
+            <column name="hng_packing_id" type="BIGINT">
+                <constraints foreignKeyName="fk_do_hng_packing"
+                             referencedTableName="hng_batch_packing" referencedColumnNames="id"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="hng-packing-5" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="delivery_order_items">
+            <column name="description" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

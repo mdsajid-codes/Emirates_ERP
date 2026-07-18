@@ -1,0 +1,31 @@
+package com.example.multi_tanent.sales.enums;
+
+public enum SalesStatus {
+    DRAFT,
+    SENT,
+    ACCEPTED,
+    REJECTED,
+    CANCELLED,
+    ORDERED,
+    RENTAL_ORDER,
+    RENTAL_INVOICE,
+    DELIVERED,
+    RETURNED,
+    SHIPPED,
+    OPEN,
+    PENDING,
+    INVOICED,
+    PAID,
+    PARTIALLY_PAID,
+    RENTAL_INVOICED,
+    PROFORMA_INVOICED,
+    CLOSED, CONVERTED,
+    PARTIAL_RECEIVED,
+    PARTIAL_RETURNED,
+    FULLY_RETURNED,
+    FULLY_RECEIVED,
+    PICKING,
+    PACKED,
+    DISPATCHED,
+    OUT_FOR_DELIVERY;
+}

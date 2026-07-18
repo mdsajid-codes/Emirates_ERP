@@ -1,0 +1,2945 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   context="ACCOUNTS">
+  <changeSet id="006-seed-coa-excel-all" author="dev-a">
+    <validCheckSum>ANY</validCheckSum>
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="chart_of_accounts"/>
+    </preConditions>
+    <!-- Clear old charts of accounts and dimensions first to prevent duplicate code collisions -->
+    <sql>SET FOREIGN_KEY_CHECKS = 0;</sql>
+    <sql>DELETE FROM account_dimensions WHERE account_id IN (SELECT account_id FROM chart_of_accounts WHERE created_by IS NULL);</sql>
+    <sql>DELETE FROM chart_of_accounts WHERE created_by IS NULL;</sql>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1000000"/>
+      <column name="description" value="Non-Current Assets"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="1"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2000000"/>
+      <column name="description" value="Current Assets"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="1"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2100000"/>
+      <column name="description" value="PDCs Received"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="1"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="3000000"/>
+      <column name="description" value="Equity"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="1"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="4000000"/>
+      <column name="description" value="Non-Current Liabilities"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="1"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5000000"/>
+      <column name="description" value="Current Liabilities"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="1"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5100000"/>
+      <column name="description" value="Contract Liabilities"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CONTRACT_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="1"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6000000"/>
+      <column name="description" value="Income"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="1"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7000000"/>
+      <column name="description" value="Expenses"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="1"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="8000000"/>
+      <column name="description" value="Profit or Loss"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="1"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="9000000"/>
+      <column name="description" value="Off-Balance Sheet Accounts"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="true"/>
+      <column name="level" valueNumeric="1"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1010000"/>
+      <column name="description" value="Property, Plant and Equipment"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1020000"/>
+      <column name="description" value="Investment Property"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1030000"/>
+      <column name="description" value="Intangible Assets"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1040000"/>
+      <column name="description" value="Non-Current Financial Assets"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1050000"/>
+      <column name="description" value="Deferred Tax Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_DEFERRED_TAX_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1060000"/>
+      <column name="description" value="Non-Current Inventories"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="true"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1070000"/>
+      <column name="description" value="Non-Current Deferred Expenses"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_NON_CURRENT_DEFERRED_EXPENSES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1090000"/>
+      <column name="description" value="Other Non-Current Assets"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2010000"/>
+      <column name="description" value="Inventories"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2020000"/>
+      <column name="description" value="Current Financial Assets"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030000"/>
+      <column name="description" value="Trade and Other Current Receivables"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2040000"/>
+      <column name="description" value="Prepayments to Suppliers"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2050000"/>
+      <column name="description" value="Cash and Cash Equivalents"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2060000"/>
+      <column name="description" value="Staff Settlements"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2070000"/>
+      <column name="description" value="Assets Classified as Held for Sale"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2080000"/>
+      <column name="description" value="Other Current Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2090000"/>
+      <column name="description" value="Deferred Expenses"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_DEFERRED_EXPENSES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2110000"/>
+      <column name="description" value="Work In Progress"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_TRADE_RECEIVABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2100000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2110099"/>
+      <column name="description" value="Contract Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CONTRACT_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2100000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="3010000"/>
+      <column name="description" value="Issued Share Capital"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_SHARE_CAPITAL"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '3000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="3020000"/>
+      <column name="description" value="Retained Earnings"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="BS_RETAINED_EARNINGS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '3000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="3030000"/>
+      <column name="description" value="Share Premium"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_EQUITY"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '3000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="3040000"/>
+      <column name="description" value="Treasury Shares"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_EQUITY"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '3000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="3050000"/>
+      <column name="description" value="Other Equity Interest"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_NON_CONTROLLING_INTEREST"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '3000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="3060000"/>
+      <column name="description" value="Other Reserves"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_EQUITY"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '3000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="4010000"/>
+      <column name="description" value="Non-Current Loans Received"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '4000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="4020000"/>
+      <column name="description" value="Non-Current Bank Loans Received"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '4000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="4030000"/>
+      <column name="description" value="Non-Current Finance Lease Liabilities"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '4000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="4040000"/>
+      <column name="description" value="Other Long-Term Financial Liabilities"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '4000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="4050000"/>
+      <column name="description" value="Deferred Tax Liabilities"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_DEFERRED_TAX_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '4000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="4060000"/>
+      <column name="description" value="Other Non-Current Liabilities"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '4000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="4070000"/>
+      <column name="description" value="Non-Current Deferred Revenue"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_NON_CURRENT_DEFERRED_REVENUE"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '4000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="4080000"/>
+      <column name="description" value="Non-Current Contract Liabilities"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_NON_CURRENT_CONTRACT_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '4000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5010000"/>
+      <column name="description" value="Current Financial Liabilities"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5020000"/>
+      <column name="description" value="Trade and Other Current Payables"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5030000"/>
+      <column name="description" value="Prepayments from Customers"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_TRADE_PAYABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5040000"/>
+      <column name="description" value="Staff Settlements"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5050000"/>
+      <column name="description" value="Provisions"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_EOSB_PROVISION"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5060000"/>
+      <column name="description" value="Other Current Liabilities"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5070000"/>
+      <column name="description" value="VAT Accrued on Prepayments Issued"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_INPUT_VAT"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5080000"/>
+      <column name="description" value="Deferred Revenue"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_DEFERRED_REVENUE"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5090000"/>
+      <column name="description" value="PDCs Issued"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010000"/>
+      <column name="description" value="Revenue"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6020000"/>
+      <column name="description" value="Other Operating Income"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="PL_OTHER_INCOME"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6030000"/>
+      <column name="description" value="Finance and Other Income"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6040000"/>
+      <column name="description" value="Output VAT on Other Operating Income"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_OTHER_INCOME"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7010000"/>
+      <column name="description" value="Cost of Sales"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7020000"/>
+      <column name="description" value="Selling Expenses"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_OPERATING_EXPENSES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7030000"/>
+      <column name="description" value="Administrative Expenses"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7040000"/>
+      <column name="description" value="Other Operating Expenses"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_OPERATING_EXPENSES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7050000"/>
+      <column name="description" value="Finance and Other Expenses"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7060000"/>
+      <column name="description" value="Current Tax Expense"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_INCOME_TAX"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7070000"/>
+      <column name="description" value="Hired Labor Cost"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_OPERATING_EXPENSES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="8010000"/>
+      <column name="description" value="Profit or Loss"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_OTHER_INCOME"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '8000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="9010000"/>
+      <column name="description" value="Current Assets (ОBS)"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="true"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '9000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="9020000"/>
+      <column name="description" value="Current Liabilities (ОBS)"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="true"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '9000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="9030000"/>
+      <column name="description" value="Expenses (ОBS)"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_ADMIN_EXPENSES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="true"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '9000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="9040000"/>
+      <column name="description" value="Income (ОBS)"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="PL_OTHER_INCOME"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="true"/>
+      <column name="level" valueNumeric="2"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '9000000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1010100"/>
+      <column name="description" value="Fixed Assets at Cost"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_FIXED_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1010200"/>
+      <column name="description" value="Depreciation of Fixed Assets"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_FIXED_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1010300"/>
+      <column name="description" value="Impairment of Fixed Assets"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_FIXED_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1010400"/>
+      <column name="description" value="Construction in Progress of Property, Plant and Equipment"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CAPITAL_IMPROVEMENTS_PPE"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1010500"/>
+      <column name="description" value="Fixed Assets Acquired"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_FIXED_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="true"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1010600"/>
+      <column name="description" value="Capital Improvements to Property, Plant and Equipment"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CAPITAL_IMPROVEMENTS_PPE"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1020100"/>
+      <column name="description" value="Investment Property at Cost"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INVESTMENT_PROPERTY"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1020200"/>
+      <column name="description" value="Investment Property at Fair Value"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INVESTMENT_PROPERTY"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1020300"/>
+      <column name="description" value="Depreciation of Investment Property"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_INVESTMENT_PROPERTY"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1020400"/>
+      <column name="description" value="Impairment of Investment Property"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_INVESTMENT_PROPERTY"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1020500"/>
+      <column name="description" value="Construction in Progress of Investment Property"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INVESTMENT_PROPERTY"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1020600"/>
+      <column name="description" value="Capital Improvements to Investment Property"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CAPITAL_IMPROVEMENTS_PPE"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1030100"/>
+      <column name="description" value="Intangible Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INTANGIBLE_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1030200"/>
+      <column name="description" value="Amortization of Intangible Assets"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_INTANGIBLE_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1030300"/>
+      <column name="description" value="Impairment of Intangible Assets"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_INTANGIBLE_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1030400"/>
+      <column name="description" value="Construction in Progress of Intangible Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INTANGIBLE_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1030500"/>
+      <column name="description" value="Capital Improvements to Intangible Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INTANGIBLE_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1040100"/>
+      <column name="description" value="Non-Current Loans Issued"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1040000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1040200"/>
+      <column name="description" value="Equity Investments"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1040000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1040300"/>
+      <column name="description" value="Other Non-Current Financial Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1040000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1040400"/>
+      <column name="description" value="Non-Current Receivables"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1040000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1090100"/>
+      <column name="description" value="Other Non-Current Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1090000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1090200"/>
+      <column name="description" value="Provision for Other Non-Current Assets"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1090000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2010100"/>
+      <column name="description" value="Raw Materials and Production Supplies"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INVENTORIES"/>
+      <column name="is_quantitative" valueBoolean="true"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2010200"/>
+      <column name="description" value="Goods"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INVENTORIES"/>
+      <column name="is_quantitative" valueBoolean="true"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2010300"/>
+      <column name="description" value="Work in Progress"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2010400"/>
+      <column name="description" value="Finished Goods"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INVENTORIES"/>
+      <column name="is_quantitative" valueBoolean="true"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2010500"/>
+      <column name="description" value="Other Inventories"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INVENTORIES"/>
+      <column name="is_quantitative" valueBoolean="true"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2010600"/>
+      <column name="description" value="Allowance for Obsolescence"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_INVENTORIES"/>
+      <column name="is_quantitative" valueBoolean="true"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2010700"/>
+      <column name="description" value="Goods on Consignment"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INVENTORIES"/>
+      <column name="is_quantitative" valueBoolean="true"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2020100"/>
+      <column name="description" value="Current Loans Issued"/>
+      <column name="account_type" value="DEBIT_CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2020200"/>
+      <column name="description" value="Current Portion of Non-Current Loans Issued"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2020300"/>
+      <column name="description" value="Bad Debt Provision for Current Loans Issued"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030100"/>
+      <column name="description" value="Current Trade Receivables from Customers"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_TRADE_RECEIVABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030200"/>
+      <column name="description" value="Deposits Paid to Suppliers"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_TRADE_RECEIVABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030300"/>
+      <column name="description" value="Other Current Receivables"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_TRADE_RECEIVABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030400"/>
+      <column name="description" value="Bad Debt Provision for Trade and Other Current Receivables"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_TRADE_RECEIVABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030500"/>
+      <column name="description" value="Current Receivables - Group"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_TRADE_RECEIVABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030600"/>
+      <column name="description" value="Current Income Tax Receivable"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030700"/>
+      <column name="description" value="Input VAT"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030800"/>
+      <column name="description" value="Current VAT Receivable"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030900"/>
+      <column name="description" value="VAT Accrued on Prepayments Received"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_VAT_PAYABLE"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2031000"/>
+      <column name="description" value="Current Other Tax Receivable"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2031100"/>
+      <column name="description" value="Retention Receivables"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_TRADE_RECEIVABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2040100"/>
+      <column name="description" value="Prepayments to Suppliers"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_TRADE_RECEIVABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2040000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2040200"/>
+      <column name="description" value="Bad Debt Provision for Prepayments to Suppliers"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_TRADE_RECEIVABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2040000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2050100"/>
+      <column name="description" value="Cash on Hand"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CASH"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2050000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2050200"/>
+      <column name="description" value="Bank Accounts"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CASH"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2050000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2050300"/>
+      <column name="description" value="Cash in Transit"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CASH"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2050000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2050400"/>
+      <column name="description" value="Short-Term Bank Deposits"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CASH"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2050000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2050500"/>
+      <column name="description" value="Other Cash and Cash Equivalents"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CASH_EQUIVALENTS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2050000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2060100"/>
+      <column name="description" value="Prepaid Employee Business Expenses"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2060000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2060200"/>
+      <column name="description" value="Loans to Employees"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2060000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2060300"/>
+      <column name="description" value="Interest on Loans of Employees"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2060000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2060400"/>
+      <column name="description" value="Other Staff Settlements"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2060000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2060500"/>
+      <column name="description" value="Payroll Deductions"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2060000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2070100"/>
+      <column name="description" value="Assets Classified as Held for Sale - Fixed Assets at Cost"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_FIXED_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2070000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2070200"/>
+      <column name="description" value="Assets Classified as Held for Sale - Investment Property"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INVESTMENT_PROPERTY"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2070000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2070300"/>
+      <column name="description" value="Assets Classified as Held for Sale - Intangible Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INTANGIBLE_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2070000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2100100"/>
+      <column name="description" value="PDCs Received from Companies"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_TRADE_RECEIVABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2100000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2100200"/>
+      <column name="description" value="PDCs Received from Employees"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2100000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="4010100"/>
+      <column name="description" value="Non-Current Loans Received"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '4010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="4010200"/>
+      <column name="description" value="Interest Payable (Non-Current Loans Received)"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '4010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="4020100"/>
+      <column name="description" value="Non-Current Bank Loans Received"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '4020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="4020200"/>
+      <column name="description" value="Interest Payable (Non-Current Bank Loans Received)"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '4020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5010100"/>
+      <column name="description" value="Current Loans"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5010200"/>
+      <column name="description" value="Current Bank Loans"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5010300"/>
+      <column name="description" value="Current Finance Lease Liabilities"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5010400"/>
+      <column name="description" value="Current Portion of Non-Current Loans"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5010500"/>
+      <column name="description" value="Current Portion of Non-Current Bank Loans"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5010600"/>
+      <column name="description" value="Current Portion of Non-Current Finance Lease Liabilities"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5020100"/>
+      <column name="description" value="Сurrent Trade Payables"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_TRADE_PAYABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5020200"/>
+      <column name="description" value="Deposits From Customers"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_TRADE_PAYABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5020300"/>
+      <column name="description" value="Other Current Payables"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_TRADE_PAYABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5020400"/>
+      <column name="description" value="Unbilled Purchases (Payables)"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_TRADE_PAYABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5020500"/>
+      <column name="description" value="Current Income Tax Payable"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_INCOME_TAX_PAYABLE"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5020600"/>
+      <column name="description" value="Current VAT Payable"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_OTHER_TAX_PAYABLE"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5020700"/>
+      <column name="description" value="Current Other Tax Payable"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_OTHER_TAX_PAYABLE"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5020800"/>
+      <column name="description" value="Retention VAT Payable"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_OTHER_TAX_PAYABLE"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5020900"/>
+      <column name="description" value="Retention Payables"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_TRADE_PAYABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5040100"/>
+      <column name="description" value="Staff Salary Settlements"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5040000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5040200"/>
+      <column name="description" value="End of Service Benefits"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5040000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5040300"/>
+      <column name="description" value="Unpaid Employee Business Expenses"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5040000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5040400"/>
+      <column name="description" value="Staff Provision"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5040000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5040500"/>
+      <column name="description" value="Other Staff Settlements"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5040000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5040600"/>
+      <column name="description" value="Accumulated Vacation Pay"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5040000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5090100"/>
+      <column name="description" value="PDCs Issued to Companies"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_TRADE_PAYABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5090000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5090200"/>
+      <column name="description" value="PDCs Issued to Employees"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5090000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010100"/>
+      <column name="description" value="Sales of Goods"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="PL_SALES_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010200"/>
+      <column name="description" value="Sales of Services"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="PL_SALES_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010300"/>
+      <column name="description" value="Sales of Finished Products"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="PL_SALES_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010400"/>
+      <column name="description" value="Other Sales Revenue"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="PL_SALES_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010500"/>
+      <column name="description" value="Trade Discounts and Rebates"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010600"/>
+      <column name="description" value="Output VAT"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6030100"/>
+      <column name="description" value="Finance Income"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="PL_INTEREST_INCOME"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6030200"/>
+      <column name="description" value="Gains on Exchange Differences"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="PL_OTHER_INCOME"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7010100"/>
+      <column name="description" value="COS: Raw Materials"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_COS_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7010200"/>
+      <column name="description" value="COS: Goоds for Resale"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_COS_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7010300"/>
+      <column name="description" value="COS: Finished Goоds"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_COS_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7010400"/>
+      <column name="description" value="COS: Depreciation of Fixed Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_COS_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7010500"/>
+      <column name="description" value="COS: Amortization of Intangible Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_COS_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7010600"/>
+      <column name="description" value="COS: Employee Benefits Expenses"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="ACCOUNTS_GROUP"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7010700"/>
+      <column name="description" value="COS: Other Expenses"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_COS_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7010800"/>
+      <column name="description" value="COS: Completed Works"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_COS_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7030100"/>
+      <column name="description" value="Employee Benefits Expenses"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_SALARIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7030200"/>
+      <column name="description" value="Depreciation of Fixed Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_DEPRECIATION"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7030300"/>
+      <column name="description" value="Amortization of Intangible Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_ADMIN_EXPENSES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7030400"/>
+      <column name="description" value="Banking and Other Costs"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_ADMIN_EXPENSES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7030500"/>
+      <column name="description" value="Other Administrative Expenses"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_ADMIN_EXPENSES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7030000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7050100"/>
+      <column name="description" value="Financial Expenses"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_INTEREST_EXPENSE"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7050000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7050200"/>
+      <column name="description" value="Losses on Exchange Differences"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_OPERATING_EXPENSES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7050000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="9010100"/>
+      <column name="description" value="Cash Assets (ОBS)"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CASH"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="true"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '9010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="9010200"/>
+      <column name="description" value="Prepayments to Suppliers (ОBS)"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_TRADE_RECEIVABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="true"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '9010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="9010300"/>
+      <column name="description" value="Current Trade Receivables from Customers (ОBS)"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_TRADE_RECEIVABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="true"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '9010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="9010400"/>
+      <column name="description" value="Prepaid Employee Business Expenses (OBS)"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="true"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '9010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="9010500"/>
+      <column name="description" value="Other Current Receivables - Other Staff Settlements (ОBS)"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="true"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '9010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="9020100"/>
+      <column name="description" value="Сurrent Trade Payables (ОBS)"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_TRADE_PAYABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="true"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '9020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="9020200"/>
+      <column name="description" value="Prepayments from Customers (ОBS)"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_TRADE_PAYABLES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="true"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '9020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="9020300"/>
+      <column name="description" value="Staff Salary Settlements (ОBS)"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="true"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '9020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="9020400"/>
+      <column name="description" value="Unpaid Employee Business Expenses (ОBS)"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="true"/>
+      <column name="level" valueNumeric="3"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '9020000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1040101"/>
+      <column name="description" value="Non-Current Loans Issued"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1040100' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1040102"/>
+      <column name="description" value="Non-Current Interest Receivable"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1040100' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1040103"/>
+      <column name="description" value="Provision for Non-Current Loans Issued"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1040100' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1040401"/>
+      <column name="description" value="Other Non-Current Receivables"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1040400' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1040402"/>
+      <column name="description" value="Non-Current Advances Paid to Suppliers"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1040400' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="1040403"/>
+      <column name="description" value="Bad Debt Provisions for Non-Current Receivables"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_NON_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '1040400' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2010301"/>
+      <column name="description" value="Work in Progress - Main Production"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INVENTORIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2010300' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2010302"/>
+      <column name="description" value="Work in Progress - Secondary Production"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INVENTORIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2010300' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2010303"/>
+      <column name="description" value="Half-Finished Products"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INVENTORIES"/>
+      <column name="is_quantitative" valueBoolean="true"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2010300' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2010304"/>
+      <column name="description" value="Work in Progress - Other"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INVENTORIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2010300' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2010799"/>
+      <column name="description" value="Goods on Consignment"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INVENTORIES"/>
+      <column name="is_quantitative" valueBoolean="true"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2010000' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2020101"/>
+      <column name="description" value="Current Loans Issued"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2020100' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2020102"/>
+      <column name="description" value="Current Interest Receivable"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_ASSETS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2020100' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030701"/>
+      <column name="description" value="Input VAT on Purchases of Inventory"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INPUT_VAT"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030700' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030702"/>
+      <column name="description" value="Input VAT on Purchases of Services"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INPUT_VAT"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030700' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030703"/>
+      <column name="description" value="Input VAT on Purchases of Non-Current Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INPUT_VAT"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030700' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030704"/>
+      <column name="description" value="Input VAT on Purchases of Other Current Assets"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INPUT_VAT"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030700' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030705"/>
+      <column name="description" value="Input VAT on Purchases of Inventory (Import)"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INPUT_VAT"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030700' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030706"/>
+      <column name="description" value="Input VAT on Purchases of Services (Import)"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INPUT_VAT"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030700' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030707"/>
+      <column name="description" value="Input VAT on Prepayments Issued"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INPUT_VAT"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030700' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="2030708"/>
+      <column name="description" value="Retention Input VAT"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="BS_INPUT_VAT"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '2030700' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5010101"/>
+      <column name="description" value="Current Loans"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5010100' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5010102"/>
+      <column name="description" value="Current Interest Payable"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5010100' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5010201"/>
+      <column name="description" value="Current Bank Loans"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5010200' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5010202"/>
+      <column name="description" value="Current Interest Payable (Bank Loans)"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5010200' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5010301"/>
+      <column name="description" value="Current Finance Lease Liabilities"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5010300' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="5010302"/>
+      <column name="description" value="Current Interest Payable (Finance Lease Liabilities)"/>
+      <column name="account_type" value="CREDIT"/>
+      <column name="section" value="BS_CURRENT_FINANCIAL_LIABILITIES"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '5010300' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010501"/>
+      <column name="description" value="Trade Discounts and Rebates on Sales of Goods"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_SALES_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6010500' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010502"/>
+      <column name="description" value="Trade Discounts and Rebates on Sales of Services"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_SALES_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6010500' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010503"/>
+      <column name="description" value="Trade Discounts and Rebates on Sales of Finished Products"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_SALES_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6010500' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010504"/>
+      <column name="description" value="Trade Discounts and Rebates on Other Sales"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_SALES_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6010500' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010601"/>
+      <column name="description" value="Output VAT on Sales of Goods"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_SALES_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6010600' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010602"/>
+      <column name="description" value="Output VAT on Sales of Services"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_SALES_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6010600' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010603"/>
+      <column name="description" value="Output VAT on Sales of Finished Products"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_SALES_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6010600' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="6010604"/>
+      <column name="description" value="Output VAT on Other Sales"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_SALES_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '6010600' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7010601"/>
+      <column name="description" value="COS: Salary Expenses"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_COS_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7010600' LIMIT 1)"/>
+    </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7010602"/>
+      <column name="description" value="COS: Accruals on Other Employee Benefits"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_COS_GOODS"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+      <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7010600' LIMIT 1)"/>
+    </insert>
+    <sql>SET FOREIGN_KEY_CHECKS = 1;</sql>
+  </changeSet>
+</databaseChangeLog>

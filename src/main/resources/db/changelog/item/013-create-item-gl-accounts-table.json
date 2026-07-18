@@ -1,0 +1,170 @@
+{
+    "databaseChangeLog": [
+        {
+            "changeSet": {
+                "id": "013-create-item-gl-accounts-table",
+                "author": "system",
+                "changes": [
+                    {
+                        "createTable": {
+                            "tableName": "item_gl_accounts",
+                            "columns": [
+                                {
+                                    "column": {
+                                        "name": "item_gl_account_id",
+                                        "type": "BIGINT",
+                                        "autoIncrement": true,
+                                        "constraints": {
+                                            "primaryKey": true,
+                                            "nullable": false
+                                        }
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "item_id",
+                                        "type": "BIGINT",
+                                        "constraints": {
+                                            "nullable": false
+                                        }
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "gl_account_id",
+                                        "type": "BIGINT"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "goods_on_consignment_account_id",
+                                        "type": "BIGINT"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "sales_revenue_account_id",
+                                        "type": "BIGINT"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "trade_discounts_account_id",
+                                        "type": "BIGINT"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "cost_of_goods_sold_account_id",
+                                        "type": "BIGINT"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "deferred_expenses_account_id",
+                                        "type": "BIGINT"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "output_vat_account_id",
+                                        "type": "BIGINT"
+                                    }
+                                },
+                                {
+                                    "column": {
+                                        "name": "input_vat_account_id",
+                                        "type": "BIGINT"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "addForeignKeyConstraint": {
+                            "baseTableName": "item_gl_accounts",
+                            "baseColumnNames": "item_id",
+                            "referencedTableName": "items",
+                            "referencedColumnNames": "item_id",
+                            "constraintName": "fk_item_gl_accounts_item"
+                        }
+                    },
+                    {
+                        "addForeignKeyConstraint": {
+                            "baseTableName": "item_gl_accounts",
+                            "baseColumnNames": "gl_account_id",
+                            "referencedTableName": "chart_of_accounts",
+                            "referencedColumnNames": "account_id",
+                            "constraintName": "fk_item_gl_main"
+                        }
+                    },
+                    {
+                        "addForeignKeyConstraint": {
+                            "baseTableName": "item_gl_accounts",
+                            "baseColumnNames": "goods_on_consignment_account_id",
+                            "referencedTableName": "chart_of_accounts",
+                            "referencedColumnNames": "account_id",
+                            "constraintName": "fk_item_gl_consignment"
+                        }
+                    },
+                    {
+                        "addForeignKeyConstraint": {
+                            "baseTableName": "item_gl_accounts",
+                            "baseColumnNames": "sales_revenue_account_id",
+                            "referencedTableName": "chart_of_accounts",
+                            "referencedColumnNames": "account_id",
+                            "constraintName": "fk_item_gl_revenue"
+                        }
+                    },
+                    {
+                        "addForeignKeyConstraint": {
+                            "baseTableName": "item_gl_accounts",
+                            "baseColumnNames": "trade_discounts_account_id",
+                            "referencedTableName": "chart_of_accounts",
+                            "referencedColumnNames": "account_id",
+                            "constraintName": "fk_item_gl_discounts"
+                        }
+                    },
+                    {
+                        "addForeignKeyConstraint": {
+                            "baseTableName": "item_gl_accounts",
+                            "baseColumnNames": "cost_of_goods_sold_account_id",
+                            "referencedTableName": "chart_of_accounts",
+                            "referencedColumnNames": "account_id",
+                            "constraintName": "fk_item_gl_cogs"
+                        }
+                    },
+                    {
+                        "addForeignKeyConstraint": {
+                            "baseTableName": "item_gl_accounts",
+                            "baseColumnNames": "deferred_expenses_account_id",
+                            "referencedTableName": "chart_of_accounts",
+                            "referencedColumnNames": "account_id",
+                            "constraintName": "fk_item_gl_deferred"
+                        }
+                    },
+                    {
+                        "addForeignKeyConstraint": {
+                            "baseTableName": "item_gl_accounts",
+                            "baseColumnNames": "output_vat_account_id",
+                            "referencedTableName": "chart_of_accounts",
+                            "referencedColumnNames": "account_id",
+                            "constraintName": "fk_item_gl_output_vat"
+                        }
+                    },
+                    {
+                        "addForeignKeyConstraint": {
+                            "baseTableName": "item_gl_accounts",
+                            "baseColumnNames": "input_vat_account_id",
+                            "referencedTableName": "chart_of_accounts",
+                            "referencedColumnNames": "account_id",
+                            "constraintName": "fk_item_gl_input_vat"
+                        }
+                    }
+                ],
+                "context": "ACCOUNTS",
+                "validCheckSum": "ANY"
+            }
+        }
+    ]
+}

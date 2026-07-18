@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="add-verification-columns-to-applicant-documents" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+
+        <addColumn tableName="ats_applicant_documents">
+            <column name="verification_status" type="VARCHAR(30)" defaultValue="PENDING"/>
+            <column name="verified_by_id" type="BIGINT"/>
+            <column name="verified_at" type="DATETIME"/>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="ats_applicant_documents"
+                                 baseColumnNames="verified_by_id"
+                                 constraintName="fk_doc_verified_by"
+                                 referencedTableName="employees"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+</databaseChangeLog>

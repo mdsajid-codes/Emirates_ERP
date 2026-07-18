@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-sales-orders-quotations-schema" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        
+        <!-- sales_order_items -->
+        <createTable tableName="sales_order_items">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="sales_order_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="crm_product_id" type="BIGINT"/>
+            <column name="item_code" type="VARCHAR(255)"/>
+            <column name="item_name" type="VARCHAR(255)"/>
+            <column name="category_id" type="BIGINT"/>
+            <column name="subcategory_id" type="BIGINT"/>
+            <column name="quantity" type="INT"/>
+            <column name="rate" type="DECIMAL(19, 4)"/>
+            <column name="amount" type="DECIMAL(19, 4)"/>
+            <column name="tax_value" type="DECIMAL(19, 4)"/>
+            <column name="is_tax_exempt" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="tax_percentage" type="DECIMAL(19, 4)"/>
+            <column name="raw_material_id" type="BIGINT"/>
+            <column name="semifinished_id" type="BIGINT"/>
+            <column name="finished_good_id" type="BIGINT"/>
+        </createTable>
+
+        <!-- quotations -->
+        <createTable tableName="quotations">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="quotation_date" type="DATE"/>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="salesperson_id" type="BIGINT"/>
+            <column name="quotation_number" type="VARCHAR(255)"><constraints unique="true"/></column>
+            <column name="reference" type="VARCHAR(255)"/>
+            <column name="expiry_date" type="DATE"/>
+            <column name="quotation_type" type="VARCHAR(50)"/>
+            <column name="sub_total" type="DECIMAL(19, 2)"/>
+            <column name="total_discount" type="DECIMAL(19, 2)"/>
+            <column name="gross_total" type="DECIMAL(19, 2)"/>
+            <column name="total_tax" type="DECIMAL(19, 2)"/>
+            <column name="other_charges" type="DECIMAL(19, 2)"/>
+            <column name="net_total" type="DECIMAL(19, 2)"/>
+            <column name="terms_and_conditions" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="email_to" type="VARCHAR(255)"/>
+            <column name="template" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- quotation_items -->
+        <createTable tableName="quotation_items">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="quotation_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="crm_product_id" type="BIGINT"/>
+            <column name="item_code" type="VARCHAR(255)"/>
+            <column name="item_name" type="VARCHAR(255)"/>
+            <column name="category_id" type="BIGINT"/>
+            <column name="subcategory_id" type="BIGINT"/>
+            <column name="quantity" type="INT"/>
+            <column name="rate" type="DECIMAL(19, 4)"/>
+            <column name="amount" type="DECIMAL(19, 4)"/>
+            <column name="tax_value" type="DECIMAL(19, 4)"/>
+            <column name="is_tax_exempt" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="raw_material_id" type="BIGINT"/>
+            <column name="semifinished_id" type="BIGINT"/>
+            <column name="finished_good_id" type="BIGINT"/>
+            <column name="tax_percentage" type="DECIMAL(19, 4)"/>
+        </createTable>
+
+        <!-- quotation_attachments -->
+        <createTable tableName="quotation_attachments">
+            <column name="quotation_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="attachment_url" type="VARCHAR(1024)"/>
+        </createTable>
+
+        <!-- proforma_invoices -->
+        <createTable tableName="proforma_invoices">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="invoice_ledger" type="VARCHAR(255)"/>
+            <column name="invoice_date" type="DATE"/>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="invoice_number" type="VARCHAR(255)"><constraints unique="true"/></column>
+            <column name="reference" type="VARCHAR(255)"/>
+            <column name="due_date" type="DATE"/>
+            <column name="date_of_supply" type="DATE"/>
+            <column name="salesperson_id" type="BIGINT"/>
+            <column name="po_number" type="VARCHAR(255)"/>
+            <column name="sub_total" type="DECIMAL(19, 4)"/>
+            <column name="total_discount" type="DECIMAL(19, 4)"/>
+            <column name="gross_total" type="DECIMAL(19, 4)"/>
+            <column name="total_tax" type="DECIMAL(19, 4)"/>
+            <column name="other_charges" type="DECIMAL(19, 4)"/>
+            <column name="net_total" type="DECIMAL(19, 4)"/>
+            <column name="terms_and_conditions" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="bank_details" type="TEXT"/>
+            <column name="template" type="VARCHAR(255)"/>
+            <column name="email_to" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- proforma_invoice_items -->
+        <createTable tableName="proforma_invoice_items">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="proforma_invoice_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="crm_product_id" type="BIGINT"/>
+            <column name="item_code" type="VARCHAR(255)"/>
+            <column name="item_name" type="VARCHAR(255)"/>
+            <column name="description" type="VARCHAR(2000)"/>
+            <column name="category_id" type="BIGINT"/>
+            <column name="subcategory_id" type="BIGINT"/>
+            <column name="quantity" type="INT"/>
+            <column name="rate" type="DECIMAL(19, 4)"/>
+            <column name="amount" type="DECIMAL(19, 4)"/>
+            <column name="tax_value" type="DECIMAL(19, 4)"/>
+            <column name="is_tax_exempt" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="tax_percentage" type="DECIMAL(19, 4)"/>
+        </createTable>
+
+        <!-- proforma_invoice_attachments -->
+        <createTable tableName="proforma_invoice_attachments">
+            <column name="proforma_invoice_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="attachment_url" type="VARCHAR(1024)"/>
+        </createTable>
+
+        <!-- delivery_orders -->
+        <createTable tableName="delivery_orders">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="delivery_order_date" type="DATE"/>
+            <column name="shipment_date" type="DATE"/>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="sales_order_id" type="BIGINT"/>
+            <column name="number" type="VARCHAR(255)"><constraints unique="true"/></column>
+            <column name="reference" type="VARCHAR(255)"/>
+            <column name="po_number" type="VARCHAR(255)"/>
+            <column name="salesperson_id" type="BIGINT"/>
+            <column name="sub_total" type="DECIMAL(19, 4)"/>
+            <column name="total_discount" type="DECIMAL(19, 4)"/>
+            <column name="gross_total" type="DECIMAL(19, 4)"/>
+            <column name="total_tax" type="DECIMAL(19, 4)"/>
+            <column name="other_charges" type="DECIMAL(19, 4)"/>
+            <column name="net_total" type="DECIMAL(19, 4)"/>
+            <column name="terms_and_conditions" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="template" type="VARCHAR(255)"/>
+            <column name="email_to" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- delivery_order_items -->
+        <createTable tableName="delivery_order_items">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="delivery_order_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="crm_product_id" type="BIGINT"/>
+            <column name="category_id" type="BIGINT"/>
+            <column name="subcategory_id" type="BIGINT"/>
+            <column name="item_code" type="VARCHAR(100)"/>
+            <column name="item_name" type="VARCHAR(255)"/>
+            <column name="quantity" type="INT"/>
+            <column name="rate" type="DECIMAL(19, 4)"/>
+            <column name="amount" type="DECIMAL(19, 4)"/>
+            <column name="tax_value" type="DECIMAL(19, 4)"/>
+            <column name="tax_percentage" type="DECIMAL(19, 4)"/>
+            <column name="is_tax_exempt" type="BOOLEAN" defaultValueBoolean="false"/>
+        </createTable>
+
+        <!-- delivery_order_attachments -->
+        <createTable tableName="delivery_order_attachments">
+            <column name="delivery_order_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="attachment_url" type="VARCHAR(1024)"/>
+        </createTable>
+
+    </changeSet>
+
+</databaseChangeLog>

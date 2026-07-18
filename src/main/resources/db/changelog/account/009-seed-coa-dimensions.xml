@@ -1,0 +1,2456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   context="ACCOUNTS">
+  <changeSet id="009-seed-coa-dimensions" author="dev-a">
+    <validCheckSum>9:69e1aa1c40450fb329d516de17bff17c</validCheckSum>
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="account_dimensions"/>
+    </preConditions>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1010100' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1010200' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1010300' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1010400' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1010400' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1010500' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="true"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1010500' LIMIT 1)"/>
+      <column name="dimension_type" value="WAREHOUSE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1010600' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1010600' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1020100' LIMIT 1)"/>
+      <column name="dimension_type" value="INVESTMENT_PROPERTY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1020200' LIMIT 1)"/>
+      <column name="dimension_type" value="INVESTMENT_PROPERTY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1020300' LIMIT 1)"/>
+      <column name="dimension_type" value="INVESTMENT_PROPERTY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1020400' LIMIT 1)"/>
+      <column name="dimension_type" value="INVESTMENT_PROPERTY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1020500' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1020500' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1020600' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1020600' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1030100' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1030200' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1030300' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1030400' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1030400' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1030500' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1030500' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040101' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040101' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040102' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040102' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040103' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040103' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040200' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040200' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040300' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040300' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040401' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040401' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040402' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040402' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040403' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1040403' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1050000' LIMIT 1)"/>
+      <column name="dimension_type" value="TAX_TYPE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1060000' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="true"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1060000' LIMIT 1)"/>
+      <column name="dimension_type" value="WAREHOUSE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1070000' LIMIT 1)"/>
+      <column name="dimension_type" value="DEFERRED_EXPENSE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1090100' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '1090200' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010100' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="true"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010100' LIMIT 1)"/>
+      <column name="dimension_type" value="WAREHOUSE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010200' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="true"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010200' LIMIT 1)"/>
+      <column name="dimension_type" value="WAREHOUSE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010301' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010301' LIMIT 1)"/>
+      <column name="dimension_type" value="COST_OBJECT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010302' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010302' LIMIT 1)"/>
+      <column name="dimension_type" value="COST_OBJECT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010303' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="true"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010303' LIMIT 1)"/>
+      <column name="dimension_type" value="WAREHOUSE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010304' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010304' LIMIT 1)"/>
+      <column name="dimension_type" value="COST_OBJECT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010400' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="true"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010400' LIMIT 1)"/>
+      <column name="dimension_type" value="WAREHOUSE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010500' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="true"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010500' LIMIT 1)"/>
+      <column name="dimension_type" value="WAREHOUSE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010600' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="true"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010600' LIMIT 1)"/>
+      <column name="dimension_type" value="WAREHOUSE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010700' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="true"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010700' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010799' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="true"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2010799' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2020101' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2020101' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2020102' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2020102' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2020200' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2020200' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2020300' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2020300' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030100' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030100' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030200' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030200' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030300' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030300' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030400' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030400' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030500' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030500' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030600' LIMIT 1)"/>
+      <column name="dimension_type" value="TAX_TYPE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030600' LIMIT 1)"/>
+      <column name="dimension_type" value="TYPES_OF_PAYMENTS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030701' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030701' LIMIT 1)"/>
+      <column name="dimension_type" value="BASIS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030701' LIMIT 1)"/>
+      <column name="dimension_type" value="INPUT_VAT_TYPES"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030702' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030702' LIMIT 1)"/>
+      <column name="dimension_type" value="BASIS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030702' LIMIT 1)"/>
+      <column name="dimension_type" value="INPUT_VAT_TYPES"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030703' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030703' LIMIT 1)"/>
+      <column name="dimension_type" value="BASIS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030703' LIMIT 1)"/>
+      <column name="dimension_type" value="INPUT_VAT_TYPES"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030704' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030704' LIMIT 1)"/>
+      <column name="dimension_type" value="BASIS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030704' LIMIT 1)"/>
+      <column name="dimension_type" value="INPUT_VAT_TYPES"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030705' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030705' LIMIT 1)"/>
+      <column name="dimension_type" value="BASIS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030705' LIMIT 1)"/>
+      <column name="dimension_type" value="INPUT_VAT_TYPES"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030706' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030706' LIMIT 1)"/>
+      <column name="dimension_type" value="BASIS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030706' LIMIT 1)"/>
+      <column name="dimension_type" value="INPUT_VAT_TYPES"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030707' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030707' LIMIT 1)"/>
+      <column name="dimension_type" value="BASIS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030707' LIMIT 1)"/>
+      <column name="dimension_type" value="INPUT_VAT_TYPES"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030708' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030708' LIMIT 1)"/>
+      <column name="dimension_type" value="BASIS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030708' LIMIT 1)"/>
+      <column name="dimension_type" value="INPUT_VAT_TYPES"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030800' LIMIT 1)"/>
+      <column name="dimension_type" value="TAX_TYPE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030800' LIMIT 1)"/>
+      <column name="dimension_type" value="TYPES_OF_PAYMENTS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030900' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2030900' LIMIT 1)"/>
+      <column name="dimension_type" value="PREPAYMENTS_DOCUMENT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2031000' LIMIT 1)"/>
+      <column name="dimension_type" value="TAX_TYPE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2031000' LIMIT 1)"/>
+      <column name="dimension_type" value="TYPES_OF_PAYMENTS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2031100' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2031100' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2040100' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2040100' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2040200' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2040200' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2050100' LIMIT 1)"/>
+      <column name="dimension_type" value="CASH_FLOW_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2050200' LIMIT 1)"/>
+      <column name="dimension_type" value="BANK_ACCOUNT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2050200' LIMIT 1)"/>
+      <column name="dimension_type" value="CASH_FLOW_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2050300' LIMIT 1)"/>
+      <column name="dimension_type" value="CASH_FLOW_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2050400' LIMIT 1)"/>
+      <column name="dimension_type" value="BANK_ACCOUNT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2050400' LIMIT 1)"/>
+      <column name="dimension_type" value="CASH_FLOW_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2050500' LIMIT 1)"/>
+      <column name="dimension_type" value="CASH_EQUIVALENT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2050500' LIMIT 1)"/>
+      <column name="dimension_type" value="CASH_FLOW_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2060100' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2060200' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2060300' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2060400' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2060500' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2070100' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2070200' LIMIT 1)"/>
+      <column name="dimension_type" value="INVESTMENT_PROPERTY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2070300' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2080000' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2090000' LIMIT 1)"/>
+      <column name="dimension_type" value="DEFERRED_EXPENSE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2100100' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2100100' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2100200' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2110000' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2110000' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2110099' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '2110099' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '3010000' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '3010000' LIMIT 1)"/>
+      <column name="dimension_type" value="EQUITY_MOVEMENTS_ITEMS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '3020000' LIMIT 1)"/>
+      <column name="dimension_type" value="EQUITY_MOVEMENTS_ITEMS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '3030000' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '3030000' LIMIT 1)"/>
+      <column name="dimension_type" value="EQUITY_MOVEMENTS_ITEMS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '3040000' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '3040000' LIMIT 1)"/>
+      <column name="dimension_type" value="EQUITY_MOVEMENTS_ITEMS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '3050000' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '3050000' LIMIT 1)"/>
+      <column name="dimension_type" value="EQUITY_MOVEMENTS_ITEMS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '3060000' LIMIT 1)"/>
+      <column name="dimension_type" value="EQUITY_MOVEMENTS_ITEMS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4010100' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4010100' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4010200' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4010200' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4020100' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4020100' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4020200' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4020200' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4030000' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4030000' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4040000' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4040000' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4050000' LIMIT 1)"/>
+      <column name="dimension_type" value="TAX_TYPE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4060000' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4060000' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4070000' LIMIT 1)"/>
+      <column name="dimension_type" value="DEFERRED_REVENUE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4080000' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '4080000' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010101' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010101' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010102' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010102' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010201' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010201' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010202' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010202' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010301' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010301' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010302' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010302' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010400' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010400' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010500' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010500' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010600' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5010600' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020100' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020100' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020200' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020200' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020300' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020300' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020400' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020400' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020500' LIMIT 1)"/>
+      <column name="dimension_type" value="TAX_TYPE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020500' LIMIT 1)"/>
+      <column name="dimension_type" value="TYPES_OF_PAYMENTS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020600' LIMIT 1)"/>
+      <column name="dimension_type" value="TAX_TYPE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020600' LIMIT 1)"/>
+      <column name="dimension_type" value="TYPES_OF_PAYMENTS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020700' LIMIT 1)"/>
+      <column name="dimension_type" value="TAX_TYPE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020700' LIMIT 1)"/>
+      <column name="dimension_type" value="TYPES_OF_PAYMENTS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020800' LIMIT 1)"/>
+      <column name="dimension_type" value="TAX_TYPE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020800' LIMIT 1)"/>
+      <column name="dimension_type" value="TYPES_OF_PAYMENTS"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020900' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5020900' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5030000' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5030000' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5040100' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5040200' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5040300' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5040400' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5040500' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5040600' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5050000' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5050000' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5060000' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5060000' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5070000' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5070000' LIMIT 1)"/>
+      <column name="dimension_type" value="PREPAYMENTS_DOCUMENT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5080000' LIMIT 1)"/>
+      <column name="dimension_type" value="DEFERRED_REVENUE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5090100' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5090100' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5090200' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5100000' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '5100000' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010100' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010100' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010100' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010200' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010200' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010200' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010300' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010300' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010300' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010400' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010400' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010400' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010501' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010501' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010501' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010502' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010502' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010502' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010503' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010503' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010503' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010504' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010504' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010504' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010601' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010601' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010601' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010602' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010602' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010602' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010603' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010603' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010603' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010604' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010604' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6010604' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6020000' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6020000' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6030100' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6030100' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6030200' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6030200' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6040000' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '6040000' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010100' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010100' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010100' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010200' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010200' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010200' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010300' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010300' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010300' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010400' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010400' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010400' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010500' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010500' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010500' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010601' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010601' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010601' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010602' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010602' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010602' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010700' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010700' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010800' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010800' LIMIT 1)"/>
+      <column name="dimension_type" value="ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7010800' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7020000' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7020000' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7030100' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7030100' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7030100' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7030200' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7030200' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7030200' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7030300' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7030300' LIMIT 1)"/>
+      <column name="dimension_type" value="FIXED_ASSET"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7030300' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7030400' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7030400' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7030500' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7030500' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7040000' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7040000' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7050100' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7050100' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7050200' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7050200' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7060000' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7060000' LIMIT 1)"/>
+      <column name="dimension_type" value="TAX_TYPE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7060000' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7070000' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '7070000' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '8010000' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '8010000' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '8010000' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9010100' LIMIT 1)"/>
+      <column name="dimension_type" value="CASH_FLOW_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9010200' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9010200' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9010300' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9010300' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9010400' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9010500' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9020100' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9020100' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9020200' LIMIT 1)"/>
+      <column name="dimension_type" value="COMPANY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9020200' LIMIT 1)"/>
+      <column name="dimension_type" value="CONTRACT"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9020300' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9020400' LIMIT 1)"/>
+      <column name="dimension_type" value="EMPLOYEE"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9030000' LIMIT 1)"/>
+      <column name="dimension_type" value="EXPENSE_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9030000' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9040000' LIMIT 1)"/>
+      <column name="dimension_type" value="INCOME_ITEM"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+    <insert tableName="account_dimensions">
+      <column name="account_id" valueComputed="(SELECT account_id FROM chart_of_accounts WHERE account_code = '9040000' LIMIT 1)"/>
+      <column name="dimension_type" value="BUSINESS_ACTIVITY"/>
+      <column name="track_amount" valueBoolean="true"/>
+      <column name="track_quantitative" valueBoolean="false"/>
+      <column name="turnovers_only" valueBoolean="false"/>
+    </insert>
+  </changeSet>
+</databaseChangeLog>

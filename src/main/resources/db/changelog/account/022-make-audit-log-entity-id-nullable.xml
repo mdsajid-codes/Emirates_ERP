@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="022-make-audit-log-entity-id-nullable" author="antigravity">
+        <dropNotNullConstraint tableName="accounting_audit_logs" columnName="entity_id" columnDataType="BIGINT"/>
+    </changeSet>
+
+</databaseChangeLog>

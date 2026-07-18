@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-dispatch-jobs-table" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="dispatch_jobs">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_no" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="customer_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_dispatch_job_customer" referencedTableName="trip_customers" referencedColumnNames="id"/>
+            </column>
+            <column name="pickup_location" type="VARCHAR(255)"/>
+            <column name="drop_location" type="VARCHAR(255)"/>
+            <column name="cargo_details" type="VARCHAR(255)"/>
+            <column name="load_weight" type="DOUBLE"/>
+            <column name="priority" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assigned_vehicle_id" type="BIGINT">
+                <constraints foreignKeyName="fk_dispatch_job_vehicle" referencedTableName="fleet_vehicles" referencedColumnNames="id"/>
+            </column>
+            <column name="assigned_driver_id" type="BIGINT">
+                <constraints foreignKeyName="fk_dispatch_job_driver" referencedTableName="fleet_drivers" referencedColumnNames="id"/>
+            </column>
+            <column name="linked_trip_id" type="BIGINT">
+                <constraints foreignKeyName="fk_dispatch_job_trip" referencedTableName="trips" referencedColumnNames="id"/>
+            </column>
+            <column name="delivery_status" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="proof_of_delivery_path" type="VARCHAR(255)"/>
+            <column name="delivered_at" type="datetime"/>
+            <column name="remarks" type="VARCHAR(1000)"/>
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addUniqueConstraint columnNames="tenant_id, job_no" constraintName="uk_dispatch_job_no_tenant" tableName="dispatch_jobs"/>
+    </changeSet>
+
+</databaseChangeLog>

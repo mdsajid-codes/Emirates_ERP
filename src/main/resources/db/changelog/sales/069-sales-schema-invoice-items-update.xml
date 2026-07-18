@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.11.xsd">
+
+    <!-- 1. Add columns to proforma_invoice_items -->
+    <changeSet id="sales-069-1" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="CONTINUE">
+            <not><columnExists tableName="proforma_invoice_items" columnName="raw_material_id"/></not>
+        </preConditions>
+        <addColumn tableName="proforma_invoice_items">
+            <column name="raw_material_id" type="BIGINT"/>
+            <column name="semifinished_id" type="BIGINT"/>
+            <column name="finished_good_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <!-- 2. Add FKs to proforma_invoice_items -->
+    <changeSet id="sales-069-2" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="CONTINUE">
+            <not><foreignKeyConstraintExists foreignKeyName="fk_proforma_invoice_items_raw_mat" foreignKeyTableName="proforma_invoice_items"/></not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="proforma_invoice_items" baseColumnNames="raw_material_id" constraintName="fk_proforma_invoice_items_raw_mat" referencedTableName="pro_raw_materials" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="proforma_invoice_items" baseColumnNames="semifinished_id" constraintName="fk_proforma_invoice_items_semi_fin" referencedTableName="pro_semifinished" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="proforma_invoice_items" baseColumnNames="finished_good_id" constraintName="fk_proforma_invoice_items_fin_good" referencedTableName="pro_finished_goods" referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- 3. Add columns to sales_invoice_items -->
+    <changeSet id="sales-069-3" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="CONTINUE">
+            <not><columnExists tableName="sales_invoice_items" columnName="raw_material_id"/></not>
+        </preConditions>
+        <addColumn tableName="sales_invoice_items">
+            <column name="raw_material_id" type="BIGINT"/>
+            <column name="semifinished_id" type="BIGINT"/>
+            <column name="finished_good_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <!-- 4. Add FKs to sales_invoice_items -->
+    <changeSet id="sales-069-4" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="CONTINUE">
+            <not><foreignKeyConstraintExists foreignKeyName="fk_sales_invoice_items_raw_mat" foreignKeyTableName="sales_invoice_items"/></not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="sales_invoice_items" baseColumnNames="raw_material_id" constraintName="fk_sales_invoice_items_raw_mat" referencedTableName="pro_raw_materials" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="sales_invoice_items" baseColumnNames="semifinished_id" constraintName="fk_sales_invoice_items_semi_fin" referencedTableName="pro_semifinished" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="sales_invoice_items" baseColumnNames="finished_good_id" constraintName="fk_sales_invoice_items_fin_good" referencedTableName="pro_finished_goods" referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

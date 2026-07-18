@@ -1,0 +1,200 @@
+﻿{PUT [/api/sales/quotations/{id}], consumes [multipart/form-data]} : com.example.multi_tanent.sales.controller.QuotationController#updateQuotation(Long, QuotationRequest, MultipartFile[])
+{GET [/api/crm/kpis/{kpiId}/ranges]} : com.example.multi_tanent.crm.controller.CrmKpiRangeController#getAll(Long)
+{GET [/api/purchases/reports/bill-details]} : com.example.multi_tanent.purchases.controller.PurReportController#getBillDetailsReport(LocalDate, LocalDate, Long)
+{PUT [/api/warehouse/racks/{id}]} : com.example.multi_tanent.warehouse.controller.RackController#update(Long, RackRequest)
+{GET [/api/sales/reports/due-bills]} : com.example.multi_tanent.sales.controller.SalReportController#getListOfDueBillsReport(LocalDate, Long, Long, int, int)
+{PUT [/api/production/tools/{id}]} : com.example.multi_tanent.production.controller.ProToolsController#updateTool(Long, ProToolsRequest)
+{PUT [/api/parties/{id}]} : com.example.multi_tanent.spersusers.controller.PartyController#update(Long, PartyRequest)
+{POST [/api/materials/requisition/generate-missing]} : com.example.multi_tanent.materials.controller.MaterialRequisionController#generateMissing()
+{DELETE [/api/production/price-categories/{id}]} : com.example.multi_tanent.production.controller.ProPriceCategoryController#deletePriceCategory(Long)
+{POST [/api/crm/todos/labels]} : com.example.multi_tanent.crm.controller.CrmTodoController#createLabel(CrmTodoLabelRequest)
+{PUT [/api/items/{itemId}]} : com.example.multi_tanent.accounts.controller.ItemController#updateItem(Long, ItemRequest)
+{GET [/api/warehouse/taxes]} : com.example.multi_tanent.warehouse.controller.WareTaxController#list()
+{PUT [/api/warehouse/zones/{id}]} : com.example.multi_tanent.warehouse.controller.ZoneController#update(Long, ZoneRequest)
+{GET [/api/production/tool-categories]} : com.example.multi_tanent.production.controller.ProToolCategoryController#getAllToolCategories()
+{POST [/api/crm/permissions]} : com.example.multi_tanent.crm.controller.CrmPermissionController#create(CrmPermissionDto)
+{POST [/api/invoices/{id}/post]} : com.example.multi_tanent.accounts.controller.InvoiceController#postInvoice(Long, String)
+{PUT [/api/sales/delivery-orders/{id}], consumes [multipart/form-data || application/json]} : com.example.multi_tanent.sales.controller.DeliveryOrderController#updateDeliveryOrder(Long, DeliveryOrderRequest, MultipartFile[])
+{PUT [/api/sales/rental-item-received/{id}]} : com.example.multi_tanent.sales.controller.RentalItemRecievedController#update(Long, RentalItemRecievedRequest)
+{PUT [/api/company-locations/{id}]} : com.example.multi_tanent.tenant.payroll.controller.CompanyLocationController#updateLocation(Long, CompanyLocationRequest)
+{GET [/api/production/manufacturing-orders/{id}]} : com.example.multi_tanent.production.controller.ManufacturingOrderController#getById(Long)
+{GET [/api/warehouse/products/template]} : com.example.multi_tanent.warehouse.controller.WareProductsController#downloadTemplate()
+{GET [/api/production/manage-tasks]} : com.example.multi_tanent.production.controller.ProManageTaskController#getAllManageTasks()
+{POST [/api/pos/sales]} : com.example.multi_tanent.pos.controller.SaleController#createSale(SaleRequest)
+{GET [/api/journal-entries]} : com.example.multi_tanent.accounts.controller.JournalEntryController#getAllJournalEntries()
+{GET [/api/audit-logs/{auditId}]} : com.example.multi_tanent.accounts.controller.AuditLogController#getAuditLogById(Long)
+{DELETE [/api/production/manage-tasks/{id}]} : com.example.multi_tanent.production.controller.ProManageTaskController#deleteManageTask(Long)
+{POST [/api/leave-balances]} : com.example.multi_tanent.tenant.leave.controller.LeaveBalanceController#createOrUpdateBalance(LeaveBalanceRequest)
+{GET [/api/production/bom-semi-finished/{id}]} : com.example.multi_tanent.production.controller.BomSemiFinishedController#getById(Long)
+{GET [/api/statutory-rules]} : com.example.multi_tanent.tenant.payroll.controller.StatutoryRuleController#getAllStatutoryRules()
+{PUT [/api/production/raw-materials/{id}/stock-quantity]} : com.example.multi_tanent.production.controller.ProRawMaterialsController#updateStockQuantity(Long, BigDecimal)
+{PUT [/api/employee-bank-accounts/{employeeCode}]} : com.example.multi_tanent.tenant.payroll.controller.EmployeeBankAccountController#createOrUpdateBankAccount(String, EmployeeBankAccountRequest)
+{GET [/api/invoices/{id}]} : com.example.multi_tanent.accounts.controller.InvoiceController#getInvoiceById(Long)
+{GET [/api/reports/employment-status]} : com.example.multi_tanent.tenant.reports.controller.HrmsReportController#exportEmploymentStatusReport()
+{PUT [/api/users/{id}]} : com.example.multi_tanent.spersusers.controller.UserController#updateUser(Long, UserUpdateRequest)
+{GET [/api/reports/compliance/emiratization]} : com.example.multi_tanent.tenant.reports.controller.HRComplianceReportController#getEmiratizationReport()
+{GET [/api/purchases/reports/payments-made]} : com.example.multi_tanent.purchases.controller.PurReportController#getPaymentMadeReport(LocalDate, LocalDate, Long)
+{GET [/api/warehouse/warehouses/status]} : com.example.multi_tanent.warehouse.controller.WareHouseController#getByActive(Boolean)
+{GET [/api/employee-biometric-mappings/{id}]} : com.example.multi_tanent.tenant.attendance.controller.EmployeeBiometricMappingController#getMappingById(Long)
+{GET [/api/reports/attendance/daily]} : com.example.multi_tanent.tenant.reports.controller.AttendanceReportController#downloadDailyReport(LocalDate)
+{PUT [/api/expenses/{id}/approve]} : com.example.multi_tanent.tenant.payroll.controller.ExpenseController#approveExpense(Long)
+{DELETE [/api/income-items/{id}]} : com.example.multi_tanent.accounts.controller.IncomeItemController#deleteIncomeItem(Long)
+{GET [/api/items]} : com.example.multi_tanent.accounts.controller.ItemController#getAllItems()
+{GET [/api/notifications/modules/{module}/settings]} : com.example.multi_tanent.crm.controller.CrmNotificationController#getSetting(NotificationModule)
+{POST [/api/warehouse/floors]} : com.example.multi_tanent.warehouse.controller.FloorController#create(FloorRequest)
+{GET [/api/warehouse/shelves/{id}]} : com.example.multi_tanent.warehouse.controller.ShelfController#getShelfById(Long)
+{GET [/api/designations]} : com.example.multi_tanent.tenant.base.controller.DesignationController#getAllDesignations()
+{POST [/api/companies]} : com.example.multi_tanent.accounts.controller.CompanyController#createCompany(CompanyRequest)
+{GET [/api/master/tenant-company-info/{masterTenantId}]} : com.example.multi_tanent.master.controller.TenantCompanyInfoController#getByMasterTenantId(Long)
+{DELETE [/api/warehouse/products/{id}]} : com.example.multi_tanent.warehouse.controller.WareProductsController#delete(Long)
+{GET [/api/reports/compliance/nationality]} : com.example.multi_tanent.tenant.reports.controller.HRComplianceReportController#getNationalityReports()
+{POST [/api/production/tools]} : com.example.multi_tanent.production.controller.ProToolsController#createTool(ProToolsRequest)
+{GET [/api/production/semi-finished/{id}/image]} : com.example.multi_tanent.production.controller.ProSemiFinishedController#getSemiFinishedImage(Long)
+{DELETE [/api/production/inventory-types/{id}]} : com.example.multi_tanent.production.controller.ProInventoryTypeController#deleteInventoryType(Long)
+{GET [/api/contacts/by-lead/{leadId}]} : com.example.multi_tanent.crm.controller.ContactController#getContactsByLeadId(Long)
+{PUT [/api/crm/kpis/{id}]} : com.example.multi_tanent.crm.controller.CrmKpiController#update(Long, CrmKpiRequest)
+{GET [/api/pos/sales/{saleId}/items]} : com.example.multi_tanent.pos.controller.SaleItemController#getAllItemsForSale(Long)
+{GET [/api/master/company-info]} : com.example.multi_tanent.master.controller.MyCompanyInfoController#getCompanyInfo()
+{GET [/api/production/parameters]} : com.example.multi_tanent.production.controller.ProParameterController#getAll()
+{POST [/api/master/auth/login]} : com.example.multi_tanent.master.controller.MasterAuthController#login(MasterAuthRequest)
+{GET [/api/biometric-devices]} : com.example.multi_tanent.tenant.attendance.controller.BiometricDeviceController#getAllDevices()
+{PUT [/api/statutory-rules/{id}]} : com.example.multi_tanent.tenant.payroll.controller.StatutoryRuleController#updateStatutoryRule(Long, StatutoryRuleRequest)
+{GET [/api/pos/categories/{id}]} : com.example.multi_tanent.pos.controller.CategoryController#getCategoryById(Long)
+{GET [/api/production/finished-goods/{id}]} : com.example.multi_tanent.production.controller.ProFinishedGoodController#getFinishedGoodById(Long)
+{PUT [/api/designations/{id}]} : com.example.multi_tanent.tenant.base.controller.DesignationController#updateDesignation(Long, DesignationRequest)
+{GET [/api/reports/demographics]} : com.example.multi_tanent.tenant.reports.controller.HrmsReportController#exportDemographicReport()
+{GET [/api/reports/eos/termination-reason]} : com.example.multi_tanent.tenant.reports.controller.EndOfServiceReportController#getTerminationReasonReports()
+{GET [/api/crm/lead-sources]} : com.example.multi_tanent.crm.controller.LeadSourceContoller#getAll()
+{POST [/api/invoices]} : com.example.multi_tanent.accounts.controller.InvoiceController#createInvoice(InvoiceRequest)
+{GET [/api/reports/eos/eosb/export]} : com.example.multi_tanent.tenant.reports.controller.EndOfServiceReportController#exportEosbReport()
+{POST [/api/master/tenants]} : com.example.multi_tanent.master.controller.TenantAdminController#createTenant(MasterTenant)
+{PUT [/api/crm/kpis/{kpiId}/ranges/{id}]} : com.example.multi_tanent.crm.controller.CrmKpiRangeController#update(Long, Long, CrmKpiRangeRequest)
+{GET [/api/pos/product-variants/barcode/{barcode}]} : com.example.multi_tanent.pos.controller.ProductVariantScanController#getVariantByBarcode(String)
+{GET [/api/master/tenant-requests/{id}]} : com.example.multi_tanent.master.controller.TenantRequestController#getTenantRequestById(Long)
+{POST [/api/warehouse/subcategories]} : com.example.multi_tanent.warehouse.controller.WareSubCategoryController#create(WareSubCategoryRequest)
+{POST [/api/purchases/invoices/{id}/convert-to-payment]} : com.example.multi_tanent.purchases.controller.PurPurchaseInvoiceController#convertToPayment(Long)
+{PUT [/api/pos/plans/{id}]} : com.example.multi_tanent.pos.controller.PlanController#updatePlan(Long, PlanRequest)
+{PATCH [/api/sales/orders/{id}/status]} : com.example.multi_tanent.sales.controller.SalesOrderController#updateStatus(Long, SalesStatus)
+{GET [/api/expenses/employee/{employeeCode}]} : com.example.multi_tanent.tenant.payroll.controller.ExpenseController#getExpensesByEmployeeCode(String)
+{GET [/api/crm/tasks]} : com.example.multi_tanent.crm.controller.CrmTaskController#getAll()
+{GET [/api/payslips/employee/{employeeCode}]} : com.example.multi_tanent.tenant.payroll.controller.PayslipController#getPayslipsForEmployee(String)
+{GET [/api/pos/uploads/view/**]} : com.example.multi_tanent.pos.controller.FileUploadController#viewFile(HttpServletRequest)
+{GET [/api/production/process-finished-goods/{id}]} : com.example.multi_tanent.production.controller.ProcessFinishedGoodController#getById(Long)
+{GET [/api/parties/export]} : com.example.multi_tanent.spersusers.controller.PartyController#exportParties()
+{GET [/api/pos/purchase-orders/{purchaseOrderId}/items]} : com.example.multi_tanent.pos.controller.PurchaseOrderItemController#getItemsForPurchaseOrder(Long)
+{DELETE [/api/settings/industries/{id}]} : com.example.multi_tanent.crm.controller.CrmIndustryController#delete(Long)
+{POST [/api/pos/customers]} : com.example.multi_tanent.pos.controller.CustomerController#createCustomer(CustomerRequest)
+{PUT [/api/crm/products/{id}]} : com.example.multi_tanent.crm.controller.CrmProductController#update(Long, CrmProductDto)
+{POST [/api/production/inventory-types]} : com.example.multi_tanent.production.controller.ProInventoryTypeController#createInventoryType(ProInventoryTypeRequest)
+{GET [/api/sales/sales-invoices]} : com.example.multi_tanent.sales.controller.SalesInvoiceController#getAllSalesInvoices(String, LocalDate, LocalDate, Long, Pageable)
+{GET [/api/attendance-capturing-policies/{id}]} : com.example.multi_tanent.tenant.attendance.controller.AttendanceCapturingPolicyController#getPolicyById(Long)
+{GET [/api/employees/by-martial-status/{martialStatus}]} : com.example.multi_tanent.spersusers.controller.EmployeeController#fetchByMartialStatus(String)
+{GET [/api/production/work-stations/{id}]} : com.example.multi_tanent.production.controller.ProWorkStationController#getWorkStationById(Long)
+{PUT [/api/material-issues/update/{id} || /api/material-issues/{id}]} : com.example.multi_tanent.materials.controller.MaterialIssueController#update(Long, MaterialIssueRequest, HttpServletRequest)
+{POST [/api/holiday-policies/{policyId}/holidays]} : com.example.multi_tanent.tenant.leave.controller.HolidayPolicyController#addHolidayToPolicy(Long, HolidayRequest)
+{POST [/api/crm/todos]} : com.example.multi_tanent.crm.controller.CrmTodoController#create(CrmTodoRequest)
+{GET [/api/crm/lead-stages]} : com.example.multi_tanent.crm.controller.CrmLeadStageController#getAll()
+{POST [/api/production/manage-tasks]} : com.example.multi_tanent.production.controller.ProManageTaskController#createManageTask(ProManageTaskRequest)
+{PUT [/api/material-reservations/update/{id}]} : com.example.multi_tanent.materials.controller.MaterialReservationController#update(Long, MaterialReservationRequest, HttpServletRequest)
+{GET [/api/warehouse/categories/{id}]} : com.example.multi_tanent.warehouse.controller.WareCategoryController#getById(Long)
+{PUT [/api/production/manufacturing-orders/{id}/status]} : com.example.multi_tanent.production.controller.ManufacturingOrderController#updateStatus(Long, ManufacturingOrderStatus)
+{GET [/api/crm/lead-stages/{id}]} : com.example.multi_tanent.crm.controller.CrmLeadStageController#getById(Long)
+{POST [/api/warehouse/serials]} : com.example.multi_tanent.warehouse.controller.WareProductSerialController#create(WareProductSerialRequest)
+{GET [/api/reports/eos/final-settlement]} : com.example.multi_tanent.tenant.reports.controller.EndOfServiceReportController#getFinalSettlementReports()
+{GET [/api/production/manufacturing-orders/{id}/export-bom]} : com.example.multi_tanent.production.controller.ManufacturingOrderController#exportBom(Long)
+{POST [/api/cash-flow-transactions/{id}/post]} : com.example.multi_tanent.accounts.controller.CashFlowTransactionController#post(Long)
+{GET [/api/companies/{companyId}]} : com.example.multi_tanent.accounts.controller.CompanyController#getCompanyById(Long)
+{POST [/api/purchases/invoices], consumes [application/json || multipart/form-data]} : com.example.multi_tanent.purchases.controller.PurPurchaseInvoiceController#create(PurPurchaseInvoiceRequest, MultipartFile[])
+{DELETE [/api/attendance-records/{id}]} : com.example.multi_tanent.tenant.attendance.controller.AttendanceRecordController#deleteAttendance(Long)
+{GET [/api/leave-types/{id}]} : com.example.multi_tanent.tenant.leave.controller.LeaveTypeController#getLeaveTypeById(Long)
+{DELETE [/api/material-reservations/{id}]} : com.example.multi_tanent.materials.controller.MaterialReservationController#delete(Long, HttpServletRequest)
+{POST [/api/crm/events/availability/{employeeId}]} : com.example.multi_tanent.crm.controller.CrmEventController#employeeBusy(Long, CrmEventRequest)
+{GET [/api/reports/compliance/company-quota]} : com.example.multi_tanent.tenant.reports.controller.HRComplianceReportController#getCompanyQuotaReport()
+{GET [/api/production/price-categories/{id}]} : com.example.multi_tanent.production.controller.ProPriceCategoryController#getPriceCategoryById(Long)
+{POST [/api/sales/orders/from-quotation/{quotationId}]} : com.example.multi_tanent.sales.controller.SalesOrderController#createSalesOrderFromQuotation(Long)
+{GET [/api/journal-entries/status/{status}]} : com.example.multi_tanent.accounts.controller.JournalEntryController#getJournalEntriesByStatus(JournalEntryStatus)
+{GET [/api/parties/bulk-template]} : com.example.multi_tanent.spersusers.controller.PartyController#downloadBulkTemplate()
+{GET [/api/cash-flow/transactions/{id}]} : com.example.multi_tanent.accounts.controller.CashFlowStatementController#getById(Long)
+{DELETE [/api/leave-groups/{id}]} : com.example.multi_tanent.tenant.employee.controller.LeaveGroupController#deleteLeaveGroup(Long)
+{POST [/api/crm/products]} : com.example.multi_tanent.crm.controller.CrmProductController#create(CrmProductDto)
+{DELETE [/api/warehouse/warehouses/{id}]} : com.example.multi_tanent.warehouse.controller.WareHouseController#delete(Long)
+{DELETE [/api/leave-allocations/{id}]} : com.example.multi_tanent.tenant.leave.controller.LeaveAllocationController#deleteAllocation(Long)
+{PUT [/api/warehouse/bins/{id}]} : com.example.multi_tanent.warehouse.controller.BinController#update(Long, BinRequest)
+{GET [/api/production/manage-tasks/{id}]} : com.example.multi_tanent.production.controller.ProManageTaskController#getManageTaskById(Long)
+{GET [/api/cash-flow/transactions/unposted]} : com.example.multi_tanent.accounts.controller.CashFlowStatementController#getUnposted()
+{GET [/api/payslips/{id}/download]} : com.example.multi_tanent.tenant.payroll.controller.PayslipController#downloadPayslipPdf(Long)
+{GET [/api/reports/compliance/absconding]} : com.example.multi_tanent.tenant.reports.controller.HRComplianceReportController#getAbscondingReports()
+{GET [/api/pos/uploads/download-sample-text]} : com.example.multi_tanent.pos.controller.FileUploadController#downloadSampleTextFile()
+{PUT [/api/production/manufacturing-orders/{id}]} : com.example.multi_tanent.production.controller.ManufacturingOrderController#update(Long, ManufacturingOrderRequest)
+{DELETE [/api/purchases/invoices/{id}]} : com.example.multi_tanent.purchases.controller.PurPurchaseInvoiceController#delete(Long)
+{GET [/api/warehouse/warehouses/code/{code}]} : com.example.multi_tanent.warehouse.controller.WareHouseController#getByCode(String)
+{GET [/api/jobBands]} : com.example.multi_tanent.tenant.base.controller.JobBandController#getAllJobBands()
+{POST [/api/equity/transactions/{id}/post]} : com.example.multi_tanent.accounts.controller.EquityStatementController#postTransaction(Long)
+{GET [/api/production/work-groups]} : com.example.multi_tanent.production.controller.ProWorkGroupController#getAllWorkGroups()
+{PUT [/api/crm/company-types/{id}]} : com.example.multi_tanent.crm.controller.CompanyTypeController#updateCompanyType(Long, CompanyTypeRequest)
+{POST [/api/master/tenant-company-info/{masterTenantId}], consumes [multipart/form-data]} : com.example.multi_tanent.master.controller.TenantCompanyInfoController#saveOrUpdate(Long, TenantCompanyInfoRequest)
+{DELETE [/api/cash-flow-transactions/{id}]} : com.example.multi_tanent.accounts.controller.CashFlowTransactionController#delete(Long)
+{PUT [/api/production/bom-semi-finished/{id}]} : com.example.multi_tanent.production.controller.BomSemiFinishedController#update(Long, BomSemiFinishedRequest)
+{POST [/api/payroll-runs/{id}/execute/employee/{employeeId}]} : com.example.multi_tanent.tenant.payroll.controller.PayrollRunController#executeForSingleEmployee(Long, Long)
+{GET [/api/income-items/{id}]} : com.example.multi_tanent.accounts.controller.IncomeItemController#getIncomeItemById(Long)
+{POST [/api/attendance-records]} : com.example.multi_tanent.tenant.attendance.controller.AttendanceRecordController#markAttendance(AttendanceRecordRequest)
+{POST [/api/provisions]} : com.example.multi_tanent.tenant.payroll.controller.EmployeeBenefitProvisionController#createProvision(EmployeeBenefitProvisionRequest)
+{PUT [/api/invoices/{id}]} : com.example.multi_tanent.accounts.controller.InvoiceController#updateInvoice(Long, InvoiceRequest)
+{DELETE [/api/biometric-devices/{id}]} : com.example.multi_tanent.tenant.attendance.controller.BiometricDeviceController#deleteDevice(Long)
+{PUT [/api/employee-biometric-mappings/{id}]} : com.example.multi_tanent.tenant.attendance.controller.EmployeeBiometricMappingController#updateMapping(Long, EmployeeBiometricMappingRequest)
+{PUT [/api/employee-loans/{id}/approve]} : com.example.multi_tanent.tenant.payroll.controller.EmployeeLoanController#approveLoan(Long)
+{GET [/api/warehouse/products/{id}]} : com.example.multi_tanent.warehouse.controller.WareProductsController#getById(Long)
+{GET [/api/production/price-categories]} : com.example.multi_tanent.production.controller.ProPriceCategoryController#getAllPriceCategories()
+{DELETE [/api/expense-items/{id}]} : com.example.multi_tanent.accounts.controller.ExpenseItemController#deleteExpenseItem(Long)
+{DELETE [/api/employee-loans/{id}]} : com.example.multi_tanent.tenant.payroll.controller.EmployeeLoanController#deleteLoan(Long)
+{POST [/api/credit-notes]} : com.example.multi_tanent.sales.controller.CreditNotesController#create(CreditNotesRequest, HttpServletRequest)
+{GET [/api/attendance-policies]} : com.example.multi_tanent.tenant.attendance.controller.AttendancePolicyController#getAllPolicies()
+======================================================
+2026-01-28T19:26:24.329+05:30  INFO 16356 --- [multi_tanent] [           main] c.e.m.config.ManualSchemaFixer           : Starting Manual Schema Fixer for ManufacturingOrder item_id...
+Hibernate: 
+    select
+        mt1_0.id,
+        mt1_0.companyName,
+        mt1_0.hrmsAccessCount,
+        mt1_0.jdbcUrl,
+        mt1_0.numberOfLocations,
+        mt1_0.numberOfStore,
+        mt1_0.numberOfUsers,
+        mt1_0.password,
+        mt1_0.serviceModules,
+        mt1_0.status,
+        mt1_0.subscriptionEndDate,
+        mt1_0.subscriptionStartDate,
+        mt1_0.tenantId,
+        mt1_0.username 
+    from
+        master_tenant mt1_0
+2026-01-28T19:26:24.341+05:30  INFO 16356 --- [multi_tanent] [           main] c.e.m.config.ManualSchemaFixer           : Processing tenant: tata5
+2026-01-28T19:26:24.342+05:30  INFO 16356 --- [multi_tanent] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Starting...
+2026-01-28T19:26:24.350+05:30  INFO 16356 --- [multi_tanent] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Start completed.
+2026-01-28T19:26:24.409+05:30  INFO 16356 --- [multi_tanent] [           main] c.e.m.config.ManualSchemaFixer           : Successfully altered manufacturing_orders.item_id for tenant: tata5
+2026-01-28T19:26:24.409+05:30  INFO 16356 --- [multi_tanent] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Shutdown initiated...
+2026-01-28T19:26:24.413+05:30  INFO 16356 --- [multi_tanent] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Shutdown completed.
+2026-01-28T19:26:24.414+05:30  INFO 16356 --- [multi_tanent] [           main] c.e.m.config.ManualSchemaFixer           : Processing tenant: tata10
+2026-01-28T19:26:24.414+05:30  INFO 16356 --- [multi_tanent] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-5 - Starting...
+2026-01-28T19:26:24.420+05:30  INFO 16356 --- [multi_tanent] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-5 - Start completed.
+2026-01-28T19:26:24.486+05:30  INFO 16356 --- [multi_tanent] [           main] c.e.m.config.ManualSchemaFixer           : Successfully altered manufacturing_orders.item_id for tenant: tata10
+2026-01-28T19:26:24.487+05:30  INFO 16356 --- [multi_tanent] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-5 - Shutdown initiated...
+2026-01-28T19:26:24.489+05:30  INFO 16356 --- [multi_tanent] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-5 - Shutdown completed.
+2026-01-28T19:26:24.489+05:30  INFO 16356 --- [multi_tanent] [           main] c.e.m.config.ManualSchemaFixer           : Manual Schema Fixer completed.
+2026-01-28T20:52:59.304+05:30  INFO 16356 --- [multi_tanent] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-01-28T20:52:59.305+05:30  INFO 16356 --- [multi_tanent] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-01-28T20:52:59.325+05:30  INFO 16356 --- [multi_tanent] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 19 ms
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:40 h
+[INFO] Finished at: 2026-01-28T21:03:44+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.5.5:run (default-cli) on project multi_tanent: Process terminated with exit code: 137 -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

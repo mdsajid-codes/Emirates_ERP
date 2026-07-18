@@ -1,0 +1,45 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "001-create-chart-of-accounts",
+        "author": "dev-a",
+        "context": "ACCOUNTS",
+        "preConditions": [
+          {
+            "onFail": "MARK_RAN",
+            "not": {
+              "tableExists": {
+                "tableName": "chart_of_accounts"
+              }
+            }
+          }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "chart_of_accounts",
+              "columns": [
+                {"column": {"name": "account_id", "type": "BIGINT", "autoIncrement": true, "constraints": {"primaryKey": true, "nullable": false}}},
+                {"column": {"name": "account_code", "type": "VARCHAR(20)", "constraints": {"nullable": false, "unique": true}}},
+                {"column": {"name": "description", "type": "VARCHAR(200)", "constraints": {"nullable": false}}},
+                {"column": {"name": "account_type", "type": "VARCHAR(20)", "constraints": {"nullable": false}}},
+                {"column": {"name": "section", "type": "VARCHAR(100)", "constraints": {"nullable": false}}},
+                {"column": {"name": "parent_group", "type": "VARCHAR(200)"}},
+                {"column": {"name": "is_off_balance", "type": "BOOLEAN", "defaultValueBoolean": false}},
+                {"column": {"name": "is_quantitative", "type": "BOOLEAN", "defaultValueBoolean": false}},
+                {"column": {"name": "currency", "type": "VARCHAR(3)", "defaultValue": "AED"}},
+                {"column": {"name": "is_active", "type": "BOOLEAN", "defaultValueBoolean": true}},
+                {"column": {"name": "details", "type": "TEXT"}},
+                {"column": {"name": "tenant_id", "type": "BIGINT"}},
+                {"column": {"name": "created_by", "type": "VARCHAR(100)"}},
+                {"column": {"name": "created_at", "type": "DATETIME"}},
+                {"column": {"name": "updated_at", "type": "DATETIME"}}
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

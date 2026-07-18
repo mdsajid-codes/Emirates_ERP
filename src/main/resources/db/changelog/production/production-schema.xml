@@ -1,0 +1,1035 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-production-base-tables" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <!-- pro_inventory_types -->
+        <createTable tableName="pro_inventory_types">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="datetime"/>
+        </createTable>
+
+        <!-- pro_taxes -->
+        <createTable tableName="pro_taxes">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="code" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rate" type="DECIMAL(5, 2)" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(255)"/>
+        </createTable>
+        <addUniqueConstraint tableName="pro_taxes" columnNames="tenant_id, code" constraintName="uk_pro_tax_tenant_code"/>
+
+        <!-- pro_units -->
+        <createTable tableName="pro_units">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(100)"/>
+        </createTable>
+        <addUniqueConstraint tableName="pro_units" columnNames="tenant_id, name" constraintName="uk_pro_unit_tenant_name"/>
+
+        <!-- pro_categories -->
+        <createTable tableName="pro_categories">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="pro_categories" columnNames="tenant_id, name" constraintName="uk_pro_category_tenant_name"/>
+        <addUniqueConstraint tableName="pro_categories" columnNames="tenant_id, code" constraintName="uk_pro_category_tenant_code"/>
+
+        <!-- pro_tasks -->
+        <createTable tableName="pro_tasks">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="task_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="created_at" type="datetime"/>
+        </createTable>
+
+        <!-- pro_tool_categories -->
+        <createTable tableName="pro_tool_categories">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="created_at" type="datetime"/>
+        </createTable>
+
+        <!-- pro_price_categories -->
+        <createTable tableName="pro_price_categories">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="created_at" type="datetime"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-production-dependent-tables-1" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <!-- pro_sub_categories -->
+        <createTable tableName="pro_sub_categories">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="category_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_subcategory_category" references="pro_categories(id)"/>
+            </column>
+            <column name="name" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="pro_sub_categories" columnNames="category_id, name" constraintName="uk_pro_subcategory_category_name"/>
+        <addUniqueConstraint tableName="pro_sub_categories" columnNames="category_id, code" constraintName="uk_pro_subcategory_category_code"/>
+
+        <!-- pro_work_groups -->
+        <createTable tableName="pro_work_groups">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="number" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="designation" type="VARCHAR(255)"/>
+            <column name="number_of_employees" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="instance_count" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hourly_rate" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fixed_working_minutes" type="INT"/>
+            <column name="custom_working_hours" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="color_hex" type="VARCHAR(7)"/>
+            <column name="created_at" type="datetime"/>
+        </createTable>
+        
+        <!-- pro_work_group_day_schedules -->
+        <createTable tableName="pro_work_group_day_schedules">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="workgroup_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_wgs_workgroup" references="pro_work_groups(id)"/>
+            </column>
+            <column name="day_of_week" type="VARCHAR(9)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_time" type="time"/>
+            <column name="end_time" type="time"/>
+        </createTable>
+        <addUniqueConstraint tableName="pro_work_group_day_schedules" columnNames="workgroup_id, day_of_week" constraintName="uk_wgs_workgroup_day"/>
+
+        <!-- pro_work_stations -->
+        <createTable tableName="pro_work_stations">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="workgroup_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_workstation_workgroup" references="pro_work_groups(id)"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="workstation_number" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="workstation_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="datetime"/>
+        </createTable>
+
+        <!-- pro_workstation_employees (Join Table) -->
+        <createTable tableName="pro_workstation_employees">
+            <column name="workstation_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_we_workstation" references="pro_work_stations(id)"/>
+            </column>
+            <column name="employee_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-production-tools-tables" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <!-- pro_tools -->
+        <createTable tableName="pro_tools">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="manufacturing_date" type="date"/>
+            <column name="workgroup_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_tool_workgroup" references="pro_work_groups(id)"/>
+            </column>
+            <column name="workstation_id" type="BIGINT">
+                <constraints foreignKeyName="fk_tool_workstation" references="pro_work_stations(id)"/>
+            </column>
+            <column name="category_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_tool_category" references="pro_tool_categories(id)"/>
+            </column>
+            <column name="location_id" type="BIGINT">
+                <constraints foreignKeyName="fk_tool_location" references="locations(id)"/>
+            </column>
+            <column name="created_at" type="datetime"/>
+        </createTable>
+
+        <!-- pro_tool_stations -->
+        <createTable tableName="pro_tool_stations">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tool_id" type="BIGINT">
+                <constraints foreignKeyName="fk_toolstation_tool" references="pro_tools(id)"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="position" type="INT"/>
+            <column name="created_at" type="datetime"/>
+        </createTable>
+
+        <!-- pro_tool_parameters -->
+        <createTable tableName="pro_tool_parameters">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tool_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_toolparam_tool" references="pro_tools(id)"/>
+            </column>
+            <column name="name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- pro_tool_parameter_values -->
+        <createTable tableName="pro_tool_parameter_values">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parameter_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_toolparamvalue_param" references="pro_tool_parameters(id)"/>
+            </column>
+            <column name="value" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="position" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-production-goods-tables" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <!-- pro_finished_goods -->
+        <createTable tableName="pro_finished_goods">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="inventory_type_id" type="BIGINT">
+                <constraints foreignKeyName="fk_fg_inventory_type" references="pro_inventory_types(id)"/>
+            </column>
+            <column name="item_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="for_purchase" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="for_sales" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="is_tax_inclusive" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="category_id" type="BIGINT">
+                <constraints foreignKeyName="fk_fg_category" references="pro_categories(id)"/>
+            </column>
+            <column name="sub_category_id" type="BIGINT">
+                <constraints foreignKeyName="fk_fg_subcategory" references="pro_sub_categories(id)"/>
+            </column>
+            <column name="item_code" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="barcode" type="VARCHAR(128)"/>
+            <column name="barcode_img_url" type="VARCHAR(255)"/>
+            <column name="hsn_sac_code" type="VARCHAR(50)"/>
+            <column name="description" type="TEXT"/>
+            <column name="picture_path" type="VARCHAR(512)"/>
+            <column name="issue_unit_id" type="BIGINT">
+                <constraints foreignKeyName="fk_fg_issue_unit" references="pro_units(id)"/>
+            </column>
+            <column name="purchase_unit_id" type="BIGINT">
+                <constraints foreignKeyName="fk_fg_purchase_unit" references="pro_units(id)"/>
+            </column>
+            <column name="unit_relation" type="DECIMAL(12, 4)" defaultValueNumeric="1"/>
+            <column name="tolerance_percentage" type="DECIMAL(5, 2)" defaultValueNumeric="0"/>
+            <column name="reorder_limit" type="DECIMAL(12, 4)" defaultValueNumeric="0"/>
+            <column name="stock_quantity" type="DECIMAL(12, 4)" defaultValueNumeric="0"/>
+            <column name="tax_id" type="BIGINT">
+                <constraints foreignKeyName="fk_fg_tax" references="pro_taxes(id)"/>
+            </column>
+            <column name="purchase_price" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="sales_price" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+        </createTable>
+        <addUniqueConstraint tableName="pro_finished_goods" columnNames="tenant_id, item_code" constraintName="uk_finished_good_tenant_item_code"/>
+
+        <!-- pro_raw_materials -->
+        <createTable tableName="pro_raw_materials">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="inventory_type_id" type="BIGINT">
+                <constraints foreignKeyName="fk_rm_inventory_type" references="pro_inventory_types(id)"/>
+            </column>
+            <column name="item_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="for_purchase" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="for_sales" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="category_id" type="BIGINT">
+                <constraints foreignKeyName="fk_rm_category" references="pro_categories(id)"/>
+            </column>
+            <column name="sub_category_id" type="BIGINT">
+                <constraints foreignKeyName="fk_rm_subcategory" references="pro_sub_categories(id)"/>
+            </column>
+            <column name="item_code" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="barcode" type="VARCHAR(128)"/>
+            <column name="barcode_img_url" type="VARCHAR(255)"/>
+            <column name="description" type="TEXT"/>
+            <column name="issue_unit_id" type="BIGINT">
+                <constraints foreignKeyName="fk_rm_issue_unit" references="pro_units(id)"/>
+            </column>
+            <column name="purchase_unit_id" type="BIGINT">
+                <constraints foreignKeyName="fk_rm_purchase_unit" references="pro_units(id)"/>
+            </column>
+            <column name="unit_relation" type="DECIMAL(12, 4)" defaultValueNumeric="1"/>
+            <column name="reorder_limit" type="DECIMAL(12, 4)" defaultValueNumeric="0"/>
+            <column name="tax_id" type="BIGINT">
+                <constraints foreignKeyName="fk_rm_tax" references="pro_taxes(id)"/>
+            </column>
+            <column name="purchase_price" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="sales_price" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="stock_quantity" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="discontinued" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="picture_path" type="VARCHAR(512)"/>
+        </createTable>
+        <addUniqueConstraint tableName="pro_raw_materials" columnNames="tenant_id, item_code" constraintName="uk_raw_material_tenant_item_code"/>
+
+        <!-- pro_semifinished -->
+        <createTable tableName="pro_semifinished">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="inventory_type_id" type="BIGINT">
+                <constraints foreignKeyName="fk_sf_inventory_type" references="pro_inventory_types(id)"/>
+            </column>
+            <column name="item_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="for_purchase" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="for_sales" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="is_roll" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="is_scrap_item" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="category_id" type="BIGINT">
+                <constraints foreignKeyName="fk_sf_category" references="pro_categories(id)"/>
+            </column>
+            <column name="sub_category_id" type="BIGINT">
+                <constraints foreignKeyName="fk_sf_subcategory" references="pro_sub_categories(id)"/>
+            </column>
+            <column name="item_code" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+             <column name="description" type="TEXT"/>
+            <column name="picture_path" type="VARCHAR(512)"/>
+            <column name="barcode" type="VARCHAR(128)"/>
+            <column name="barcode_img_url" type="VARCHAR(255)"/>
+            <column name="issue_unit_id" type="BIGINT">
+                <constraints foreignKeyName="fk_sf_issue_unit" references="pro_units(id)"/>
+            </column>
+            <column name="purchase_unit_id" type="BIGINT">
+                <constraints foreignKeyName="fk_sf_purchase_unit" references="pro_units(id)"/>
+            </column>
+            <column name="unit_relation" type="DECIMAL(12, 4)" defaultValueNumeric="1"/>
+            <column name="wastage_percentage" type="DECIMAL(5, 2)" defaultValueNumeric="0"/>
+            <column name="reorder_limit" type="DECIMAL(12, 4)" defaultValueNumeric="0"/>
+            <column name="stock_quantity" type="DECIMAL(12, 4)" defaultValueNumeric="0"/>
+            <column name="purchase_price" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="sales_price" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="is_tax_inclusive" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="tax_id" type="BIGINT">
+                <constraints foreignKeyName="fk_sf_tax" references="pro_taxes(id)"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="pro_semifinished" columnNames="tenant_id, item_code" constraintName="uk_pro_semifinished_tenant_item_code"/>
+    </changeSet>
+
+    <changeSet id="create-production-process-tables" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <!-- pro_processes -->
+        <createTable tableName="pro_processes">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- pro_process_workgroups -->
+        <createTable tableName="pro_process_workgroups">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="process_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_pwg_process" references="pro_processes(id)"/>
+            </column>
+            <column name="workgroup_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_pwg_workgroup" references="pro_work_groups(id)"/>
+            </column>
+            <column name="sequence_index" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="pro_process_workgroups" columnNames="process_id, workgroup_id" constraintName="uk_pwg_process_workgroup"/>
+        <addUniqueConstraint tableName="pro_process_workgroups" columnNames="process_id, sequence_index" constraintName="uk_pwg_process_sequence"/>
+
+        <!-- process_finished_goods -->
+        <createTable tableName="process_finished_goods">
+             <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="finished_good_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_pfg_finished_good" references="pro_finished_goods(id)"/>
+            </column>
+            <column name="process_flow_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="other_fixed_cost" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="other_variable_cost" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="is_locked" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="created_at" type="datetime"/>
+            <column name="updated_at" type="datetime"/>
+        </createTable>
+
+        <!-- process_finished_good_details -->
+        <createTable tableName="process_finished_good_details">
+             <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="process_finished_good_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_pfgd_parent" references="process_finished_goods(id)"/>
+            </column>
+            <column name="process_id" type="BIGINT">
+                <constraints foreignKeyName="fk_pfgd_process" references="pro_processes(id)"/>
+            </column>
+            <column name="work_group_id" type="BIGINT">
+                <constraints foreignKeyName="fk_pfgd_workgroup" references="pro_work_groups(id)"/>
+            </column>
+            <column name="setup_time" type="INT"/>
+            <column name="cycle_time" type="INT"/>
+            <column name="fixed_cost" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="variable_cost" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="is_outsource" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="is_testing" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="notes" type="TEXT"/>
+            <column name="sequence" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- process_semi_finished -->
+        <createTable tableName="process_semi_finished">
+             <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="item_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_psf_item" references="pro_semifinished(id)"/>
+            </column>
+            <column name="process_flow_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="other_fixed_cost" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="other_variable_cost" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="is_locked" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="created_at" type="datetime"/>
+            <column name="updated_at" type="datetime"/>
+        </createTable>
+
+        <!-- process_semi_finished_details -->
+        <createTable tableName="process_semi_finished_details">
+             <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="process_semi_finished_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_psfd_parent" references="process_semi_finished(id)"/>
+            </column>
+            <column name="process_id" type="BIGINT">
+                <constraints foreignKeyName="fk_psfd_process" references="pro_processes(id)"/>
+            </column>
+            <column name="work_group_id" type="BIGINT">
+                <constraints foreignKeyName="fk_psfd_workgroup" references="pro_work_groups(id)"/>
+            </column>
+            <column name="setup_time" type="INT"/>
+            <column name="cycle_time" type="INT"/>
+            <column name="fixed_cost" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="variable_cost" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="is_outsource" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="is_testing" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="notes" type="TEXT"/>
+            <column name="sequence" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    
+    <changeSet id="create-production-bom-tables" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <!-- bom_finished_goods -->
+        <createTable tableName="bom_finished_goods">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="item_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_bom_fg_item" references="pro_finished_goods(id)"/>
+            </column>
+            <column name="bom_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity" type="DECIMAL(19, 4)" defaultValueNumeric="1"/>
+            <column name="routing_id" type="BIGINT">
+                <constraints foreignKeyName="fk_bom_fg_routing" references="process_finished_goods(id)"/>
+            </column>
+            <column name="approximate_cost" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="is_locked" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="created_at" type="datetime"/>
+            <column name="updated_at" type="datetime"/>
+        </createTable>
+
+        <!-- bom_finished_good_details -->
+        <createTable tableName="bom_finished_good_details">
+             <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="bom_finished_good_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_bom_fg_details_parent" references="bom_finished_goods(id)"/>
+            </column>
+            <column name="process_id" type="BIGINT">
+                <constraints foreignKeyName="fk_bom_fg_details_process" references="pro_processes(id)"/>
+            </column>
+            <column name="raw_material_id" type="BIGINT">
+                <constraints foreignKeyName="fk_bom_fg_details_rm" references="pro_raw_materials(id)"/>
+            </column>
+            <column name="semi_finished_id" type="BIGINT">
+                <constraints foreignKeyName="fk_bom_fg_details_sf" references="pro_semifinished(id)"/>
+            </column>
+            <column name="quantity" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="uom_id" type="BIGINT">
+                <constraints foreignKeyName="fk_bom_fg_details_uom" references="pro_units(id)"/>
+            </column>
+            <column name="rate" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="amount" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="notes" type="TEXT"/>
+            <column name="sequence" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- bom_semi_finished -->
+         <createTable tableName="bom_semi_finished">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="item_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_bom_sf_item" references="pro_semifinished(id)"/>
+            </column>
+            <column name="bom_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity" type="DECIMAL(19, 4)" defaultValueNumeric="1"/>
+            <column name="routing_id" type="BIGINT">
+                <constraints foreignKeyName="fk_bom_sf_routing" references="process_semi_finished(id)"/>
+            </column>
+            <column name="approximate_cost" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="is_locked" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="created_at" type="datetime"/>
+            <column name="updated_at" type="datetime"/>
+        </createTable>
+
+        <!-- bom_semi_finished_details -->
+        <createTable tableName="bom_semi_finished_details">
+             <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="bom_semi_finished_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_bom_sf_details_parent" references="bom_semi_finished(id)"/>
+            </column>
+            <column name="process_id" type="BIGINT">
+                <constraints foreignKeyName="fk_bom_sf_details_process" references="pro_processes(id)"/>
+            </column>
+            <column name="raw_material_id" type="BIGINT">
+                <constraints foreignKeyName="fk_bom_sf_details_rm" references="pro_raw_materials(id)"/>
+            </column>
+            <column name="semi_finished_id" type="BIGINT">
+                <constraints foreignKeyName="fk_bom_sf_details_sf" references="pro_semifinished(id)"/>
+            </column>
+             <column name="quantity" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="uom_id" type="BIGINT">
+                <constraints foreignKeyName="fk_bom_sf_details_uom" references="pro_units(id)"/>
+            </column>
+            <column name="rate" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="amount" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="notes" type="TEXT"/>
+            <column name="sequence" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-production-orders-tables" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <!-- manufacturing_orders -->
+         <createTable tableName="manufacturing_orders">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="mo_number" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="so_number" type="VARCHAR(255)"/>
+            <column name="customer" type="VARCHAR(255)"/>
+            <column name="reference_no" type="VARCHAR(255)"/>
+            <column name="item_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_mo_item" references="pro_finished_goods(id)"/>
+            </column>
+             <column name="quantity" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="schedule_start" type="datetime"/>
+            <column name="schedule_finish" type="datetime"/>
+            <column name="due_date" type="datetime"/>
+            <column name="actual_start" type="datetime"/>
+            <column name="actual_finish" type="datetime"/>
+            <column name="assign_to_id" type="BIGINT"/>
+            <column name="batch_no" type="VARCHAR(255)"/>
+            <column name="bom_id" type="BIGINT">
+                <constraints foreignKeyName="fk_mo_bom" references="bom_finished_goods(id)"/>
+            </column>
+            <column name="created_at" type="datetime"/>
+            <column name="updated_at" type="datetime"/>
+
+             <!-- Extra fields matching entity -->
+             <column name="category_id" type="BIGINT"/>
+             <column name="sub_category_id" type="BIGINT"/>
+             <column name="wastage" type="DECIMAL(19,4)"/>
+             <column name="sampling_request_status" type="VARCHAR(255)"/>
+             <column name="shift" type="VARCHAR(255)"/>
+             <column name="production_date" type="datetime"/>
+             <column name="start_time" type="time"/>
+             <column name="end_time" type="time"/>
+             <column name="finished_quantity" type="DECIMAL(19,4)"/>
+             <column name="remarks" type="TEXT"/>
+        </createTable>
+
+        <!-- manufacturing_order_files -->
+         <createTable tableName="manufacturing_order_files">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="manufacturing_order_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_mo_files_order" references="manufacturing_orders(id)"/>
+            </column>
+            <column name="file_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_path" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- pro_manufacturing_orders (for semi-finished) -->
+        <createTable tableName="pro_manufacturing_orders">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="mo_number" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="so_number" type="VARCHAR(255)"/>
+            <column name="customer" type="VARCHAR(255)"/>
+            <column name="reference_no" type="VARCHAR(255)"/>
+            <column name="item_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_pmo_item" references="pro_semifinished(id)"/>
+            </column>
+            <column name="quantity" type="DECIMAL(19, 4)" defaultValueNumeric="0"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="schedule_start" type="datetime"/>
+            <column name="schedule_finish" type="datetime"/>
+            <column name="due_date" type="datetime"/>
+            <column name="actual_start" type="datetime"/>
+            <column name="actual_finish" type="datetime"/>
+            <column name="assign_to" type="VARCHAR(255)"/>
+            <column name="batch_no" type="VARCHAR(255)"/>
+            <column name="bom_id" type="BIGINT">
+                <constraints foreignKeyName="fk_pmo_bom" references="bom_semi_finished(id)"/>
+            </column>
+            <column name="created_at" type="datetime"/>
+            <column name="updated_at" type="datetime"/>
+        </createTable>
+
+        <!-- pro_manufacturing_order_files -->
+        <createTable tableName="pro_manufacturing_order_files">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="manufacturing_order_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_pmo_files_order" references="pro_manufacturing_orders(id)"/>
+            </column>
+            <column name="file_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_path" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-production-schedules-tables" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+         <!-- production_schedules -->
+        <createTable tableName="production_schedules">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="manufacturing_order_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_schedule_mo" references="manufacturing_orders(id)"/>
+            </column>
+            <column name="work_group_id" type="BIGINT">
+                <constraints foreignKeyName="fk_schedule_workgroup" references="pro_work_groups(id)"/>
+            </column>
+            <column name="employee_id" type="BIGINT">
+                <!-- Assuming employees table exists in users/master schema, but foreign key might be tricky if cross-schema -->
+                 <constraints nullable="true"/> 
+            </column>
+            <column name="start_time" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_time" type="datetime">
+                 <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="notes" type="VARCHAR(500)"/>
+            <column name="created_at" type="datetime"/>
+            <column name="updated_at" type="datetime"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-production-manage-tasks" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <!-- pro_parameters -->
+        <createTable tableName="pro_parameters">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changes_quantity" type="BOOLEAN" defaultValueBoolean="false"/>
+        </createTable>
+         <addUniqueConstraint tableName="pro_parameters" columnNames="tenant_id, name" constraintName="uk_parameter_tenant_name"/>
+
+        <!-- pro_parameter_values -->
+        <createTable tableName="pro_parameter_values">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parameter_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_paramvalue_param" references="pro_parameters(id)"/>
+            </column>
+            <column name="code" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(200)">
+                 <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="pro_parameter_values" columnNames="parameter_id, code" constraintName="uk_paramvalue_param_code"/>
+
+        <!-- pro_manage_tasks -->
+        <createTable tableName="pro_manage_tasks">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+             <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT">
+                <constraints foreignKeyName="fk_mp_location" references="locations(id)"/>
+            </column>
+            <column name="workgroup_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_mp_workgroup" references="pro_work_groups(id)"/>
+            </column>
+            <column name="workstation_id" type="BIGINT">
+                <constraints foreignKeyName="fk_mp_workstation" references="pro_work_stations(id)"/>
+            </column>
+            <column name="task_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_mp_task" references="pro_tasks(id)"/>
+            </column>
+            <column name="frequency" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_performed_on" type="date"/>
+            <column name="alert_before_days" type="INT"/>
+            <column name="created_at" type="datetime"/>
+            <column name="updated_at" type="datetime"/>
+        </createTable>
+
+        <!-- pro_manage_task_notifications -->
+        <createTable tableName="pro_manage_task_notifications">
+            <column name="plan_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_mtn_plan" references="pro_manage_tasks(id)"/>
+            </column>
+            <column name="employee_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <!-- Add missing columns to manufacturing_orders to match current entity -->
+    <changeSet id="add-manufacturing-orders-missing-columns" author="system">
+        <validCheckSum>ANY</validCheckSum>
+
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="manufacturing_orders" columnName="bom_finished_good_id"/></not>
+        </preConditions>
+        <addColumn tableName="manufacturing_orders">
+            <column name="bom_finished_good_id" type="BIGINT"/>
+        </addColumn>
+
+    </changeSet>
+
+    <changeSet id="add-manufacturing-orders-sales-order-id" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="manufacturing_orders" columnName="sales_order_id"/></not>
+        </preConditions>
+        <addColumn tableName="manufacturing_orders">
+            <column name="sales_order_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add-manufacturing-orders-customer-id" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="manufacturing_orders" columnName="customer_id"/></not>
+        </preConditions>
+        <addColumn tableName="manufacturing_orders">
+            <column name="customer_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add-manufacturing-orders-raw-material-id" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="manufacturing_orders" columnName="raw_material_id"/></not>
+        </preConditions>
+        <addColumn tableName="manufacturing_orders">
+            <column name="raw_material_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add-manufacturing-orders-finished-good-id" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="manufacturing_orders" columnName="finished_good_id"/></not>
+        </preConditions>
+        <addColumn tableName="manufacturing_orders">
+            <column name="finished_good_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add-manufacturing-orders-crm-product-id" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="manufacturing_orders" columnName="crm_product_id"/></not>
+        </preConditions>
+        <addColumn tableName="manufacturing_orders">
+            <column name="crm_product_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="086-create-driver-documents-table" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="fleet_driver_documents">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="driver_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_driver_doc_driver" referencedTableName="fleet_drivers" referencedColumnNames="id"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_driver_doc_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+            </column>
+            <column name="document_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_path" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_number" type="VARCHAR(50)"/>
+            <column name="expiry_date" type="DATE"/>
+            <column name="uploaded_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="fleet_driver_documents" indexName="idx_driver_doc_tenant_driver">
+            <column name="tenant_id"/>
+            <column name="driver_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

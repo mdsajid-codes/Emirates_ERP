@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-crm-lead-attachments" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="crm_lead_attachments">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lead_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_path" type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_type" type="VARCHAR(100)"/>
+            <column name="file_size" type="BIGINT"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint baseTableName="crm_lead_attachments" 
+                                 baseColumnNames="lead_id" 
+                                 referencedTableName="crm_leads" 
+                                 referencedColumnNames="id" 
+                                 constraintName="fk_attachment_lead"/>
+    </changeSet>
+
+</databaseChangeLog>

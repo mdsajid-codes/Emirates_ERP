@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="vehicle-add-operational-fields" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="fleet_vehicles">
+            <column name="engine_number" type="VARCHAR(100)"/>
+            <column name="permit_expiry" type="DATE"/>
+            <column name="yard_location" type="VARCHAR(100)"/>
+            <column name="vehicle_status" type="VARCHAR(30)" defaultValue="ACTIVE"/>
+        </addColumn>
+        <addUniqueConstraint tableName="fleet_vehicles" columnNames="tenant_id, engine_number" constraintName="uq_vehicle_engine_number"/>
+        <addUniqueConstraint tableName="fleet_vehicles" columnNames="tenant_id, vin_number" constraintName="uq_vehicle_vin_number"/>
+    </changeSet>
+
+</databaseChangeLog>

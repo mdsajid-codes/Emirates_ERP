@@ -1,0 +1,20 @@
+package com.example.multi_tanent.ats.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.OffsetDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AtsClientGuidelineResponse {
+    private Long id;
+    private Long clientId;
+    private String submissionGuidelines;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
+}

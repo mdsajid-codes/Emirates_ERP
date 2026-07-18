@@ -1,0 +1,49 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="014-create-company-gl-accounts" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="company_gl_accounts"/>
+      </not>
+    </preConditions>
+    <createTable tableName="company_gl_accounts">
+      <column name="id" type="BIGINT" autoIncrement="true">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="company_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="account_purpose" type="VARCHAR(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="gl_account_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="tenant_id" type="BIGINT"/>
+      <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+      <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="company_gl_accounts"
+                             baseColumnNames="gl_account_id"
+                             referencedTableName="chart_of_accounts"
+                             referencedColumnNames="account_id"
+                             constraintName="fk_company_gl_account"/>
+
+    <addForeignKeyConstraint baseTableName="company_gl_accounts"
+                             baseColumnNames="tenant_id"
+                             referencedTableName="tenants"
+                             referencedColumnNames="id"
+                             constraintName="fk_company_gl_tenant"/>
+
+    <addForeignKeyConstraint baseTableName="company_gl_accounts"
+                             baseColumnNames="company_id"
+                             referencedTableName="crm_companies"
+                             referencedColumnNames="id"
+                             constraintName="fk_company_gl_crm_company"/>
+  </changeSet>
+
+</databaseChangeLog>

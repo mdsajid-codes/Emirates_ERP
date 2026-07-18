@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Subscriptions -->
+    <changeSet id="create-subscriptions" author="sajid">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="subscriptions"/></not>
+        </preConditions>
+        <createTable tableName="subscriptions">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="number_of_locations" type="INT"/>
+            <column name="number_of_users" type="INT"/>
+            <column name="hrms_access_count" type="INT"/>
+            <column name="number_of_store" type="INT"/>
+            <column name="subscription_start_date" type="DATE"/>
+            <column name="subscription_end_date" type="DATE"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Locations -->
+    <changeSet id="create-locations" author="sajid">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="locations"/></not>
+        </preConditions>
+        <createTable tableName="locations">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="address" type="VARCHAR(255)"/>
+            <column name="city" type="VARCHAR(255)"/>
+            <column name="state" type="VARCHAR(255)"/>
+            <column name="postal_code" type="VARCHAR(255)"/>
+            <column name="country" type="VARCHAR(255)"/>
+            <column name="is_primary" type="BOOLEAN" defaultValueBoolean="false"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="locations" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_locations_tenant"/>
+    </changeSet>
+
+    <!-- Stores -->
+    <changeSet id="create-stores" author="sajid">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="stores"/></not>
+        </preConditions>
+        <createTable tableName="stores">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="address" type="VARCHAR(255)"/>
+            <column name="currency" type="VARCHAR(3)"/>
+            <column name="timezone" type="VARCHAR(255)"/>
+            <column name="vat_number" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="stores" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_stores_tenant"/>
+    </changeSet>
+
+    <!-- Company Info -->
+    <changeSet id="create-company-info" author="sajid">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="company_info"/></not>
+        </preConditions>
+        <createTable tableName="company_info">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT"/>
+            <column name="company_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="logo_url" type="VARCHAR(255)"/>
+            <column name="address" type="VARCHAR(255)"/>
+            <column name="city" type="VARCHAR(255)"/>
+            <column name="emirate" type="VARCHAR(255)"/>
+            <column name="po_box" type="VARCHAR(255)"/>
+            <column name="country" type="VARCHAR(255)"/>
+            <column name="phone" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="website" type="VARCHAR(255)"/>
+            <column name="trade_license_number" type="VARCHAR(255)"/>
+            <column name="trade_license_expiry" type="DATE"/>
+            <column name="trn" type="VARCHAR(255)"/>
+            <column name="mohre_establishment_id" type="VARCHAR(255)"/>
+            <column name="visa_quota_total" type="INT"/>
+            <column name="employer_bank_routing_code" type="VARCHAR(255)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="company_info" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_company_info_tenant"/>
+    </changeSet>
+
+    <!-- Company Locations -->
+    <changeSet id="create-company-locations" author="sajid">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="company_locations"/></not>
+        </preConditions>
+        <createTable tableName="company_locations">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="company_info_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="address" type="VARCHAR(255)"/>
+            <column name="city" type="VARCHAR(255)"/>
+            <column name="state" type="VARCHAR(255)"/>
+            <column name="postal_code" type="VARCHAR(255)"/>
+            <column name="country" type="VARCHAR(255)"/>
+            <column name="is_primary" type="BOOLEAN" defaultValueBoolean="false"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="company_locations" baseColumnNames="company_info_id" referencedTableName="company_info" referencedColumnNames="id" constraintName="fk_cl_company_info"/>
+    </changeSet>
+
+    <!-- Company Bank Accounts -->
+    <changeSet id="create-company-bank-accounts" author="sajid">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="company_bank_accounts"/></not>
+        </preConditions>
+        <createTable tableName="company_bank_accounts">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="company_info_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bank_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_number" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ifsc_code" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_holder_name" type="VARCHAR(255)"/>
+            <column name="branch_name" type="VARCHAR(255)"/>
+            <column name="is_primary" type="BOOLEAN" defaultValueBoolean="false"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="company_bank_accounts" baseColumnNames="company_info_id" referencedTableName="company_info" referencedColumnNames="id" constraintName="fk_cba_company_info"/>
+    </changeSet>
+
+    <!-- Users -->
+    <changeSet id="create-users" author="sajid">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="users"/></not>
+        </preConditions>
+        <createTable tableName="users">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="store_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password_hash" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_active" type="BOOLEAN"/>
+            <column name="is_locked" type="BOOLEAN"/>
+            <column name="login_attempts" type="INT"/>
+            <column name="last_login_at" type="DATETIME"/>
+            <column name="last_login_ip" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="users" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_users_tenant"/>
+        <addForeignKeyConstraint baseTableName="users" baseColumnNames="location_id" referencedTableName="locations" referencedColumnNames="id" constraintName="fk_users_location"/>
+        <addForeignKeyConstraint baseTableName="users" baseColumnNames="store_id" referencedTableName="stores" referencedColumnNames="id" constraintName="fk_users_store"/>
+    </changeSet>
+
+    <!-- User Roles -->
+    <changeSet id="create-user-roles" author="sajid">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="user_roles"/></not>
+        </preConditions>
+        <createTable tableName="user_roles">
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="user_roles" baseColumnNames="user_id" referencedTableName="users" referencedColumnNames="id" constraintName="fk_user_roles_user"/>
+    </changeSet>
+
+    <!-- Employees -->
+    <changeSet id="create-employees" author="sajid">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="employees"/></not>
+        </preConditions>
+        <createTable tableName="employees">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="employee_code" type="VARCHAR(255)">
+                <constraints unique="true"/>
+            </column>
+            <column name="first_name" type="VARCHAR(255)"/>
+            <column name="middle_name" type="VARCHAR(255)"/>
+            <column name="last_name" type="VARCHAR(255)"/>
+            <column name="email_work" type="VARCHAR(255)"/>
+            <column name="email_personal" type="VARCHAR(255)"/>
+            <column name="phone_primary" type="VARCHAR(255)"/>
+            <column name="dob" type="DATE"/>
+            <column name="gender" type="VARCHAR(255)"/>
+            <column name="martial_status" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(255)"/>
+            <column name="photo_path" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="employees" baseColumnNames="user_id" referencedTableName="users" referencedColumnNames="id" constraintName="fk_employees_user"/>
+        <addForeignKeyConstraint baseTableName="employees" baseColumnNames="location_id" referencedTableName="locations" referencedColumnNames="id" constraintName="fk_employees_location"/>
+    </changeSet>
+
+    <!-- CRM Products and Industries -->
+    <changeSet id="create-crm-industries" author="sajid">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="crm_industries"/></not>
+        </preConditions>
+        <createTable tableName="crm_industries">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="crm_industries" columnNames="tenant_id, name" constraintName="uk_industry_tenant_name"/>
+    </changeSet>
+
+    <changeSet id="create-crm-products" author="sajid">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="crm_products"/></not>
+        </preConditions>
+        <createTable tableName="crm_products">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="industry_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location_id" type="BIGINT"/>
+            <column name="name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="crm_products" columnNames="tenant_id, name" constraintName="uk_product_tenant_name"/>
+        <addForeignKeyConstraint baseTableName="crm_products" baseColumnNames="industry_id" referencedTableName="crm_industries" referencedColumnNames="id" constraintName="fk_product_industry"/>
+    </changeSet>
+
+    <changeSet id="create-crm-sales-products" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="crm_sales_products"/></not>
+        </preConditions>
+        <createTable tableName="crm_sales_products">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="item_type" type="VARCHAR(255)"/>
+            <column name="is_purchase" type="BOOLEAN"/>
+            <column name="is_sales" type="BOOLEAN"/>
+            <column name="item_code" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="description" type="LONGTEXT"/>
+            <column name="image_url" type="VARCHAR(255)"/>
+            <column name="unit_of_measure" type="VARCHAR(255)"/>
+            <column name="reorder_limit" type="INT"/>
+            <column name="vat_classification_code" type="VARCHAR(255)"/>
+            <column name="purchase_price" type="DECIMAL(19, 2)"/>
+            <column name="sales_price" type="DECIMAL(19, 2)"/>
+            <column name="tax" type="VARCHAR(255)"/>
+            <column name="barcode" type="VARCHAR(255)"/>
+            <column name="barcode_url" type="VARCHAR(255)"/>
+            <column name="tax_rate" type="DOUBLE"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

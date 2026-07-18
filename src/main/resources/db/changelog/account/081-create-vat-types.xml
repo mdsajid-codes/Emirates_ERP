@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="081-create-vat-types" author="system">
+        <createTable tableName="vat_types">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vat_group_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="receivable_gl_account_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payable_gl_account_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="vat_types" baseColumnNames="vat_group_id" referencedTableName="vat_groups" referencedColumnNames="id" constraintName="fk_vat_type_group"/>
+        <addForeignKeyConstraint baseTableName="vat_types" baseColumnNames="receivable_gl_account_id" referencedTableName="chart_of_accounts" referencedColumnNames="account_id" constraintName="fk_vat_type_receivable_gl"/>
+        <addForeignKeyConstraint baseTableName="vat_types" baseColumnNames="payable_gl_account_id" referencedTableName="chart_of_accounts" referencedColumnNames="account_id" constraintName="fk_vat_type_payable_gl"/>
+    </changeSet>
+
+</databaseChangeLog>

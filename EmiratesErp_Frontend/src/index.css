@@ -1,0 +1,177 @@
+html, body {
+  font-family: var(--font-family-sans);
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-primary-foreground hover:opacity-90 focus:ring-primary disabled:bg-slate-400;
+  }
+
+  .btn-secondary {
+    @apply btn bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 focus:ring-primary disabled:bg-slate-100 disabled:text-slate-400;
+  }
+
+  .btn-danger {
+    @apply btn bg-error text-white hover:opacity-90 focus:ring-error disabled:bg-slate-400;
+  }
+
+  .btn-ghost {
+    @apply btn text-primary hover:bg-slate-100 focus:ring-primary disabled:text-slate-400;
+  }
+
+  /* Helper classes for tables and forms for consistency */
+  .th-cell {
+    @apply text-left py-3 px-4 uppercase font-semibold text-sm text-slate-600;
+  }
+
+  .td-cell {
+    @apply py-3 px-4;
+  }
+
+  .input {
+    @apply mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-600 focus:border-blue-600 sm:text-sm;
+  }
+
+  .label-sm {
+    @apply block text-xs font-medium text-foreground-muted mb-1;
+  }
+
+  .input-sm {
+    @apply input py-1.5 px-2 text-sm;
+  }
+
+  .btn-sm {
+    @apply btn-secondary py-1 px-2 text-xs;
+  }
+
+}
+
+/* Custom Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 40px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(20%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.8s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .glass-nav {
+  background: rgba(15, 23, 42, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+
+/* ===== Custom Thin Scrollbar ===== */
+
+.custom-scrollbar {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #1E3A5F #E2E8F0; /* thumb + track */
+}
+
+/* Chrome, Edge, Safari */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #E2E8F0;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #1E3A5F;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #16324F; /* slightly darker */
+}
+/* ===== Hide Scrollbar but keep functionality ===== */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

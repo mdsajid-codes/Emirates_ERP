@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+    <changeSet id="hng-rework-1" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="hng_rework_entry">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_rework_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+            </column>
+            <column name="batch_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_rework_batch" referencedTableName="hng_production_batch" referencedColumnNames="id"/>
+            </column>
+            <column name="rework_no" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="source_stage" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_stage" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rework_qty" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="VARCHAR(255)"/>
+            <column name="remarks" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

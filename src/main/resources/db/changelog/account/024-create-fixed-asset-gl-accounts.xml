@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="024-create-fixed-asset-gl-accounts" author="antigravity">
+        <createTable tableName="fixed_asset_gl_accounts">
+            <column name="fixed_asset_gl_account_id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="fixed_asset_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="asset_cost_account_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="accum_depreciation_account_id" type="BIGINT"/>
+            <column name="depreciation_expense_account_id" type="BIGINT"/>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="fixed_asset_gl_accounts" baseColumnNames="asset_cost_account_id"
+                                 constraintName="fk_fixed_asset_gl_cost"
+                                 referencedTableName="chart_of_accounts" referencedColumnNames="account_id"/>
+                                 
+        <addForeignKeyConstraint baseTableName="fixed_asset_gl_accounts" baseColumnNames="accum_depreciation_account_id"
+                                 constraintName="fk_fixed_asset_gl_accum_dep"
+                                 referencedTableName="chart_of_accounts" referencedColumnNames="account_id"/>
+                                 
+        <addForeignKeyConstraint baseTableName="fixed_asset_gl_accounts" baseColumnNames="depreciation_expense_account_id"
+                                 constraintName="fk_fixed_asset_gl_dep_exp"
+                                 referencedTableName="chart_of_accounts" referencedColumnNames="account_id"/>
+                                 
+        <addForeignKeyConstraint baseTableName="fixed_asset_gl_accounts" baseColumnNames="tenant_id"
+                                 constraintName="fk_fixed_asset_gl_tenant"
+                                 referencedTableName="tenants" referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

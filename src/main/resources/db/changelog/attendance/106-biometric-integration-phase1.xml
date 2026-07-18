@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="106-1-alter-biometric-devices" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="biometric_devices">
+            <column name="api_key" type="VARCHAR(255)">
+                <constraints unique="true"/>
+            </column>
+            <column name="vendor_format" type="VARCHAR(50)" defaultValue="GENERIC"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="106-2-create-biometric-raw-punches" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="biometric_raw_punches">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="device_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="raw_payload" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="punch_time" type="DATETIME"/>
+            <column name="processing_status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="error_message" type="TEXT"/>
+            <column name="created_at" type="DATETIME" defaultValueComputed="now()"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="biometric_raw_punches" baseColumnNames="device_id"
+                                 referencedTableName="biometric_devices" referencedColumnNames="id"
+                                 constraintName="fk_raw_punch_device"/>
+    </changeSet>
+
+</databaseChangeLog>

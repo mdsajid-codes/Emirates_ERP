@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+    <changeSet id="hng-field-additions-1" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <!-- Adding chemical batch and thickness fields for better coating traceability -->
+        <addColumn tableName="hng_coating_log">
+            <column name="chemical_batch" type="VARCHAR(100)"/>
+            <column name="coating_thickness_mm" type="DECIMAL(8,4)"/>
+        </addColumn>
+        
+        <!-- Adding net weight and carton size for enhanced logistics data -->
+        <addColumn tableName="hng_batch_packing">
+            <column name="net_weight_kg" type="DECIMAL(10,3)"/>
+            <column name="carton_size" type="VARCHAR(100)"/>
+        </addColumn>
+        
+        <!-- Adding cost center for financial tracking in wire cutting -->
+        <addColumn tableName="hng_batch_wire_processing">
+            <column name="cost_center" type="VARCHAR(100)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="add-fleet-columns-to-delivery-orders" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="delivery_orders" columnName="driver_id"/></not>
+        </preConditions>
+        <addColumn tableName="delivery_orders">
+            <column name="driver_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="vehicle_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="warehouse_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="dispatched_at" type="DATETIME">
+                <constraints nullable="true"/>
+            </column>
+            <column name="delivered_at" type="DATETIME">
+                <constraints nullable="true"/>
+            </column>
+            <column name="route_notes" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add-fleet-fks-to-delivery-orders" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <addForeignKeyConstraint baseTableName="delivery_orders" baseColumnNames="driver_id" referencedTableName="fleet_drivers" referencedColumnNames="id" constraintName="fk_do_driver"/>
+        <addForeignKeyConstraint baseTableName="delivery_orders" baseColumnNames="vehicle_id" referencedTableName="fleet_vehicles" referencedColumnNames="id" constraintName="fk_do_vehicle"/>
+        <addForeignKeyConstraint baseTableName="delivery_orders" baseColumnNames="warehouse_id" referencedTableName="wms_warehouse" referencedColumnNames="id" constraintName="fk_do_warehouse"/>
+    </changeSet>
+
+</databaseChangeLog>

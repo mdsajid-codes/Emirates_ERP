@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="update-delivery-order-items-manufacturing-cols" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="delivery_order_items">
+            <column name="raw_material_id" type="BIGINT"/>
+            <column name="semifinished_id" type="BIGINT"/>
+            <column name="finished_good_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

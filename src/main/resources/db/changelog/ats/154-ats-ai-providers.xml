@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-ats-ai-providers" author="sajid">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="ats_ai_providers">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="api_key" type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="model" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="base_url" type="VARCHAR(500)"/>
+            <column name="max_tokens" type="INT" defaultValueNumeric="4096"/>
+            <column name="temperature" type="DECIMAL(3,2)" defaultValueNumeric="0.0"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ats_ai_providers" indexName="idx_ats_ai_provider_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex tableName="ats_ai_providers" indexName="idx_ats_ai_provider_active">
+            <column name="tenant_id"/>
+            <column name="is_active"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="ats_ai_providers" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_ats_ai_provider_tenant"/>
+    </changeSet>
+
+</databaseChangeLog>

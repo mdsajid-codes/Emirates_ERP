@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="hng-coating-log-v1" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        
+        <!-- Create Coating Log table for Coating / Painting stage -->
+        <createTable tableName="hng_coating_log">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_cl_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+            </column>
+            <column name="batch_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_hng_cl_batch" referencedTableName="hng_production_batch" referencedColumnNames="id"/>
+            </column>
+            <column name="coating_log_no" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_hng_coating_log_no"/>
+            </column>
+            <column name="coating_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="color_code" type="VARCHAR(50)"/>
+            <column name="workstation_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_cl_ws" referencedTableName="pro_work_stations" referencedColumnNames="id"/>
+            </column>
+            <column name="operator_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_cl_operator" referencedTableName="employees" referencedColumnNames="id"/>
+            </column>
+            <column name="shift" type="varchar(20)"/>
+            <column name="input_qty" type="INT"/>
+            <column name="produced_qty" type="INT"/>
+            <column name="rejected_qty" type="INT"/>
+            <column name="rework_qty" type="INT"/>
+            <column name="paint_consumed_kg" type="decimal(8,3)"/>
+            <column name="temperature_c" type="decimal(5,1)"/>
+            <column name="duration_min" type="decimal(6,1)"/>
+            <column name="color_pass" type="BOOLEAN"/>
+            <column name="start_time" type="datetime"/>
+            <column name="end_time" type="datetime"/>
+            <column name="remarks" type="TEXT"/>
+            <column name="created_at" type="datetime" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <createIndex tableName="hng_coating_log" indexName="idx_hng_cl_batch">
+            <column name="tenant_id"/>
+            <column name="batch_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="hng-scrap-entry-coating-log-v1" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="hng_scrap_entry">
+            <column name="coating_log_id" type="BIGINT">
+                <constraints foreignKeyName="fk_hng_scrap_cl" referencedTableName="hng_coating_log" referencedColumnNames="id"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,66 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="010-add-coa-created-by" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="chart_of_accounts" columnName="created_by"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="chart_of_accounts">
+      <column name="created_by" type="VARCHAR(100)"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="010-add-coa-created-at" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="chart_of_accounts" columnName="created_at"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="chart_of_accounts">
+      <column name="created_at" type="DATETIME"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="010-add-coa-updated-at" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="chart_of_accounts" columnName="updated_at"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="chart_of_accounts">
+      <column name="updated_at" type="DATETIME"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="010-add-coa-parent-id" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="chart_of_accounts" columnName="parent_id"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="chart_of_accounts">
+      <column name="parent_id" type="BIGINT"/>
+    </addColumn>
+    <addForeignKeyConstraint baseTableName="chart_of_accounts"
+                             baseColumnNames="parent_id"
+                             constraintName="fk_coa_parent"
+                             referencedTableName="chart_of_accounts"
+                             referencedColumnNames="account_id"/>
+  </changeSet>
+
+  <changeSet id="010-add-coa-level" author="dev-a">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="chart_of_accounts" columnName="level"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="chart_of_accounts">
+      <column name="level" type="INT" defaultValueNumeric="1"/>
+    </addColumn>
+  </changeSet>
+
+</databaseChangeLog>

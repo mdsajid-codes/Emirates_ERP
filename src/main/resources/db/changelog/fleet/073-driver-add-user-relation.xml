@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="add-user-id-to-fleet-drivers" author="system">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="fleet_drivers"/>
+            <not><columnExists tableName="fleet_drivers" columnName="user_id"/></not>
+        </preConditions>
+        <addColumn tableName="fleet_drivers">
+            <column name="user_id" type="BIGINT">
+                <constraints unique="true" foreignKeyName="fk_driver_user" referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

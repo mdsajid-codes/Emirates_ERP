@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="20240523-hanger-grn-coil-fields" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="pur_grn_item">
+            <column name="is_hanger_coil" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="heat_no" type="varchar(100)"/>
+            <column name="lot_no" type="varchar(100)"/>
+            <column name="material_type" type="varchar(20)"/>
+            <column name="wire_gauge_mm" type="decimal(6,2)"/>
+            <column name="gross_weight_kg" type="decimal(12,4)"/>
+            <column name="tare_weight_kg" type="decimal(12,4)"/>
+            <column name="net_weight_kg" type="decimal(12,4)"/>
+            <column name="rate_per_kg" type="decimal(12,4)"/>
+            <column name="total_value" type="decimal(14,4)"/>
+            <column name="mill_certificate_url" type="varchar(500)"/>
+            <column name="warehouse_location" type="varchar(200)"/>
+            <column name="coil_no" type="varchar(50)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

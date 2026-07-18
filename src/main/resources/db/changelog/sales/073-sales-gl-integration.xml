@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+    <changeSet id="073-sales-gl-integration" author="antigravity">
+        <!-- Sales Invoices -->
+        <addColumn tableName="sales_invoices">
+            <column name="journal_entry_id" type="BIGINT"/>
+            <column name="gl_posted" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="sales_invoices"
+                                 baseColumnNames="journal_entry_id"
+                                 constraintName="fk_sales_invoices_journal_entry"
+                                 referencedTableName="journal_entries"
+                                 referencedColumnNames="journal_entry_id"/>
+
+        <!-- Received Amounts -->
+        <addColumn tableName="recieved_amounts">
+            <column name="journal_entry_id" type="BIGINT"/>
+            <column name="gl_posted" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="recieved_amounts"
+                                 baseColumnNames="journal_entry_id"
+                                 constraintName="fk_recieved_amounts_journal_entry"
+                                 referencedTableName="journal_entries"
+                                 referencedColumnNames="journal_entry_id"/>
+
+        <!-- Credit Notes -->
+        <addColumn tableName="credit_notes">
+            <column name="journal_entry_id" type="BIGINT"/>
+            <column name="gl_posted" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="credit_notes"
+                                 baseColumnNames="journal_entry_id"
+                                 constraintName="fk_credit_notes_journal_entry"
+                                 referencedTableName="journal_entries"
+                                 referencedColumnNames="journal_entry_id"/>
+
+        <!-- Rental Invoices -->
+        <addColumn tableName="rental_invoices">
+            <column name="journal_entry_id" type="BIGINT"/>
+            <column name="gl_posted" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+
+        <addForeignKeyConstraint baseTableName="rental_invoices"
+                                 baseColumnNames="journal_entry_id"
+                                 constraintName="fk_rental_invoices_journal_entry"
+                                 referencedTableName="journal_entries"
+                                 referencedColumnNames="journal_entry_id"/>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-sales-customer-schema" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        
+        <!-- base_customers table -->
+        <createTable tableName="base_customers">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="party_type" type="VARCHAR(64)"/>
+            
+            <!-- Basic / Header -->
+            <column name="under_account" type="VARCHAR(255)"/>
+            <column name="price_category" type="VARCHAR(255)"/>
+            <column name="vendor_customer_code" type="VARCHAR(64)"/>
+            <column name="customer_code" type="VARCHAR(64)"/>
+            
+            <!-- Primary Contact -->
+            <column name="primary_contact_title" type="VARCHAR(32)"/>
+            <column name="primary_first_name" type="VARCHAR(128)"/>
+            <column name="primary_last_name" type="VARCHAR(128)"/>
+            <column name="primary_contact_person" type="VARCHAR(255)"/>
+            <column name="primary_contact_person_full" type="VARCHAR(255)"/>
+            <column name="primary_mobile" type="VARCHAR(50)"/>
+            <column name="contact_email" type="VARCHAR(256)"/>
+            <column name="contact_phone" type="VARCHAR(64)"/>
+            <column name="work_phone" type="VARCHAR(64)"/>
+            <column name="skype" type="VARCHAR(128)"/>
+            <column name="designation" type="VARCHAR(128)"/>
+            <column name="department" type="VARCHAR(128)"/>
+            
+            <!-- Company Details -->
+            <column name="company_name" type="VARCHAR(512)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="website" type="VARCHAR(256)"/>
+            <column name="owner_ceo_name" type="VARCHAR(256)"/>
+            <column name="owner_ceo_contact" type="VARCHAR(64)"/>
+            <column name="owner_ceo_email" type="VARCHAR(256)"/>
+            <column name="pan_number" type="VARCHAR(64)"/>
+            <column name="tan_number" type="VARCHAR(64)"/>
+            <column name="cin_number" type="VARCHAR(64)"/>
+            
+            <!-- Tax -->
+            <column name="vat_number" type="VARCHAR(128)"/>
+            <column name="vat_treatment" type="VARCHAR(64)"/>
+            <column name="vat_trn_number" type="VARCHAR(128)"/>
+            
+            <!-- Location -->
+            <column name="city" type="VARCHAR(128)"/>
+            <column name="region" type="VARCHAR(128)"/>
+            <column name="currency" type="VARCHAR(64)"/>
+            
+            <!-- Terms -->
+            <column name="terms_internal" type="TEXT"/>
+            <column name="terms_display" type="TEXT"/>
+            <column name="mode_of_payment" type="VARCHAR(256)"/>
+            <column name="delivery_type" type="VARCHAR(256)"/>
+            <column name="payment_terms" type="VARCHAR(512)"/>
+            <column name="transport_dispatch_through" type="VARCHAR(512)"/>
+            <column name="freight_terms" type="VARCHAR(512)"/>
+            <column name="spl_instruction" type="VARCHAR(1024)"/>
+            <column name="sales_value_previous_year" type="DECIMAL(19, 4)"/>
+            
+            <!-- Social -->
+            <column name="facebook" type="VARCHAR(256)"/>
+            <column name="twitter" type="VARCHAR(256)"/>
+            
+            <!-- Financials -->
+            <column name="tax_deducted" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="opening_balance" type="DECIMAL(19, 4)"/>
+            <column name="opening_balance_type" type="VARCHAR(8)"/>
+            <column name="credit_limit_allowed" type="DECIMAL(19, 4)"/>
+            <column name="credit_period_allowed" type="INT"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true"/>
+            
+            <!-- Addresses -->
+            <column name="billing_attention" type="VARCHAR(256)"/>
+            <column name="billing_address" type="VARCHAR(2000)"/>
+            <column name="billing_city" type="VARCHAR(128)"/>
+            <column name="billing_state" type="VARCHAR(128)"/>
+            <column name="billing_zip_code" type="VARCHAR(64)"/>
+            <column name="billing_country" type="VARCHAR(128)"/>
+            <column name="billing_phone" type="VARCHAR(64)"/>
+            <column name="billing_fax" type="VARCHAR(64)"/>
+            
+            <column name="shipping_attention" type="VARCHAR(256)"/>
+            <column name="shipping_address" type="VARCHAR(2000)"/>
+            <column name="shipping_city" type="VARCHAR(128)"/>
+            <column name="shipping_state" type="VARCHAR(128)"/>
+            <column name="shipping_zip_code" type="VARCHAR(64)"/>
+            <column name="shipping_country" type="VARCHAR(128)"/>
+            <column name="shipping_phone" type="VARCHAR(64)"/>
+            <column name="shipping_fax" type="VARCHAR(64)"/>
+            <column name="shipping_same_as_billing" type="BOOLEAN" defaultValueBoolean="false"/>
+            
+            <!-- Meta -->
+            <column name="remarks" type="TEXT"/>
+            <column name="created_by" type="VARCHAR(128)"/>
+            <column name="created_date" type="datetime"/>
+        </createTable>
+
+        <!-- sales_orders table -->
+        <createTable tableName="sales_orders">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sales_order_date" type="DATE"/>
+            <column name="customer_id" type="BIGINT">
+                <constraints foreignKeyName="fk_so_customer" references="base_customers(id)"/>
+            </column>
+            <column name="sales_order_number" type="VARCHAR(255)">
+                <constraints unique="true"/>
+            </column>
+            <column name="reference" type="VARCHAR(255)"/>
+            <column name="customer_po_no" type="VARCHAR(255)"/>
+            <column name="customer_po_date" type="DATE"/>
+            <column name="salesperson_id" type="BIGINT"/>
+            <column name="sale_type" type="VARCHAR(255)"/>
+            
+            <column name="sub_total" type="DECIMAL(19, 2)"/>
+            <column name="total_discount" type="DECIMAL(19, 2)"/>
+            <column name="gross_total" type="DECIMAL(19, 2)"/>
+            <column name="total_tax" type="DECIMAL(19, 2)"/>
+            <column name="other_charges" type="DECIMAL(19, 2)"/>
+            <column name="net_total" type="DECIMAL(19, 2)"/>
+            
+            <column name="terms_and_conditions" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="template" type="VARCHAR(255)"/>
+            <column name="email_to" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="created_at" type="datetime"/>
+            <column name="updated_at" type="datetime"/>
+        </createTable>
+
+        <!-- sales_order_attachments table -->
+        <createTable tableName="sales_order_attachments">
+            <column name="sales_order_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_soa_order" references="sales_orders(id)"/>
+            </column>
+            <column name="attachment_url" type="VARCHAR(255)"/>
+        </createTable>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-employee-schema" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        
+        <!-- employee_profile -->
+        <createTable tableName="employee_profile">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="employee_id" type="BIGINT"/>
+            <column name="job_title" type="VARCHAR(255)"/>
+            <column name="department" type="VARCHAR(255)"/>
+            <column name="preferred_name" type="VARCHAR(255)"/>
+            <column name="job_type" type="VARCHAR(255)"/>
+            <column name="office" type="VARCHAR(255)"/>
+            <column name="mol_id" type="VARCHAR(255)"/>
+            <column name="payment_method" type="VARCHAR(255)"/>
+            <column name="hire_date" type="DATE"/>
+            <column name="is_wps_registered" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="labor_card_number" type="VARCHAR(255)"/>
+            <column name="labor_card_expiry" type="DATE"/>
+            <column name="nationality" type="VARCHAR(255)"/>
+            <column name="routing_code" type="VARCHAR(255)"/>
+            <column name="address" type="VARCHAR(1000)"/>
+            <column name="city" type="VARCHAR(100)"/>
+            <column name="state" type="VARCHAR(100)"/>
+            <column name="country" type="VARCHAR(100)"/>
+            <column name="postal_code" type="VARCHAR(30)"/>
+            <column name="emergency_contact_name" type="VARCHAR(255)"/>
+            <column name="emergency_contact_relation" type="VARCHAR(100)"/>
+            <column name="emergency_contact_phone" type="VARCHAR(50)"/>
+            <column name="bank_name" type="VARCHAR(255)"/>
+            <column name="bank_account_number" type="VARCHAR(255)"/>
+            <column name="iban" type="VARCHAR(34)"/>
+            <column name="ifsc_code" type="VARCHAR(20)"/>
+            <column name="blood_group" type="VARCHAR(10)"/>
+            <column name="notes" type="VARCHAR(2000)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="employee_profile" baseColumnNames="employee_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_employee_profile_employee"/>
+
+        <!-- job_details -->
+        <createTable tableName="job_details">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="employee_id" type="BIGINT"/>
+            <column name="location_id" type="BIGINT"/>
+            <column name="actual_location" type="VARCHAR(255)"/>
+            <column name="department" type="VARCHAR(255)"/>
+            <column name="designation" type="VARCHAR(255)"/>
+            <column name="job_band" type="VARCHAR(255)"/>
+            <column name="reports_to" type="VARCHAR(255)"/>
+            <column name="date_of_joining" type="DATE"/>
+            <column name="probation_end_date" type="DATE"/>
+            <column name="login_id" type="VARCHAR(255)"/>
+            <column name="profile_name" type="VARCHAR(255)"/>
+            <column name="employee_number" type="VARCHAR(255)"/>
+            <column name="legal_entity" type="VARCHAR(255)"/>
+            <column name="contract_type" type="VARCHAR(50)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="job_details" baseColumnNames="employee_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_job_details_employee"/>
+        <addForeignKeyConstraint baseTableName="job_details" baseColumnNames="location_id" referencedTableName="locations" referencedColumnNames="id" constraintName="fk_job_details_location"/>
+
+        <!-- time_attendence -->
+        <createTable tableName="time_attendence">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="employee_id" type="BIGINT"/>
+            <column name="time_type_id" type="BIGINT"/>
+            <column name="work_type_id" type="BIGINT"/>
+            <column name="weekly_off_policy_id" type="BIGINT"/>
+            <column name="leave_group_id" type="BIGINT"/>
+            <column name="attendence_capture_scheme" type="VARCHAR(255)"/>
+            <column name="holiday_list" type="VARCHAR(255)"/>
+            <column name="expense_policy" type="VARCHAR(255)"/>
+            <column name="attendance_policy_id" type="BIGINT"/>
+            <column name="is_roster_based_employee" type="BOOLEAN"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="time_attendence" baseColumnNames="employee_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_time_attendence_employee"/>
+        <addForeignKeyConstraint baseTableName="time_attendence" baseColumnNames="time_type_id" referencedTableName="time_types" referencedColumnNames="id" constraintName="fk_time_attendence_timetype"/>
+        <addForeignKeyConstraint baseTableName="time_attendence" baseColumnNames="work_type_id" referencedTableName="work_type" referencedColumnNames="id" constraintName="fk_time_attendence_worktype"/>
+        <addForeignKeyConstraint baseTableName="time_attendence" baseColumnNames="weekly_off_policy_id" referencedTableName="weekly_off_policy" referencedColumnNames="id" constraintName="fk_time_attendence_weeklyoff"/>
+        <addForeignKeyConstraint baseTableName="time_attendence" baseColumnNames="leave_group_id" referencedTableName="leave_group" referencedColumnNames="id" constraintName="fk_time_attendence_leavegroup"/>
+        <addForeignKeyConstraint baseTableName="time_attendence" baseColumnNames="attendance_policy_id" referencedTableName="attendance_policies" referencedColumnNames="id" constraintName="fk_time_attendence_att_policy"/>
+
+        <!-- employment_policies -->
+        <createTable tableName="employment_policies">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="probation_days" type="INT"/>
+            <column name="notice_period_days" type="INT"/>
+            <column name="auto_confirm_after_probation" type="BOOLEAN"/>
+            <column name="confirmation_criteria" type="VARCHAR(1000)"/>
+        </createTable>
+
+        <!-- employee_document -->
+        <createTable tableName="employee_document">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="employee_id" type="BIGINT"/>
+            <column name="doc_type_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_id" type="VARCHAR(100)"/>
+            <column name="registration_date" type="DATE"/>
+            <column name="end_date" type="DATE"/>
+            <column name="file_name" type="VARCHAR(255)"/>
+            <column name="file_path" type="VARCHAR(2048)"/>
+            <column name="preview_path" type="VARCHAR(2048)"/>
+            <column name="verified" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="remarks" type="VARCHAR(2000)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="employee_document" baseColumnNames="employee_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_employee_doc_employee"/>
+        <addForeignKeyConstraint baseTableName="employee_document" baseColumnNames="doc_type_id" referencedTableName="document_types" referencedColumnNames="id" constraintName="fk_employee_doc_type"/>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="108-create-biometric-commands" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="biometric_commands">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="device_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="command_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payload" type="TEXT"/>
+            <column name="response_message" type="TEXT"/>
+            <column name="created_at" type="DATETIME" defaultValueComputed="now()"/>
+            <column name="executed_at" type="DATETIME"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="biometric_commands" baseColumnNames="device_id"
+                                 referencedTableName="biometric_devices" referencedColumnNames="id"
+                                 constraintName="fk_biometric_command_device"/>
+    </changeSet>
+
+    <changeSet id="109-add-template-to-mappings" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="employee_biometric_mappings">
+            <column name="biometric_template" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

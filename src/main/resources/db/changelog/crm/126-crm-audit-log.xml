@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="126-crm-audit-log" author="antigravity">
+        <createTable tableName="crm_audit_logs">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="employee_id" type="BIGINT"/>
+            <column name="performed_by_email" type="VARCHAR(255)"/>
+            <column name="action" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entity_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entity_id" type="BIGINT"/>
+            <column name="description" type="VARCHAR(2000)"/>
+            <column name="performed_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="crm_audit_logs" indexName="idx_audit_tenant_entity">
+            <column name="tenant_id"/>
+            <column name="entity_type"/>
+            <column name="performed_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

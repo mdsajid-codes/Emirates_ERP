@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="hanger-mo-extension" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="manufacturing_orders">
+            <column name="hanger_type_id" type="BIGINT">
+                <constraints foreignKeyName="fk_mo_hanger_type" referencedTableName="hng_hanger_types" referencedColumnNames="id"/>
+            </column>
+            <column name="wire_gauge_required" type="DECIMAL(6,2)"/>
+            <column name="required_wire_kg" type="DECIMAL(12,4)"/>
+            <column name="cost_center_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="hanger-material-issue-extension" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="material_issue_detail">
+            <column name="coil_ref_id" type="BIGINT">
+                <constraints foreignKeyName="fk_mi_coil_ref" referencedTableName="hng_coil_stock" referencedColumnNames="id"/>
+            </column>
+            <column name="issued_weight_kg" type="DECIMAL(12,4)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

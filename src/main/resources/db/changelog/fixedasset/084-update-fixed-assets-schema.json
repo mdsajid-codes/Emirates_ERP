@@ -1,0 +1,219 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "3",
+        "author": "antigravity",
+        "context": "FIXED_ASSETS",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "fixed_asset_classes",
+              "columns": [
+                {
+                  "column": {
+                    "autoIncrement": true,
+                    "constraints": {
+                      "primaryKey": true,
+                      "nullable": false
+                    },
+                    "name": "class_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "name",
+                    "type": "VARCHAR(100)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "code",
+                    "type": "VARCHAR(50)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "tenant_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "defaultValueComputed": "CURRENT_TIMESTAMP",
+                    "name": "created_at",
+                    "type": "TIMESTAMP"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "defaultValueComputed": "CURRENT_TIMESTAMP",
+                    "name": "updated_at",
+                    "type": "TIMESTAMP"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "createTable": {
+              "tableName": "fixed_asset_groups",
+              "columns": [
+                {
+                  "column": {
+                    "autoIncrement": true,
+                    "constraints": {
+                      "primaryKey": true,
+                      "nullable": false
+                    },
+                    "name": "group_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "name",
+                    "type": "VARCHAR(100)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "parent_group_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "tenant_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "defaultValueComputed": "CURRENT_TIMESTAMP",
+                    "name": "created_at",
+                    "type": "TIMESTAMP"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "defaultValueComputed": "CURRENT_TIMESTAMP",
+                    "name": "updated_at",
+                    "type": "TIMESTAMP"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addColumn": {
+              "tableName": "fixed_assets",
+              "columns": [
+                {
+                  "column": {
+                    "name": "asset_type",
+                    "type": "VARCHAR(100)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "class_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "group_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "is_hired_resource",
+                    "type": "BOOLEAN",
+                    "defaultValueBoolean": false
+                  }
+                },
+                {
+                  "column": {
+                    "name": "is_use_scheduling",
+                    "type": "BOOLEAN",
+                    "defaultValueBoolean": false
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseColumnNames": "class_id",
+              "baseTableName": "fixed_assets",
+              "constraintName": "fk_fixed_asset_class",
+              "referencedColumnNames": "class_id",
+              "referencedTableName": "fixed_asset_classes"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseColumnNames": "group_id",
+              "baseTableName": "fixed_assets",
+              "constraintName": "fk_fixed_asset_group",
+              "referencedColumnNames": "group_id",
+              "referencedTableName": "fixed_asset_groups"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseColumnNames": "parent_group_id",
+              "baseTableName": "fixed_asset_groups",
+              "constraintName": "fk_fixed_asset_group_parent",
+              "referencedColumnNames": "group_id",
+              "referencedTableName": "fixed_asset_groups"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "4",
+        "author": "antigravity",
+        "context": "FIXED_ASSETS",
+        "changes": [
+          {
+            "addColumn": {
+              "tableName": "fixed_assets",
+              "columns": [
+                {
+                  "column": {
+                    "name": "hired_company",
+                    "type": "VARCHAR(255)"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

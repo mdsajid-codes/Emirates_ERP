@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-work-schedule-schema" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>9:4561c82e25078ec3ccd9851c52c7be92</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="work_schedules"/></not>
+        </preConditions>
+        <createTable tableName="work_schedules">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="VARCHAR(255)"><constraints nullable="false" unique="true"/></column>
+            <column name="code" type="VARCHAR(50)"><constraints nullable="false" unique="true"/></column>
+            <column name="holiday_policy_id" type="BIGINT"/>
+            <column name="total_weekly_hours" type="INT" defaultValueNumeric="0"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true"><constraints nullable="false"/></column>
+        </createTable>
+
+        <createTable tableName="work_schedule_days">
+            <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="work_schedule_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="day_of_week" type="VARCHAR(10)"><constraints nullable="false"/></column>
+            <column name="working_hours" type="DECIMAL(5, 2)" defaultValueNumeric="0.00"/>
+            <column name="is_working_day" type="BOOLEAN" defaultValueBoolean="true"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="work_schedule_days" baseColumnNames="work_schedule_id"
+                                 constraintName="fk_work_sch_days_sch"
+                                 referencedTableName="work_schedules" referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint baseTableName="work_schedules" baseColumnNames="holiday_policy_id"
+                                 constraintName="fk_work_sch_holiday_policy"
+                                 referencedTableName="holiday_policies" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="add-work-schedule-id-to-time-attendance" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="time_attendence"/>
+            <not><columnExists tableName="time_attendence" columnName="work_schedule_id"/></not>
+        </preConditions>
+        <addColumn tableName="time_attendence">
+            <column name="work_schedule_id" type="BIGINT"/>
+        </addColumn>
+        <addForeignKeyConstraint baseTableName="time_attendence" baseColumnNames="work_schedule_id"
+                                 constraintName="fk_time_att_work_sch"
+                                 referencedTableName="work_schedules" referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

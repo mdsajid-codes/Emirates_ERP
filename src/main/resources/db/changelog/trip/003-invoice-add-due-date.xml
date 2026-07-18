@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="trip-003-invoice-add-due-date" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="trip_invoices"/>
+            <not><columnExists tableName="trip_invoices" columnName="due_date"/></not>
+        </preConditions>
+        <addColumn tableName="trip_invoices">
+            <column name="due_date" type="DATE"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

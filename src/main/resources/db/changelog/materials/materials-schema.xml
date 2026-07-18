@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-materials-schema-1" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        
+        <!-- 1. material_requisition -->
+        <createTable tableName="material_requisition">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_material_requisition"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="request_no" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_material_requisition_req_no"/>
+            </column>
+            <column name="request_date" type="DATE"/>
+            <column name="manufacturing_order_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="employee_id" type="BIGINT"/>
+            <column name="status" type="VARCHAR(255)"/>
+            <column name="location_id" type="BIGINT"/>
+            <column name="indent_status" type="VARCHAR(255)"/>
+            <column name="reserve_status" type="VARCHAR(30)"/>
+            <column name="material_status" type="VARCHAR(255)"/>
+            <column name="requisition_for" type="VARCHAR(255)"/>
+            <column name="extra_requisition" type="BOOLEAN"/>
+            <column name="remarks" type="TEXT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="material_requisition" baseColumnNames="tenant_id" constraintName="fk_mat_req_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+
+        <!-- 2. material_indent -->
+        <createTable tableName="material_indent">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_material_indent"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="indent_no" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_material_indent_no"/>
+            </column>
+            <column name="indent_date" type="DATE"/>
+            <column name="material_requisition_id" type="BIGINT"/>
+            <column name="location_id" type="BIGINT"/>
+            <column name="employee_id" type="BIGINT"/>
+            <column name="department_id" type="BIGINT"/>
+            <column name="status" type="VARCHAR(255)"/>
+            <column name="remarks" type="TEXT"/>
+            <column name="approval_status" type="VARCHAR(255)"/>
+            <column name="create_po_status" type="VARCHAR(255)"/>
+            <column name="approved_date" type="DATETIME"/>
+            <column name="approved_by_id" type="BIGINT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+        
+        <addForeignKeyConstraint baseTableName="material_indent" baseColumnNames="tenant_id" constraintName="fk_mat_indent_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="material_indent" baseColumnNames="material_requisition_id" constraintName="fk_mat_indent_req" referencedTableName="material_requisition" referencedColumnNames="id"/>
+
+        <!-- 3. material_indent_detail -->
+        <createTable tableName="material_indent_detail">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_material_indent_detail"/>
+            </column>
+            <column name="material_indent_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="raw_material_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="process_id" type="BIGINT"/>
+            <column name="indent_quantity" type="DECIMAL(19, 2)"/>
+            <column name="remarks" type="TEXT"/>
+            <column name="additional_description" type="TEXT"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="material_indent_detail" baseColumnNames="material_indent_id" constraintName="fk_mat_indent_det_indent" referencedTableName="material_indent" referencedColumnNames="id"/>
+
+        <!-- 4. material_issue -->
+        <createTable tableName="material_issue">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_material_issue"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="issue_no" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_material_issue_no"/>
+            </column>
+            <column name="issue_date" type="DATE"/>
+            <column name="material_requisition_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="remarks" type="TEXT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="material_issue" baseColumnNames="tenant_id" constraintName="fk_mat_issue_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="material_issue" baseColumnNames="material_requisition_id" constraintName="fk_mat_issue_req" referencedTableName="material_requisition" referencedColumnNames="id"/>
+
+        <!-- 5. material_issue_detail -->
+        <createTable tableName="material_issue_detail">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_material_issue_detail"/>
+            </column>
+            <column name="material_issue_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="raw_material_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="process_id" type="BIGINT"/>
+            <column name="issued_quantity" type="DECIMAL(19, 2)"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="material_issue_detail" baseColumnNames="material_issue_id" constraintName="fk_mat_issue_det_issue" referencedTableName="material_issue" referencedColumnNames="id"/>
+
+        <!-- 6. material_reservation -->
+        <createTable tableName="material_reservation">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_material_reservation"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reservation_no" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_material_reservation_no"/>
+            </column>
+            <column name="reservation_date" type="DATE"/>
+            <column name="material_requisition_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(30)"/>
+            <column name="remarks" type="TEXT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="material_reservation" baseColumnNames="tenant_id" constraintName="fk_mat_resv_tenant" referencedTableName="tenants" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="material_reservation" baseColumnNames="material_requisition_id" constraintName="fk_mat_resv_req" referencedTableName="material_requisition" referencedColumnNames="id"/>
+
+        <!-- 7. material_reservation_detail -->
+        <createTable tableName="material_reservation_detail">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_material_reservation_detail"/>
+            </column>
+            <column name="material_reservation_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="raw_material_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="process_id" type="BIGINT"/>
+            <column name="reserved_quantity" type="DECIMAL(19, 2)"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="material_reservation_detail" baseColumnNames="material_reservation_id" constraintName="fk_mat_resv_det_resv" referencedTableName="material_reservation" referencedColumnNames="id"/>
+
+    </changeSet>
+</databaseChangeLog>

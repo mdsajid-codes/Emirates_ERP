@@ -1,0 +1,36 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "002-create-account-dimensions",
+        "author": "dev-a",
+        "context": "ACCOUNTS",
+        "preConditions": [
+          {
+            "onFail": "MARK_RAN",
+            "not": {
+              "tableExists": {
+                "tableName": "account_dimensions"
+              }
+            }
+          }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "account_dimensions",
+              "columns": [
+                {"column": {"name": "dimension_id", "type": "BIGINT", "autoIncrement": true, "constraints": {"primaryKey": true, "nullable": false}}},
+                {"column": {"name": "account_id", "type": "BIGINT", "constraints": {"nullable": false, "foreignKeyName": "fk_dim_account", "referencedTableName": "chart_of_accounts", "referencedColumnNames": "account_id"}}},
+                {"column": {"name": "dimension_type", "type": "VARCHAR(50)", "constraints": {"nullable": false}}},
+                {"column": {"name": "track_amount", "type": "BOOLEAN", "defaultValueBoolean": true}},
+                {"column": {"name": "track_quantitative", "type": "BOOLEAN", "defaultValueBoolean": false}},
+                {"column": {"name": "turnovers_only", "type": "BOOLEAN", "defaultValueBoolean": false}}
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

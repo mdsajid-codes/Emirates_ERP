@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="018-drop-item-gl-accounts-fk" author="system">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="fk_item_gl_accounts_item" foreignKeyTableName="item_gl_accounts"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="item_gl_accounts" constraintName="fk_item_gl_accounts_item"/>
+    </changeSet>
+
+</databaseChangeLog>

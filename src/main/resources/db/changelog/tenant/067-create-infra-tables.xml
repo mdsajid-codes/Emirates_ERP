@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-infra-tables" author="system">
+        
+        <!-- notification_logs -->
+        <createTable tableName="notification_logs">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT"/>
+            <column name="recipient" type="VARCHAR(255)"/>
+            <column name="subject" type="VARCHAR(255)"/>
+            <column name="channel" type="VARCHAR(50)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="error_message" type="VARCHAR(1000)"/>
+            <column name="sent_at" type="DATETIME"/>
+        </createTable>
+
+        <!-- themes -->
+        <createTable tableName="themes">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="primary_color" type="VARCHAR(50)"/>
+            <column name="secondary_color" type="VARCHAR(50)"/>
+            <column name="accent_color" type="VARCHAR(50)"/>
+            <column name="background_color" type="VARCHAR(50)"/>
+            <column name="text_color" type="VARCHAR(50)"/>
+            <column name="font_url" type="VARCHAR(255)"/>
+            <column name="font_family" type="VARCHAR(255)"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="themes" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_themes_tenant"/>
+
+        <!-- base_bank_details -->
+        <createTable tableName="base_bank_details">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="bank_name" type="VARCHAR(255)"/>
+            <column name="account_number" type="VARCHAR(255)"/>
+            <column name="ifs_code" type="VARCHAR(255)"/>
+            <column name="iban_code" type="VARCHAR(255)"/>
+            <column name="corporate_id" type="VARCHAR(255)"/>
+            <column name="location_branch" type="VARCHAR(255)"/>
+            <column name="branch_address" type="TEXT"/>
+            <column name="beneficiary_mail_id" type="VARCHAR(255)"/>
+        </createTable>
+
+        <!-- custom_fields -->
+        <createTable tableName="custom_fields">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="field_name" type="VARCHAR(255)"/>
+            <column name="field_value" type="TEXT"/>
+        </createTable>
+
+        <!-- other_persons -->
+        <createTable tableName="other_persons">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="salutation" type="VARCHAR(50)"/>
+            <column name="first_name" type="VARCHAR(255)"/>
+            <column name="last_name" type="VARCHAR(255)"/>
+            <column name="email_address" type="VARCHAR(255)"/>
+            <column name="work_phone" type="VARCHAR(50)"/>
+            <column name="mobile" type="VARCHAR(50)"/>
+            <column name="skype_name_or_number" type="VARCHAR(255)"/>
+            <column name="designation" type="VARCHAR(255)"/>
+            <column name="department" type="VARCHAR(255)"/>
+        </createTable>
+
+    </changeSet>
+
+</databaseChangeLog>

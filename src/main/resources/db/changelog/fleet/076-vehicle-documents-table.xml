@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="create-vehicle-documents-table" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <createTable tableName="fleet_vehicle_documents">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="vehicle_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_vehicle_doc_vehicle" referencedTableName="fleet_vehicles" referencedColumnNames="id"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_path" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expiry_date" type="DATE"/>
+            <column name="uploaded_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- 1. Trip Customers -->
+    <changeSet id="trip-001-trip-customers" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>9:7836bfa5e533184994cbfdd497b5f1cb</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="trip_customers"/></not>
+        </preConditions>
+        <createTable tableName="trip_customers">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="company_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contact_person" type="VARCHAR(255)"/>
+            <column name="phone" type="VARCHAR(30)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="trn_number" type="VARCHAR(50)"/>
+            <column name="address" type="TEXT"/>
+            <column name="customer_type" type="VARCHAR(30)"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="trip_customers" columnNames="tenant_id, company_name" constraintName="uk_trip_customer_tenant_company"/>
+        <addForeignKeyConstraint baseTableName="trip_customers" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_trip_customer_tenant"/>
+    </changeSet>
+
+    <!-- 2. Trip Vendors -->
+    <changeSet id="trip-001-trip-vendors" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>9:7e090e93308be6afa285fb769e8f9248</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="trip_vendors"/></not>
+        </preConditions>
+        <createTable tableName="trip_vendors">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="company_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contact_person" type="VARCHAR(255)"/>
+            <column name="phone" type="VARCHAR(30)"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="trip_vendors" columnNames="tenant_id, company_name" constraintName="uk_trip_vendor_tenant_company"/>
+        <addForeignKeyConstraint baseTableName="trip_vendors" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_trip_vendor_tenant"/>
+    </changeSet>
+
+    <!-- 3. Trip Invoices -->
+    <changeSet id="trip-001-trip-invoices" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>9:bf522bff52fcca39c0fa5d06361d61c5</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="trip_invoices"/></not>
+        </preConditions>
+        <createTable tableName="trip_invoices">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="invoice_number" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="invoice_date" type="DATE"/>
+            <column name="sub_total_amount" type="DECIMAL(12, 2)"/>
+            <column name="total_token_amount" type="DECIMAL(12, 2)"/>
+            <column name="total_other_charges" type="DECIMAL(12, 2)"/>
+            <column name="total_vat_amount" type="DECIMAL(12, 2)"/>
+            <column name="grand_total" type="DECIMAL(12, 2)"/>
+            <column name="status" type="VARCHAR(30)" defaultValue="DRAFT"/>
+            <column name="payment_received_date" type="DATE"/>
+            <column name="payment_method" type="VARCHAR(50)"/>
+            <column name="cheque_number" type="VARCHAR(50)"/>
+            <column name="other_reference" type="VARCHAR(255)"/>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="trip_invoices" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_trip_invoice_tenant"/>
+        <addForeignKeyConstraint baseTableName="trip_invoices" baseColumnNames="customer_id" referencedTableName="trip_customers" referencedColumnNames="id" constraintName="fk_trip_invoice_customer"/>
+    </changeSet>
+
+    <!-- 4. Trips -->
+    <changeSet id="trip-001-trips" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>9:d2a3da8b3bb1891a49595ebe458964d7</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="trips"/></not>
+        </preConditions>
+        <createTable tableName="trips">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trip_no" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trip_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trip_month" type="VARCHAR(10)"/>
+            <column name="driver_id" type="BIGINT"/>
+            <column name="container_number" type="VARCHAR(20)"/>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="customer_ref_job_no" type="VARCHAR(255)"/>
+            <column name="contact_person" type="VARCHAR(255)"/>
+            <column name="customer_type" type="VARCHAR(20)"/>
+            <column name="from_location" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="to_location" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trip_status" type="VARCHAR(20)" defaultValue="CREATED"/>
+            <column name="invoice_id" type="BIGINT"/>
+            <column name="remarks" type="TEXT"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="trips" baseColumnNames="tenant_id" referencedTableName="tenants" referencedColumnNames="id" constraintName="fk_trip_tenant"/>
+        <addForeignKeyConstraint baseTableName="trips" baseColumnNames="driver_id" referencedTableName="employees" referencedColumnNames="id" constraintName="fk_trip_driver"/>
+        <addForeignKeyConstraint baseTableName="trips" baseColumnNames="customer_id" referencedTableName="trip_customers" referencedColumnNames="id" constraintName="fk_trip_customer"/>
+        <addForeignKeyConstraint baseTableName="trips" baseColumnNames="invoice_id" referencedTableName="trip_invoices" referencedColumnNames="id" constraintName="fk_trip_invoice"/>
+    </changeSet>
+
+    <!-- 5. Trip Charges -->
+    <changeSet id="trip-001-trip-charges" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>9:8f38bfe96b45d00f69dd8ad7a19ac6a7</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="trip_charges"/></not>
+        </preConditions>
+        <createTable tableName="trip_charges">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="trip_id" type="BIGINT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="amount" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="token_amount" type="DECIMAL(10, 2)"/>
+            <column name="other_charges" type="DECIMAL(10, 2)"/>
+            <column name="other_charge_type" type="VARCHAR(30)"/>
+            <column name="vat_amount" type="DECIMAL(10, 2)"/>
+            <column name="total_amount" type="DECIMAL(10, 2)"/>
+            <column name="driver_commission" type="DECIMAL(10, 2)"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="trip_charges" baseColumnNames="trip_id" referencedTableName="trips" referencedColumnNames="id" constraintName="fk_trip_charges_trip"/>
+    </changeSet>
+
+    <!-- 6. Trip Payment -->
+    <changeSet id="trip-001-trip-payment" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>9:a1fd01abc6508af0df6fc60edc6f3091</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="trip_payment"/></not>
+        </preConditions>
+        <createTable tableName="trip_payment">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="trip_id" type="BIGINT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="payment_status" type="VARCHAR(20)" defaultValue="PENDING"/>
+            <column name="payment_date" type="DATE"/>
+            <column name="received_by" type="VARCHAR(255)"/>
+            <column name="token_payment_method" type="VARCHAR(30)"/>
+            <column name="cheque_number" type="VARCHAR(255)"/>
+            <column name="other_reference" type="VARCHAR(255)"/>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="trip_payment" baseColumnNames="trip_id" referencedTableName="trips" referencedColumnNames="id" constraintName="fk_trip_payment_trip"/>
+    </changeSet>
+
+    <!-- 7. Trip Vendor Assignment -->
+    <changeSet id="trip-001-trip-vendor-assignment" author="system">
+        <validCheckSum>ANY</validCheckSum>
+        <validCheckSum>9:547d4d0166bff9bd6b46176e143604ff</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="trip_vendor_assignment"/></not>
+        </preConditions>
+        <createTable tableName="trip_vendor_assignment">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="trip_id" type="BIGINT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="vendor_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vendor_amount" type="DECIMAL(10, 2)"/>
+            <column name="vendor_payment_status" type="VARCHAR(20)" defaultValue="PENDING"/>
+            <column name="vendor_payment_date" type="DATE"/>
+            <column name="vendor_notes" type="TEXT"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="trip_vendor_assignment" baseColumnNames="trip_id" referencedTableName="trips" referencedColumnNames="id" constraintName="fk_tva_trip"/>
+        <addForeignKeyConstraint baseTableName="trip_vendor_assignment" baseColumnNames="vendor_id" referencedTableName="trip_vendors" referencedColumnNames="id" constraintName="fk_tva_vendor"/>
+    </changeSet>
+
+</databaseChangeLog>

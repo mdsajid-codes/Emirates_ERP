@@ -1,0 +1,108 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "3",
+        "author": "antigravity",
+        "context": "FIXED_ASSETS",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "banks",
+              "columns": [
+                {
+                  "column": {
+                    "autoIncrement": true,
+                    "constraints": {
+                      "primaryKey": true,
+                      "nullable": false
+                    },
+                    "name": "id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "bank_name",
+                    "type": "VARCHAR(150)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "folder",
+                    "type": "VARCHAR(100)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "branch_name",
+                    "type": "VARCHAR(150)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "swift",
+                    "type": "VARCHAR(50)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "routing_code",
+                    "type": "VARCHAR(50)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "city",
+                    "type": "VARCHAR(100)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "address",
+                    "type": "TEXT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "phone_numbers",
+                    "type": "VARCHAR(100)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "tenant_id",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "created_at",
+                    "type": "TIMESTAMP",
+                    "defaultValueComputed": "CURRENT_TIMESTAMP"
+                  }
+                },
+                {
+                  "column": {
+                    "constraints": {
+                      "nullable": false
+                    },
+                    "name": "updated_at",
+                    "type": "TIMESTAMP",
+                    "defaultValueComputed": "CURRENT_TIMESTAMP"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

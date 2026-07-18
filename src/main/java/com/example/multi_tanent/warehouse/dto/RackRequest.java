@@ -1,0 +1,21 @@
+package com.example.multi_tanent.warehouse.dto;
+
+import com.example.multi_tanent.warehouse.enums.RackType;
+import lombok.*;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class RackRequest {
+    private Long zoneId;
+    private String rackCode;
+    private String barcodeTag;
+    private RackType rackType;
+    private String aisle;
+    private Integer pickSequence;
+    private Double maxWeight;
+    private Double maxVolume;
+    private Boolean isActive;
+    private String description;
+}

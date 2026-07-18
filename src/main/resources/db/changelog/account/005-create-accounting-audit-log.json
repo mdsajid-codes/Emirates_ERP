@@ -1,0 +1,38 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "005-create-accounting-audit-log",
+        "author": "dev-a",
+        "context": "ACCOUNTS",
+        "preConditions": [
+          {
+            "onFail": "MARK_RAN",
+            "not": {
+              "tableExists": {
+                "tableName": "accounting_audit_logs"
+              }
+            }
+          }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "accounting_audit_logs",
+              "columns": [
+                {"column": {"name": "log_id", "type": "BIGINT", "autoIncrement": true, "constraints": {"primaryKey": true, "nullable": false}}},
+                {"column": {"name": "action", "type": "VARCHAR(50)", "constraints": {"nullable": false}}},
+                {"column": {"name": "entity_type", "type": "VARCHAR(100)", "constraints": {"nullable": false}}},
+                {"column": {"name": "entity_id", "type": "BIGINT", "constraints": {"nullable": false}}},
+                {"column": {"name": "changed_by", "type": "VARCHAR(100)"}},
+                {"column": {"name": "change_timestamp", "type": "DATETIME", "constraints": {"nullable": false}}},
+                {"column": {"name": "old_value", "type": "TEXT"}},
+                {"column": {"name": "new_value", "type": "TEXT"}}
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
