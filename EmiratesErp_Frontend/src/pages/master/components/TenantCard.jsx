@@ -10,10 +10,35 @@ const TenantCard = ({ tenant, onDelete, onEdit, onViewDetails }) => {
             host = host.replace('master.', '');
         }
         const loginUrl = `${window.location.protocol}//${tenant.tenantId}.${host}/login`;
-        navigator.clipboard.writeText(loginUrl).then(() => {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        });
+
+        // Try modern Clipboard API first, fall back to execCommand for older browsers
+        const copyToClipboard = (text) => {
+            if (navigator.clipboard && window.isSecureContext) {
+                return navigator.clipboard.writeText(text);
+            }
+            // Fallback: create a temporary textarea element
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            return Promise.resolve();
+        };
+
+        copyToClipboard(loginUrl)
+            .then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            })
+            .catch((err) => {
+                console.error('Failed to copy:', err);
+                // Show the URL in an alert as last resort
+                alert(`Copy this link:\n${loginUrl}`);
+            });
     };
     return (
         <div className="bg-background-muted rounded-lg p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
