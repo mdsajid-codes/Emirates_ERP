@@ -1,0 +1,66 @@
+services:
+
+  # ── MySQL Database ──────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: emirates-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── Spring Boot Backend ─────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: emirates-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      MAIL_HOST: ${MAIL_HOST:-smtp.example.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    ports:
+      - "8080:8080"
+    volumes:
+      # Persist uploaded files outside the container
+      - uploads_data:/app/uploads
+
+  # ── React / Vite Frontend (served by Nginx) ─────────────────────────
+  frontend:
+    build:
+      context: ./EmiratesErp_Frontend
+      dockerfile: Dockerfile
+    container_name: emirates-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+# ── Named Volumes ────────────────────────────────────────────────────
+volumes:
+  mysql_data:
+    driver: local
+  uploads_data:
+    driver: local

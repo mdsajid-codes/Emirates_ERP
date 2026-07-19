@@ -336,7 +336,8 @@ function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* ── PUBLIC ROUTES ──────────────────────────────────────── */}
-            <Route path='/' element={<Home />} />
+            {/* <Route path='/' element={<Home />} /> */}
+            <Route path='/' element={<Navigate to="/login" replace />} />
             <Route path='/features' element={<Features />} />
             <Route path='/login' element={<Login />} />
             <Route path='/register' element={<Register />} />

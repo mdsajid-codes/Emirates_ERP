@@ -163,10 +163,7 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOrigins(
-        java.util.List.of("http://localhost:5173", "https://thegtrgroup.com",
-            "http://localhost:8080")); // React
-    // app URL
+    config.setAllowedOriginPatterns(java.util.List.of("*")); // Allow all domains/subdomains
     config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
     config.setAllowedHeaders(java.util.List.of("*"));
     config.setAllowCredentials(true); // If using cookies or auth headers

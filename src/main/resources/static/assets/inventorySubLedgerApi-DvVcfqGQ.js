@@ -1,1 +1,0 @@
-import{a as t}from"./vendor-axios-B9ygI19o.js";const e="/api/accounts/sub-ledger/inventory",r={getInventorySummary:()=>t.get(e),getInventoryMovement:(o,n)=>t.get(`${e}/${o}`,{params:n}),getStockValuation:()=>t.get(`${e}/valuation`)};export{r as i};

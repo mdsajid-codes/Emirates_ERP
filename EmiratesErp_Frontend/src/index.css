@@ -1,3 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700;800&display=swap');
+
+:root {
+  --color-brand-primary: #112D48;
+  --color-brand-accent: #2AA2A5;
+  --color-brand-accent-dark: #1d8a8d;
+  --color-brand-secondary: #296198;
+  --color-brand-surface: #1e293b;
+  --font-family-sans: "Inter", sans-serif;
+  --font-family-heading: "Poppins", sans-serif;
+}
+
 html, body {
   font-family: var(--font-family-sans);
 }
@@ -55,6 +67,11 @@ html, body {
 }
 
 /* Custom Animations */
+@keyframes pulseSlow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -107,6 +124,10 @@ html, body {
   animation: fadeInUp 0.8s ease-out forwards;
 }
 
+.animate-pulse-slow {
+  animation: pulseSlow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 .animate-fade-in {
   animation: fadeIn 1s ease-out forwards;
 }
@@ -136,6 +157,20 @@ html, body {
 .dark .glass-nav {
   background: rgba(15, 23, 42, 0.8);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass {
+  background: rgba(255,255,255,0.70);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.20);
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+}
+
+.glass-dark {
+  background: rgba(15,23,42,0.80);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(51,65,85,0.50);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
 }
 
 

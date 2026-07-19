@@ -1,7 +1,20 @@
-import React from 'react';
-import { Eye, Edit, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Eye, Edit, Trash2, Copy, Check } from 'lucide-react';
 
 const TenantCard = ({ tenant, onDelete, onEdit, onViewDetails }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopyLink = () => {
+        let host = window.location.host;
+        if (host.startsWith('master.')) {
+            host = host.replace('master.', '');
+        }
+        const loginUrl = `${window.location.protocol}//${tenant.tenantId}.${host}/login`;
+        navigator.clipboard.writeText(loginUrl).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    };
     return (
         <div className="bg-background-muted rounded-lg p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
             <div>
@@ -18,6 +31,9 @@ const TenantCard = ({ tenant, onDelete, onEdit, onViewDetails }) => {
                 </div>
             </div>
             <div className="flex items-center justify-end gap-1 mt-4 pt-3 border-t border-border">
+                <button onClick={handleCopyLink} className="p-2 text-foreground-muted hover:text-[#2AA2A5] hover:bg-background rounded-full transition-colors" title={`Copy Login Link for ${tenant.tenantId}`}>
+                    {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                </button>
                 <button onClick={() => onViewDetails(tenant)} className="p-2 text-foreground-muted hover:text-green-500 hover:bg-background rounded-full transition-colors" title={`View ${tenant.tenantId}`}>
                     <Eye className="h-4 w-4" />
                 </button>

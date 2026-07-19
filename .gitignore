@@ -47,6 +47,7 @@ lerna-debug.log*
 
 ### Secrets ###
 application-secret.properties
+.env
 
 ### Garbage ###
 C:/

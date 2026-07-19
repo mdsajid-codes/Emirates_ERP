@@ -20,10 +20,10 @@ public class MasterDataService {
     private final MasterUserRepository masterUserRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${app.default-master-admin.username:masteradmin}")
+    @Value("${app.default-master-admin.username:info@emirateserp.com}")
     private String defaultUsername;
 
-    @Value("${app.default-master-admin.password:password123}")
+    @Value("${app.default-master-admin.password:emirates@2026}")
     private String defaultPassword;
 
     public MasterDataService(MasterUserRepository masterUserRepository, PasswordEncoder passwordEncoder) {

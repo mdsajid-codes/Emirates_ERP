@@ -1,0 +1,18 @@
+# ─────────────────────────────────────────────
+#  Development: Vite dev server with hot-reload
+#  Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# ─────────────────────────────────────────────
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy dependency manifests and install
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Source files are mounted via volume at runtime (see docker-compose.dev.yml)
+# so we don't COPY src here.
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev"]

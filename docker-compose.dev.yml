@@ -1,0 +1,26 @@
+# ─────────────────────────────────────────────────────────────────────
+#  Development Override
+#  Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#  This overrides the frontend service to use the Vite dev server with
+#  hot-reload via volume mounting instead of the Nginx production build.
+# ─────────────────────────────────────────────────────────────────────
+services:
+
+  # Override frontend with the Vite dev server
+  frontend:
+    build:
+      context: ./EmiratesErp_Frontend
+      dockerfile: Dockerfile.dev
+    container_name: emirates-frontend-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      # Mount source for hot-reload (node_modules stays in the container)
+      - ./EmiratesErp_Frontend/src:/app/src
+      - ./EmiratesErp_Frontend/public:/app/public
+      - ./EmiratesErp_Frontend/index.html:/app/index.html
+      - ./EmiratesErp_Frontend/vite.config.js:/app/vite.config.js
+    environment:
+      # Tell Vite to poll for changes (required inside Docker on Linux)
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"

@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useTenant } from '../context/TenantContext';
 import { saveThemeToStorage, applyTheme } from '../utils/themeUtils';
+import { getTenantFromSubdomain } from '../utils/tenantUtils';
 import gtrLogo from '../assets/gtr.png';
 
 // Module carousel data — images use new URL() so Vite resolves and fingerprints
@@ -49,9 +50,10 @@ const modules = [
 ];
 
 const Login = () => {
+    const resolvedTenantId = getTenantFromSubdomain();
+
     const [showPassword, setShowPassword] = useState(false);
     const [loginData, setLoginData] = useState({
-        tenantId: "",
         email: "",
         password: ""
     });
@@ -100,7 +102,7 @@ const Login = () => {
         try {
             let response;
 
-            if (loginData.tenantId.toLowerCase() === "master" || loginData.tenantId === "") {
+            if (resolvedTenantId.toLowerCase() === "master") {
                 response = await axios.post(`${API_URL}/master/auth/login`, { username: loginData.email, password: loginData.password });
                 localStorage.setItem('token', response.data.token)
                 localStorage.setItem('roles', JSON.stringify(response.data.roles))
@@ -108,11 +110,15 @@ const Login = () => {
                 localStorage.setItem('tenantId', 'master')
                 console.log(response.data)
             } else {
-                response = await axios.post(`${API_URL}/auth/login`, loginData);
+                response = await axios.post(`${API_URL}/auth/login`, {
+                    tenantId: resolvedTenantId,
+                    email: loginData.email,
+                    password: loginData.password
+                });
                 localStorage.setItem('token', response.data.token)
                 localStorage.setItem('roles', JSON.stringify(response.data.roles))
                 localStorage.setItem('username', loginData.email)
-                localStorage.setItem('tenantId', loginData.tenantId)
+                localStorage.setItem('tenantId', resolvedTenantId)
                 localStorage.setItem('modules', response.data.modules)
                 
                 // Handle theme logic
@@ -177,47 +183,32 @@ const Login = () => {
 
 
     return (
-        <div className="min-h-screen flex bg-white font-sans text-slate-900">
+        <div className="min-h-screen flex bg-slate-50 font-sans text-slate-900">
             {/* Left Side - Login Form */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-between p-8 lg:p-12 xl:p-16 relative z-10">
+            <div className="w-full lg:w-1/2 flex flex-col justify-between p-8 lg:p-12 xl:p-16 relative z-10 bg-white">
                 {/* Logo Area */}
                 <div className="flex items-center gap-2 mb-8">
-                    <Link to="/" className="flex items-center gap-3 decoration-none">
-                        <img src={gtrLogo} alt="GTR Services" className="h-10 w-auto" />
-                        <span className="text-[#1a237e] text-2xl font-bold">GTR Services</span>
+                    <Link to="/" className="flex items-center decoration-none">
+                        <img src="/Logo_Name.svg" alt="GTR Services" className="h-10 w-auto" />
                     </Link>
                 </div>
 
                 <div className="max-w-md w-full mx-auto">
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2">LOGIN</h1>
-                        <p className="text-gray-500 text-sm">Login to take control of your success today.</p>
+                        <span className="text-[#2AA2A5] font-semibold tracking-wider uppercase text-sm block mb-1">Welcome Back</span>
+                        <h1 className="font-heading text-3xl font-bold text-[#112D48] mb-2">LOGIN</h1>
+                        <div className="w-12 h-1 bg-[#2AA2A5] rounded-full mb-4"></div>
+                        <p className="text-gray-500 text-sm">
+                            {resolvedTenantId !== 'master' ? `Signing into: ${resolvedTenantId}` : 'Login to take control of your success today.'}
+                        </p>
                     </div>
 
                     <form className="space-y-5" onSubmit={handleSubmit}>
-                        {/* Company ID Field */}
-                        <div>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <LogIn className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    id="companyId"
-                                    name="tenantId"
-                                    type="text"
-                                    value={loginData.tenantId}
-                                    onChange={handleChange}
-                                    className="block w-full pl-10 pr-3 py-3 border-none rounded-lg bg-gray-100 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#1a237e] transition-all"
-                                    placeholder="Company ID"
-                                />
-                            </div>
-                        </div>
-
                         {/* Username Field */}
                         <div>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <User className="h-5 w-5 text-gray-400" />
+                                    <User className="h-5 w-5 text-[#2AA2A5]" />
                                 </div>
                                 <input
                                     id="email"
@@ -227,7 +218,7 @@ const Login = () => {
                                     onChange={handleChange}
                                     autoComplete="username"
                                     required
-                                    className="block w-full pl-10 pr-3 py-3 border-none rounded-lg bg-gray-100 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#1a237e] transition-all"
+                                    className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2AA2A5] transition-all shadow-sm"
                                     placeholder="Username"
                                 />
                             </div>
@@ -237,7 +228,7 @@ const Login = () => {
                         <div>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-gray-400" />
+                                    <Lock className="h-5 w-5 text-[#2AA2A5]" />
                                 </div>
                                 <input
                                     id="password"
@@ -247,7 +238,7 @@ const Login = () => {
                                     onChange={handleChange}
                                     autoComplete="current-password"
                                     required
-                                    className="block w-full pl-10 pr-10 py-3 border-none rounded-lg bg-gray-100 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#1a237e] transition-all"
+                                    className="block w-full pl-10 pr-10 py-3 border border-slate-200 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2AA2A5] transition-all shadow-sm"
                                     placeholder="Password"
                                 />
                                 <button
@@ -265,7 +256,7 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#1a237e] hover:bg-[#151b60] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1a237e] disabled:opacity-50 transition-colors"
+                            className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-medium text-white bg-[#2AA2A5] hover:bg-[#1d8a8d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2AA2A5] disabled:opacity-50 transition-colors ${!isLoading ? 'animate-pulse-slow' : ''}`}
                         >
                             {isLoading ? (
                                 <span className="flex items-center">
@@ -290,22 +281,22 @@ const Login = () => {
 
                 {/* Footer */}
                 <div className="mt-8 flex items-center justify-center gap-2 text-gray-400 text-xs">
-                    <Sparkles className="h-4 w-4" />
-                    <span>Powered Company</span>
+                    <img src="/icon.svg" alt="Emirates ERP" className="h-4 w-4 opacity-50" />
+                    <span>Powered by Emirates ERP</span>
                 </div>
             </div>
 
             {/* Right Side - Branding/Illustration */}
-            <div className="hidden lg:flex w-1/2 bg-[#2d3abf] relative overflow-hidden items-center justify-center transition-all duration-500 ease-in-out">
+            <div className="hidden lg:flex w-1/2 bg-[#112D48] relative overflow-hidden items-center justify-center transition-all duration-500 ease-in-out">
                 {/* Abstract circles/waves for background effect */}
-                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white opacity-5 animate-pulse"></div>
-                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-white opacity-5 animate-pulse delay-700"></div>
+                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-[#2AA2A5] opacity-20 blur-3xl animate-pulse"></div>
+                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-[#2AA2A5] opacity-20 blur-3xl animate-pulse delay-700"></div>
 
                 <div className="relative z-10 w-full max-w-2xl px-8 flex flex-col items-center justify-center text-white text-center">
 
                     <div className="relative w-full flex items-center justify-center mb-8 h-[400px]">
                         {/* Left Arrow */}
-                        <button onClick={prevSlide} className="absolute left-0 p-2 rounded-full hover:bg-white/10 transition-colors z-20 focus:outline-none">
+                        <button onClick={prevSlide} className="absolute left-0 p-2 rounded-full hover:bg-[#2AA2A5]/20 transition-colors z-20 focus:outline-none">
                             <ChevronLeft className="h-10 w-10 text-white/70 hover:text-white transition-colors" />
                         </button>
 
@@ -320,12 +311,12 @@ const Login = () => {
                         </div>
 
                         {/* Right Arrow */}
-                        <button onClick={nextSlide} className="absolute right-0 p-2 rounded-full hover:bg-white/10 transition-colors z-20 focus:outline-none">
+                        <button onClick={nextSlide} className="absolute right-0 p-2 rounded-full hover:bg-[#2AA2A5]/20 transition-colors z-20 focus:outline-none">
                             <ChevronRight className="h-10 w-10 text-white/70 hover:text-white transition-colors" />
                         </button>
                     </div>
 
-                    <div className="text-3xl font-bold tracking-wider uppercase mb-4 animate-fade-in-up">
+                    <div className="font-heading text-3xl font-bold tracking-wider uppercase mb-4 animate-fade-in-up">
                         {modules[currentModuleIndex].title}
                     </div>
 
@@ -339,7 +330,7 @@ const Login = () => {
                             <button
                                 key={idx}
                                 onClick={() => setCurrentModuleIndex(idx)}
-                                className={`h-2 rounded-full transition-all duration-300 ${idx === currentModuleIndex ? 'w-8 bg-white' : 'w-2 bg-white/30 hover:bg-white/50'}`}
+                                className={`h-2 rounded-full transition-all duration-300 ${idx === currentModuleIndex ? 'w-8 bg-[#2AA2A5]' : 'w-2 bg-white/30 hover:bg-white/50'}`}
                             />
                         ))}
                     </div>
