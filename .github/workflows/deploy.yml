@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    name: Build & Deploy to AWS EC2
+    name: Deploy to AWS EC2
     runs-on: ubuntu-latest
 
     steps:
@@ -17,35 +17,13 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/EmiratesErp
+            cd /home/ubuntu/Emirates_ERP
 
-            # Use the Personal Access Token (GH_PAT) to authenticate the git pull
-            # This temporarily sets the remote URL to include the token for authentication
-            git remote set-url origin https://${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git
-            
-            # Pull latest code
+            # Pull latest code using the Deploy Key configured on this server
             git pull origin main
 
-            # Revert the remote URL back to normal (without token) for security
-            git remote set-url origin https://github.com/${{ github.repository }}.git
-
-            # Write .env from GitHub Secrets
-            cat > .env << EOF
-            MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-            MYSQL_DATABASE=master_db
-            DB_HOST=mysql
-            DB_PORT=3306
-            DB_USERNAME=${{ secrets.DB_USERNAME }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}
-            MAIL_HOST=${{ secrets.MAIL_HOST }}
-            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
-            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
-            EOF
-
-            # Rebuild and restart containers
+            # Rebuild and restart containers (.env file lives permanently on this server)
             docker compose up -d --build --remove-orphans
 
-            # Clean up old unused images
+            # Clean up old unused images to save disk space
             docker image prune -f
