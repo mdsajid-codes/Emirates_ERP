@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 
-// Vibrant Enterprise palette tokens
-const NODE_COLOR_A = '#036b58' // primary (Mint)
-const NODE_COLOR_B = '#615596' // secondary (Lavender)
+// Palette tokens
+const NODE_COLOR_A = '#97B3AE' // Target accent #97B3AE
+const NODE_COLOR_B = '#B9D9D5' // Light mint accent
+const NODE_COLOR_C = '#C4DADE' // Light powder blue
 
 const TICKER_ITEMS = [
   'HR & Payroll',
@@ -51,13 +52,14 @@ export default function PatternBackground({ cursorPosition }) {
 
     // ── Node initialisation ─────────────────────────────────────────────────
     const nodeCount = 65
+    const colors = [NODE_COLOR_A, NODE_COLOR_B, NODE_COLOR_C]
     const nodes = Array.from({ length: nodeCount }, () => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
       vx: (Math.random() - 0.5) * 0.45,
       vy: (Math.random() - 0.5) * 0.45,
       radius: 2 + Math.random() * 2.5,
-      color: Math.random() > 0.45 ? NODE_COLOR_A : NODE_COLOR_B,
+      color: colors[Math.floor(Math.random() * colors.length)],
       opacity: 0.55 + Math.random() * 0.35,
     }))
 
@@ -70,7 +72,7 @@ export default function PatternBackground({ cursorPosition }) {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       // Subtle grid lines
-      ctx.strokeStyle = 'rgba(3, 107, 88, 0.04)'
+      ctx.strokeStyle = 'rgba(24, 67, 65, 0.05)'
       ctx.lineWidth = 1
       const gs = 58
       for (let x = 0; x < canvas.width; x += gs) {
@@ -106,9 +108,9 @@ export default function PatternBackground({ cursorPosition }) {
 
         // Soft edge bounce
         const margin = 20
-        if (node.x < margin)                 node.vx += 0.12
-        else if (node.x > canvas.width - margin)  node.vx -= 0.12
-        if (node.y < margin)                 node.vy += 0.12
+        if (node.x < margin) node.vx += 0.12
+        else if (node.x > canvas.width - margin) node.vx -= 0.12
+        if (node.y < margin) node.vy += 0.12
         else if (node.y > canvas.height - margin) node.vy -= 0.12
 
         // Organic micro-drift
@@ -125,7 +127,7 @@ export default function PatternBackground({ cursorPosition }) {
             ctx.beginPath()
             ctx.moveTo(node.x, node.y)
             ctx.lineTo(other.x, other.y)
-            ctx.strokeStyle = `rgba(3, 107, 88, ${0.18 * (1 - dist / 115)})`
+            ctx.strokeStyle = `rgba(24, 67, 65, ${0.18 * (1 - dist / 115)})`
             ctx.lineWidth = 0.9
             ctx.stroke()
           }

@@ -2,46 +2,40 @@
  * login.css
  * =========
  * Scoped styles for the Emirates ERP login page.
- * Uses the "Vibrant Enterprise" design system.
- *
- * Fonts: Outfit (headings/titles) + Plus Jakarta Sans (body/labels)
- * Color palette: Mint primary (#036b58), Lavender secondary (#615596),
- *   surface (#f8f9ff), on-surface (#0d1c2e)
- *
- * This file is imported ONLY by Login.jsx and does not affect the rest
- * of the app — no Tailwind classes, no :root overrides to shared tokens.
+ * Palette based on light tones: #C4DADE, #DDE8ED, #ECF2F5, #B9D9D5, #D2E0D3
+ * paired with rich dark highlights (#184341, #2A4556, #0E1B22).
  */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
 
 /* ─── Local design tokens ────────────────────────────────────────── */
 .login-root {
-  --lp-primary:            #036b58;
-  --lp-primary-dim:        #005142;
-  --lp-primary-container:  #88dbc3;
-  --lp-on-primary:         #ffffff;
-  --lp-secondary:          #615596;
-  --lp-secondary-container:#c5b7ff;
-  --lp-surface:            #f8f9ff;
-  --lp-surface-container:  #e6eeff;
-  --lp-surface-container-high: #dce9ff;
-  --lp-on-surface:         #0d1c2e;
-  --lp-on-surface-variant: #3e4945;
-  --lp-inverse-surface:    #233144;
-  --lp-outline:            #6e7975;
-  --lp-outline-variant:    #bec9c4;
-  --lp-inverse-primary:    #83d6be;
-  --lp-error:              #ba1a1a;
-  --lp-error-container:    #ffdad6;
+  --lp-primary: #184341;
+  --lp-primary-dim: #10302F;
+  --lp-primary-container: #B9D9D5;
+  --lp-on-primary: #ffffff;
+  --lp-secondary: #2A4556;
+  --lp-secondary-container: #C4DADE;
+  --lp-surface: #ECF2F5;
+  --lp-surface-container: #DDE8ED;
+  --lp-surface-container-high: #D2E0D3;
+  --lp-on-surface: #0E1B22;
+  --lp-on-surface-variant: #344A57;
+  --lp-inverse-surface: #162832;
+  --lp-outline: #6B8594;
+  --lp-outline-variant: #C4DADE;
+  --lp-inverse-primary: #B9D9D5;
+  --lp-error: #ba1a1a;
+  --lp-error-container: #ffdad6;
   --lp-on-error-container: #93000a;
 
   --lp-font-heading: 'Outfit', sans-serif;
-  --lp-font-body:    'Plus Jakarta Sans', sans-serif;
+  --lp-font-body: 'Plus Jakarta Sans', sans-serif;
 
-  --lp-radius-sm:   0.5rem;
-  --lp-radius:      1rem;
-  --lp-radius-md:   1.5rem;
-  --lp-radius-lg:   2rem;
+  --lp-radius-sm: 0.5rem;
+  --lp-radius: 1rem;
+  --lp-radius-md: 1.5rem;
+  --lp-radius-lg: 2rem;
   --lp-radius-full: 9999px;
 }
 
@@ -51,13 +45,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 54px 24px 24px; /* top padding clears the ticker bar */
+  padding: 54px 24px 24px;
+  /* top padding clears the ticker bar */
   position: relative;
   overflow: hidden;
   background-color: var(--lp-surface);
   background-image:
-    radial-gradient(circle at 12% 18%, rgba(3,107,88,0.07),  transparent 42%),
-    radial-gradient(circle at 88% 82%, rgba(97,85,150,0.09), transparent 42%);
+    radial-gradient(circle at 12% 18%, rgba(185, 217, 213, 0.45), transparent 45%),
+    radial-gradient(circle at 88% 82%, rgba(196, 218, 222, 0.45), transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(210, 224, 211, 0.35), transparent 60%);
 }
 
 /* ─── Pattern Canvas Background ──────────────────────────────────── */
@@ -82,13 +78,13 @@
   left: 0;
   right: 0;
   height: 34px;
-  background: var(--lp-primary);
-  border-bottom: 2px solid var(--lp-inverse-primary);
+  background: #97B3AE;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.45);
   display: flex;
   align-items: center;
   overflow: hidden;
   z-index: 100;
-  box-shadow: 0 2px 12px rgba(3,107,88,0.3);
+  box-shadow: 0 2px 12px rgba(151, 179, 174, 0.35);
 }
 
 .login-ticker-track {
@@ -100,8 +96,8 @@
 .login-ticker-item {
   font-family: var(--lp-font-body);
   font-size: 0.73rem;
-  font-weight: 600;
-  color: #e2e8f0;
+  font-weight: 700;
+  color: #152D2A;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -112,8 +108,8 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--lp-inverse-primary);
-  box-shadow: 0 0 7px var(--lp-inverse-primary);
+  background: #ffffff;
+  box-shadow: 0 0 7px #ffffff;
   flex-shrink: 0;
 }
 
@@ -122,8 +118,8 @@
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(3,107,88,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(97,85,150,0.03) 1px, transparent 1px);
+    linear-gradient(rgba(24, 67, 65, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(42, 69, 86, 0.05) 1px, transparent 1px);
   background-size: 44px 44px;
   pointer-events: none;
   z-index: 0;
@@ -137,12 +133,10 @@
   border-radius: 50%;
   pointer-events: none;
   z-index: 1;
-  background: radial-gradient(
-    circle,
-    rgba(3,107,88,0.18)   0%,
-    rgba(97,85,150,0.08) 50%,
-    transparent          72%
-  );
+  background: radial-gradient(circle,
+      rgba(185, 217, 213, 0.40) 0%,
+      rgba(196, 218, 222, 0.25) 50%,
+      transparent 72%);
   filter: blur(18px);
 }
 
@@ -156,11 +150,11 @@
   grid-template-columns: 1fr 1fr;
   border-radius: 20px;
   /* Glassmorphism surface layer */
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.40);
+  background: rgba(236, 242, 245, 0.85);
+  border: 1px solid rgba(196, 218, 222, 0.80);
   box-shadow:
-    0 20px 40px rgba(13,28,46,0.08),
-    0 0 0 1px rgba(255,255,255,0.04);
+    0 20px 40px rgba(14, 27, 34, 0.12),
+    0 0 0 1px rgba(221, 232, 237, 0.50);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   overflow: hidden;
@@ -169,10 +163,12 @@
 /* ─── HUD Status Header ──────────────────────────────────────────── */
 .login-hud-header {
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 34px;
-  background: rgba(3,107,88,0.06);
-  border-bottom: 1px solid rgba(3,107,88,0.15);
+  background: rgba(24, 67, 65, 0.06);
+  border-bottom: 1px solid rgba(24, 67, 65, 0.15);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -187,11 +183,11 @@
   color: var(--lp-primary);
   font-weight: 700;
   font-family: var(--lp-font-heading);
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 .login-hud-time {
-  color: rgba(3,107,88,0.7);
+  color: rgba(24, 67, 65, 0.75);
   font-weight: 600;
 }
 
@@ -207,10 +203,9 @@
   flex-direction: column;
   justify-content: center;
   background: linear-gradient(155deg,
-    rgba(248,249,255,0.98),
-    rgba(230,238,255,0.95)
-  );
-  border-right: 1px solid rgba(3,107,88,0.12);
+      rgba(236, 242, 245, 0.98),
+      rgba(221, 232, 237, 0.95));
+  border-right: 1px solid rgba(24, 67, 65, 0.14);
 }
 
 /* ─── Company Eyebrow ────────────────────────────────────────────── */
@@ -222,10 +217,9 @@
   letter-spacing: 0.26em;
   text-transform: uppercase;
   background: linear-gradient(90deg,
-    var(--lp-primary)   0%,
-    var(--lp-secondary) 60%,
-    var(--lp-primary)   100%
-  );
+      var(--lp-primary) 0%,
+      var(--lp-secondary) 60%,
+      var(--lp-primary) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -247,7 +241,7 @@
 .login-heading-letter {
   display: inline-block;
   color: var(--lp-on-surface);
-  text-shadow: 0 0 22px rgba(3,107,88,0.2);
+  text-shadow: 0 0 22px rgba(185, 217, 213, 0.4);
 }
 
 /* ─── Subtext ────────────────────────────────────────────────────── */
@@ -271,8 +265,15 @@
 }
 
 @keyframes loginBlink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 
 /* ─── Login Form ─────────────────────────────────────────────────── */
@@ -308,8 +309,8 @@
 
 .login-input-wrapper input {
   width: 100%;
-  background: rgba(3,107,88,0.05);
-  border: 1px solid rgba(3,107,88,0.22);
+  background: rgba(185, 217, 213, 0.22);
+  border: 1px solid rgba(24, 67, 65, 0.22);
   border-radius: var(--lp-radius);
   padding: 13px 15px;
   font-family: var(--lp-font-body);
@@ -325,8 +326,8 @@
 
 .login-input-wrapper input:focus {
   border-color: var(--lp-primary);
-  box-shadow: 0 0 18px rgba(3,107,88,0.22);
-  background: rgba(3,107,88,0.08);
+  box-shadow: 0 0 18px rgba(185, 217, 213, 0.6);
+  background: rgba(196, 218, 222, 0.35);
 }
 
 .login-pass-toggle {
@@ -349,7 +350,7 @@
 /* ─── Error Message ──────────────────────────────────────────────── */
 .login-error-box {
   background: var(--lp-error-container);
-  border: 1px solid rgba(186,26,26,0.3);
+  border: 1px solid rgba(186, 26, 26, 0.3);
   border-radius: var(--lp-radius);
   padding: 10px 14px;
   font-family: var(--lp-font-body);
@@ -364,22 +365,22 @@
   padding: 15px 22px;
   border: none;
   border-radius: var(--lp-radius);
-  background: var(--lp-primary);
-  color: var(--lp-on-primary);
+  background: #97B3AE;
+  color: #152D2A;
   font-family: var(--lp-font-heading);
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.07em;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 18px rgba(3,107,88,0.38);
+  box-shadow: 0 4px 18px rgba(151, 179, 174, 0.45);
   transition: background-color 0.2s;
   min-height: 44px;
 }
 
 .login-submit-btn:hover {
-  background-color: var(--lp-primary-dim);
+  background-color: #7E9B96;
 }
 
 .login-submit-btn:disabled {
@@ -399,18 +400,18 @@
 .login-btn-shimmer {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255,255,255,0.28),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.28),
+      transparent);
   transform: translateX(-100%);
   animation: loginBtnShimmer 3s infinite;
 }
 
 @keyframes loginBtnShimmer {
-  100% { transform: translateX(100%); }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .login-spin-icon {
@@ -418,13 +419,15 @@
 }
 
 @keyframes loginSpin {
-  100% { transform: rotate(360deg); }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* ─── Success / Welcome Box ──────────────────────────────────────── */
 .login-success-box {
-  background: rgba(3,107,88,0.08);
-  border: 1px solid rgba(3,107,88,0.4);
+  background: rgba(185, 217, 213, 0.35);
+  border: 1px solid rgba(24, 67, 65, 0.4);
   border-radius: var(--lp-radius);
   padding: 11px 15px;
   display: flex;
@@ -433,7 +436,7 @@
   font-family: var(--lp-font-body);
   font-size: 0.84rem;
   color: var(--lp-primary);
-  box-shadow: 0 0 14px rgba(3,107,88,0.2);
+  box-shadow: 0 0 14px rgba(185, 217, 213, 0.4);
 }
 
 .login-success-icon {
@@ -460,21 +463,21 @@
   letter-spacing: 0.09em;
 }
 
-/* ─── RIGHT: Showcase Panel ──────────────────────────────────────── */
+/* ─── RIGHT: Showcase Panel (LIGHT THEME) ─────────────────────────── */
 .login-showcase-panel {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
-  /* Dark gradient backdrop so the 3D canvas pops */
+  /* Light theme backdrop strictly combining user palette */
   background: linear-gradient(150deg,
-    rgba(11,26,44,0.97) 0%,
-    rgba(8,18,32,0.99) 100%
+    rgba(221, 235, 237, 0.95) 0%,
+    rgba(210, 224, 211, 0.95) 50%,
+    rgba(196, 218, 222, 0.95) 100%
   );
-  /* Custom themed scrollbar for this panel */
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(3,107,88,0.5) rgba(255,255,255,0.05);
+  scrollbar-color: rgba(185, 217, 213, 0.8) rgba(236, 242, 245, 0.5);
 }
 
 .login-showcase-panel::-webkit-scrollbar {
@@ -482,12 +485,12 @@
 }
 
 .login-showcase-panel::-webkit-scrollbar-track {
-  background: rgba(255,255,255,0.05);
+  background: rgba(236, 242, 245, 0.5);
   border-radius: var(--lp-radius-full);
 }
 
 .login-showcase-panel::-webkit-scrollbar-thumb {
-  background: rgba(3,107,88,0.5);
+  background: rgba(185, 217, 213, 0.8);
   border-radius: var(--lp-radius-full);
   transition: background 0.2s;
 }
@@ -512,17 +515,18 @@
   gap: 7px;
   padding: 7px 13px;
   border-radius: var(--lp-radius-full);
-  background: rgba(3,107,88,0.12);
-  border: 1px solid rgba(3,107,88,0.35);
+  background: rgba(236, 242, 245, 0.85);
+  border: 1.5px solid rgba(185, 217, 213, 0.90);
   font-family: var(--lp-font-body);
   font-size: 0.73rem;
   font-weight: 700;
-  color: var(--lp-inverse-primary);
+  color: var(--lp-primary);
   letter-spacing: 0.1em;
+  box-shadow: 0 2px 8px rgba(30, 59, 55, 0.08);
 }
 
 .login-chip-icon {
-  color: var(--lp-inverse-primary);
+  color: var(--lp-primary);
 }
 
 /* ─── Carousel Nav Buttons ───────────────────────────────────────── */
@@ -535,34 +539,35 @@
   width: 33px;
   height: 33px;
   border-radius: 50%;
-  background: rgba(3,107,88,0.12);
-  border: 1px solid rgba(3,107,88,0.28);
-  color: var(--lp-inverse-primary);
+  background: rgba(236, 242, 245, 0.85);
+  border: 1.5px solid rgba(185, 217, 213, 0.90);
+  color: var(--lp-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(30, 59, 55, 0.08);
 }
 
 .login-nav-btn:hover {
   background: var(--lp-primary);
-  color: #ffffff;
-  box-shadow: 0 0 14px rgba(3,107,88,0.6);
+  color: #ECF2F5;
+  box-shadow: 0 0 14px rgba(185, 217, 213, 0.8);
 }
 
-/* ─── Glass Info Card (over 3D background) ───────────────────────── */
+/* ─── Glass Info Card (Light Surface) ───────────────────────────── */
 .login-3d-card {
   position: relative;
   z-index: 10;
   margin-top: auto;
   margin-bottom: 0;
-  background: rgba(11,24,42,0.68);
-  border: 1px solid rgba(3,107,88,0.28);
+  background: rgba(236, 242, 245, 0.88);
+  border: 1.5px solid rgba(196, 218, 222, 0.90);
   border-radius: var(--lp-radius-md);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  box-shadow: 0 8px 32px rgba(30, 59, 55, 0.10);
   overflow: hidden;
 }
 
@@ -574,8 +579,8 @@
   margin: 0 0 6px;
   font-family: var(--lp-font-heading);
   font-size: 1.1rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-weight: 800;
+  color: var(--lp-primary);
   line-height: 1.3;
 }
 
@@ -583,7 +588,7 @@
   margin: 0 0 16px;
   font-family: var(--lp-font-body);
   font-size: 0.84rem;
-  color: rgba(255,255,255,0.6);
+  color: var(--lp-on-surface-variant);
   line-height: 1.5;
 }
 
@@ -594,8 +599,8 @@
 }
 
 .login-stat-box {
-  background: rgba(3,107,88,0.09);
-  border: 1px solid rgba(3,107,88,0.2);
+  background: rgba(221, 235, 237, 0.75);
+  border: 1px solid rgba(185, 217, 213, 0.85);
   border-radius: 9px;
   padding: 9px 11px;
   display: flex;
@@ -606,15 +611,16 @@
 .login-stat-label {
   font-family: var(--lp-font-body);
   font-size: 0.62rem;
-  color: rgba(255,255,255,0.45);
+  color: var(--lp-outline);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-weight: 600;
 }
 
 .login-stat-value {
   font-family: var(--lp-font-heading);
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 /* ─── Carousel Progress Dots ─────────────────────────────────────── */
@@ -637,7 +643,7 @@
   height: 5px;
   border-radius: var(--lp-radius-full);
   border: none;
-  background: rgba(3,107,88,0.2);
+  background: rgba(185, 217, 213, 0.25);
   padding: 0;
   cursor: pointer;
   overflow: hidden;
@@ -645,13 +651,13 @@
 }
 
 .login-dot-pill.active {
-  background: rgba(3,107,88,0.35);
+  background: rgba(185, 217, 213, 0.40);
 }
 
 .login-dot-progress-fill {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, var(--lp-primary), var(--lp-secondary));
+  background: linear-gradient(90deg, #B9D9D5, #C4DADE);
   border-radius: var(--lp-radius-full);
 }
 
@@ -664,7 +670,7 @@
 
   .login-form-panel {
     border-right: none;
-    border-bottom: 1px solid rgba(3,107,88,0.12);
+    border-bottom: 1px solid rgba(24, 67, 65, 0.14);
   }
 
   .login-showcase-panel {
@@ -673,7 +679,15 @@
 }
 
 @media (max-width: 640px) {
-  .login-root           { padding: 48px 12px 16px; }
-  .login-panel          { padding: 40px 18px 24px; }
-  .login-stats-grid     { grid-template-columns: 1fr 1fr; }
+  .login-root {
+    padding: 48px 12px 16px;
+  }
+
+  .login-panel {
+    padding: 40px 18px 24px;
+  }
+
+  .login-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }

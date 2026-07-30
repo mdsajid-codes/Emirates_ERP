@@ -25,20 +25,30 @@ import * as THREE from 'three'
  * right panel's actual pixel dimensions change (fixes blank canvas on init).
  */
 
-// ── Vibrant Enterprise color tokens ───────────────────────────────────────
-const BRAND_PRIMARY    = 0x0d1c2e   // on-surface dark
-const BRAND_ACCENT     = 0x036b58   // primary — Mint
-const BRAND_ACCENT_DIM = 0x005142   // on-primary-container
-const BRAND_SECONDARY  = 0x615596   // secondary — Lavender
+// ── Color tokens ──────────────────────────────────────────────────────────
+const COLOR_TARGET    = 0x97B3AE   // User requested color #97B3AE
+const COLOR_MINT      = 0xB9D9D5
+const COLOR_BLUE      = 0xC4DADE
+const COLOR_SAGE      = 0xD2E0D3
+const COLOR_SLATE     = 0xDDEBED
+const COLOR_ICE       = 0xECF2F5
+const COLOR_DARK_MINT = 0x1E3B37
+
+const BRAND_PRIMARY    = COLOR_TARGET
+const BRAND_ACCENT     = COLOR_TARGET
+const BRAND_ACCENT_DIM = COLOR_MINT
+const BRAND_SECONDARY  = COLOR_BLUE
+const BRAND_LIGHT_MINT = COLOR_TARGET
+const BRAND_LIGHT_BLUE = COLOR_BLUE
 
 export default function ThreeCanvas({ activeSlideIndex }) {
-  const mountRef          = useRef(null)
-  const sceneRef          = useRef(null)
-  const rendererRef       = useRef(null)
-  const cameraRef         = useRef(null)
+  const mountRef = useRef(null)
+  const sceneRef = useRef(null)
+  const rendererRef = useRef(null)
+  const cameraRef = useRef(null)
   const currentObjectsRef = useRef([])   // holds the active slide's Group directly
-  const mouseRef          = useRef({ x: 0, y: 0 })
-  const animFrameRef      = useRef(null)
+  const mouseRef = useRef({ x: 0, y: 0 })
+  const animFrameRef = useRef(null)
 
   // ── One-time: scene / renderer / camera / lights / loop ─────────────────
   useEffect(() => {
@@ -46,7 +56,7 @@ export default function ThreeCanvas({ activeSlideIndex }) {
     if (!container) return
 
     // Use fallback sizes if the container hasn't laid out yet
-    const w = container.clientWidth  || 500
+    const w = container.clientWidth || 500
     const h = container.clientHeight || 600
 
     // Scene
@@ -68,11 +78,11 @@ export default function ThreeCanvas({ activeSlideIndex }) {
     // Lighting
     scene.add(new THREE.AmbientLight(0xffffff, 1.2))
 
-    const pl1 = new THREE.PointLight(BRAND_ACCENT, 5.5, 80)
+    const pl1 = new THREE.PointLight(BRAND_LIGHT_MINT, 5.5, 80)
     pl1.position.set(8, 8, 8)
     scene.add(pl1)
 
-    const pl2 = new THREE.PointLight(BRAND_SECONDARY, 5.5, 80)
+    const pl2 = new THREE.PointLight(BRAND_LIGHT_BLUE, 5.5, 80)
     pl2.position.set(-8, -8, 8)
     scene.add(pl2)
 
@@ -80,8 +90,8 @@ export default function ThreeCanvas({ activeSlideIndex }) {
     const onMouseMove = (e) => {
       const rect = container.getBoundingClientRect()
       mouseRef.current = {
-        x:  ((e.clientX - rect.left) / rect.width)  * 2 - 1,
-        y: -((e.clientY - rect.top)  / rect.height) * 2 + 1,
+        x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        y: -((e.clientY - rect.top) / rect.height) * 2 + 1,
       }
     }
     window.addEventListener('mousemove', onMouseMove)
@@ -199,10 +209,10 @@ export default function ThreeCanvas({ activeSlideIndex }) {
         )
         group.add(node)
         nodes.push({
-          mesh:   node,
-          angle:  (i / nodeCount) * Math.PI * 2,
+          mesh: node,
+          angle: (i / nodeCount) * Math.PI * 2,
           radius: 2.6 + (i % 3) * 0.2,   // max 3.0
-          speed:  0.55 + (i % 3) * 0.15,
+          speed: 0.55 + (i % 3) * 0.15,
         })
       }
 
@@ -218,7 +228,7 @@ export default function ThreeCanvas({ activeSlideIndex }) {
       group.userData.animate = (t) => {
         core.rotation.x = t * 0.35
         core.rotation.y = t * 0.55
-        gem.rotation.y  = -t * 0.8
+        gem.rotation.y = -t * 0.8
         ring.rotation.z = -t * 0.4
         nodes.forEach((n) => {
           const a = n.angle + t * n.speed
@@ -278,10 +288,10 @@ export default function ThreeCanvas({ activeSlideIndex }) {
       group.userData.animate = (t) => {
         solidCube.rotation.x = t * 0.4
         solidCube.rotation.y = t * 0.6
-        wireCube.rotation.x  = -t * 0.4
-        wireCube.rotation.y  = -t * 0.6
-        ring1.rotation.z     = t * 0.8
-        ring2.rotation.z     = -t * 0.5
+        wireCube.rotation.x = -t * 0.4
+        wireCube.rotation.y = -t * 0.6
+        ring1.rotation.z = t * 0.8
+        ring2.rotation.z = -t * 0.5
       }
 
       scene.add(group)
@@ -319,9 +329,9 @@ export default function ThreeCanvas({ activeSlideIndex }) {
         )
         group.add(cargo)
         cargos.push({
-          mesh:   cargo,
-          axis:   new THREE.Vector3(Math.sin(i), Math.cos(i), Math.sin(i * 2)).normalize(),
-          speed:  0.75 + i * 0.08,
+          mesh: cargo,
+          axis: new THREE.Vector3(Math.sin(i), Math.cos(i), Math.sin(i * 2)).normalize(),
+          speed: 0.75 + i * 0.08,
           radius: 2.8 + (i % 2) * 0.4,   // max 3.2
         })
       }
@@ -387,8 +397,8 @@ export default function ThreeCanvas({ activeSlideIndex }) {
       group.add(particles)
 
       group.userData.animate = (t) => {
-        prism.rotation.y     = t * 0.7
-        prismTop.rotation.y  = -t * 0.7
+        prism.rotation.y = t * 0.7
+        prismTop.rotation.y = -t * 0.7
         particles.rotation.y = t * 0.2
         // Gentle breathing pulse on the prism
         const pulse = 1 + Math.sin(t * 1.5) * 0.04
