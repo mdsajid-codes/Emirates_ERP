@@ -45,14 +45,14 @@ import { saveThemeToStorage, applyTheme } from '../utils/themeUtils';
 import { getTenantFromSubdomain } from '../utils/tenantUtils';
 
 import PatternBackground from '../components/login/PatternBackground';
-import ThreeCanvas       from '../components/login/ThreeCanvas';
+import ThreeCanvas from '../components/login/ThreeCanvas';
 import '../components/login/login.css';
 
 // ── Static content (English) ────────────────────────────────────────────────
-const COMPANY    = 'EMIRATES ERP';
+const COMPANY = 'EMIRATES ERP';
 const HUD_VERSION = 'ERP v3.0 // SECURE';
-const HEADING    = 'Next-Gen Enterprise Platform';
-const SUBTEXT    = 'Unify operations, unlock insights, and scale your business with confidence.';
+const HEADING = 'Next-Gen Enterprise Platform';
+const SUBTEXT = 'Unify operations, unlock insights, and scale your business with confidence.';
 
 const ERM_SLIDES = [
   {
@@ -63,9 +63,9 @@ const ERM_SLIDES = [
     description:
       'Streamline recruitment, payroll, and performance reviews. Build a high-performing workforce at scale.',
     stats: [
-      { label: 'Workforce',  value: '12,450',  color: '#036b58' },
-      { label: 'Payroll',    value: '100.0%',  color: '#036b58' },
-      { label: 'Retention',  value: '98.4%',   color: '#615596' },
+      { label: 'Workforce', value: '12,450', color: '#1E3B37' },
+      { label: 'Payroll', value: '100.0%', color: '#1E3B37' },
+      { label: 'Retention', value: '98.4%', color: '#1E3B37' },
     ],
   },
   {
@@ -76,9 +76,9 @@ const ERM_SLIDES = [
     description:
       'Full-ledger accounting, VAT compliance, and real-time financial dashboards for data-driven decisions.',
     stats: [
-      { label: 'Revenue',    value: '$42.8M',     color: '#615596' },
-      { label: 'VAT Status', value: 'COMPLIANT',  color: '#036b58' },
-      { label: 'Audit',      value: '100%',        color: '#036b58' },
+      { label: 'Revenue', value: '$42.8M', color: '#1E3B37' },
+      { label: 'VAT Status', value: 'COMPLIANT', color: '#1E3B37' },
+      { label: 'Audit', value: '100%', color: '#1E3B37' },
     ],
   },
   {
@@ -89,9 +89,9 @@ const ERM_SLIDES = [
     description:
       'End-to-end visibility across procurement, warehousing, and delivery — optimised for speed and accuracy.',
     stats: [
-      { label: 'Fulfillment', value: '99.8%',  color: '#036b58' },
-      { label: 'Warehouses',  value: '48',     color: '#615596' },
-      { label: 'Lead Time',   value: '-42.0%', color: '#036b58' },
+      { label: 'Fulfillment', value: '99.8%', color: '#1E3B37' },
+      { label: 'Warehouses', value: '48', color: '#1E3B37' },
+      { label: 'Lead Time', value: '-42.0%', color: '#1E3B37' },
     ],
   },
   {
@@ -102,9 +102,9 @@ const ERM_SLIDES = [
     description:
       'Manage leads, track deals, and deliver exceptional customer experiences with AI-powered insights.',
     stats: [
-      { label: 'Conversion', value: '+45.2%', color: '#036b58' },
-      { label: 'Deals',      value: '1,820',  color: '#615596' },
-      { label: 'CSAT',       value: '4.9 / 5', color: '#036b58' },
+      { label: 'Conversion', value: '+45.2%', color: '#1E3B37' },
+      { label: 'Deals', value: '1,820', color: '#1E3B37' },
+      { label: 'CSAT', value: '4.9 / 5', color: '#1E3B37' },
     ],
   },
 ];
@@ -153,21 +153,21 @@ const Login = () => {
   // ── Tenant & API ──────────────────────────────────────────────────────────
   const resolvedTenantId = getTenantFromSubdomain();
   const { refreshModules } = useTenant();
-  const navigate   = useNavigate();
-  const API_URL    = import.meta.env.VITE_API_BASE_URL;
+  const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_BASE_URL;
 
   // ── Form state ────────────────────────────────────────────────────────────
-  const [loginData, setLoginData]     = useState({ email: '', password: '' });
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading]     = useState(false);
-  const [error, setError]             = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState('');
 
   // ── Carousel / animation state ────────────────────────────────────────────
-  const [activeIndex, setActiveIndex]   = useState(0);
-  const [headingKey, setHeadingKey]     = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [headingKey, setHeadingKey] = useState(0);
   const [cursorPosition, setCursorPosition] = useState({ x: 400, y: 300 });
-  const [systemTime, setSystemTime]     = useState('');
+  const [systemTime, setSystemTime] = useState('');
 
   // ── Carousel auto-advance every 7.5 s ────────────────────────────────────
   useEffect(() => {
@@ -237,14 +237,14 @@ const Login = () => {
       } else {
         response = await axios.post(`${API_URL}/auth/login`, {
           tenantId: resolvedTenantId,
-          email:    loginData.email,
+          email: loginData.email,
           password: loginData.password,
         });
-        localStorage.setItem('token',    response.data.token);
-        localStorage.setItem('roles',    JSON.stringify(response.data.roles));
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('roles', JSON.stringify(response.data.roles));
         localStorage.setItem('username', loginData.email);
         localStorage.setItem('tenantId', resolvedTenantId);
-        localStorage.setItem('modules',  response.data.modules);
+        localStorage.setItem('modules', response.data.modules);
 
         // Theme handling
         if (response.data.theme) {
@@ -260,7 +260,7 @@ const Login = () => {
         particleCount: 80,
         spread: 65,
         origin: { y: 0.6 },
-        colors: ['#036b58', '#615596', '#0d1c2e', '#ffffff'],
+        colors: ['#184341', '#2A4556', '#B9D9D5', '#C4DADE', '#D2E0D3'],
       });
 
       // Re-sync sidebar modules
@@ -322,7 +322,7 @@ const Login = () => {
 
   // ── Derived ───────────────────────────────────────────────────────────────
   const currentSlide = ERM_SLIDES[activeIndex];
-  const BadgeIcon    = currentSlide.badgeIcon;
+  const BadgeIcon = currentSlide.badgeIcon;
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -436,7 +436,7 @@ const Login = () => {
             <motion.button
               type="submit"
               className="login-submit-btn"
-              whileHover={{ scale: 1.02, boxShadow: '0 0 28px rgba(3,107,88,0.5)' }}
+              whileHover={{ scale: 1.02, boxShadow: '0 0 28px rgba(151, 179, 174, 0.7)' }}
               whileTap={{ scale: 0.97 }}
               disabled={isLoading}
             >

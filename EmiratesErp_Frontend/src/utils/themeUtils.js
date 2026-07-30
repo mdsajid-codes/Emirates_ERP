@@ -27,6 +27,49 @@ export const DEFAULT_THEME = {
     darkMode: false,
 };
 
+export const POS_FALLBACK_THEME = {
+    // Layout
+    sidebarBg: '#B9D9D5',
+    sidebarActive: '#97B3AE',
+    sidebarActiveFg: '#1b2421',
+    sidebarText: '#2d4542',
+    sidebarHover: '#C4DADE',
+    cardBg: '#C4DADE',
+    cardAlt: '#DDEBED',
+    pageBg: '#ECF2F5',
+    accent: '#D2E0D3',
+    accentFg: '#2d4542',
+    primary: '#97B3AE',
+    text: '#1e2e2c',
+    textMuted: '#5a7875',
+
+    // Status badges
+    success: '#dcfce7',
+    successFg: '#15803d',
+    warning: '#fef9c3',
+    warningFg: '#a16207',
+    error: '#fee2e2',
+    errorFg: '#dc2626',
+    info: '#dbeafe',
+    infoFg: '#1d4ed8',
+
+    // Bar Chart
+    barRevenue: '#97B3AE',
+    barProfit: '#C4DADE',
+    barLabelBg: '#2d4542',
+    barLabelFg: '#ffffff',
+
+    // Donut Chart
+    donutSeg1: '#97B3AE',
+    donutSeg2: '#C4DADE',
+    donutSeg3: '#B9D9D5',
+    donutSeg4: '#D2E0D3',
+    donutCenter: '#2d4542',
+
+    // Top Products mini-bar chart
+    dayBar: '#97B3AE',
+};
+
 const THEME_STORAGE_KEY = 'tenant_theme';
 
 /**
