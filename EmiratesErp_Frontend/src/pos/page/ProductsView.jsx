@@ -137,7 +137,7 @@ const BarcodeModal = ({ isOpen, onClose, product }) => {
     );
 };
 
-const ProductsView = ({ posTheme: propPosTheme }) => {
+const ProductsView = ({ posTheme: propPosTheme, isExpanded = true }) => {
     const posTheme = propPosTheme || POS_FALLBACK_THEME;
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -150,6 +150,7 @@ const ProductsView = ({ posTheme: propPosTheme }) => {
     const [isBulkImageModalOpen, setIsBulkImageModalOpen] = useState(false);
     const [barcodeModalProduct, setBarcodeModalProduct] = useState(null);
     const [showInactive, setShowInactive] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null); // { product, isHardDelete }
 
     const { isPosAdmin, canManage } = usePosAuth();
 
@@ -197,29 +198,23 @@ const ProductsView = ({ posTheme: propPosTheme }) => {
         }
     };
 
-    const handleDelete = async (productId) => {
-        if (window.confirm('Are you sure you want to deactivate this product?')) {
-            const token = localStorage.getItem('token');
-            try {
-                await axios.delete(`${API_URL}/pos/products/${productId}`, { headers: { "Authorization": `Bearer ${token}` } });
-                toast.warning('Product deactivated.');
-                fetchProducts();
-            } catch (err) {
-                toast.error('Failed to deactivate product.');
-            }
-        }
-    };
-
-    const handleHardDelete = async (productId) => {
-        if (window.confirm('WARNING: This will PERMANENTLY delete the product and all history. Are you sure?')) {
-            const token = localStorage.getItem('token');
-            try {
-                await axios.delete(`${API_URL}/pos/products/${productId}/hard`, { headers: { "Authorization": `Bearer ${token}` } });
-                fetchProducts();
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        const { product, isHardDelete } = deleteTarget;
+        const token = localStorage.getItem('token');
+        try {
+            if (isHardDelete) {
+                await axios.delete(`${API_URL}/pos/products/${product.id}/hard`, { headers: { "Authorization": `Bearer ${token}` } });
                 toast.error('Product permanently deleted.');
-            } catch (err) {
-                toast.error(`Failed to hard delete: ${err.response?.data?.message || err.message}`);
+            } else {
+                await axios.delete(`${API_URL}/pos/products/${product.id}`, { headers: { "Authorization": `Bearer ${token}` } });
+                toast.warning('Product deactivated.');
             }
+            fetchProducts();
+        } catch (err) {
+            toast.error(`Failed to delete product: ${err.response?.data?.message || err.message}`);
+        } finally {
+            setDeleteTarget(null);
         }
     };
 
@@ -360,7 +355,7 @@ const ProductsView = ({ posTheme: propPosTheme }) => {
                                                             <>
                                                                 {product.active ? (
                                                                     <button 
-                                                                        onClick={() => handleDelete(product.id)} 
+                                                                        onClick={() => setDeleteTarget({ product, isHardDelete: false })} 
                                                                         className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" 
                                                                         title="Deactivate"
                                                                     >
@@ -368,7 +363,7 @@ const ProductsView = ({ posTheme: propPosTheme }) => {
                                                                     </button>
                                                                 ) : (
                                                                     <button 
-                                                                        onClick={() => handleHardDelete(product.id)} 
+                                                                        onClick={() => setDeleteTarget({ product, isHardDelete: true })} 
                                                                         className="p-1.5 text-rose-700 hover:bg-rose-100 rounded-lg transition-colors" 
                                                                         title="Permanent Delete"
                                                                     >
@@ -397,7 +392,7 @@ const ProductsView = ({ posTheme: propPosTheme }) => {
                 </div>
             </div>
 
-            {/* Compact Side Panel for Add/Edit Form */}
+            {/* Full-Width Side Panel for Add/Edit Form */}
             <AnimatePresence>
                 {isPanelOpen && (
                     <>
@@ -413,7 +408,11 @@ const ProductsView = ({ posTheme: propPosTheme }) => {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-                            className="fixed top-0 right-0 h-full w-full max-w-xl bg-white shadow-2xl z-50 flex flex-col rounded-l-3xl overflow-hidden"
+                            className="fixed top-0 right-0 h-full bg-white shadow-2xl z-50 flex flex-col rounded-l-3xl overflow-hidden"
+                            style={{
+                                left: typeof window !== 'undefined' && window.innerWidth >= 1024 ? (isExpanded ? '288px' : '92px') : '0px',
+                                right: 0
+                            }}
                         >
                             <div className="px-5 py-4 border-b flex items-center justify-between">
                                 <div className="flex items-center gap-3">
@@ -434,6 +433,7 @@ const ProductsView = ({ posTheme: propPosTheme }) => {
                                 onCancel={handleClosePanel}
                                 isSubmitting={isSubmitting}
                                 onGenerateBarcode={() => handleViewBarcodes(selectedProduct)}
+                                posTheme={posTheme}
                             />
                             <div className="p-4 border-t bg-slate-50 flex justify-end gap-2 sticky bottom-0 z-50">
                                 <button type="button" onClick={handleClosePanel} className="px-4 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition-all" disabled={isSubmitting}>Cancel</button>
@@ -470,6 +470,49 @@ const ProductsView = ({ posTheme: propPosTheme }) => {
                 onClose={() => setBarcodeModalProduct(null)}
                 product={barcodeModalProduct}
             />
+
+            {/* Custom Delete Confirmation Modal */}
+            <AnimatePresence>
+                {deleteTarget && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex justify-center items-center z-50 p-4" onClick={() => setDeleteTarget(null)}>
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm text-center border border-slate-100" 
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3">
+                                <Trash2 size={22} />
+                            </div>
+                            <h3 className="text-base font-bold text-slate-900">
+                                {deleteTarget.isHardDelete ? 'Permanently Delete Product?' : 'Deactivate Product?'}
+                            </h3>
+                            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                                {deleteTarget.isHardDelete 
+                                    ? `Are you sure you want to permanently delete "${deleteTarget.product.name}"? This action cannot be undone and will erase all transaction history.`
+                                    : `Are you sure you want to deactivate "${deleteTarget.product.name}"? It will no longer appear in POS sales.`}
+                            </p>
+                            <div className="flex gap-2.5 mt-6">
+                                <button
+                                    type="button"
+                                    onClick={() => setDeleteTarget(null)}
+                                    className="flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={confirmDelete}
+                                    className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 shadow-sm transition-all cursor-pointer"
+                                >
+                                    {deleteTarget.isHardDelete ? 'Delete Forever' : 'Deactivate'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
