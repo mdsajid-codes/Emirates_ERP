@@ -26,10 +26,8 @@ const TICKER_ITEMS = [
  * Props:
  *   cursorPosition – { x, y } relative to the app-shell container
  */
-export default function PatternBackground({ cursorPosition }) {
+export default function PatternBackground({ cursorPosition, loginTheme }) {
   const canvasRef = useRef(null)
-  // Keep cursor position in a ref so the canvas render loop reads latest value
-  // without triggering re-renders or re-initialising the canvas effect.
   const cursorRef = useRef(cursorPosition)
 
   useEffect(() => {
@@ -42,6 +40,10 @@ export default function PatternBackground({ cursorPosition }) {
     const ctx = canvas.getContext('2d')
     let animationFrameId
 
+    const primaryHex = loginTheme?.primary || '#184341'
+    const accentHex = loginTheme?.accent || '#97B3AE'
+    const secondaryHex = loginTheme?.secondary || '#2A4556'
+
     // ── Resize ──────────────────────────────────────────────────────────────
     const setSize = () => {
       canvas.width = window.innerWidth
@@ -52,7 +54,7 @@ export default function PatternBackground({ cursorPosition }) {
 
     // ── Node initialisation ─────────────────────────────────────────────────
     const nodeCount = 65
-    const colors = [NODE_COLOR_A, NODE_COLOR_B, NODE_COLOR_C]
+    const colors = [primaryHex, accentHex, secondaryHex]
     const nodes = Array.from({ length: nodeCount }, () => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,

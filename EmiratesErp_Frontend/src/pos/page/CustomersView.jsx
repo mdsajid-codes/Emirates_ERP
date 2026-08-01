@@ -6,8 +6,10 @@ import Modal from '../components/Modal';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
+import { POS_FALLBACK_THEME } from '../../utils/themeUtils';
+
 // --- Customer Form Component ---
-const CustomerForm = ({ customer, onSave, onCancel, isSubmitting }) => {
+const CustomerForm = ({ customer, onSave, onCancel, isSubmitting, posTheme }) => {
     const [formData, setFormData] = useState(customer || { name: '', email: '', phone: '' });
 
     useEffect(() => {
@@ -36,8 +38,13 @@ const CustomerForm = ({ customer, onSave, onCancel, isSubmitting }) => {
                 <input id="phone" name="phone" value={formData.phone} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" />
             </div>
             <div className="flex justify-end gap-2 pt-3">
-                <button type="button" onClick={onCancel} className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all" disabled={isSubmitting}>Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-all flex items-center justify-center min-w-[100px]" disabled={isSubmitting}>
+                <button type="button" onClick={onCancel} className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer" disabled={isSubmitting}>Cancel</button>
+                <button 
+                    type="submit" 
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition-all hover:opacity-90 flex items-center justify-center min-w-[100px] cursor-pointer" 
+                    style={{ backgroundColor: posTheme?.primary || posTheme?.sidebarActive || '#184341' }}
+                    disabled={isSubmitting}
+                >
                     {isSubmitting ? <Loader className="animate-spin h-4 w-4" /> : 'Save Customer'}
                 </button>
             </div>
@@ -60,7 +67,8 @@ const usePosAuth = () => {
     return { isPosAdmin, canManage };
 };
 
-const CustomersView = () => {
+const CustomersView = ({ posTheme: propPosTheme }) => {
+    const posTheme = propPosTheme || POS_FALLBACK_THEME;
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -137,7 +145,11 @@ const CustomersView = () => {
                     <p className="text-xs text-slate-500 mt-0.5">Manage registered POS customer details.</p>
                 </div>
                 {canManage && (
-                    <button onClick={handleAdd} className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 shadow-sm transition-all">
+                    <button 
+                        onClick={handleAdd} 
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold text-white shadow-sm transition-all hover:opacity-90 cursor-pointer"
+                        style={{ backgroundColor: posTheme?.primary || posTheme?.sidebarActive || '#184341' }}
+                    >
                         <UserPlus size={15} /> Add Customer
                     </button>
                 )}
@@ -197,10 +209,10 @@ const CustomersView = () => {
             </div>
 
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingCustomer ? 'Edit Customer' : 'Add New Customer'}>
-                <CustomerForm customer={editingCustomer} onSave={handleSave} onCancel={handleCloseModal} isSubmitting={isSubmitting} />
+                <CustomerForm customer={editingCustomer} onSave={handleSave} onCancel={handleCloseModal} isSubmitting={isSubmitting} posTheme={posTheme} />
             </Modal>
         </div>
     );
-}
+};
 
 export default CustomersView;

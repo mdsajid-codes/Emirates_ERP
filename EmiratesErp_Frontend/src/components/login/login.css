@@ -78,13 +78,13 @@
   left: 0;
   right: 0;
   height: 34px;
-  background: #97B3AE;
+  background: var(--lp-primary);
   border-bottom: 2px solid rgba(255, 255, 255, 0.45);
   display: flex;
   align-items: center;
   overflow: hidden;
   z-index: 100;
-  box-shadow: 0 2px 12px rgba(151, 179, 174, 0.35);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
 .login-ticker-track {
@@ -97,7 +97,7 @@
   font-family: var(--lp-font-body);
   font-size: 0.73rem;
   font-weight: 700;
-  color: #152D2A;
+  color: #ffffff;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -229,13 +229,23 @@
 .login-heading {
   margin: 0;
   font-family: var(--lp-font-heading);
-  font-size: clamp(2rem, 3vw, 2.8rem);
+  font-size: clamp(1.4rem, 2.1vw, 2.1rem);
   font-weight: 800;
-  line-height: 1.18;
+  line-height: 1.25;
   color: var(--lp-on-surface);
   display: flex;
   flex-wrap: wrap;
-  gap: 0;
+  align-items: center;
+}
+
+.login-heading-word {
+  display: inline-flex;
+  white-space: nowrap;
+}
+
+.login-heading-space {
+  display: inline-block;
+  width: 0.25em;
 }
 
 .login-heading-letter {
@@ -463,21 +473,16 @@
   letter-spacing: 0.09em;
 }
 
-/* ─── RIGHT: Showcase Panel (LIGHT THEME) ─────────────────────────── */
+/* ─── RIGHT: Showcase Panel ───────────────────────────────────────── */
 .login-showcase-panel {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
-  /* Light theme backdrop strictly combining user palette */
-  background: linear-gradient(150deg,
-    rgba(221, 235, 237, 0.95) 0%,
-    rgba(210, 224, 211, 0.95) 50%,
-    rgba(196, 218, 222, 0.95) 100%
-  );
+  background-color: var(--lp-secondary);
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(185, 217, 213, 0.8) rgba(236, 242, 245, 0.5);
+  scrollbar-color: var(--lp-secondary) rgba(236, 242, 245, 0.2);
 }
 
 .login-showcase-panel::-webkit-scrollbar {
@@ -485,18 +490,19 @@
 }
 
 .login-showcase-panel::-webkit-scrollbar-track {
-  background: rgba(236, 242, 245, 0.5);
+  background: rgba(236, 242, 245, 0.15);
   border-radius: var(--lp-radius-full);
 }
 
 .login-showcase-panel::-webkit-scrollbar-thumb {
-  background: rgba(185, 217, 213, 0.8);
+  background: var(--lp-primary);
   border-radius: var(--lp-radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   transition: background 0.2s;
 }
 
 .login-showcase-panel::-webkit-scrollbar-thumb:hover {
-  background: var(--lp-primary);
+  background: var(--lp-secondary);
 }
 
 /* ─── Showcase Top Badge Row ─────────────────────────────────────── */

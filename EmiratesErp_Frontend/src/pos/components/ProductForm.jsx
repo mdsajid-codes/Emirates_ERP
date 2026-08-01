@@ -16,7 +16,7 @@ const constructImageUrl = (relativeUrl) => {
     return `${API_URL}${relativeUrl}`;
 };
 
-const ProductForm = ({ product, onSave, onCancel, isSubmitting, onGenerateBarcode }) => {
+const ProductForm = ({ product, onSave, onCancel, isSubmitting, onGenerateBarcode, posTheme }) => {
     const [formData, setFormData] = useState(product || { name: '', sku: '', description: '', categoryId: null, active: true, variants: [{ sku: '', barcode: '', price: 0, cost: 0, attributes: {}, imageUrl: null, imageFile: null, taxRateId: null, active: true }] });
     const [taxRates, setTaxRates] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -166,11 +166,13 @@ const ProductForm = ({ product, onSave, onCancel, isSubmitting, onGenerateBarcod
         <form id="product-form" onSubmit={handleSubmit} className="p-5 flex-grow overflow-y-auto overflow-x-hidden space-y-5 text-xs">
             <div className="space-y-3">
                 <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">General Information</h3>
-                <div>
-                    <label htmlFor="name" className="block font-semibold text-slate-700 mb-1">Product Name *</label>
-                    <input id="name" name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
+                
+                {/* 1st Row: 3 Fields (Product Name, Base SKU, Category) */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label htmlFor="name" className="block font-semibold text-slate-700 mb-1">Product Name *</label>
+                        <input id="name" name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" />
+                    </div>
                     <div>
                         <label htmlFor="sku" className="block font-semibold text-slate-700 mb-1">Base SKU</label>
                         <input id="sku" name="sku" value={formData.sku} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-mono focus:ring-2 focus:ring-slate-900 outline-none" />
@@ -183,6 +185,8 @@ const ProductForm = ({ product, onSave, onCancel, isSubmitting, onGenerateBarcod
                         </select>
                     </div>
                 </div>
+
+                {/* Below 1st Row: Full Width Description */}
                 <div>
                     <label htmlFor="description" className="block font-semibold text-slate-700 mb-1">Description</label>
                     <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows="2" className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" />
@@ -196,14 +200,20 @@ const ProductForm = ({ product, onSave, onCancel, isSubmitting, onGenerateBarcod
             <div className="pt-2">
                 <div className="flex justify-between items-center mb-3">
                     <h3 className="text-sm font-bold text-slate-800">Variants ({formData.variants.length})</h3>
-                    <button type="button" onClick={addVariant} className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800 hover:bg-slate-200 font-bold transition-all flex items-center gap-1">
-                        <PlusCircle size={14} /> Add Variant
+                    <button 
+                        type="button" 
+                        onClick={addVariant} 
+                        className="px-3.5 py-1.5 rounded-full text-xs font-bold text-white shadow-xs transition-all hover:opacity-90 cursor-pointer flex items-center gap-1.5"
+                        style={{ backgroundColor: posTheme?.primary || '#0f172a' }}
+                    >
+                        <PlusCircle size={15} /> Add Variant
                     </button>
                 </div>
 
-                <div className="space-y-3">
+                {/* Variants Grid Layout: 2 Variants Per Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                     {formData.variants.map((variant, index) => (
-                        <div key={index} className="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50 relative space-y-3">
+                        <div key={index} className="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50 relative space-y-3 flex flex-col justify-between">
                             {formData.variants.length > 1 && (
                                 <button type="button" onClick={() => removeVariant(index)} className="absolute top-2.5 right-2.5 p-1 text-slate-400 hover:text-rose-600 transition-colors">
                                     <X size={15} />

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Loader } from 'lucide-react';
 
-const CustomerForm = ({ onSave, onCancel, isSubmitting }) => {
+const CustomerForm = ({ onSave, onCancel, isSubmitting, posTheme }) => {
     const [formData, setFormData] = useState({ name: '', email: '', phone: '' });
 
     const handleChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,7 +27,12 @@ const CustomerForm = ({ onSave, onCancel, isSubmitting }) => {
             </div>
             <div className="flex justify-end gap-2 pt-4">
                 <button type="button" onClick={onCancel} className="btn-secondary" disabled={isSubmitting}>Cancel</button>
-                <button type="submit" className="btn-primary flex items-center" disabled={isSubmitting}>
+                <button 
+                    type="submit" 
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition-all hover:opacity-90 flex items-center justify-center cursor-pointer" 
+                    style={{ backgroundColor: posTheme?.primary || '#184341' }}
+                    disabled={isSubmitting}
+                >
                     {isSubmitting && <Loader className="animate-spin h-4 w-4 mr-2" />}
                     Save Customer
                 </button>
