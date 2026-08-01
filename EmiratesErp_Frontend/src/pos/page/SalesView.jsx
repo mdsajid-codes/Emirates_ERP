@@ -414,6 +414,7 @@ const SalesView = ({ posTheme: propPosTheme }) => {
                     onAddProduct={() => setProductPanelOpen(true)}
                     showInactive={showInactive}
                     onToggleInactive={() => setShowInactive(!showInactive)}
+                    posTheme={posTheme}
                 />
                 {loading.products || loading.stores ? (
                     <div className="flex-grow flex justify-center items-center"><Loader className="animate-spin h-8 w-8 text-slate-900" /></div>
@@ -490,6 +491,7 @@ const SalesView = ({ posTheme: propPosTheme }) => {
                     onClose={() => setDiscountModalOpen(false)}
                     onApplyDiscount={setDiscountCents}
                     subtotal={subtotal}
+                    posTheme={posTheme}
                 />
             )}
 

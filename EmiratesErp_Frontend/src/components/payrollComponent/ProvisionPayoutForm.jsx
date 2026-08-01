@@ -1,16 +1,28 @@
 import React, { useState, useEffect } from 'react';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 
 const InputField = ({ label, id, type = 'text', ...props }) => (
     <div>
-        <label htmlFor={id} className="block text-sm font-medium text-slate-700">{label}</label>
-        <input id={id} type={type} {...props} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
+        {label && <label htmlFor={id} className="block text-[11px] font-medium text-foreground-muted mb-0.5">{label}</label>}
+        <input
+            id={id}
+            type={type}
+            {...props}
+            className="w-full px-2 py-1 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-colors h-7"
+        />
     </div>
 );
 
 const SelectField = ({ label, id, children, ...props }) => (
     <div>
-        <label htmlFor={id} className="block text-sm font-medium text-slate-700">{label}</label>
-        <select id={id} {...props} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">{children}</select>
+        {label && <label htmlFor={id} className="block text-[11px] font-medium text-foreground-muted mb-0.5">{label}</label>}
+        <select
+            id={id}
+            {...props}
+            className="w-full px-2 py-1 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-colors h-7"
+        >
+            {children}
+        </select>
     </div>
 );
 
@@ -35,7 +47,7 @@ const ProvisionPayoutForm = ({ provision, onSave, onCancel }) => {
     };
 
     const handleFileChange = (e) => {
-        setFile(e.target.files); // Handle multiple files
+        setFile(e.target.files);
     };
 
     const handleSubmit = (e) => {
@@ -43,7 +55,7 @@ const ProvisionPayoutForm = ({ provision, onSave, onCancel }) => {
         const submissionData = new FormData();
         submissionData.append('payoutDetails', new Blob([JSON.stringify(formData)], { type: 'application/json' }));
         if (file && file.length > 0) {
-            for (let i = 0; i < file.length; i++) { // Changed to 'files' to match backend
+            for (let i = 0; i < file.length; i++) {
                 submissionData.append('files', file[i]);
             }
         }
@@ -51,26 +63,66 @@ const ProvisionPayoutForm = ({ provision, onSave, onCancel }) => {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <InputField label="Paid Out Date" name="paidOutDate" type="date" value={formData.paidOutDate} onChange={handleChange} required />
-            <InputField label="Paid Amount" name="paidAmount" type="number" value={formData.paidAmount} onChange={handleChange} readOnly className="bg-slate-100" />
-            <SelectField label="Payment Method" name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} required>
-                <option value="BANK_TRANSFER">Bank Transfer</option>
-                <option value="CASH">Cash</option>
-                <option value="CHEQUE">Cheque</option>
-                <option value="IN_KIND">In Kind (e.g., Ticket)</option>
-            </SelectField>
-            <InputField label="Payment Details / Remarks" name="paymentDetails" type="textarea" value={formData.paymentDetails} onChange={handleChange} required placeholder="e.g., Ticket booked on Emirates EK201" />
-            <div>
-                <label htmlFor="confirmationFile" className="block text-sm font-medium text-slate-700">Confirmation File (Optional)</label>
-                {/* Add 'multiple' attribute to allow multiple file selection */}
-                <input id="confirmationFile" name="file" type="file" onChange={handleFileChange} multiple className="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+        <div className="p-3 border border-border rounded-lg bg-card text-foreground space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+                <h3 className="text-xs font-bold text-foreground">
+                    Pay Out: {provision?.benefitTypeName}
+                </h3>
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="px-2 py-1 text-xs font-semibold rounded-md border border-border bg-background hover:bg-background-muted text-foreground transition-colors flex items-center gap-1"
+                >
+                    <ArrowLeft size={13} /> Back
+                </button>
             </div>
-            <div className="flex justify-end gap-3 pt-4">
-                <button type="button" onClick={onCancel} className="btn-secondary">Cancel</button>
-                <button type="submit" className="btn-primary">Confirm Payout</button>
-            </div>
-        </form>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                    <InputField label="Paid Out Date" name="paidOutDate" type="date" value={formData.paidOutDate} onChange={handleChange} required />
+                    <InputField label="Paid Amount" name="paidAmount" type="number" value={formData.paidAmount} onChange={handleChange} readOnly className="bg-background-muted text-foreground-muted" />
+                </div>
+
+                <SelectField label="Payment Method" name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} required>
+                    <option value="BANK_TRANSFER">Bank Transfer</option>
+                    <option value="CASH">Cash</option>
+                    <option value="CHEQUE">Cheque</option>
+                    <option value="IN_KIND">In Kind (e.g., Ticket)</option>
+                </SelectField>
+
+                <InputField label="Payment Details / Remarks" name="paymentDetails" value={formData.paymentDetails} onChange={handleChange} required placeholder="e.g., Ticket booked on Emirates EK201" />
+
+                <div>
+                    <label htmlFor="confirmationFile" className="block text-[11px] font-medium text-foreground-muted mb-0.5">
+                        Confirmation File (Optional)
+                    </label>
+                    <input
+                        id="confirmationFile"
+                        name="file"
+                        type="file"
+                        onChange={handleFileChange}
+                        multiple
+                        className="w-full text-xs text-foreground-muted border border-border rounded-md bg-background px-2 py-1 file:mr-2 file:py-0.5 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                    />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="px-3 py-1 text-xs font-semibold text-foreground-muted hover:bg-background-muted rounded-md transition-colors border border-border"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        className="px-3.5 py-1 text-xs font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1 shadow-2xs h-7"
+                    >
+                        <CheckCircle2 size={13} /> Confirm Payout
+                    </button>
+                </div>
+            </form>
+        </div>
     );
 };
 

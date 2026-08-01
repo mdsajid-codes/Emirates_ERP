@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Download, Loader, PieChart, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Download, Loader, CheckCircle, AlertTriangle } from 'lucide-react';
 
 const EmiratizationReport = () => {
     const [loading, setLoading] = useState(false);
@@ -21,7 +21,6 @@ const EmiratizationReport = () => {
             const response = await axios.get(`${API_URL}/reports/compliance/emiratization`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
-            console.log("Emiratization Report Data:", response.data);
             setReportData(response.data);
         } catch (err) {
             console.error("Error fetching Emiratization report:", err);
@@ -55,89 +54,81 @@ const EmiratizationReport = () => {
     const isCompliant = reportData?.status === 'COMPLIANT';
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-3">
             <div className="flex justify-between items-center">
                 <div>
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Emiratization Compliance</h3>
-                    <p className="text-sm text-gray-500">Tracking nationalization targets and ratios</p>
+                    <h2 className="text-xs font-bold text-foreground">Emiratization Compliance</h2>
+                    <p className="text-[11px] text-foreground-muted">Tracking nationalization targets and workforce ratios</p>
                 </div>
-                <button onClick={handleDownloadExcel} className="btn-secondary flex items-center gap-2 text-sm bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg transition-colors">
-                    <Download size={16} /> Export Report
+                <button
+                    onClick={handleDownloadExcel}
+                    className="px-2.5 py-1 text-xs font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1 shadow-2xs h-7"
+                >
+                    <Download size={13} />
+                    <span>Export Excel</span>
                 </button>
             </div>
 
             {loading ? (
-                <div className="flex justify-center items-center py-20">
-                    <Loader className="animate-spin text-blue-600 h-8 w-8" />
+                <div className="flex justify-center items-center p-8 bg-card border border-border rounded-lg">
+                    <Loader className="animate-spin h-5 w-5 text-primary" />
                 </div>
             ) : error ? (
-                <div className="p-6 text-center text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                    <p>{error}</p>
-                    <button onClick={fetchReport} className="text-sm underline hover:text-red-800 mt-2">Retry</button>
+                <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-md border border-rose-500/20 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <AlertTriangle size={14} />
+                        <span>{error}</span>
+                    </div>
+                    <button onClick={fetchReport} className="text-xs underline hover:opacity-80">Try Again</button>
                 </div>
             ) : reportData ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {/* Compliance Status Card */}
-                    <div className={`md:col-span-1 rounded-xl border p-6 flex flex-col items-center justify-center text-center ${isCompliant ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800'}`}>
+                    <div className={`md:col-span-1 rounded-lg border p-4 flex flex-col items-center justify-center text-center ${
+                        isCompliant ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 'bg-amber-500/10 border-amber-500/20 text-amber-600'
+                    }`}>
                         {isCompliant ? (
-                            <CheckCircle size={64} className="text-green-600 dark:text-green-400 mb-4" />
+                            <CheckCircle size={40} className="mb-2" />
                         ) : (
-                            <AlertTriangle size={64} className="text-orange-600 dark:text-orange-400 mb-4" />
+                            <AlertTriangle size={40} className="mb-2" />
                         )}
-                        <h4 className={`text-xl font-bold mb-1 ${isCompliant ? 'text-green-800 dark:text-green-300' : 'text-orange-800 dark:text-orange-300'}`}>
+                        <h4 className="text-sm font-bold uppercase tracking-wider mb-0.5">
                             {reportData.status}
                         </h4>
-                        <p className={`text-sm ${isCompliant ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
+                        <p className="text-[11px] font-medium opacity-80">
                             Current Emiratization Status
                         </p>
                     </div>
 
-                    {/* Stats & Chart */}
-                    <div className="md:col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
-                        <div className="flex flex-col sm:flex-row gap-8 items-center justify-around h-full">
+                    {/* Stats & Ratios Card */}
+                    <div className="md:col-span-2 bg-card border border-border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between border-b border-border pb-2">
+                            <span className="text-xs font-bold text-foreground">Emiratization Rate</span>
+                            <span className="text-lg font-extrabold text-emerald-600">{reportData.emiratizationPercentage}%</span>
+                        </div>
 
-                            {/* Simple Pie Chart Representation */}
-                            <div className="relative w-40 h-40">
-                                <svg viewBox="0 0 32 32" className="w-full h-full transform -rotate-90">
-                                    <circle r="16" cx="16" cy="16" fill="transparent" stroke="#e2e8f0" strokeWidth="32" className="dark:stroke-slate-700" />
-                                    <circle
-                                        r="16" cx="16" cy="16"
-                                        fill="transparent"
-                                        stroke="#10b981"
-                                        strokeWidth="32"
-                                        strokeDasharray={`${reportData.emiratizationPercentage} 100`}
-                                        className="text-emerald-500"
-                                    />
-                                </svg>
-                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <span className="text-lg font-bold text-white drop-shadow-md">{reportData.emiratizationPercentage}%</span>
-                                </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <div className="p-2.5 bg-background border border-border rounded-md text-center">
+                                <span className="text-[10px] text-foreground-muted uppercase font-semibold block">Total</span>
+                                <span className="text-base font-extrabold text-foreground">{reportData.totalEmployees}</span>
                             </div>
-
-                            <div className="flex-1 w-full sm:w-auto grid grid-cols-2 gap-4">
-                                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-center">
-                                    <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Total Employees</span>
-                                    <span className="text-2xl font-bold text-gray-900 dark:text-white">{reportData.totalEmployees}</span>
-                                </div>
-                                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg text-center">
-                                    <span className="text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-1">Nationals</span>
-                                    <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{reportData.totalNationals}</span>
-                                </div>
-                                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
-                                    <span className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-widest block mb-1">Expats</span>
-                                    <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">{reportData.totalExpats}</span>
-                                </div>
-                                {/* Metric Target Placeholder */}
-                                <div className="p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center flex flex-col justify-center">
-                                    <span className="text-xs text-gray-400 uppercase tracking-widest block mb-1">Target</span>
-                                    <span className="text-lg font-semibold text-gray-500 dark:text-gray-400">2.0%</span>
-                                </div>
+                            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md text-center">
+                                <span className="text-[10px] text-emerald-600 uppercase font-semibold block">UAE Nationals</span>
+                                <span className="text-base font-extrabold text-emerald-600">{reportData.totalNationals}</span>
+                            </div>
+                            <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-md text-center">
+                                <span className="text-[10px] text-primary uppercase font-semibold block">Expats</span>
+                                <span className="text-base font-extrabold text-primary">{reportData.totalExpats}</span>
+                            </div>
+                            <div className="p-2.5 bg-background-muted border border-border rounded-md text-center">
+                                <span className="text-[10px] text-foreground-muted uppercase font-semibold block">Target</span>
+                                <span className="text-base font-bold text-foreground-muted">2.0%</span>
                             </div>
                         </div>
                     </div>
                 </div>
             ) : (
-                <div className="p-10 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-slate-800 rounded-xl border-dashed border-2 border-gray-300">
+                <div className="p-8 text-center text-foreground-muted text-xs bg-card rounded-lg border border-border">
                     No emiratization data available.
                 </div>
             )}

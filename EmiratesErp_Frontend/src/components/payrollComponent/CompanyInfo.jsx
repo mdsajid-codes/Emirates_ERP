@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Building, Landmark } from 'lucide-react';
-import axios from 'axios';
 import CompanyInfoDetails from '../../manageCompany/CompanyInfo';
 import BankDetails from '../../manageCompany/BankDetails';
 
@@ -15,20 +14,20 @@ const CompanyInfo = () => {
     const ActiveComponent = subTabs.find(tab => tab.name === activeSubTab)?.component;
 
     return (
-        <div>
-            <div className="border-b border-border mb-6">
-                <nav className="-mb-px flex space-x-6 text-foreground" aria-label="Sub-tabs">
+        <div className="space-y-3">
+            <div className="border-b border-border pb-0.5 mb-3">
+                <nav className="-mb-px flex space-x-3" aria-label="Sub-tabs">
                     {subTabs.map((tab) => (
                         <button
                             key={tab.name}
                             onClick={() => setActiveSubTab(tab.name)}
-                            className={`whitespace-nowrap flex items-center py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                            className={`whitespace-nowrap flex items-center gap-1.5 py-1 px-0.5 border-b-2 font-medium text-[11px] transition-colors ${
                                 activeSubTab === tab.name
-                                    ? 'border-primary text-primary'
+                                    ? 'border-primary text-primary font-bold'
                                     : 'border-transparent text-foreground-muted hover:text-foreground hover:border-border'
                             }`}
                         >
-                            <tab.icon className="mr-2 h-5 w-5" />
+                            <tab.icon className="h-3.5 w-3.5" />
                             {tab.name}
                         </button>
                     ))}
@@ -37,6 +36,6 @@ const CompanyInfo = () => {
             {ActiveComponent && <ActiveComponent />}
         </div>
     );
-}
+};
 
 export default CompanyInfo;

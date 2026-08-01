@@ -106,7 +106,7 @@ const PosDashboard = () => {
         const allLinks = [...navLinksOverview, ...navLinksOther];
         const activeLink = allLinks.find(link => link.name === activeItem) || navLinksOverview[0];
         const Component = activeLink.Component;
-        return <Component key={activeItem} setActiveItem={setActiveItem} posTheme={posTheme} />;
+        return <Component key={activeItem} setActiveItem={setActiveItem} posTheme={posTheme} isExpanded={isExpanded} />;
     };
 
     const SidebarNav = ({ isCollapsedMode = false }) => (
@@ -250,9 +250,9 @@ const PosDashboard = () => {
             </aside>
 
             {/* Main Content & Top Bar */}
-            <div className="flex-1 flex flex-col min-w-0">
+            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
                 {/* Main Top Header */}
-                <header className="px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3 border-b border-slate-200/40">
+                <header className="px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3 border-b border-slate-200/40 flex-shrink-0">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setSidebarOpen(true)}
@@ -327,7 +327,7 @@ const PosDashboard = () => {
                 </AnimatePresence>
 
                 {/* Content View */}
-                <main className="flex-1 pb-8">
+                <main className="flex-1 overflow-y-auto pb-8">
                     {renderContent()}
                 </main>
             </div>

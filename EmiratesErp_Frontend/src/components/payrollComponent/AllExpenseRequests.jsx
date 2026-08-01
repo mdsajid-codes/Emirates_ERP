@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
-import { Check, X, FileClock, Loader, AlertCircle, Search, Eye } from 'lucide-react';
+import { Check, X, FileClock, Loader, Eye } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const statusStyles = {
-    SUBMITTED: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: FileClock },
-    APPROVED: { bg: 'bg-green-100', text: 'text-green-800', icon: Check },
-    REJECTED: { bg: 'bg-red-100', text: 'text-red-800', icon: X },
-}; 
+    SUBMITTED: { style: 'bg-amber-500/10 text-amber-600 border-amber-500/20', icon: FileClock },
+    APPROVED: { style: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', icon: Check },
+    REJECTED: { style: 'bg-rose-500/10 text-rose-600 border-rose-500/20', icon: X },
+};
 
 const formatCurrency = (amount, currency = 'AED') => {
     return new Intl.NumberFormat('en-IN', {
@@ -18,12 +18,11 @@ const formatCurrency = (amount, currency = 'AED') => {
     }).format(amount || 0);
 };
 
-const AllExpenseRequests = () => {
+const AllExpenseRequests = ({ searchTerm = "" }) => {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState('SUBMITTED');
-    const [searchTerm, setSearchTerm] = useState('');
     const [viewingReceipt, setViewingReceipt] = useState(null);
 
     const fetchRequests = useCallback(async () => {
@@ -58,21 +57,6 @@ const AllExpenseRequests = () => {
         }
     };
 
-    const handleViewReceipt = async (expense) => {
-        if (!expense.receiptPath) return;
-        try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get(`${API_URL}/expenses/${expense.id}/receipt`, {
-                headers: { "Authorization": `Bearer ${token}` },
-                responseType: 'blob'
-            });
-            const fileURL = URL.createObjectURL(new Blob([response.data], { type: response.headers['content-type'] }));
-            setViewingReceipt(fileURL);
-        } catch (err) {
-            alert("Could not load the receipt.");
-        }
-    };
-
     const handleViewAttachment = (attachmentUrl) => {
         setViewingReceipt(attachmentUrl);
     };
@@ -80,13 +64,12 @@ const AllExpenseRequests = () => {
     const filteredRequests = useMemo(() => {
         let filtered = requests.filter(req => req.status === activeTab);
         if (searchTerm) {
-            const lowercasedFilter = searchTerm.toLowerCase();
+            const lowercasedFilter = searchTerm.toLowerCase().trim();
             filtered = filtered.filter(req =>
                 (req.employeeName?.toLowerCase() || '').includes(lowercasedFilter) ||
                 (req.employeeCode?.toLowerCase() || '').includes(lowercasedFilter) ||
                 (req.category?.toLowerCase() || '').includes(lowercasedFilter)
             );
-
         }
         return filtered;
     }, [requests, activeTab, searchTerm]);
@@ -94,77 +77,108 @@ const AllExpenseRequests = () => {
     const TABS = ['SUBMITTED', 'APPROVED', 'REJECTED'];
 
     return (
-        <>
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
-                <div className="flex border-b border-slate-200 dark:border-slate-700">
+        <div className="space-y-3">
+            <div className="border-b border-border pb-0.5">
+                <nav className="-mb-px flex space-x-3 overflow-x-auto" aria-label="Tabs">
                     {TABS.map(tab => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`px-3 py-2 text-sm font-medium whitespace-nowrap ${activeTab === tab ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400' : 'border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'}`}>
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`whitespace-nowrap py-1.5 px-0.5 border-b-2 font-medium text-[11px] transition-colors ${
+                                activeTab === tab
+                                    ? 'border-primary text-primary font-bold'
+                                    : 'border-transparent text-foreground-muted hover:text-foreground hover:border-border'
+                            }`}
+                        >
                             {tab.charAt(0) + tab.slice(1).toLowerCase()}
                         </button>
                     ))}
-                </div>
-                <div className="relative w-full sm:w-64">
-                    <input type="text" placeholder="Search by employee..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="input w-full pr-10 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" />
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                </div>
+                </nav>
             </div>
 
-            {error && <div className="text-center text-red-600 dark:text-red-400 p-4 bg-red-50 dark:bg-red-900/20 rounded-md mb-4">{error}</div>}
+            {error && <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-md border border-rose-500/20">{error}</div>}
 
-            <div className="overflow-x-auto">
-                <table className="min-w-full bg-white dark:bg-slate-800/50">
-                    <thead className="bg-slate-50 dark:bg-slate-700/50">
+            <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="min-w-full bg-card text-foreground divide-y divide-border">
+                    <thead className="bg-background-muted/60">
                         <tr>
-                            <th className="th-cell">Employee</th><th className="th-cell">Category</th><th className="th-cell">Amount</th><th className="th-cell">Date</th><th className="th-cell">Status</th><th className="th-cell">Receipt</th><th className="th-cell">Actions</th>
-                        </tr> 
+                            <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Employee</th>
+                            <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Category</th>
+                            <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Amount</th>
+                            <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Date</th>
+                            <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Status</th>
+                            <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Receipt</th>
+                            <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Actions</th>
+                        </tr>
                     </thead>
-                    <tbody className="dark:text-slate-300">
+                    <tbody className="divide-y divide-border/40">
                         {loading ? (
-                            <tr><td colSpan="7" className="text-center py-10"><Loader className="h-8 w-8 animate-spin text-blue-600 mx-auto" /></td></tr>
+                            <tr><td colSpan="7" className="text-center py-8"><Loader className="h-6 w-6 animate-spin text-primary mx-auto" /></td></tr>
                         ) : filteredRequests.length > 0 ? (
                             filteredRequests.map(req => (
-                                <tr key={req.id} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                                    <td className="td-cell"><div className="font-medium text-slate-800 dark:text-slate-100">{req.employeeName}</div><div className="text-sm text-slate-500 dark:text-slate-400">{req.employeeCode}</div></td>
-                                    <td className="td-cell">{req.category}</td>
-                                    <td className="td-cell">{formatCurrency(req.amount)}</td>
-                                    <td className="td-cell">{new Date(req.expenseDate).toLocaleDateString()}</td>
-                                    <td className="td-cell">
-                                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-semibold rounded-full ${statusStyles[req.status]?.bg} ${statusStyles[req.status]?.text}`}>
-                                            {React.createElement(statusStyles[req.status].icon, { className: "h-3 w-3" })}
-                                            {req.status.toLowerCase()}
+                                <tr key={req.id} className="hover:bg-background-muted/40 transition-colors">
+                                    <td className="px-3 py-2 text-xs">
+                                        <div className="font-semibold text-foreground">{req.employeeName || 'N/A'}</div>
+                                        <div className="text-[10px] text-foreground-muted">{req.employeeCode || 'N/A'}</div>
+                                    </td>
+                                    <td className="px-3 py-2 text-xs font-medium text-foreground">{req.category}</td>
+                                    <td className="px-3 py-2 text-xs font-medium text-foreground">{formatCurrency(req.amount)}</td>
+                                    <td className="px-3 py-2 text-xs text-foreground-muted">{new Date(req.expenseDate).toLocaleDateString()}</td>
+                                    <td className="px-3 py-2 text-xs">
+                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full border capitalize ${statusStyles[req.status]?.style || 'bg-background-muted text-foreground-muted border-border'}`}>
+                                            {statusStyles[req.status]?.icon && React.createElement(statusStyles[req.status].icon, { className: "h-3 w-3" })}
+                                            {req.status?.toLowerCase()}
                                         </span>
                                     </td>
-                                    <td className="td-cell">
+                                    <td className="px-3 py-2 text-xs text-foreground-muted">
                                         {req.attachments && req.attachments.length > 0 ? (
-                                            <div className="flex flex-col">
+                                            <div className="flex flex-col space-y-0.5">
                                                 {req.attachments.map((attachment) => (
                                                     <button
                                                         key={attachment.id}
                                                         onClick={() => handleViewAttachment(attachment.viewUrl)}
-                                                        className="text-primary hover:underline text-xs flex items-center gap-1"
-                                                    ><Eye size={14} />{attachment.originalFilename}</button>
+                                                        className="text-primary hover:underline text-[11px] flex items-center gap-1"
+                                                    ><Eye size={12} /><span className="truncate max-w-[120px]">{attachment.originalFilename}</span></button>
                                                 ))}
                                             </div>
-                                        ) : <span>No attachments</span>}
+                                        ) : <span className="text-foreground-muted/60 text-[11px]">No attachments</span>}
                                     </td>
-                                    <td className="td-cell">{req.status === 'SUBMITTED' && <div className="flex items-center gap-2 text-foreground-muted"><button onClick={() => handleAction(req.id, 'reject')} className="p-1.5 hover:text-red-600 rounded-full hover:bg-background-muted" title="Reject"><X className="h-4 w-4" /></button><button onClick={() => handleAction(req.id, 'approve')} className="p-1.5 hover:text-green-600 rounded-full hover:bg-background-muted" title="Approve"><Check className="h-4 w-4" /></button></div>}</td>
+                                    <td className="px-3 py-2 text-xs text-right whitespace-nowrap">
+                                        {req.status === 'SUBMITTED' && (
+                                            <div className="flex items-center justify-end gap-1">
+                                                <button onClick={() => handleAction(req.id, 'approve')} className="p-1 text-emerald-600 hover:bg-emerald-500/10 rounded-md transition-colors border border-border bg-background" title="Approve"><Check className="h-3.5 w-3.5" /></button>
+                                                <button onClick={() => handleAction(req.id, 'reject')} className="p-1 text-rose-600 hover:bg-rose-500/10 rounded-md transition-colors border border-border bg-background" title="Reject"><X className="h-3.5 w-3.5" /></button>
+                                            </div>
+                                        )}
+                                    </td>
                                 </tr>
                             ))
                         ) : (
-                            <tr><td colSpan="7" className="text-center py-10 text-foreground-muted"><FileClock className="mx-auto h-12 w-12 text-foreground-muted/50" /><h3 className="mt-2 text-sm font-semibold text-foreground">No requests found</h3><p className="mt-1 text-sm">There are no expense requests matching your criteria.</p></td></tr>
+                            <tr>
+                                <td colSpan="7" className="text-center py-8 text-foreground-muted text-xs">
+                                    <FileClock className="mx-auto h-7 w-7 text-foreground-muted/40 mb-1" />
+                                    <h3 className="text-xs font-bold text-foreground">No requests found</h3>
+                                    <p className="text-[11px] text-foreground-muted">There are no expense requests matching your criteria.</p>
+                                </td>
+                            </tr>
                         )}
                     </tbody>
                 </table>
             </div>
+
             {viewingReceipt && (
-                <div className="fixed inset-0 bg-black/75 z-50 flex justify-center items-center p-4" onClick={() => setViewingReceipt(null)}> 
-                    <div className="bg-card p-2 rounded-lg max-w-4xl max-h-[90vh]" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-end"><button onClick={() => setViewingReceipt(null)} className="p-2 rounded-full text-foreground-muted hover:bg-background-muted -mr-2 -mt-2 mb-2"><X size={20} /></button></div> {/* Closing button for the modal */}
-                        <img src={viewingReceipt} alt="Expense Receipt" className="max-w-full max-h-[80vh] object-contain" />
-                    </div> 
+                <div className="fixed inset-0 bg-black/75 z-50 flex justify-center items-center p-4" onClick={() => setViewingReceipt(null)}>
+                    <div className="bg-card p-2 rounded-lg max-w-4xl max-h-[90vh] border border-border" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-end">
+                            <button onClick={() => setViewingReceipt(null)} className="p-1.5 rounded-md hover:bg-background-muted text-foreground transition-colors mb-1">
+                                <X size={16} />
+                            </button>
+                        </div>
+                        <img src={viewingReceipt} alt="Expense Receipt" className="max-w-full max-h-[80vh] object-contain rounded-md" />
+                    </div>
                 </div>
             )}
-        </>
+        </div>
     );
 };
 

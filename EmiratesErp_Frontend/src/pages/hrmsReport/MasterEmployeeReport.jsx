@@ -1,34 +1,28 @@
-
 import React, { useState, useEffect } from 'react';
-import DashboardLayout from '../../components/DashboardLayout';
-import { Download, Loader, Search, RefreshCw, AlertCircle } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import { Download, Loader, RefreshCw, AlertCircle, Users } from 'lucide-react';
 import axios from 'axios';
 
 const MasterEmployeeReport = () => {
+    const { searchTerm: headerSearchTerm = '' } = useOutletContext() || {};
     const [employees, setEmployees] = useState([]);
     const [filteredEmployees, setFilteredEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [exporting, setExporting] = useState(false);
     const [error, setError] = useState('');
-    const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
 
     const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-    // Fetch employee data for the table view
     const fetchEmployees = async () => {
         setLoading(true);
         setError('');
         try {
             const token = localStorage.getItem('token');
             const headers = { "Authorization": `Bearer ${token}` };
-
-            // We'll use the existing /employees/all endpoint to populate the UI table
-            // This displays a preview/list, while the export button gets the full detailed report
             const response = await axios.get(`${API_URL}/employees/all`, { headers });
-
-            setEmployees(response.data);
-            setFilteredEmployees(response.data);
+            setEmployees(response.data || []);
+            setFilteredEmployees(response.data || []);
         } catch (err) {
             console.error("Error fetching employees:", err);
             setError("Failed to load employee list.");
@@ -42,11 +36,12 @@ const MasterEmployeeReport = () => {
     }, []);
 
     useEffect(() => {
-        const lowercasedFilter = searchTerm.toLowerCase();
+        const lowercasedFilter = headerSearchTerm.toLowerCase().trim();
         const filtered = employees.filter(emp => {
-            const matchesSearch = (
+            const matchesSearch = !lowercasedFilter || (
                 (emp.firstName && emp.firstName.toLowerCase().includes(lowercasedFilter)) ||
                 (emp.lastName && emp.lastName.toLowerCase().includes(lowercasedFilter)) ||
+                (`${emp.firstName || ''} ${emp.lastName || ''}`.toLowerCase().includes(lowercasedFilter)) ||
                 (emp.employeeCode && emp.employeeCode.toLowerCase().includes(lowercasedFilter)) ||
                 (emp.emailWork && emp.emailWork.toLowerCase().includes(lowercasedFilter))
             );
@@ -56,25 +51,22 @@ const MasterEmployeeReport = () => {
             return matchesSearch && matchesStatus;
         });
         setFilteredEmployees(filtered);
-    }, [searchTerm, statusFilter, employees]);
+    }, [headerSearchTerm, statusFilter, employees]);
 
     const handleExport = async () => {
         setExporting(true);
         try {
             const token = localStorage.getItem('token');
-            // Append status parameter if not ALL
             const params = statusFilter !== 'ALL' ? `?status=${statusFilter}` : '';
             const response = await axios.get(`${API_URL}/reports/employee-master${params}`, {
                 headers: { "Authorization": `Bearer ${token}` },
-                responseType: 'blob', // Important for file download
+                responseType: 'blob',
             });
 
-            // Create a url for the blob
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
 
-            // Extract filename from header if possible, or generate one
             const contentDisposition = response.headers['content-disposition'];
             let filename = 'Employee_Master_Report.xlsx';
             if (contentDisposition) {
@@ -97,123 +89,103 @@ const MasterEmployeeReport = () => {
     };
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Employee Master Report</h1>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1">View and export comprehensive employee details.</p>
+                    <h2 className="text-xs font-bold text-foreground">Employee Master Report</h2>
+                    <p className="text-[11px] text-foreground-muted">View and export comprehensive employee master details</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="px-2 py-1 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary h-7"
+                    >
+                        <option value="ALL">All Status</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="INACTIVE">Inactive</option>
+                        <option value="TERMINATED">Terminated</option>
+                    </select>
+
                     <button
                         onClick={fetchEmployees}
-                        className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-1 text-foreground-muted hover:text-foreground border border-border rounded-md hover:bg-background-muted transition-colors bg-background"
                         title="Refresh List"
                     >
-                        <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
+                        <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
                     </button>
+
                     <button
                         onClick={handleExport}
                         disabled={exporting || loading}
-                        className={`flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm ${exporting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        className="px-2.5 py-1 text-xs font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1 shadow-2xs h-7 disabled:opacity-70"
                     >
-                        {exporting ? <Loader className="animate-spin h-5 w-5" /> : <Download size={20} />}
-                        <span>{exporting ? 'Exporting...' : 'Export to Excel'}</span>
+                        {exporting ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Download size={13} />}
+                        <span>{exporting ? 'Exporting...' : 'Export Excel'}</span>
                     </button>
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex-1 flex flex-col overflow-hidden">
-                {/* Toolbar */}
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search employees..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 w-full sm:w-64"
-                            />
-                        </div>
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 w-full sm:w-auto"
-                        >
-                            <option value="ALL">All Status</option>
-                            <option value="ACTIVE">Active</option>
-                            <option value="INACTIVE">Inactive</option>
-                            <option value="TERMINATED">Terminated</option>
-                        </select>
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                        Showing {filteredEmployees.length} records
-                    </div>
+            {error && (
+                <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-md border border-rose-500/20 flex items-center gap-2">
+                    <AlertCircle size={14} />
+                    <span>{error}</span>
                 </div>
+            )}
 
-                {/* Table */}
-                <div className="overflow-auto flex-1">
-                    {loading && employees.length === 0 ? (
-                        <div className="flex justify-center items-center h-full">
-                            <Loader className="animate-spin h-8 w-8 text-blue-600" />
-                        </div>
-                    ) : error ? (
-                        <div className="flex flex-col justify-center items-center h-full text-red-500">
-                            <AlertCircle className="h-10 w-10 mb-2" />
-                            <p>{error}</p>
-                        </div>
-                    ) : (
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead className="bg-gray-50 dark:bg-gray-900/50 sticky top-0 z-10">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Employee Code</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Phone</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Gender</th>
+            <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="min-w-full bg-card text-foreground divide-y divide-border">
+                    <thead className="bg-background-muted/60">
+                        <tr>
+                            <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Employee Code</th>
+                            <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Name</th>
+                            <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Email</th>
+                            <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Phone</th>
+                            <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Status</th>
+                            <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Gender</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                        {loading ? (
+                            <tr>
+                                <td colSpan="6" className="text-center py-8">
+                                    <Loader className="animate-spin h-5 w-5 text-primary mx-auto" />
+                                </td>
+                            </tr>
+                        ) : filteredEmployees.length > 0 ? (
+                            filteredEmployees.map((emp) => (
+                                <tr key={emp.id || emp.employeeCode} className="hover:bg-background-muted/40 transition-colors">
+                                    <td className="px-3 py-2 text-xs font-semibold text-foreground">{emp.employeeCode}</td>
+                                    <td className="px-3 py-2 text-xs font-medium text-foreground">{emp.firstName} {emp.lastName}</td>
+                                    <td className="px-3 py-2 text-xs text-foreground-muted">{emp.emailWork || '-'}</td>
+                                    <td className="px-3 py-2 text-xs text-foreground-muted">{emp.phonePrimary || '-'}</td>
+                                    <td className="px-3 py-2 text-xs">
+                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border capitalize ${
+                                            emp.status === 'ACTIVE'
+                                                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                                                : 'bg-rose-500/10 text-rose-600 border-rose-500/20'
+                                        }`}>
+                                            {emp.status?.toLowerCase()}
+                                        </span>
+                                    </td>
+                                    <td className="px-3 py-2 text-xs text-foreground-muted capitalize">{emp.gender ? emp.gender.toLowerCase() : '-'}</td>
                                 </tr>
-                            </thead>
-                            <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                {filteredEmployees.map((emp) => (
-                                    <tr key={emp.id || emp.employeeCode} className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                                            {emp.employeeCode}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                            {emp.firstName} {emp.lastName}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                            {emp.emailWork || '-'}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                            {emp.phonePrimary || '-'}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${emp.status === 'ACTIVE'
-                                                ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
-                                                : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'
-                                                }`}>
-                                                {emp.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 capitalize">
-                                            {emp.gender ? emp.gender.toLowerCase() : '-'}
-                                        </td>
-                                    </tr>
-                                ))}
-                                {filteredEmployees.length === 0 && (
-                                    <tr>
-                                        <td colSpan="6" className="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
-                                            No employees found.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="6" className="text-center py-8 text-foreground-muted text-xs">
+                                    <Users className="mx-auto h-7 w-7 text-foreground-muted/40 mb-1" />
+                                    <h3 className="text-xs font-bold text-foreground">No employees found</h3>
+                                    <p className="text-[11px] text-foreground-muted">There are no employees matching your search criteria.</p>
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="text-[11px] text-foreground-muted text-right pr-1">
+                Showing {filteredEmployees.length} of {employees.length} records
             </div>
         </div>
     );

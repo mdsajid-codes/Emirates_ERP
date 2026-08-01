@@ -91,56 +91,59 @@ const LookupModal = ({ isOpen, onClose, onResumeSale, onRemoveSale }) => {
 
     const renderContent = () => {
         if (loading) {
-            return <div className="flex justify-center items-center py-10"><Loader className="animate-spin h-8 w-8 text-blue-600" /></div>;
+            return <div className="flex justify-center items-center py-16"><Loader className="animate-spin h-8 w-8 text-slate-900" /></div>;
         }
         if (error) {
-            return <div className="text-center text-red-500 py-10"><AlertCircle className="mx-auto h-8 w-8" /><p>{error}</p></div>;
+            return <div className="text-center text-rose-500 py-16 font-semibold"><AlertCircle className="mx-auto h-8 w-8 mb-2" /><p>{error}</p></div>;
         }
         if (filteredSales.length === 0) {
-            return <div className="text-center text-slate-500 py-10"><p>No sales found for '{activeTab}'.</p></div>;
+            return <div className="text-center text-slate-400 py-16 text-xs font-medium"><p>No sales records found for '{activeTab}'.</p></div>;
         }
 
         return (
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200">
-                    <thead className="bg-slate-50">
+            <div className="overflow-x-auto h-full">
+                <table className="w-full text-left border-collapse">
+                    <thead className="bg-slate-50/80 sticky top-0 border-b border-slate-200/60 z-10 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                         <tr>
-                            <th className="th-cell">Invoice #</th>
-                            <th className="th-cell">Date</th>
-                            <th className="th-cell">Customer</th>
-                            <th className="th-cell">Status</th>
-                            <th className="th-cell text-right">Total</th>
-                            {(activeTab === 'Completed' || activeTab === 'Pending') && <th className="th-cell">Actions</th>}
+                            <th className="py-3 px-4">Invoice #</th>
+                            <th className="py-3 px-4">Date</th>
+                            <th className="py-3 px-4">Customer</th>
+                            <th className="py-3 px-4">Status</th>
+                            <th className="py-3 px-4 text-right">Total</th>
+                            {(activeTab === 'Completed' || activeTab === 'Pending') && <th className="py-3 px-4 text-right">Actions</th>}
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-slate-200 text-slate-700">
+                    <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
                         {filteredSales.map(sale => (
-                            <tr key={sale.id}>
-                                <td className="td-cell font-medium">{sale.invoiceNo}</td>
-                                <td className="td-cell text-sm">{new Date(sale.invoiceDate).toLocaleString()}</td>
-                                <td className="td-cell">{sale.customerName || 'Walk-in'}</td>
-                                <td className="td-cell capitalize">{sale.status} ({sale.paymentStatus})</td>
-                                <td className="td-cell text-right font-semibold">{formatPrice(sale.totalCents)}</td>
+                            <tr key={sale.id} className="hover:bg-slate-50/80 transition-colors">
+                                <td className="py-3 px-4 font-mono font-bold text-slate-900">{sale.invoiceNo}</td>
+                                <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">{new Date(sale.invoiceDate).toLocaleString()}</td>
+                                <td className="py-3 px-4 font-semibold text-slate-800">{sale.customerName || 'Walk-in Customer'}</td>
+                                <td className="py-3 px-4">
+                                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize ${
+                                        sale.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                    }`}>
+                                        {sale.status} ({sale.paymentStatus})
+                                    </span>
+                                </td>
+                                <td className="py-3 px-4 text-right font-extrabold text-slate-900">{formatPrice(sale.totalCents)}</td>
                                 {activeTab === 'Completed' && (
-                                    <td className="td-cell">
-                                        <div className="flex items-center gap-2">
-                                            <button onClick={() => handlePrint(sale.id)} className="p-1.5 text-slate-500 hover:text-blue-600 rounded-full" title="Print Invoice" disabled={isPrinting === sale.id}>
-                                                {isPrinting === sale.id ? <Loader className="animate-spin h-4 w-4" /> : <Printer size={16} />}
-                                            </button>
-                                            <button onClick={() => handleEdit(sale.id)} className="p-1.5 text-slate-500 hover:text-green-600 rounded-full" title="Edit Sale">
-                                                <Edit size={16} />
+                                    <td className="py-3 px-4 text-right">
+                                        <div className="flex items-center justify-end gap-1.5">
+                                            <button onClick={() => handlePrint(sale.id)} className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer" title="Print Invoice" disabled={isPrinting === sale.id}>
+                                                {isPrinting === sale.id ? <Loader className="animate-spin h-4 w-4" /> : <Printer size={15} />}
                                             </button>
                                         </div>
                                     </td>
                                 )}
                                 {activeTab === 'Pending' && (
-                                    <td className="td-cell">
-                                        <div className="flex items-center gap-2">
-                                            <button onClick={() => handleAction(sale.id, onResumeSale)} className="p-1.5 text-slate-500 hover:text-green-600 rounded-full" title="Resume and Pay" disabled={!!processingId}>
-                                                {processingId === sale.id ? <Loader className="animate-spin h-4 w-4" /> : <CreditCard size={16} />}
+                                    <td className="py-3 px-4 text-right">
+                                        <div className="flex items-center justify-end gap-1.5">
+                                            <button onClick={() => handleAction(sale.id, onResumeSale)} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer" title="Resume and Pay" disabled={!!processingId}>
+                                                {processingId === sale.id ? <Loader className="animate-spin h-4 w-4" /> : <CreditCard size={15} />}
                                             </button>
-                                            <button onClick={() => handleAction(sale.id, onRemoveSale)} className="p-1.5 text-slate-500 hover:text-red-600 rounded-full" title="Remove Sale" disabled={!!processingId}>
-                                                <Trash2 size={16} />
+                                            <button onClick={() => handleAction(sale.id, onRemoveSale)} className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer" title="Remove Sale" disabled={!!processingId}>
+                                                <Trash2 size={15} />
                                             </button>
                                         </div>
                                     </td>
@@ -154,35 +157,52 @@ const LookupModal = ({ isOpen, onClose, onResumeSale, onRemoveSale }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4" onClick={onClose}>
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl flex flex-col max-h-[80vh]" onClick={e => e.stopPropagation()}>
-                <div className="p-4 border-b flex justify-between items-center flex-shrink-0">
-                    <h3 className="text-xl font-semibold">Lookup Sales</h3>
-                    <button onClick={onClose} className="p-1 rounded-full hover:bg-slate-100"><X size={20} /></button>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex justify-center items-center z-50 p-3 sm:p-5" onClick={onClose}>
+            <div className="bg-white rounded-3xl shadow-2xl w-full h-full flex flex-col overflow-hidden border border-slate-100" onClick={e => e.stopPropagation()}>
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-shrink-0">
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-900">Lookup Sales Orders</h3>
+                        <p className="text-xs text-slate-500">View transaction history, print receipts, and resume parked sales.</p>
+                    </div>
+                    <button onClick={onClose} className="p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer">
+                        <X size={20} />
+                    </button>
                 </div>
-                <div className="border-b border-slate-200 flex-shrink-0">
-                    <nav className="-mb-px flex space-x-4 px-4" aria-label="Tabs">
-                        {TABS.map((tab) => (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab
-                                        ? 'border-blue-600 text-blue-600'
-                                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                                    }`}
-                            >
-                                {tab}
-                            </button>
-                        ))}
-                    </nav>
+
+                {/* Tabs */}
+                <div className="px-6 py-2 border-b border-slate-100 bg-slate-50/30 flex gap-2 flex-shrink-0 overflow-x-auto">
+                    {TABS.map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                                activeTab === tab
+                                    ? 'bg-slate-900 text-white shadow-xs'
+                                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                            }`}
+                        >
+                            {tab}
+                        </button>
+                    ))}
                 </div>
-                <div className="p-4 border-b border-slate-200 flex-shrink-0">
+
+                {/* Search Bar */}
+                <div className="px-6 py-3 border-b border-slate-100 flex-shrink-0">
                     <div className="relative">
-                        <input type="text" placeholder="Search by Invoice # or Customer Name..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="input w-full pl-10" />
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by Invoice # or Customer Name..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-full text-xs font-medium border-0 shadow-xs outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 transition-all"
+                        />
                     </div>
                 </div>
-                <div className="flex-grow overflow-y-auto p-6 pt-0">{renderContent()}</div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto">{renderContent()}</div>
             </div>
         </div>
     );

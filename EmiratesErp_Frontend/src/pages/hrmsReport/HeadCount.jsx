@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Download, Loader, Users, Building, Briefcase } from 'lucide-react';
 import axios from 'axios';
@@ -22,13 +21,9 @@ const HeadCount = () => {
                 const token = localStorage.getItem('token');
                 const headers = { "Authorization": `Bearer ${token}` };
 
-                // Fetch basic list
                 const employeesRes = await axios.get(`${API_URL}/employees/all`, { headers });
-                const employees = employeesRes.data;
+                const employees = employeesRes.data || [];
 
-                // Fetch job details for all employees to get Department and Designation
-                // We limit concurrency or just await all for simplicity given likely small-medium dataset
-                // In a real large-scale app, this should be paginated or backend-supported.
                 const employeesWithDetails = await Promise.all(
                     employees.map(async (emp) => {
                         try {
@@ -49,7 +44,7 @@ const HeadCount = () => {
         };
 
         fetchData();
-    }, []);
+    }, [API_URL]);
 
     const processStats = (data) => {
         const newStats = {
@@ -97,91 +92,84 @@ const HeadCount = () => {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center h-96">
-                <Loader className="animate-spin h-8 w-8 text-blue-600 mb-4" />
-                <p className="text-gray-500">Loading headcount statistics...</p>
-                <p className="text-xs text-gray-400 mt-2">Fetching detailed records</p>
+            <div className="flex flex-col items-center justify-center p-8 bg-card rounded-lg border border-border">
+                <Loader className="animate-spin h-6 w-6 text-primary mb-2" />
+                <p className="text-xs text-foreground-muted">Loading headcount statistics...</p>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-3">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Headcount Overview</h2>
-                    <p className="text-sm text-gray-500">Distribution by Department and Role</p>
+                    <h2 className="text-xs font-bold text-foreground">Headcount Overview</h2>
+                    <p className="text-[11px] text-foreground-muted">Distribution by Department and Role</p>
                 </div>
                 <button
                     onClick={handleExport}
                     disabled={exporting}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70"
+                    className="px-2.5 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-2xs h-7 disabled:opacity-70"
                 >
-                    {exporting ? <Loader className="animate-spin h-4 w-4" /> : <Download size={18} />}
+                    {exporting ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Download size={13} />}
                     <span>Export Excel</span>
                 </button>
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg">
-                            <Users size={24} />
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Total Employees</p>
-                            <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{stats.total}</h3>
-                        </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="p-3 bg-card border border-border rounded-lg text-foreground flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 text-primary rounded-md">
+                        <Users size={18} />
+                    </div>
+                    <div>
+                        <p className="text-[11px] text-foreground-muted font-medium">Total Employees</p>
+                        <h3 className="text-base font-bold text-foreground leading-tight">{stats.total}</h3>
                     </div>
                 </div>
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-lg">
-                            <Users size={24} />
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
-                            <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{stats.active}</h3>
-                        </div>
+                <div className="p-3 bg-card border border-border rounded-lg text-foreground flex items-center gap-3">
+                    <div className="p-2 bg-emerald-500/10 text-emerald-600 rounded-md">
+                        <Users size={18} />
+                    </div>
+                    <div>
+                        <p className="text-[11px] text-foreground-muted font-medium">Active</p>
+                        <h3 className="text-base font-bold text-foreground leading-tight">{stats.active}</h3>
                     </div>
                 </div>
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-lg">
-                            <Users size={24} />
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Inactive/Terminated</p>
-                            <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{stats.inactive}</h3>
-                        </div>
+                <div className="p-3 bg-card border border-border rounded-lg text-foreground flex items-center gap-3">
+                    <div className="p-2 bg-rose-500/10 text-rose-600 rounded-md">
+                        <Users size={18} />
+                    </div>
+                    <div>
+                        <p className="text-[11px] text-foreground-muted font-medium">Inactive/Terminated</p>
+                        <h3 className="text-base font-bold text-foreground leading-tight">{stats.inactive}</h3>
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {/* Department Table */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex items-center gap-2">
-                        <Building size={18} className="text-gray-500" />
-                        <h3 className="font-semibold text-gray-700 dark:text-gray-200">Department Wise</h3>
+                <div className="rounded-lg border border-border overflow-hidden bg-card text-foreground">
+                    <div className="p-2.5 border-b border-border bg-background-muted/60 flex items-center gap-2">
+                        <Building size={14} className="text-foreground-muted" />
+                        <h3 className="text-xs font-bold text-foreground">Department Wise</h3>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400">
+                        <table className="min-w-full divide-y divide-border">
+                            <thead className="bg-background-muted/40">
                                 <tr>
-                                    <th className="px-6 py-3">Department</th>
-                                    <th className="px-6 py-3 text-right">Count</th>
-                                    <th className="px-6 py-3 text-right">%</th>
+                                    <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Department</th>
+                                    <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Count</th>
+                                    <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">%</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                            <tbody className="divide-y divide-border/40">
                                 {Object.entries(stats.byDepartment).map(([dept, count]) => (
-                                    <tr key={dept} className="bg-white dark:bg-slate-800">
-                                        <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{dept}</td>
-                                        <td className="px-6 py-4 text-right">{count}</td>
-                                        <td className="px-6 py-4 text-right text-gray-500">
-                                            {((count / stats.total) * 100).toFixed(1)}%
+                                    <tr key={dept} className="hover:bg-background-muted/40 transition-colors">
+                                        <td className="px-3 py-2 text-xs font-semibold text-foreground">{dept}</td>
+                                        <td className="px-3 py-2 text-xs text-right font-medium text-foreground">{count}</td>
+                                        <td className="px-3 py-2 text-xs text-right text-foreground-muted">
+                                            {stats.total > 0 ? ((count / stats.total) * 100).toFixed(1) : 0}%
                                         </td>
                                     </tr>
                                 ))}
@@ -191,27 +179,27 @@ const HeadCount = () => {
                 </div>
 
                 {/* Designation Table */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex items-center gap-2">
-                        <Briefcase size={18} className="text-gray-500" />
-                        <h3 className="font-semibold text-gray-700 dark:text-gray-200">Role Wise</h3>
+                <div className="rounded-lg border border-border overflow-hidden bg-card text-foreground">
+                    <div className="p-2.5 border-b border-border bg-background-muted/60 flex items-center gap-2">
+                        <Briefcase size={14} className="text-foreground-muted" />
+                        <h3 className="text-xs font-bold text-foreground">Role Wise</h3>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400">
+                        <table className="min-w-full divide-y divide-border">
+                            <thead className="bg-background-muted/40">
                                 <tr>
-                                    <th className="px-6 py-3">Role / Designation</th>
-                                    <th className="px-6 py-3 text-right">Count</th>
-                                    <th className="px-6 py-3 text-right">%</th>
+                                    <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Role / Designation</th>
+                                    <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Count</th>
+                                    <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">%</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                            <tbody className="divide-y divide-border/40">
                                 {Object.entries(stats.byDesignation).map(([role, count]) => (
-                                    <tr key={role} className="bg-white dark:bg-slate-800">
-                                        <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{role}</td>
-                                        <td className="px-6 py-4 text-right">{count}</td>
-                                        <td className="px-6 py-4 text-right text-gray-500">
-                                            {((count / stats.total) * 100).toFixed(1)}%
+                                    <tr key={role} className="hover:bg-background-muted/40 transition-colors">
+                                        <td className="px-3 py-2 text-xs font-semibold text-foreground">{role}</td>
+                                        <td className="px-3 py-2 text-xs text-right font-medium text-foreground">{count}</td>
+                                        <td className="px-3 py-2 text-xs text-right text-foreground-muted">
+                                            {stats.total > 0 ? ((count / stats.total) * 100).toFixed(1) : 0}%
                                         </td>
                                     </tr>
                                 ))}

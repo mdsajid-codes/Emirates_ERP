@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Loader, AlertCircle } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import { Download, Loader, AlertCircle, FileText } from 'lucide-react';
 import axios from 'axios';
 
 const WpsSifReport = () => {
+    const { searchTerm: headerSearchTerm = '' } = useOutletContext() || {};
     const [downloading, setDownloading] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -11,8 +13,8 @@ const WpsSifReport = () => {
     const [payrollRun, setPayrollRun] = useState(null);
     const [checkingRun, setCheckingRun] = useState(false);
 
-    // Table Data
     const [tableData, setTableData] = useState([]);
+    const [filteredData, setFilteredData] = useState([]);
     const [tableHeaders, setTableHeaders] = useState([]);
 
     const API_URL = import.meta.env.VITE_API_BASE_URL;
@@ -35,14 +37,14 @@ const WpsSifReport = () => {
         { value: 12, label: 'December' },
     ];
 
-    // Effect to check for existing payroll run when year/month changes
     useEffect(() => {
         const findAndFetch = async () => {
             setCheckingRun(true);
             setPayrollRun(null);
             setError('');
             setTableData([]);
-            setTableHeaders([]); // Clear headers
+            setFilteredData([]);
+            setTableHeaders([]);
 
             try {
                 const token = localStorage.getItem('token');
@@ -50,7 +52,7 @@ const WpsSifReport = () => {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
-                const runs = response.data;
+                const runs = response.data || [];
                 const match = runs.find(r => r.year === selectedYear && r.month === selectedMonth);
 
                 if (match) {
@@ -71,6 +73,18 @@ const WpsSifReport = () => {
         findAndFetch();
     }, [selectedYear, selectedMonth, API_URL]);
 
+    useEffect(() => {
+        if (!headerSearchTerm) {
+            setFilteredData(tableData);
+        } else {
+            const lowerTerm = headerSearchTerm.toLowerCase().trim();
+            const filtered = tableData.filter(row =>
+                row.some(cell => String(cell).toLowerCase().includes(lowerTerm))
+            );
+            setFilteredData(filtered);
+        }
+    }, [headerSearchTerm, tableData]);
+
     const fetchPreview = async (runId) => {
         setLoading(true);
         try {
@@ -83,41 +97,26 @@ const WpsSifReport = () => {
             const content = response.data;
             if (!content) return;
 
-            // Parse SIF Content (Simple CSV/Pipe detection)
             const lines = content.split('\n').filter(line => line.trim() !== '');
             if (lines.length > 0) {
-                // heuristic to detect delimiter
                 const firstLine = lines[0];
-                const delimiter = firstLine.includes(',') ? ',' : '|'; // Common SIF delimiters
-
-                // Assuming first line might NOT be header in standard SIF, but for table display we need something.
-                // If it's a standard .csv with header, fine. 
-                // If it's specific SIF format (Header Record, Body Records, Footer Record), we might strictly just split.
-
-                // Let's assume user wants to see raw data for now, or we can try to infer headers.
-                // Given User Request: "MOL employee ID, IBAN, Salary amount, Salary period"
-                // If the file doesn't have headers, we can map manually if we knew the order.
-                // For now, let's treat the first line as headers if it looks like text, or generate generic headers.
-
+                const delimiter = firstLine.includes(',') ? ',' : '|';
                 const parsedData = lines.map(line => line.split(delimiter).map(cell => cell.trim()));
-
-                // Check if first row looks like headers (string keys) vs data (numbers/IBANs)
-                // This is a bit loose, but improves UX if headers are present
                 const hasHeaders = parsedData[0].some(cell => isNaN(cell) && cell.length > 0);
 
                 if (hasHeaders) {
                     setTableHeaders(parsedData[0]);
                     setTableData(parsedData.slice(1));
+                    setFilteredData(parsedData.slice(1));
                 } else {
-                    // Generate generic headers
                     const maxCols = Math.max(...parsedData.map(r => r.length));
                     setTableHeaders(Array.from({ length: maxCols }, (_, i) => `Column ${i + 1}`));
                     setTableData(parsedData);
+                    setFilteredData(parsedData);
                 }
             }
         } catch (err) {
             console.error("Preview load failed:", err);
-            // Don't error out the whole UI, just maybe show data unavailable
         } finally {
             setLoading(false);
         }
@@ -160,23 +159,19 @@ const WpsSifReport = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">WPS Salary Transfer Report (SIF)</h2>
-                    <p className="text-sm text-gray-500">Generate and preview SIF file for bank salary transfers.</p>
+                    <h2 className="text-xs font-bold text-foreground">WPS Salary Transfer Report (SIF)</h2>
+                    <p className="text-[11px] text-foreground-muted">Generate and preview SIF file for bank salary transfers</p>
                 </div>
-            </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end mb-4">
-                    {/* Year Selector */}
+                <div className="flex items-center gap-2">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year</label>
                         <select
                             value={selectedYear}
                             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="px-2.5 py-1 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary h-7"
                         >
                             {years.map(year => (
                                 <option key={year} value={year}>{year}</option>
@@ -184,13 +179,11 @@ const WpsSifReport = () => {
                         </select>
                     </div>
 
-                    {/* Month Selector */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Month</label>
                         <select
                             value={selectedMonth}
                             onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="px-2.5 py-1 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary h-7"
                         >
                             {months.map(month => (
                                 <option key={month.value} value={month.value}>{month.label}</option>
@@ -201,80 +194,78 @@ const WpsSifReport = () => {
                     <button
                         onClick={handleDownload}
                         disabled={downloading || !payrollRun}
-                        className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed h-[42px]"
+                        className="px-2.5 py-1 text-xs font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1 shadow-2xs h-7 disabled:opacity-70"
                     >
-                        {downloading ? <Loader className="animate-spin h-4 w-4" /> : <Download size={18} />}
+                        {downloading ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Download size={13} />}
                         <span>Download SIF File</span>
                     </button>
                 </div>
+            </div>
 
-                {checkingRun && (
-                    <div className="mb-4 text-sm text-gray-500 flex items-center gap-2">
-                        <Loader className="animate-spin h-4 w-4" /> Checking payroll status...
-                    </div>
-                )}
+            {checkingRun && (
+                <div className="p-3 bg-card border border-border rounded-md text-xs text-foreground-muted flex items-center gap-2">
+                    <Loader className="animate-spin h-3.5 w-3.5 text-primary" />
+                    <span>Checking payroll status...</span>
+                </div>
+            )}
 
-                {!checkingRun && !payrollRun && !error && (
-                    <div className="mb-6 p-3 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 rounded-lg flex items-center gap-2 text-sm">
-                        <AlertCircle size={16} />
-                        <span>No completed payroll run found for this period.</span>
-                    </div>
-                )}
+            {!checkingRun && !payrollRun && !error && (
+                <div className="p-3 bg-amber-500/10 text-amber-600 text-xs rounded-md border border-amber-500/20 flex items-center gap-2">
+                    <AlertCircle size={14} />
+                    <span>No completed payroll run found for this period.</span>
+                </div>
+            )}
 
-                {error && (
-                    <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg flex items-center gap-2 text-sm">
-                        <AlertCircle size={16} />
-                        <span>{error}</span>
-                    </div>
-                )}
+            {error && (
+                <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-md border border-rose-500/20 flex items-center gap-2">
+                    <AlertCircle size={14} />
+                    <span>{error}</span>
+                </div>
+            )}
 
-                {/* Table View */}
+            <div className="overflow-x-auto rounded-lg border border-border">
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center p-12">
-                        <Loader className="animate-spin h-8 w-8 text-cyan-600 mb-4" />
-                        <p className="text-gray-500">Loading SIF data...</p>
+                    <div className="flex justify-center items-center p-8 bg-card">
+                        <Loader className="animate-spin h-5 w-5 text-primary" />
                     </div>
-                ) : tableData.length > 0 ? (
-                    <div className="overflow-x-auto border rounded-lg mt-4">
-                        <table className="w-full text-sm text-left whitespace-nowrap">
-                            <thead className="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
-                                <tr>
-                                    {tableHeaders.map((header, i) => (
-                                        <th key={i} className="px-6 py-3 border-b dark:border-gray-600">{header}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                {tableData.map((row, idx) => (
-                                    <tr key={idx} className="bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                ) : (
+                    <table className="min-w-full bg-card text-foreground divide-y divide-border">
+                        <thead className="bg-background-muted/60">
+                            <tr>
+                                {tableHeaders.map((header, i) => (
+                                    <th key={i} className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider whitespace-nowrap">{header}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/40">
+                            {filteredData.length > 0 ? (
+                                filteredData.map((row, idx) => (
+                                    <tr key={idx} className="hover:bg-background-muted/40 transition-colors">
                                         {row.map((cell, i) => (
-                                            <td key={i} className="px-6 py-4 text-gray-900 dark:text-gray-300 border-r border-gray-100 dark:border-gray-700 last:border-0">
+                                            <td key={i} className="px-3 py-2 text-xs font-medium text-foreground whitespace-nowrap">
                                                 {cell}
                                             </td>
                                         ))}
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : payrollRun && !loading && (
-                    <div className="mt-4 p-8 text-center text-gray-500 border rounded-lg border-dashed">
-                        No preview data available or file is empty.
-                    </div>
-                )}
-
-                {tableData.length > 0 && (
-                    <div className="p-2 mt-2 text-xs text-center text-gray-400">
-                        Showing {tableData.length} rows from SIF file preview
-                    </div>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={tableHeaders.length || 1} className="text-center py-8 text-foreground-muted text-xs">
+                                        <FileText className="mx-auto h-7 w-7 text-foreground-muted/40 mb-1" />
+                                        <h3 className="text-xs font-bold text-foreground">No records found</h3>
+                                        <p className="text-[11px] text-foreground-muted">
+                                            {tableData.length === 0 ? "No SIF records found for this period." : "No records match your search."}
+                                        </p>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 )}
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">Notice</h4>
-                <p className="text-xs text-blue-600 dark:text-blue-400">
-                    The preview above parses the raw SIF text file. The actual format is determined by the WpsService in the backend.
-                </p>
+            <div className="text-[11px] text-foreground-muted text-right pr-1">
+                Showing {filteredData.length} records
             </div>
         </div>
     );

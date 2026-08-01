@@ -8,7 +8,8 @@ const SalesHeader = ({
     selectedStore, onStoreChange, stores,
     selectedCustomer, onCustomerChange, customers,
     onAddCustomer, onAddProduct,
-    showInactive, onToggleInactive
+    showInactive, onToggleInactive,
+    posTheme
 }) => {
     return (
         <div className="mb-3 flex flex-wrap gap-2.5 items-center font-sans text-xs">
@@ -79,7 +80,7 @@ const SalesHeader = ({
                 <span className="hidden xl:inline">{showInactive ? 'Inactive' : 'Active Only'}</span>
             </button>
 
-            {/* Customer Dropdown + Quick Add */}
+            {/* Customer Dropdown + Highlighted Quick Add */}
             <div className="relative flex items-center gap-1.5">
                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
                 <select
@@ -92,10 +93,11 @@ const SalesHeader = ({
                 </select>
                 <button
                     onClick={onAddCustomer}
-                    className="p-2 rounded-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-xs transition-colors"
+                    className="p-2 rounded-full text-white shadow-xs hover:opacity-90 transition-all cursor-pointer flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: posTheme?.primary || '#0f172a' }}
                     title="Add New Customer"
                 >
-                    <UserPlus size={14} />
+                    <UserPlus size={14} strokeWidth={2.5} />
                 </button>
             </div>
         </div>

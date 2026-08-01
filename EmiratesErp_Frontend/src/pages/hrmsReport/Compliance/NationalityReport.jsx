@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import axios from 'axios';
-import { Download, Loader, Search, Flag, ChevronDown, ChevronUp } from 'lucide-react';
+import { Download, Loader, Flag, ChevronDown, ChevronUp, AlertCircle, FileText } from 'lucide-react';
 
 const NationalityReport = () => {
+    const { searchTerm: headerSearchTerm = '' } = useOutletContext() || {};
     const [loading, setLoading] = useState(false);
     const [reportData, setReportData] = useState([]);
     const [error, setError] = useState('');
@@ -22,8 +24,7 @@ const NationalityReport = () => {
             const response = await axios.get(`${API_URL}/reports/compliance/nationality`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
-            console.log("Nationality Report Data:", response.data);
-            setReportData(response.data);
+            setReportData(response.data || []);
         } catch (err) {
             console.error("Error fetching Nationality report:", err);
             setError('Failed to load nationality report.');
@@ -60,50 +61,81 @@ const NationalityReport = () => {
         }));
     };
 
+    const filteredReportData = useMemo(() => {
+        if (!headerSearchTerm) return reportData;
+        const term = headerSearchTerm.toLowerCase().trim();
+        return reportData.map(item => {
+            const nationalityMatches = item.nationality && item.nationality.toLowerCase().includes(term);
+            const matchingEmps = (item.employees || []).filter(emp =>
+                (emp.employeeName && emp.employeeName.toLowerCase().includes(term)) ||
+                (emp.employeeCode && emp.employeeCode.toLowerCase().includes(term)) ||
+                (emp.designation && emp.designation.toLowerCase().includes(term))
+            );
+            if (nationalityMatches || matchingEmps.length > 0) {
+                return {
+                    ...item,
+                    employees: nationalityMatches ? item.employees : matchingEmps,
+                    employeeCount: nationalityMatches ? item.employeeCount : matchingEmps.length
+                };
+            }
+            return null;
+        }).filter(Boolean);
+    }, [reportData, headerSearchTerm]);
+
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Employee Nationality Distribution</h3>
-                    <p className="text-sm text-gray-500">Demographic breakdown by nationality</p>
+                    <h2 className="text-xs font-bold text-foreground">Employee Nationality Distribution</h2>
+                    <p className="text-[11px] text-foreground-muted">Demographic breakdown of workforce by nationality</p>
                 </div>
-                <button onClick={handleDownloadExcel} className="btn-secondary flex items-center gap-2 text-sm bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg transition-colors">
-                    <Download size={16} /> Export Report
+
+                <button
+                    onClick={handleDownloadExcel}
+                    className="px-2.5 py-1 text-xs font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1 shadow-2xs h-7"
+                >
+                    <Download size={13} />
+                    <span>Export Excel</span>
                 </button>
             </div>
 
-            {loading ? (
-                <div className="flex justify-center items-center py-20">
-                    <Loader className="animate-spin text-blue-600 h-8 w-8" />
+            {error && (
+                <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-md border border-rose-500/20 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle size={14} />
+                        <span>{error}</span>
+                    </div>
+                    <button onClick={fetchReport} className="text-xs underline hover:opacity-80">Try Again</button>
                 </div>
-            ) : error ? (
-                <div className="p-6 text-center text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                    <p>{error}</p>
-                    <button onClick={fetchReport} className="text-sm underline hover:text-red-800 mt-2">Retry</button>
-                </div>
-            ) : (
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-                    <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {reportData.length > 0 ? (
-                            reportData.map((item) => (
-                                <div key={item.nationality} className="bg-white dark:bg-slate-800">
+            )}
+
+            <div className="rounded-lg border border-border overflow-hidden bg-card text-foreground">
+                {loading ? (
+                    <div className="flex justify-center items-center p-8 bg-card">
+                        <Loader className="animate-spin h-5 w-5 text-primary" />
+                    </div>
+                ) : (
+                    <div className="divide-y divide-border">
+                        {filteredReportData.length > 0 ? (
+                            filteredReportData.map((item) => (
+                                <div key={item.nationality} className="bg-card">
                                     <div
-                                        className="px-6 py-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+                                        className="px-3 py-2.5 flex justify-between items-center cursor-pointer hover:bg-background-muted/50 transition-colors"
                                         onClick={() => toggleRow(item.nationality)}
                                     >
-                                        <div className="flex items-center gap-4">
-                                            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
-                                                <Flag size={20} />
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="p-1.5 bg-primary/10 text-primary rounded-md">
+                                                <Flag size={15} />
                                             </div>
                                             <div>
-                                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                <h4 className="text-xs font-bold text-foreground leading-tight">
                                                     {item.nationality || 'Unknown'}
                                                 </h4>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <span className="text-[10px] text-foreground-muted">
                                                         {item.employeeCount} Employee{item.employeeCount !== 1 ? 's' : ''}
                                                     </span>
-                                                    <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded">
+                                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-background-muted text-foreground-muted border border-border">
                                                         {item.percentage}%
                                                     </span>
                                                 </div>
@@ -111,28 +143,27 @@ const NationalityReport = () => {
                                         </div>
 
                                         {expandedRows[item.nationality] ?
-                                            <ChevronUp size={20} className="text-gray-400" /> :
-                                            <ChevronDown size={20} className="text-gray-400" />
+                                            <ChevronUp size={16} className="text-foreground-muted" /> :
+                                            <ChevronDown size={16} className="text-foreground-muted" />
                                         }
                                     </div>
 
-                                    {/* Expanded Details */}
                                     {expandedRows[item.nationality] && (
-                                        <div className="bg-gray-50 dark:bg-slate-900/50 px-6 py-3 border-t border-gray-100 dark:border-gray-800">
-                                            <table className="min-w-full text-sm">
+                                        <div className="bg-background-muted/40 px-3 py-2 border-t border-border">
+                                            <table className="min-w-full text-xs">
                                                 <thead>
-                                                    <tr>
-                                                        <th className="text-left font-medium text-gray-500 py-2 w-24">Code</th>
-                                                        <th className="text-left font-medium text-gray-500 py-2">Name</th>
-                                                        <th className="text-right font-medium text-gray-500 py-2">Designation</th>
+                                                    <tr className="border-b border-border text-[11px] font-bold text-foreground-muted uppercase">
+                                                        <th className="text-left py-1.5 w-24">Code</th>
+                                                        <th className="text-left py-1.5">Name</th>
+                                                        <th className="text-right py-1.5">Designation</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody>
+                                                <tbody className="divide-y divide-border/30">
                                                     {item.employees && item.employees.map((emp, idx) => (
-                                                        <tr key={idx} className="border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-                                                            <td className="py-2 text-gray-700 dark:text-gray-300">{emp.employeeCode}</td>
-                                                            <td className="py-2 text-gray-700 dark:text-gray-300 font-medium">{emp.employeeName}</td>
-                                                            <td className="py-2 text-right text-gray-700 dark:text-gray-300">{emp.designation || '-'}</td>
+                                                        <tr key={idx}>
+                                                            <td className="py-1.5 font-semibold text-foreground">{emp.employeeCode}</td>
+                                                            <td className="py-1.5 text-foreground">{emp.employeeName}</td>
+                                                            <td className="py-1.5 text-right text-foreground-muted">{emp.designation || '-'}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -142,13 +173,15 @@ const NationalityReport = () => {
                                 </div>
                             ))
                         ) : (
-                            <div className="p-10 text-center text-gray-500 dark:text-gray-400">
-                                No nationality data found.
+                            <div className="p-8 text-center text-foreground-muted text-xs">
+                                <FileText className="mx-auto h-7 w-7 text-foreground-muted/40 mb-1" />
+                                <h3 className="text-xs font-bold text-foreground">No nationality data found</h3>
+                                <p className="text-[11px] text-foreground-muted">No records match your search criteria.</p>
                             </div>
                         )}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };

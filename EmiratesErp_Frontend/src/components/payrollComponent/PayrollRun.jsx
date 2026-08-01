@@ -1,24 +1,30 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { Loader, PlusCircle, Play, Eye, CheckCircle, FileClock, AlertTriangle, Download } from 'lucide-react';
+import { Loader, PlusCircle, Play, Eye, CheckCircle, FileClock, AlertTriangle, Download, ArrowLeft, X } from 'lucide-react';
 import ProcessPayrollRun from './ProcessPayrollRun';
 
-// --- Helper Components (copied from PayrollSettings for encapsulation) ---
 const InputField = ({ label, id, type = 'text', children, ...props }) => (
     <div>
-        <label htmlFor={id} className="block text-sm font-medium text-slate-700">{label}</label>
-        <input id={id} type={type} {...props} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
+        {label && <label htmlFor={id} className="block text-[11px] font-medium text-foreground-muted mb-0.5">{label}</label>}
+        <input
+            id={id}
+            type={type}
+            {...props}
+            className="w-full px-2.5 py-1 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-colors h-7"
+        />
     </div>
 );
 
 const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">{title}</h3>
-                    <button onClick={onClose} className="text-slate-500 hover:text-slate-800">&times;</button>
+        <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center p-4">
+            <div className="bg-card text-foreground border border-border rounded-xl shadow-xl p-4 w-full max-w-lg">
+                <div className="flex justify-between items-center pb-2 mb-3 border-b border-border">
+                    <h3 className="text-xs font-bold text-foreground">{title}</h3>
+                    <button onClick={onClose} className="p-1 rounded-md text-foreground-muted hover:text-foreground hover:bg-background-muted transition-colors">
+                        <X size={14} />
+                    </button>
                 </div>
                 {children}
             </div>
@@ -26,17 +32,16 @@ const Modal = ({ isOpen, onClose, title, children }) => {
     );
 };
 
-// --- Payroll Run Component Logic ---
 const statusStyles = {
-    DRAFT: 'bg-yellow-100 text-yellow-800',
-    PROCESSING: 'bg-blue-100 text-blue-800',
-    COMPLETED: 'bg-green-100 text-green-800',
-    PAID: 'bg-green-100 text-green-800', // Using same as completed for consistency
-    GENERATED: 'bg-green-100 text-green-800',
-    FAILED: 'bg-red-100 text-red-800',
+    DRAFT: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+    PROCESSING: 'bg-primary/10 text-primary border-primary/20',
+    COMPLETED: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+    PAID: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+    GENERATED: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+    FAILED: 'bg-rose-500/10 text-rose-600 border-rose-500/20',
 };
 
-const CreateRunModal = ({ isOpen, onClose, onCreate }) => {
+const CreateRunFormView = ({ onCancel, onCreate }) => {
     const [year, setYear] = useState(new Date().getFullYear());
     const [month, setMonth] = useState(new Date().getMonth() + 1);
 
@@ -46,89 +51,108 @@ const CreateRunModal = ({ isOpen, onClose, onCreate }) => {
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Create New Payroll Run">
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <InputField label="Year" type="number" value={year} onChange={(e) => setYear(e.target.value)} required />
-                <InputField label="Month" type="number" min="1" max="12" value={month} onChange={(e) => setMonth(e.target.value)} required />
-                <div className="flex justify-end gap-3 pt-4">
-                    <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
-                    <button type="submit" className="btn-primary">Create Draft</button>
+        <div className="p-4 border border-border rounded-lg bg-card text-foreground space-y-4 max-w-lg">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+                <h3 className="text-xs font-bold text-foreground">Create New Payroll Run</h3>
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="px-2 py-1 text-xs font-semibold rounded-md border border-border bg-background hover:bg-background-muted text-foreground transition-colors flex items-center gap-1"
+                >
+                    <ArrowLeft size={13} /> Back
+                </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <InputField label="Year" type="number" value={year} onChange={(e) => setYear(e.target.value)} required />
+                    <InputField label="Month" type="number" min="1" max="12" value={month} onChange={(e) => setMonth(e.target.value)} required />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-3 border-t border-border">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="px-3 py-1 text-xs font-semibold text-foreground-muted hover:bg-background-muted rounded-md transition-colors border border-border"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        className="px-3.5 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-2xs h-7"
+                    >
+                        <PlusCircle size={13} /> Create Draft
+                    </button>
                 </div>
             </form>
-        </Modal>
+        </div>
     );
 };
 
 const PayslipsModal = ({ isOpen, onClose, run, payslips, loading, onUpdateStatus, employees }) => {
     if (!run) return null;
 
-    // Helper to get employee display info
     const getEmployeeDisplay = (p) => {
-        // First check directly on payslip object (if backend fixed)
         if (p.employeeName) {
             return { name: p.employeeName, code: p.employeeCode || p.employeeId };
         }
-        // Fallback: look up in employees list
         if (employees && employees.length > 0) {
-            const emp = employees.find(e => e.id === p.employeeId || e.employeeCode === p.employeeCode); // Match by ID or Code
+            const emp = employees.find(e => e.id === p.employeeId || e.employeeCode === p.employeeCode);
             if (emp) {
                 return { name: emp.name || `${emp.firstName} ${emp.lastName}`, code: emp.employeeCode };
             }
         }
-        // Last resort
         return { name: null, code: p.employeeCode || p.employeeId };
     };
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={`Payslips for ${new Date(run.payPeriodStart).toLocaleString('default', { month: 'long' })} ${run.year}`}>
             {loading ? (
-                <div className="flex justify-center items-center p-8"><Loader className="animate-spin h-8 w-8 text-blue-600" /></div>
+                <div className="flex justify-center items-center p-6"><Loader className="animate-spin h-5 w-5 text-primary" /></div>
             ) : (
-                <div className="overflow-y-auto max-h-[60vh]">
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-slate-200">
-                            <thead className="bg-slate-50">
-                                <tr>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Employee</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Net Salary</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-slate-200 text-slate-700">
-                                {payslips.map(p => {
-                                    const { name, code } = getEmployeeDisplay(p);
-                                    return (
-                                        <tr key={p.id}>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                                                {name ? (
-                                                    <span>{name} <span className="text-gray-500">({code})</span></span>
-                                                ) : (
-                                                    <span className="text-gray-500">{code}</span>
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm">{p.netSalary}</td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${p.status === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                                    {p.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                                {p.status !== 'PAID' && (
-                                                    <button
-                                                        onClick={() => onUpdateStatus(p.id, 'PAID')}
-                                                        className="text-green-600 hover:text-green-800 font-medium text-xs flex items-center gap-1"
-                                                    >
-                                                        <CheckCircle size={14} /> Mark Paid
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                <div className="overflow-y-auto max-h-[60vh] border border-border rounded-lg">
+                    <table className="min-w-full bg-card text-foreground divide-y divide-border">
+                        <thead className="bg-background-muted/60">
+                            <tr>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Employee</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Net Salary</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Status</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/40">
+                            {payslips.map(p => {
+                                const { name, code } = getEmployeeDisplay(p);
+                                return (
+                                    <tr key={p.id} className="hover:bg-background-muted/40 transition-colors">
+                                        <td className="px-3 py-2 text-xs font-semibold text-foreground">
+                                            {name ? (
+                                                <span>{name} <span className="text-foreground-muted font-normal">({code})</span></span>
+                                            ) : (
+                                                <span className="text-foreground-muted">{code}</span>
+                                            )}
+                                        </td>
+                                        <td className="px-3 py-2 text-xs font-medium text-foreground">{p.netSalary}</td>
+                                        <td className="px-3 py-2 text-xs">
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${p.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 border-amber-500/20'}`}>
+                                                {p.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-3 py-2 text-xs text-right">
+                                            {p.status !== 'PAID' && (
+                                                <button
+                                                    onClick={() => onUpdateStatus(p.id, 'PAID')}
+                                                    className="px-2 py-0.5 text-xs font-semibold text-emerald-600 hover:bg-emerald-500/10 border border-emerald-500/20 rounded-md transition-colors inline-flex items-center gap-1"
+                                                >
+                                                    <CheckCircle size={12} /> Mark Paid
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
             )}
         </Modal>
@@ -139,13 +163,12 @@ const PayrollRun = () => {
     const [runs, setRuns] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [isCreateModalOpen, setCreateModalOpen] = useState(false);
     const [isPayslipsModalOpen, setPayslipsModalOpen] = useState(false);
     const [selectedRun, setSelectedRun] = useState(null);
-    const [view, setView] = useState('list'); // 'list' or 'process'
+    const [view, setView] = useState('list'); // 'list' | 'create' | 'process'
     const [payslips, setPayslips] = useState([]);
     const [payslipsLoading, setPayslipsLoading] = useState(false);
-    const [employees, setEmployees] = useState([]); // Store employee details for lookup
+    const [employees, setEmployees] = useState([]);
 
     const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -162,7 +185,6 @@ const PayrollRun = () => {
             .finally(() => setLoading(false));
     }, [API_URL]);
 
-    // Fetch employees for name lookup
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
@@ -182,7 +204,7 @@ const PayrollRun = () => {
         try {
             const token = localStorage.getItem('token');
             await axios.post(`${API_URL}/payroll-runs`, { year, month }, { headers: { "Authorization": `Bearer ${token}` } });
-            setCreateModalOpen(false);
+            setView('list');
             fetchRuns();
             alert('Payroll run created successfully as a draft.');
         } catch (err) {
@@ -222,7 +244,6 @@ const PayrollRun = () => {
                 headers: { "Authorization": `Bearer ${token}` }
             });
 
-            // Update local state
             setPayslips(prev => prev.map(p => p.id === payslipId ? { ...p, status: newStatus } : p));
         } catch (err) {
             console.error("Error updating payslip status:", err);
@@ -235,15 +256,13 @@ const PayrollRun = () => {
             const token = localStorage.getItem('token');
             const response = await axios.get(`${API_URL}/payroll-runs/${runId}/wps-sif`, {
                 headers: { "Authorization": `Bearer ${token}` },
-                responseType: 'blob', // Important for file download
+                responseType: 'blob',
             });
 
-            // Create a temporary URL for the blob
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
 
-            // Extract filename from content-disposition header if available, or generate one
             const contentDisposition = response.headers['content-disposition'];
             let fileName = 'wps_sif.SIF';
             if (contentDisposition) {
@@ -273,7 +292,7 @@ const PayrollRun = () => {
                 params: { status: newStatus },
                 headers: { "Authorization": `Bearer ${token}` }
             });
-            fetchRuns(false); // Refresh list
+            fetchRuns(false);
             alert(`Payroll run marked as ${newStatus} successfully.`);
         } catch (err) {
             console.error("Error updating status:", err);
@@ -281,78 +300,85 @@ const PayrollRun = () => {
         }
     };
 
-    if (loading) return <div className="flex justify-center items-center p-8"><Loader className="animate-spin h-8 w-8 text-blue-600" /></div>;
-    if (error) return <div className="text-center text-red-600 p-4 bg-red-50 rounded-md">{error}</div>;
+    if (loading) return <div className="flex justify-center items-center p-6"><Loader className="animate-spin h-5 w-5 text-primary" /></div>;
+    if (error) return <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-md border border-rose-500/20">{error}</div>;
+
+    if (view === 'create') {
+        return <CreateRunFormView onCancel={() => setView('list')} onCreate={handleCreateRun} />;
+    }
 
     if (view === 'process' && selectedRun) {
         return <ProcessPayrollRun run={selectedRun} onBack={() => setView('list')} onRunComplete={() => { setView('list'); fetchRuns(false); }} />;
     }
 
     return (
-        <>
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Payroll Runs</h3>
-                <button onClick={() => setCreateModalOpen(true)} className="btn-primary flex items-center gap-2">
-                    <PlusCircle size={16} /> Create Payroll Run
+        <div className="space-y-3">
+            <div className="flex justify-between items-center">
+                <h3 className="text-xs font-bold text-foreground">Payroll Runs</h3>
+                <button
+                    onClick={() => setView('create')}
+                    className="px-2.5 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-2xs"
+                >
+                    <PlusCircle size={13} /> Create Payroll Run
                 </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {runs.map(run => (
-                    <div key={run.id} className="bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col">
-                        <div className="p-4 border-b">
+                    <div key={run.id} className="bg-card border border-border rounded-lg shadow-2xs flex flex-col text-foreground">
+                        <div className="p-3 border-b border-border">
                             <div className="flex justify-between items-start">
-                                <h4 className="text-lg font-bold text-slate-800">{new Date(run.payPeriodStart).toLocaleString('default', { month: 'long' })} {run.year}</h4>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusStyles[run.status] || 'bg-slate-100 text-slate-800'}`}>
+                                <h4 className="text-xs font-bold text-foreground">
+                                    {new Date(run.payPeriodStart).toLocaleString('default', { month: 'long' })} {run.year}
+                                </h4>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusStyles[run.status] || 'bg-background-muted text-foreground-muted border-border'}`}>
                                     {run.status}
                                 </span>
                             </div>
-                            <p className="text-xs text-slate-500 mt-1">
+                            <p className="text-[10px] text-foreground-muted mt-0.5">
                                 Period: {new Date(run.payPeriodStart).toLocaleDateString()} - {new Date(run.payPeriodEnd).toLocaleDateString()}
                             </p>
                         </div>
-                        <div className="p-4 space-y-3 text-sm text-slate-600 flex-grow">
-                            <div className="flex items-center gap-2">
-                                {run.status === 'DRAFT' ? <FileClock className="h-4 w-4 text-yellow-500" /> : run.status === 'FAILED' ? <AlertTriangle className="h-4 w-4 text-red-500" /> : <CheckCircle className="h-4 w-4 text-green-500" />}
-                                <span>Status: {run.status}</span>
+                        <div className="p-3 space-y-2 text-xs text-foreground-muted flex-grow">
+                            <div className="flex items-center gap-1.5">
+                                {run.status === 'DRAFT' ? <FileClock className="h-3.5 w-3.5 text-amber-500" /> : run.status === 'FAILED' ? <AlertTriangle className="h-3.5 w-3.5 text-rose-500" /> : <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />}
+                                <span className="text-xs font-medium text-foreground">Status: {run.status}</span>
                             </div>
-                            {run.executedAt && <p className="text-xs">Executed on: {new Date(run.executedAt).toLocaleString()}</p>}
+                            {run.executedAt && <p className="text-[10px] text-foreground-muted">Executed: {new Date(run.executedAt).toLocaleString()}</p>}
                         </div>
-                        <div className="p-4 bg-slate-50 border-t flex justify-end flex-wrap gap-2">
+                        <div className="p-2.5 bg-background-muted/40 border-t border-border flex justify-end flex-wrap gap-1.5">
                             {run.status === 'DRAFT' && (
-                                <button onClick={() => handleExecuteRun(run.id)} className="btn-primary py-1 px-3 text-sm flex items-center gap-2">
-                                    <Play size={14} /> Process Payroll
+                                <button onClick={() => handleExecuteRun(run.id)} className="px-2.5 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-1">
+                                    <Play size={13} /> Process Payroll
                                 </button>
                             )}
                             {run.status === 'PROCESSING' && (
-                                <span className="text-sm italic text-slate-500 flex items-center gap-2"><Loader className="animate-spin h-4 w-4" /> Processing...</span>
+                                <span className="text-xs italic text-foreground-muted flex items-center gap-1.5"><Loader className="animate-spin h-3.5 w-3.5" /> Processing...</span>
                             )}
                             {(run.status === 'GENERATED' || run.status === 'COMPLETED') && (
                                 <>
-                                    <button onClick={() => handleViewPayslips(run)} className="btn-secondary py-1 px-3 text-sm flex items-center gap-2">
-                                        <Eye size={14} /> View Payslips
+                                    <button onClick={() => handleViewPayslips(run)} className="px-2 py-1 text-xs font-semibold border border-border bg-background hover:bg-background-muted text-foreground rounded-md transition-colors flex items-center gap-1">
+                                        <Eye size={13} /> View Payslips
                                     </button>
-                                    <button onClick={() => handleUpdateStatus(run.id, 'PAID')} className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded-md text-sm flex items-center gap-2 transition-colors">
-                                        <CheckCircle size={14} /> Mark as Paid
+                                    <button onClick={() => handleUpdateStatus(run.id, 'PAID')} className="px-2 py-1 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors flex items-center gap-1">
+                                        <CheckCircle size={13} /> Mark as Paid
                                     </button>
                                 </>
                             )}
                             {(run.status === 'PAID') && (
                                 <>
-                                    <button onClick={() => handleViewPayslips(run)} className="btn-secondary py-1 px-3 text-sm flex items-center gap-2">
-                                        <Eye size={14} /> View Payslips
+                                    <button onClick={() => handleViewPayslips(run)} className="px-2 py-1 text-xs font-semibold border border-border bg-background hover:bg-background-muted text-foreground rounded-md transition-colors flex items-center gap-1">
+                                        <Eye size={13} /> View Payslips
                                     </button>
-                                    <button onClick={() => handleDownloadWpsSif(run.id)} className="bg-cyan-600 hover:bg-cyan-700 text-white py-1 px-3 rounded-md text-sm flex items-center gap-2 transition-colors" title="Download WPS SIF File">
-                                        <Download size={14} /> WPS SIF
+                                    <button onClick={() => handleDownloadWpsSif(run.id)} className="px-2 py-1 text-xs font-semibold bg-cyan-600 hover:bg-cyan-700 text-white rounded-md transition-colors flex items-center gap-1" title="Download WPS SIF File">
+                                        <Download size={13} /> WPS SIF
                                     </button>
-                                    {/* Optional: Allow reverting if needed, though usually strict */}
-                                    {/* <button onClick={() => handleUpdateStatus(run.id, 'GENERATED')} className="text-red-600 hover:text-red-800 text-sm ml-2">Revert</button> */}
                                 </>
                             )}
                         </div>
                     </div>
                 ))}
             </div>
-            <CreateRunModal isOpen={isCreateModalOpen} onClose={() => setCreateModalOpen(false)} onCreate={handleCreateRun} />
             <PayslipsModal
                 isOpen={isPayslipsModalOpen}
                 onClose={() => setPayslipsModalOpen(false)}
@@ -361,7 +387,7 @@ const PayrollRun = () => {
                 loading={payslipsLoading}
                 onUpdateStatus={handleUpdatePayslipStatus}
             />
-        </>
+        </div>
     );
 };
 

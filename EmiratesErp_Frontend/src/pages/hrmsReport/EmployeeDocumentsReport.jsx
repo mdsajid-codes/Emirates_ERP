@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Loader, FileText, ShieldCheck, Search, AlertCircle } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import { Download, Loader, AlertCircle, FileText } from 'lucide-react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 
 const EmployeeDocumentsReport = () => {
+    const { searchTerm: headerSearchTerm = '' } = useOutletContext() || {};
     const [exporting, setExporting] = useState(false);
     const [loading, setLoading] = useState(true);
     const [tableData, setTableData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [error, setError] = useState('');
-    const [searchTerm, setSearchTerm] = useState('');
     const [columns, setColumns] = useState([]);
     const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -18,10 +19,10 @@ const EmployeeDocumentsReport = () => {
     }, []);
 
     useEffect(() => {
-        if (!searchTerm) {
+        if (!headerSearchTerm) {
             setFilteredData(tableData);
         } else {
-            const lowerTerm = searchTerm.toLowerCase();
+            const lowerTerm = headerSearchTerm.toLowerCase().trim();
             const filtered = tableData.filter(row =>
                 Object.values(row).some(val =>
                     String(val).toLowerCase().includes(lowerTerm)
@@ -29,36 +30,32 @@ const EmployeeDocumentsReport = () => {
             );
             setFilteredData(filtered);
         }
-    }, [searchTerm, tableData]);
+    }, [headerSearchTerm, tableData]);
 
     const fetchAndParseReport = async () => {
         setLoading(true);
         setError('');
         setTableData([]);
         setFilteredData([]);
-        setColumns([]); // Reset columns on new fetch
+        setColumns([]);
 
         try {
             const token = localStorage.getItem('token');
             const response = await axios.get(`${API_URL}/employee-documents/export`, {
                 headers: { "Authorization": `Bearer ${token}` },
-                responseType: 'arraybuffer', // Important for parsing
+                responseType: 'arraybuffer',
             });
 
             const workbook = XLSX.read(response.data, { type: 'array' });
-            const sheetName = workbook.SheetNames[0]; // Assuming data is in the first sheet
+            const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
 
-            // 1. Get headers explicitly from the first row
             const rawData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
             let extractedHeaders = [];
             if (rawData.length > 0) {
-                // Ensure headers are strings and trim them
                 extractedHeaders = rawData[0].map(h => String(h).trim());
             }
 
-            // 2. Parse data with defval to ensure all keys exist and handle empty cells
-            // Use the extracted headers to ensure consistent column order and access
             const data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
             if (data.length > 0) {
@@ -70,7 +67,6 @@ const EmployeeDocumentsReport = () => {
                 setFilteredData([]);
                 setColumns([]);
             }
-
         } catch (err) {
             console.error("Failed to load report data:", err);
             setError('Could not load report preview. You can still try to download the file.');
@@ -105,88 +101,73 @@ const EmployeeDocumentsReport = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Employee Documents Report</h2>
-                    <p className="text-sm text-gray-500">Overview of all uploaded documents and their status.</p>
+                    <h2 className="text-xs font-bold text-foreground">Employee Documents Report</h2>
+                    <p className="text-[11px] text-foreground-muted">Overview of uploaded employee documents and status</p>
                 </div>
                 <button
                     onClick={handleExport}
                     disabled={exporting}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="px-2.5 py-1 text-xs font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1 shadow-2xs h-7 disabled:opacity-70"
                 >
-                    {exporting ? <Loader className="animate-spin h-4 w-4" /> : <Download size={18} />}
+                    {exporting ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Download size={13} />}
                     <span>Export Excel</span>
                 </button>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
-                    <div className="relative w-full max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search documents..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+            {error && (
+                <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-md border border-rose-500/20 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle size={14} />
+                        <span>{error}</span>
                     </div>
+                    <button onClick={fetchAndParseReport} className="text-xs underline hover:opacity-80">Try Again</button>
                 </div>
+            )}
 
+            <div className="overflow-x-auto rounded-lg border border-border">
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center p-12">
-                        <Loader className="animate-spin h-8 w-8 text-blue-600 mb-4" />
-                        <p className="text-gray-500">Loading document data...</p>
-                    </div>
-                ) : error ? (
-                    <div className="flex flex-col items-center justify-center p-12 text-center">
-                        <AlertCircle className="h-12 w-12 text-red-500 mb-4 opacity-50" />
-                        <p className="text-gray-800 dark:text-gray-200 font-medium mb-2">Error loading data</p>
-                        <p className="text-gray-500 text-sm max-w-sm">{error}</p>
-                        <button onClick={fetchAndParseReport} className="mt-4 text-blue-600 hover:underline">Try Again</button>
+                    <div className="flex justify-center items-center p-8 bg-card">
+                        <Loader className="animate-spin h-5 w-5 text-primary" />
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
-                                <tr>
-                                    {columns.map((key, idx) => (
-                                        <th key={idx} className="px-6 py-3 whitespace-nowrap">{key}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                {filteredData.length > 0 ? (
-                                    filteredData.map((row, idx) => (
-                                        <tr key={idx} className="bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50">
-                                            {columns.map((colKey, i) => (
-                                                <td key={i} className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-300">
-                                                    {row[colKey] !== undefined ? row[colKey] : ''}
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={columns.length > 0 ? columns.length : 1} className="px-6 py-8 text-center text-gray-500">
-                                            No documents found matching your search.
-                                        </td>
+                    <table className="min-w-full bg-card text-foreground divide-y divide-border">
+                        <thead className="bg-background-muted/60">
+                            <tr>
+                                {columns.map((key, idx) => (
+                                    <th key={idx} className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider whitespace-nowrap">{key}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/40">
+                            {filteredData.length > 0 ? (
+                                filteredData.map((row, idx) => (
+                                    <tr key={idx} className="hover:bg-background-muted/40 transition-colors">
+                                        {columns.map((colKey, i) => (
+                                            <td key={i} className="px-3 py-2 text-xs font-medium text-foreground whitespace-nowrap">
+                                                {row[colKey] !== undefined ? row[colKey] : '-'}
+                                            </td>
+                                        ))}
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
-                        {tableData.length === 0 && !loading && (
-                            <div className="p-8 text-center text-gray-500">
-                                No records found in the report.
-                            </div>
-                        )}
-                    </div>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={columns.length > 0 ? columns.length : 1} className="text-center py-8 text-foreground-muted text-xs">
+                                        <FileText className="mx-auto h-7 w-7 text-foreground-muted/40 mb-1" />
+                                        <h3 className="text-xs font-bold text-foreground">No documents found</h3>
+                                        <p className="text-[11px] text-foreground-muted">No documents found matching your search criteria.</p>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 )}
-                <div className="p-2 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-xs text-center text-gray-400">
-                    Showing {filteredData.length} records
-                </div>
+            </div>
+
+            <div className="text-[11px] text-foreground-muted text-right pr-1">
+                Showing {filteredData.length} records
             </div>
         </div>
     );

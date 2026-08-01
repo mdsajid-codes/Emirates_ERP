@@ -46,11 +46,12 @@ import { getTenantFromSubdomain } from '../utils/tenantUtils';
 
 import PatternBackground from '../components/login/PatternBackground';
 import ThreeCanvas from '../components/login/ThreeCanvas';
+import { useLoginTheme } from '../components/login/useLoginTheme';
 import '../components/login/login.css';
 
 // ── Static content (English) ────────────────────────────────────────────────
 const COMPANY = 'EMIRATES ERP';
-const HUD_VERSION = 'ERP v3.0 // SECURE';
+const HUD_VERSION = 'EMIRATES-ERP';
 const HEADING = 'Next-Gen Enterprise Platform';
 const SUBTEXT = 'Unify operations, unlock insights, and scale your business with confidence.';
 
@@ -76,7 +77,7 @@ const ERM_SLIDES = [
     description:
       'Full-ledger accounting, VAT compliance, and real-time financial dashboards for data-driven decisions.',
     stats: [
-      { label: 'Revenue', value: '$42.8M', color: '#1E3B37' },
+      { label: 'Revenue', value: 'AED 42.8M', color: '#1E3B37' },
       { label: 'VAT Status', value: 'COMPLIANT', color: '#1E3B37' },
       { label: 'Audit', value: '100%', color: '#1E3B37' },
     ],
@@ -109,22 +110,41 @@ const ERM_SLIDES = [
   },
 ];
 
-// ── Helper: Character-by-character animated heading ─────────────────────────
+// ── Helper: Word-aware animated heading ──────────────────────────────────────
 function AnimatedHeading({ text }) {
-  const chars = text.split('');
+  const words = text.split(' ');
+  let letterIndex = 0;
   return (
     <h1 className="login-heading">
-      {chars.map((char, i) => (
-        <motion.span
-          key={i}
-          className="login-heading-letter"
-          initial={{ opacity: 0, filter: 'blur(6px)', y: 14 }}
-          animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
-          transition={{ delay: 0.12 * i, duration: 0.28, ease: 'easeOut' }}
-        >
-          {char === ' ' ? '\u00A0' : char}
-        </motion.span>
-      ))}
+      {words.map((word, wi) => {
+        const wordNode = (
+          <span key={wi} className="login-heading-word">
+            {word.split('').map((char) => {
+              const idx = letterIndex++;
+              return (
+                <motion.span
+                  key={idx}
+                  className="login-heading-letter"
+                  initial={{ opacity: 0, filter: 'blur(6px)', y: 14 }}
+                  animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+                  transition={{ delay: 0.12 * idx, duration: 0.28, ease: 'easeOut' }}
+                >
+                  {char}
+                </motion.span>
+              );
+            })}
+          </span>
+        );
+
+        return wi < words.length - 1 ? (
+          <React.Fragment key={wi}>
+            {wordNode}
+            <span className="login-heading-space">&nbsp;</span>
+          </React.Fragment>
+        ) : (
+          wordNode
+        );
+      })}
     </h1>
   );
 }
@@ -150,6 +170,9 @@ function CompanyEyebrow({ text }) {
 
 // ── Main Component ──────────────────────────────────────────────────────────
 const Login = () => {
+  // ── Theme Hook ────────────────────────────────────────────────────────────
+  const { loginTheme } = useLoginTheme();
+
   // ── Tenant & API ──────────────────────────────────────────────────────────
   const resolvedTenantId = getTenantFromSubdomain();
   const { refreshModules } = useTenant();
@@ -189,7 +212,7 @@ const Login = () => {
   useEffect(() => {
     const update = () => {
       const now = new Date();
-      setSystemTime(now.toTimeString().split(' ')[0] + ' GST');
+      setSystemTime(now.toTimeString().split(' ')[0] + ' ');
     };
     update();
     const timer = window.setInterval(update, 1000);
@@ -260,7 +283,7 @@ const Login = () => {
         particleCount: 80,
         spread: 65,
         origin: { y: 0.6 },
-        colors: ['#184341', '#2A4556', '#B9D9D5', '#C4DADE', '#D2E0D3'],
+        colors: [loginTheme.primary, loginTheme.secondary, loginTheme.accent, '#B9D9D5', '#C4DADE'],
       });
 
       // Re-sync sidebar modules
@@ -269,12 +292,11 @@ const Login = () => {
       const name = loginData.email.trim() || 'Executive';
       setWelcomeMessage(`Welcome back, ${name}!`);
 
-      // Role-based navigation (unchanged from previous Login.jsx)
+      // Role-based navigation
       const rolesString = localStorage.getItem('roles');
       if (rolesString) {
         const roles = JSON.parse(rolesString);
 
-        // Small delay to let confetti / welcome message show
         window.setTimeout(async () => {
           if (roles.includes('SUPER_ADMIN') || (roles.includes('POS_ADMIN') && roles.includes('HRMS_ADMIN'))) {
             navigate('/company-dashboard');
@@ -330,9 +352,17 @@ const Login = () => {
       className="login-root"
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setCursorPosition({ x: 400, y: 300 })}
+      style={{
+        '--lp-primary': loginTheme.primary,
+        '--lp-secondary': loginTheme.secondary,
+        '--lp-accent': loginTheme.accent,
+        '--lp-surface': loginTheme.surface,
+        '--lp-card-bg': loginTheme.cardBg,
+        '--lp-text': loginTheme.text,
+      }}
     >
       {/* Node-graph canvas + ticker bar */}
-      <PatternBackground cursorPosition={cursorPosition} />
+      <PatternBackground cursorPosition={cursorPosition} loginTheme={loginTheme} />
 
       {/* Cursor glow orb */}
       <motion.div
@@ -436,7 +466,8 @@ const Login = () => {
             <motion.button
               type="submit"
               className="login-submit-btn"
-              whileHover={{ scale: 1.02, boxShadow: '0 0 28px rgba(151, 179, 174, 0.7)' }}
+              style={{ backgroundColor: loginTheme.primary, color: '#ffffff' }}
+              whileHover={{ scale: 1.02, boxShadow: `0 0 28px ${loginTheme.primary}aa` }}
               whileTap={{ scale: 0.97 }}
               disabled={isLoading}
             >
@@ -497,9 +528,12 @@ const Login = () => {
         </section>
 
         {/* ── RIGHT PANEL: 3D Carousel ─────────────────────────────── */}
-        <section className="login-panel login-showcase-panel">
+        <section
+          className="login-panel login-showcase-panel"
+          style={{ backgroundColor: loginTheme.secondary }}
+        >
           {/* Three.js canvas — fills the panel absolutely */}
-          <ThreeCanvas activeSlideIndex={activeIndex} />
+          <ThreeCanvas activeSlideIndex={activeIndex} loginTheme={loginTheme} />
 
           {/* Badge chip + navigation arrows */}
           <div className="login-showcase-top">
