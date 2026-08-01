@@ -182,7 +182,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
 
     return (
         <div 
-            className="min-h-screen p-3.5 sm:p-4 lg:p-5 space-y-4 font-sans transition-colors duration-300"
+            className="p-3.5 sm:p-4 lg:p-5 space-y-4 font-sans transition-colors duration-300"
             style={{ backgroundColor: posTheme.pageBg, color: posTheme.text }}
         >
             {/* Top Action Bar */}

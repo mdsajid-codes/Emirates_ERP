@@ -69,7 +69,7 @@ const InfoDisplay = ({ label, value }) => (
     </div>
 );
 
-const CompanyInfo = () => {
+const CompanyInfo = ({ posTheme }) => {
     const [companyInfo, setCompanyInfo] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -147,11 +147,11 @@ const CompanyInfo = () => {
             setFormData(savedData);
             setLogoFile(null);
             setIsEditing(false);
-            alert('Company information saved successfully!');
+            toast.success('Company information saved successfully!');
         } catch (err) {
             const errorMessage = err.response?.data?.message || 'Failed to save company information.';
             setError(errorMessage);
-            alert(`Error: ${errorMessage}`);
+            toast.error(`Error: ${errorMessage}`);
         } finally {
             setSaving(false);
         }
@@ -217,12 +217,6 @@ const CompanyInfo = () => {
                     <div className="md:col-span-3 border-t border-border mt-2 pt-3">
                         <h4 className="text-xs font-bold text-foreground mb-3">UAE WPS & Statutory Details</h4>
                     </div>
-                    <InputField label="MOHRE Establishment ID" id="mohreEstablishmentId" name="mohreEstablishmentId" value={formData.mohreEstablishmentId || ''} onChange={handleChange} />
-                    <InputField label="Employer Bank Routing Code (Agent ID)" id="employerBankRoutingCode" name="employerBankRoutingCode" value={formData.employerBankRoutingCode || ''} onChange={handleChange} />
-                    <InputField label="Total Visa Quota" id="visaQuotaTotal" name="visaQuotaTotal" type="number" value={formData.visaQuotaTotal ?? ''} onChange={handleChange} />
-                    <InputField label="Trade License Number" id="tradeLicenseNumber" name="tradeLicenseNumber" value={formData.tradeLicenseNumber || ''} onChange={handleChange} />
-                    <InputField label="Trade License Expiry" id="tradeLicenseExpiry" name="tradeLicenseExpiry" type="date" value={formData.tradeLicenseExpiry || ''} onChange={handleChange} />
-                    <InputField label="TRN (Tax Registration No.)" id="trn" name="trn" value={formData.trn || ''} onChange={handleChange} />
                 </div>
 
                 <div className="flex justify-end gap-2 pt-3 border-t border-border">
@@ -265,13 +259,13 @@ const CompanyInfo = () => {
                         <img src={fetchedLogoUrl || constructImageUrl(companyInfo.logoUrl)} alt="Company Logo" className="h-16 w-auto object-contain rounded-md border border-border p-1 bg-background" />
                     </Section>
                 )}
-                <Section title="General Information">
+                
+                {/* 5 Columns for General Information */}
+                <Section title="General Information" cols="grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                     <InfoDisplay label="Company Name" value={companyInfo.companyName} />
                     <InfoDisplay label="Email" value={companyInfo.email} />
                     <InfoDisplay label="Phone" value={companyInfo.phone} />
                     <InfoDisplay label="Website" value={companyInfo.website} />
-                </Section>
-                <Section title="Address">
                     <InfoDisplay label="Address" value={companyInfo.address} />
                     <InfoDisplay label="City" value={companyInfo.city} />
                     <InfoDisplay label="Emirate" value={companyInfo.emirate} />
@@ -281,7 +275,9 @@ const CompanyInfo = () => {
                 <Section title="Statutory Details">
                     <InfoDisplay label="ESI Registration No." value={companyInfo.esiRegistrationNumber} />
                 </Section>
-                <Section title="UAE WPS & Compliance">
+
+                {/* 3 Columns for UAE WPS & Compliance */}
+                <Section title="UAE WPS & Compliance" cols="grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                     <InfoDisplay label="MOHRE Establishment ID" value={companyInfo.mohreEstablishmentId} />
                     <InfoDisplay label="Total Visa Quota" value={companyInfo.visaQuotaTotal} />
                     <InfoDisplay label="Employer Bank Routing Code" value={companyInfo.employerBankRoutingCode} />

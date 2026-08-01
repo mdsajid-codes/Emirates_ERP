@@ -11,13 +11,13 @@ const API_URL = import.meta.env.VITE_API_BASE_URL;
 const formatPrice = (cents) => `AED ${(cents / 100).toFixed(2)}`;
 
 const StatCard = ({ title, value, icon: Icon, colorClass, bgClass }) => (
-    <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200/60 flex items-center justify-between">
+    <div className="bg-white p-3.5 sm:p-4 rounded-2xl shadow-xs border border-slate-200/60 flex items-center justify-between">
         <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">{title}</p>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{value}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{title}</p>
+            <p className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">{value}</p>
         </div>
-        <div className={`p-3 rounded-2xl ${bgClass} ${colorClass}`}>
-            <Icon size={20} />
+        <div className={`p-2.5 rounded-xl ${bgClass} ${colorClass}`}>
+            <Icon size={18} />
         </div>
     </div>
 );
@@ -110,7 +110,7 @@ const ReportsView = ({ posTheme: propPosTheme }) => {
     if (error) return <div className="p-6 text-center text-rose-600 font-semibold bg-rose-50 rounded-2xl text-xs">{error}</div>;
 
     return (
-        <div className="p-4 sm:p-5 font-sans space-y-4">
+        <div className="p-4 sm:p-5 font-sans space-y-3.5">
             {/* Header & Date Range Picker */}
             <div className="flex flex-wrap justify-between items-center gap-3">
                 <div>
@@ -126,7 +126,7 @@ const ReportsView = ({ posTheme: propPosTheme }) => {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <StatCard title="Total Revenue" value={formatPrice(stats.totalRevenue)} icon={DollarSign} colorClass="text-emerald-700" bgClass="bg-emerald-50" />
                 <StatCard title="Total Transactions" value={stats.totalTransactions.toLocaleString()} icon={ShoppingBag} colorClass="text-blue-700" bgClass="bg-blue-50" />
                 <StatCard title="Avg. Sale Value" value={formatPrice(stats.avgTransactionValue)} icon={TrendingUp} colorClass="text-amber-700" bgClass="bg-amber-50" />
@@ -134,24 +134,24 @@ const ReportsView = ({ posTheme: propPosTheme }) => {
 
             {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-3.5">
-                <div className="lg:col-span-3 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Revenue Trend Over Time</h2>
-                    <ResponsiveContainer width="100%" height={260}>
+                <div className="lg:col-span-3 bg-white p-4 rounded-2xl shadow-xs border border-slate-200/60">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Revenue Trend Over Time</h2>
+                    <ResponsiveContainer width="100%" height={220}>
                         <LineChart data={filteredData.salesByDay}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                             <XAxis dataKey="date" fontSize={11} tickLine={false} axisLine={false} tickFormatter={dateTickFormatter} stroke="#64748b" />
                             <YAxis fontSize={11} tickLine={false} axisLine={false} tickFormatter={(value) => `AED ${value}`} stroke="#64748b" />
                             <Tooltip formatter={(value) => formatPrice(value * 100)} contentStyle={{ borderRadius: '12px', borderColor: '#e2e8f0', fontSize: '12px' }} />
-                            <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                            <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '5px' }} />
                             <Line type="monotone" dataKey="revenue" stroke={posTheme?.primary || '#0f172a'} strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
-                <div className="lg:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Top 5 Selling Items</h2>
-                    <ResponsiveContainer width="100%" height={260}>
+                <div className="lg:col-span-2 bg-white p-4 rounded-2xl shadow-xs border border-slate-200/60">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Top 5 Selling Items</h2>
+                    <ResponsiveContainer width="100%" height={220}>
                         <PieChart>
-                            <Pie data={filteredData.topProducts} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={85} fill="#8884d8" label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
+                            <Pie data={filteredData.topProducts} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} fill="#8884d8" label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
                                 {filteredData.topProducts.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
@@ -163,9 +163,9 @@ const ReportsView = ({ posTheme: propPosTheme }) => {
             </div>
 
             {/* Detailed Reports Catalog */}
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60">
-                <h2 className="text-sm font-bold text-slate-900 mb-3 border-b border-slate-100 pb-2">Available Report Sheets</h2>
-                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/60">
+                <h2 className="text-xs font-bold text-slate-900 mb-2.5 border-b border-slate-100 pb-2 uppercase tracking-wider text-slate-500">Available Report Sheets</h2>
+                <div className="grid gap-2.5 md:grid-cols-2 lg:grid-cols-4">
                     {[
                         {
                             title: "Business Summary",
@@ -193,15 +193,15 @@ const ReportsView = ({ posTheme: propPosTheme }) => {
                             description: "End-of-day register summary enabling register audits, payment channel balance checks, and cashier review.",
                         },
                     ].map((report, index) => (
-                        <div key={index} onClick={() => report.path && navigate(report.path)} className="group cursor-pointer bg-slate-50/70 hover:bg-slate-100/80 p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 transition-all duration-200 flex flex-col justify-between">
+                        <div key={index} onClick={() => report.path && navigate(report.path)} className="group cursor-pointer bg-slate-50/70 hover:bg-slate-100/80 p-3 rounded-xl border border-slate-100 hover:border-slate-200 transition-all duration-200 flex flex-col justify-between">
                             <div>
                                 <div className="flex items-center justify-between gap-1 mb-1">
-                                    <h3 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                                    <h3 className="text-[11px] font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                                         {report.title}
                                     </h3>
-                                    <ArrowUpRight size={14} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+                                    <ArrowUpRight size={13} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
                                 </div>
-                                <p className="text-[11px] text-slate-500 leading-normal">
+                                <p className="text-[10px] text-slate-500 leading-normal">
                                     {report.description}
                                 </p>
                             </div>

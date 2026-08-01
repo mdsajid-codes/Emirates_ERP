@@ -16,7 +16,10 @@ const Cart = ({ cart, onUpdateQuantity, onRemoveItem, onClearCart, onDiscountCha
                 <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                     <ShoppingCart size={18} /> Current Cart
                 </h2>
-                <span className="text-[11px] font-extrabold bg-slate-200 text-slate-800 px-2 py-0.5 rounded-full">
+                <span 
+                    className="text-[10px] font-black text-white px-2.5 py-0.5 rounded-full shadow-2xs"
+                    style={{ backgroundColor: posTheme?.primary || '#0f172a' }}
+                >
                     {cart.reduce((sum, item) => sum + item.quantity, 0)} Items
                 </span>
             </div>

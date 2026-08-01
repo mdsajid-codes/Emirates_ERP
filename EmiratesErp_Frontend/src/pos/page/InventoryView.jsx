@@ -430,10 +430,10 @@ const StockLevelsTab = ({ posTheme }) => {
                     ))}
                 </div>
             )}
-            <Modal isOpen={isAdjustModalOpen} onClose={() => setIsAdjustModalOpen(false)} title="Adjust Stock" size="max-w-lg">
+            <Modal isOpen={isAdjustModalOpen} onClose={() => setIsAdjustModalOpen(false)} title="Adjust Stock" size="max-w-xl">
                 <StockAdjustmentForm onSave={handleSaveAdjustment} onCancel={() => setIsAdjustModalOpen(false)} item={adjustmentItem} stores={stores} products={products} posTheme={posTheme} />
             </Modal>
-            <Modal isOpen={isAddStockModalOpen} onClose={() => setIsAddStockModalOpen(false)} title="Add Product to Stock" size="max-w-lg">
+            <Modal isOpen={isAddStockModalOpen} onClose={() => setIsAddStockModalOpen(false)} title="Add Product to Stock" size="max-w-2xl">
                 <AddStockItemForm onSave={handleSaveNewStockItem} onCancel={() => setIsAddStockModalOpen(false)} stores={stores} products={products} existingVariantIds={existingVariantIdsInStore} selectedStoreId={selectedStore} posTheme={posTheme} />
             </Modal>
         </div>
