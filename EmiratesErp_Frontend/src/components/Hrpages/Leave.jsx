@@ -4,62 +4,56 @@ import axios from 'axios';
 
 // A map for styling statuses
 const statusStyles = {
-    PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: FileClock },
-    APPROVED: { bg: 'bg-green-100', text: 'text-green-800', icon: Check },
-    REJECTED: { bg: 'bg-red-100', text: 'text-red-800', icon: X },
-    CANCELLED: { bg: 'bg-slate-100', text: 'text-slate-600', icon: X },
+    PENDING: { bg: 'bg-yellow-500/10 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-300', icon: FileClock },
+    APPROVED: { bg: 'bg-green-500/10 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-300', icon: Check },
+    REJECTED: { bg: 'bg-red-500/10 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-300', icon: X },
+    CANCELLED: { bg: 'bg-background-muted', text: 'text-foreground-muted', icon: X },
 };
 
 const LeaveCard = ({ request, onUpdate }) => {
-    const { id, leaveType, startDate, endDate, reason, status, createdAt } = request;
+    const { id, leaveType, startDate, endDate, reason, status } = request;
     const displayStatus = status || 'PENDING';
     const StatusIcon = statusStyles[displayStatus]?.icon || FileClock;
 
-    const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
+    const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
 
     return (
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex flex-col justify-between">
+        <div className="bg-card border border-border rounded-2xl p-3 shadow-xs flex flex-col justify-between space-y-2">
             <div>
                 <div className="flex justify-between items-start">
-                    <h4 className="font-semibold text-slate-800">{leaveType}</h4>
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${statusStyles[displayStatus]?.bg} ${statusStyles[displayStatus]?.text}`}>
-                        <StatusIcon className="h-3.5 w-3.5" />
+                    <h4 className="font-bold text-xs text-foreground">{leaveType}</h4>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full capitalize ${statusStyles[displayStatus]?.bg} ${statusStyles[displayStatus]?.text}`}>
+                        <StatusIcon className="h-3 w-3" />
                         {displayStatus.toLowerCase()}
                     </span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-slate-500 mt-2">
-                    <CalendarDays className="h-4 w-4" />
+                <div className="flex items-center gap-1.5 text-xs text-foreground-muted mt-1.5">
+                    <CalendarDays className="h-3.5 w-3.5 text-primary shrink-0" />
                     <span>{formatDate(startDate)}</span>
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-3 w-3 text-foreground-muted" />
                     <span>{formatDate(endDate)}</span>
                 </div>
-                <p className="text-sm text-slate-600 mt-3 flex items-start gap-2">
-                    <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <span>{reason || 'No reason provided.'}</span>
+                <p className="text-xs text-foreground-muted/90 mt-2 flex items-start gap-1.5">
+                    <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0 text-foreground-muted" />
+                    <span className="truncate">{reason || 'No reason provided.'}</span>
                 </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-slate-200">
-                {displayStatus === 'PENDING' ? (
-                    <div className="flex items-center justify-end gap-2">
-                        <button 
-                            onClick={() => onUpdate(id, 'REJECTED')}
-                            className="px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
-                        >
-                            Reject
-                        </button>
-                        <button 
-                            onClick={() => onUpdate(id, 'APPROVED')}
-                            className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-                        >
-                            Approve
-                        </button>
-                    </div>
-                ) : (
-                    <div className="text-xs text-slate-400 text-right">
-                        Applied on {formatDate(createdAt)}
-                    </div>
-                )}
-            </div>
+            {displayStatus === 'PENDING' && (
+                <div className="pt-2 border-t border-border/50 flex items-center justify-end gap-1.5">
+                    <button 
+                        onClick={() => onUpdate(id, 'REJECTED')}
+                        className="px-2.5 py-1 text-xs font-semibold text-red-600 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors"
+                    >
+                        Reject
+                    </button>
+                    <button 
+                        onClick={() => onUpdate(id, 'APPROVED')}
+                        className="px-2.5 py-1 text-xs font-semibold text-green-600 bg-green-500/10 hover:bg-green-500/20 rounded-lg transition-colors"
+                    >
+                        Approve
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

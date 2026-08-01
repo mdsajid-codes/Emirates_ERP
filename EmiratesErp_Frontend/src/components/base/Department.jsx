@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../DashboardLayout';
-import { Plus, Edit, Trash2, Loader, AlertCircle, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader, AlertCircle, X, Sparkles } from 'lucide-react';
 import axios from 'axios';
 
 const DepartmentModal = ({ isOpen, onClose, onSave, department, loading }) => {
@@ -57,7 +57,28 @@ const DepartmentModal = ({ isOpen, onClose, onSave, department, loading }) => {
                         </div>
                         <div>
                             <label htmlFor="code" className="block text-sm font-medium text-slate-700">Code</label>
-                            <input id="code" name="code" value={formData.code} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-600 focus:border-blue-600 sm:text-sm" />
+                            <div className="relative mt-1">
+                                <input 
+                                    id="code" 
+                                    name="code" 
+                                    value={formData.code} 
+                                    onChange={handleChange} 
+                                    required 
+                                    className="block w-full px-3 py-2 pr-10 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-600 focus:border-blue-600 sm:text-sm" 
+                                    placeholder="e.g. DEPT1001"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const randomCode = 'DEPT' + Math.floor(1000 + Math.random() * 9000);
+                                        setFormData(prev => ({ ...prev, code: randomCode }));
+                                    }}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                                    title="Auto Generate Department Code (DEPT + 4 digits)"
+                                >
+                                    <Sparkles className="h-4 w-4" />
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label htmlFor="description" className="block text-sm font-medium text-slate-700">Description</label>

@@ -10,8 +10,11 @@
   --font-family-heading: "Poppins", sans-serif;
 }
 
-html, body {
+html, body, #root {
   font-family: var(--font-family-sans);
+  background-color: var(--color-background, #f8fafc);
+  height: 100%;
+  overflow: hidden;
 }
 
 @tailwind base;
