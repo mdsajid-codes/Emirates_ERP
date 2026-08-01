@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../DashboardLayout';
-import { Plus, Edit, Trash2, Loader, AlertCircle, X, RefreshCw } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader, AlertCircle, Save, ArrowLeft, RefreshCw } from 'lucide-react';
 import axios from 'axios';
-import SyncPolicyModal from '../attendance/SyncPolicyModal';
+import SyncPolicyView from '../attendance/SyncPolicyView';
 
-// Modal for adding/editing shift policies
-const ShiftPolicyModal = ({ isOpen, onClose, onSave, policy, loading }) => {
+const ShiftPolicy = ({ embedded = false }) => {
+    const [policies, setPolicies] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
+    const [viewMode, setViewMode] = useState('list'); // 'list' | 'form' | 'sync'
+    const [editingPolicy, setEditingPolicy] = useState(null);
+    const [syncingPolicy, setSyncingPolicy] = useState(null);
+
     const [formData, setFormData] = useState({
         policyName: '',
         shiftStartTime: '09:30',
@@ -13,107 +20,6 @@ const ShiftPolicyModal = ({ isOpen, onClose, onSave, policy, loading }) => {
         isDefault: false,
         description: ''
     });
-    const [modalError, setModalError] = useState('');
-
-    useEffect(() => {
-        if (policy) {
-            setFormData({
-                policyName: policy.policyName || '',
-                shiftStartTime: policy.shiftStartTime || '09:30',
-                shiftEndTime: policy.shiftEndTime || '18:30',
-                isDefault: policy.isDefault || false,
-                description: policy.description || ''
-            });
-        } else {
-            setFormData({
-                policyName: '',
-                shiftStartTime: '09:30',
-                shiftEndTime: '18:30',
-                isDefault: false,
-                description: ''
-            });
-        }
-        setModalError('');
-    }, [policy, isOpen]);
-
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!formData.policyName.trim()) {
-            setModalError('Policy Name is required.');
-            return;
-        }
-        onSave(formData);
-    };
-
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4 transition-all">
-            <div className="bg-card rounded-theme shadow-2xl w-full max-w-lg border border-border overflow-hidden">
-                <div className="p-4 border-b border-border flex justify-between items-center bg-background-muted">
-                    <h2 className="text-xl font-bold text-foreground">{policy ? 'Edit' : 'Add'} Shift Policy</h2>
-                    <button onClick={onClose} className="p-2 rounded-full text-foreground-muted hover:bg-background-muted hover:text-foreground transition-colors">
-                        <X className="h-5 w-5" />
-                    </button>
-                </div>
-                <form onSubmit={handleSubmit}>
-                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto">
-                        <div className="md:col-span-2">
-                            <label htmlFor="policyName" className="block text-sm font-medium text-foreground-muted mb-1">Policy Name</label>
-                            <input id="policyName" name="policyName" value={formData.policyName} onChange={handleChange} required className="input bg-background border-border rounded-theme text-foreground focus:ring-primary focus:border-primary" />
-                        </div>
-                        <div>
-                            <label htmlFor="shiftStartTime" className="block text-sm font-medium text-foreground-muted mb-1">Shift Start Time</label>
-                            <input id="shiftStartTime" name="shiftStartTime" type="time" value={formData.shiftStartTime} onChange={handleChange} required className="input bg-background border-border rounded-theme text-foreground focus:ring-primary focus:border-primary" />
-                        </div>
-                        <div>
-                            <label htmlFor="shiftEndTime" className="block text-sm font-medium text-foreground-muted mb-1">Shift End Time</label>
-                            <input id="shiftEndTime" name="shiftEndTime" type="time" value={formData.shiftEndTime} onChange={handleChange} required className="input bg-background border-border rounded-theme text-foreground focus:ring-primary focus:border-primary" />
-                        </div>
-                        <div className="md:col-span-2">
-                            <label htmlFor="description" className="block text-sm font-medium text-foreground-muted mb-1">Description</label>
-                            <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows="3" className="input bg-background border-border rounded-theme text-foreground focus:ring-primary focus:border-primary" />
-                        </div>
-                        <div className="md:col-span-2">
-                            <label className="inline-flex items-center cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    name="isDefault"
-                                    checked={formData.isDefault}
-                                    onChange={handleChange}
-                                    className="h-4 w-4 rounded-theme border-border text-primary focus:ring-primary"
-                                />
-                                <span className="ml-2 text-sm text-foreground font-medium">Set as Default Policy</span>
-                            </label>
-                        </div>
-                        {modalError && <p className="md:col-span-2 text-error text-sm font-medium flex items-center gap-1"><AlertCircle size={14} /> {modalError}</p>}
-                    </div>
-                    <div className="p-4 border-t border-border bg-background-muted flex justify-end gap-2">
-                        <button type="button" onClick={onClose} className="btn-secondary rounded-theme" disabled={loading}>Cancel</button>
-                        <button type="submit" className="btn-primary flex items-center rounded-theme shadow-lg shadow-primary/20" disabled={loading}>
-                            {loading && <Loader className="animate-spin h-4 w-4 mr-2" />}
-                            {policy ? 'Update Policy' : 'Create Policy'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-};
-
-const ShiftPolicy = ({ embedded = false }) => {
-    const [policies, setPolicies] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [modalLoading, setModalLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingPolicy, setEditingPolicy] = useState(null);
-    const [syncingPolicy, setSyncingPolicy] = useState(null);
 
     const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -140,12 +46,26 @@ const ShiftPolicy = ({ embedded = false }) => {
 
     const handleAdd = () => {
         setEditingPolicy(null);
-        setIsModalOpen(true);
+        setFormData({
+            policyName: '',
+            shiftStartTime: '09:30',
+            shiftEndTime: '18:30',
+            isDefault: false,
+            description: ''
+        });
+        setViewMode('form');
     };
 
     const handleEdit = (policy) => {
         setEditingPolicy(policy);
-        setIsModalOpen(true); // This was already correct, just confirming.
+        setFormData({
+            policyName: policy.policyName || '',
+            shiftStartTime: policy.shiftStartTime || '09:30',
+            shiftEndTime: policy.shiftEndTime || '18:30',
+            isDefault: policy.isDefault || false,
+            description: policy.description || ''
+        });
+        setViewMode('form');
     };
 
     const handleDelete = async (policyId, policyName) => {
@@ -157,38 +77,43 @@ const ShiftPolicy = ({ embedded = false }) => {
                 });
                 setPolicies(policies.filter(p => p.id !== policyId));
             } catch (err) {
-                setError('Failed to delete policy.');
-                console.error(err);
+                console.error('Failed to delete policy:', err);
             }
         }
     };
 
-    const handleSave = async (policyData) => {
-        setModalLoading(true);
+    const handleSave = async (e) => {
+        e.preventDefault();
+        if (!formData.policyName.trim()) {
+            setError('Policy Name is required.');
+            return;
+        }
+        setSaving(true);
         setError('');
         try {
             const token = localStorage.getItem('token');
             if (editingPolicy) {
-                await axios.put(`${API_URL}/shift-policies/${editingPolicy.id}`, policyData, {
+                await axios.put(`${API_URL}/shift-policies/${editingPolicy.id}`, formData, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
             } else {
-                await axios.post(`${API_URL}/shift-policies`, policyData, {
+                await axios.post(`${API_URL}/shift-policies`, formData, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
             }
-            setIsModalOpen(false);
+            setViewMode('list');
             fetchPolicies();
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to save policy. The name might already exist.');
             console.error(err);
         } finally {
-            setModalLoading(false);
+            setSaving(false);
         }
     };
 
     const handleOpenSyncModal = (policy) => {
         setSyncingPolicy(policy);
+        setViewMode('sync');
     };
 
     const handleConfirmSync = async (policy, selectedEmployeeCodes) => {
@@ -205,8 +130,6 @@ const ShiftPolicy = ({ embedded = false }) => {
             const token = localStorage.getItem('token');
             const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-            // Find an Attendance Policy that uses this Shift Policy.
-            // We'll prefer a default one if available.
             const attendancePoliciesRes = await axios.get(`${BASE_URL}/attendance-policies`, { headers: { "Authorization": `Bearer ${token}` } });
             const attendancePolicyToSync = attendancePoliciesRes.data.find(p => p.shiftPolicy?.id === policy.id && p.isDefault) 
                                           || attendancePoliciesRes.data.find(p => p.shiftPolicy?.id === policy.id);
@@ -228,106 +151,240 @@ const ShiftPolicy = ({ embedded = false }) => {
             }
             alert(`Sync complete using Attendance Policy "${attendancePolicyToSync.policyName}"!\n- ${successCount} employees updated successfully.\n- ${errorCount} updates failed.`);
         } catch (err) {
-            setError('An unexpected error occurred during the sync process.');
-            console.error(err);
+            console.error('An unexpected error occurred during the sync process:', err);
         }
     };
 
     const content = (
-        <>
-            <div className="p-6 md:p-8 bg-background">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-3xl font-black text-foreground tracking-tight">Shift Policies</h1>
-                    <button
-                        onClick={handleAdd}
-                        className="btn-primary flex items-center rounded-theme shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
-                        <Plus className="h-5 w-5 mr-1" />
-                        New Policy
-                    </button>
-                </div>
-
-                {error && (
-                    <div className="bg-error/10 border border-error/20 text-error px-4 py-3 rounded-theme relative mb-6 flex items-center gap-2 font-medium" role="alert">
-                        <AlertCircle className="h-5 w-5" />
-                        <span>{error}</span>
-                    </div>
-                )}
-
-                <div className="bg-card rounded-theme shadow-sm overflow-hidden border border-border">
-                    {loading ? (
-                        <div className="flex justify-center items-center h-80"><Loader className="h-8 w-8 animate-spin text-primary" /></div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full">
-                                <thead className="bg-background-muted">
-                                    <tr>
-                                        <th className="th-cell text-[10px] text-foreground-muted uppercase tracking-widest font-black">Policy Name</th>
-                                        <th className="th-cell text-[10px] text-foreground-muted uppercase tracking-widest font-black">Shift Time</th>
-                                        <th className="th-cell text-[10px] text-foreground-muted uppercase tracking-widest font-black">Default</th>
-                                        <th className="th-cell text-[10px] text-foreground-muted uppercase tracking-widest font-black text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-foreground">
-                                    {policies.length > 0 ? (
-                                        policies.map(p => (
-                                            <tr key={p.id} className="border-b border-border hover:bg-background-muted transition-colors">
-                                                <td className="td-cell font-bold text-foreground">{p.policyName}</td>
-                                                <td className="td-cell">
-                                                    <span className="px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-mono font-bold">
-                                                        {p.shiftStartTime} - {p.shiftEndTime}
-                                                    </span>
-                                                </td>
-                                                <td className="td-cell">
-                                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-tighter uppercase ${p.isDefault ? 'bg-success/10 text-success border border-success/20' : 'bg-foreground-muted/10 text-foreground-muted opacity-50'}`}>
-                                                        {p.isDefault ? 'PRIMARY' : 'SECONDARY'}
-                                                    </span>
-                                                </td>
-                                                <td className="td-cell text-right">
-                                                    <div className="flex items-center justify-end gap-1"> 
-                                                        <button onClick={() => handleOpenSyncModal(p)} className="p-2 text-foreground-muted hover:text-success hover:bg-success/10 rounded-full transition-all" title="Sync to employees" disabled={!!syncingPolicy}>
-                                                            {syncingPolicy?.id === p.id
-                                                                ? <Loader className="h-4 w-4 animate-spin" />
-                                                                : <RefreshCw className="h-4 w-4" />}
-                                                        </button>
-                                                        <button onClick={() => handleEdit(p)} className="p-2 text-foreground-muted hover:text-primary hover:bg-primary/10 rounded-full transition-all" title="Edit" disabled={!!syncingPolicy}>
-                                                            <Edit className="h-4 w-4" />
-                                                        </button>
-                                                        <button onClick={() => handleDelete(p.id, p.policyName)} className="p-2 text-foreground-muted hover:text-error hover:bg-error/10 rounded-full transition-all" title="Delete" disabled={!!syncingPolicy}>
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="4" className="text-center py-24 text-foreground-muted">
-                                                <AlertCircle className="mx-auto h-16 w-16 text-foreground-muted opacity-10 mb-4" />
-                                                <h3 className="text-xl font-bold text-foreground">No shift policies found</h3>
-                                                <p className="mt-2 text-sm max-w-xs mx-auto">Configure your first industrial or office shift policy to begin tracking employee attendance cycles.</p>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+        <div className={`${embedded ? '' : 'p-4 md:p-6'} space-y-4 text-foreground bg-background min-h-full w-full pb-8`}>
+            {viewMode === 'list' ? (
+                <>
+                    {!embedded && (
+                        <div className="flex justify-between items-center pb-2 border-b border-border/60">
+                            <h2 className="text-xs font-bold text-foreground">Shift Policies</h2>
+                            <button
+                                onClick={handleAdd}
+                                className="px-3 py-1.5 bg-primary text-primary-foreground font-bold text-xs rounded-lg hover:bg-primary/90 transition-all shadow-2xs flex items-center gap-1.5"
+                            >
+                                <Plus className="h-3.5 w-3.5" /> New Policy
+                            </button>
                         </div>
                     )}
-                </div>
-            </div>
-            <ShiftPolicyModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSave={handleSave}
-                policy={editingPolicy}
-                loading={modalLoading}
-            />
-            <SyncPolicyModal 
-                isOpen={!!syncingPolicy} 
-                onClose={() => setSyncingPolicy(null)} 
-                policy={syncingPolicy}
-                onSync={handleConfirmSync}
-            />
-        </>
+
+                    {embedded && (
+                        <div className="flex justify-between items-center pb-2 border-b border-border/60">
+                            <h2 className="text-xs font-bold text-foreground">Shift Policies</h2>
+                            <button
+                                onClick={handleAdd}
+                                className="px-3 py-1.5 bg-primary text-primary-foreground font-bold text-xs rounded-lg hover:bg-primary/90 transition-all shadow-2xs flex items-center gap-1.5"
+                            >
+                                <Plus className="h-3.5 w-3.5" /> New Policy
+                            </button>
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="bg-error/10 border border-error/20 text-error px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 font-medium">
+                            <AlertCircle className="h-4 w-4 shrink-0" />
+                            <span>{error}</span>
+                        </div>
+                    )}
+
+                    <div className="bg-card rounded-2xl shadow-xs border border-border overflow-hidden">
+                        {loading ? (
+                            <div className="flex justify-center items-center h-48">
+                                <Loader className="h-6 w-6 animate-spin text-primary" />
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-xs border-collapse">
+                                    <thead className="bg-background-muted/70 border-b border-border text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
+                                        <tr>
+                                            <th className="px-4 py-2.5">Policy Name</th>
+                                            <th className="px-4 py-2.5">Shift Time</th>
+                                            <th className="px-4 py-2.5">Default</th>
+                                            <th className="px-4 py-2.5 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border/60">
+                                        {policies.length > 0 ? (
+                                            policies.map(p => (
+                                                <tr key={p.id} className="hover:bg-background-muted/50 transition-colors">
+                                                    <td className="px-4 py-2.5 font-bold text-foreground">{p.policyName}</td>
+                                                    <td className="px-4 py-2.5">
+                                                        <span className="px-2.5 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-md text-[11px] font-mono font-bold">
+                                                            {p.shiftStartTime} - {p.shiftEndTime}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-2.5">
+                                                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border ${p.isDefault ? 'bg-primary/10 text-primary border-primary/20' : 'bg-background-muted text-foreground-muted border-border'}`}>
+                                                            {p.isDefault ? 'PRIMARY' : 'SECONDARY'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-2.5 text-right">
+                                                        <div className="flex items-center justify-end gap-1"> 
+                                                            <button 
+                                                                onClick={() => handleOpenSyncModal(p)} 
+                                                                className="p-1 text-foreground-muted hover:text-primary hover:bg-background-muted rounded-lg transition-colors" 
+                                                                title="Sync to employees" 
+                                                            >
+                                                                <RefreshCw className="h-3.5 w-3.5" />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleEdit(p)} 
+                                                                className="p-1 text-foreground-muted hover:text-primary hover:bg-background-muted rounded-lg transition-colors" 
+                                                                title="Edit Policy" 
+                                                            >
+                                                                <Edit className="h-3.5 w-3.5" />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleDelete(p.id, p.policyName)} 
+                                                                className="p-1 text-foreground-muted hover:text-red-600 hover:bg-background-muted rounded-lg transition-colors" 
+                                                                title="Delete Policy" 
+                                                            >
+                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="4" className="text-center py-10 text-foreground-muted">
+                                                    <AlertCircle className="mx-auto h-8 w-8 text-foreground-muted/40 mb-2" />
+                                                    <h3 className="text-xs font-bold text-foreground">No shift policies found</h3>
+                                                    <p className="mt-1 text-[11px] text-foreground-muted max-w-xs mx-auto">Configure your first shift policy to begin tracking employee attendance cycles.</p>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </>
+            ) : viewMode === 'form' ? (
+                /* In-Page Form View */
+                <form onSubmit={handleSave} className="w-full space-y-4">
+                    {/* Header bar with Back button */}
+                    <div className="flex items-center justify-between pb-2 border-b border-border/60">
+                        <div className="flex items-center gap-2.5">
+                            <button 
+                                type="button"
+                                onClick={() => setViewMode('list')} 
+                                className="p-1.5 hover:bg-background-muted rounded-lg border border-border flex items-center gap-1.5 text-xs font-semibold transition-colors"
+                            >
+                                <ArrowLeft className="h-3.5 w-3.5" />
+                                <span>Back to Shift Policies</span>
+                            </button>
+                            <h2 className="text-xs font-bold text-foreground">
+                                {editingPolicy ? 'Edit Shift Policy' : 'Create Shift Policy'}
+                            </h2>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button 
+                                type="button" 
+                                onClick={() => setViewMode('list')} 
+                                className="px-3 py-1 text-xs font-semibold text-foreground-muted hover:bg-background-muted border border-border rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="submit" 
+                                disabled={saving}
+                                className="px-3.5 py-1 bg-primary text-primary-foreground font-bold text-xs rounded-lg hover:bg-primary/90 transition-all shadow-2xs flex items-center gap-1.5 disabled:opacity-50"
+                            >
+                                {saving ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
+                                {saving ? 'Saving...' : 'Save Policy'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {error && (
+                        <div className="bg-error/10 border border-error/20 text-error px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 font-medium">
+                            <AlertCircle className="h-4 w-4 shrink-0" />
+                            <span>{error}</span>
+                        </div>
+                    )}
+
+                    {/* Policy Details Card */}
+                    <div className="bg-card p-3.5 rounded-xl shadow-xs border border-border space-y-3">
+                        <h3 className="text-xs font-bold text-foreground border-b border-border pb-1.5">Policy Details</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                            <div className="sm:col-span-2 lg:col-span-1">
+                                <label htmlFor="policyName" className="block text-[11px] font-semibold text-foreground-muted mb-1">Policy Name</label>
+                                <input 
+                                    id="policyName" 
+                                    name="policyName" 
+                                    value={formData.policyName} 
+                                    onChange={(e) => setFormData(p => ({ ...p, policyName: e.target.value }))} 
+                                    required 
+                                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all" 
+                                    placeholder="e.g. Standard Morning Shift" 
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="shiftStartTime" className="block text-[11px] font-semibold text-foreground-muted mb-1">Shift Start Time</label>
+                                <input 
+                                    id="shiftStartTime" 
+                                    name="shiftStartTime" 
+                                    type="time" 
+                                    value={formData.shiftStartTime} 
+                                    onChange={(e) => setFormData(p => ({ ...p, shiftStartTime: e.target.value }))} 
+                                    required 
+                                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all font-mono" 
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="shiftEndTime" className="block text-[11px] font-semibold text-foreground-muted mb-1">Shift End Time</label>
+                                <input 
+                                    id="shiftEndTime" 
+                                    name="shiftEndTime" 
+                                    type="time" 
+                                    value={formData.shiftEndTime} 
+                                    onChange={(e) => setFormData(p => ({ ...p, shiftEndTime: e.target.value }))} 
+                                    required 
+                                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all font-mono" 
+                                />
+                            </div>
+                            <div className="sm:col-span-2 lg:col-span-3 pt-1">
+                                <label className="inline-flex items-center cursor-pointer gap-2">
+                                    <input
+                                        type="checkbox"
+                                        name="isDefault"
+                                        checked={formData.isDefault}
+                                        onChange={(e) => setFormData(p => ({ ...p, isDefault: e.target.checked }))}
+                                        className="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary accent-primary"
+                                    />
+                                    <span className="text-xs text-foreground font-semibold">Set as Default Policy</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Description Card */}
+                    <div className="bg-card p-3.5 rounded-xl shadow-xs border border-border space-y-3">
+                        <h3 className="text-xs font-bold text-foreground border-b border-border pb-1.5">Description</h3>
+                        <textarea 
+                            id="description" 
+                            name="description" 
+                            value={formData.description} 
+                            onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))} 
+                            rows="3" 
+                            className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all resize-none" 
+                            placeholder="Optional shift notes or details..."
+                        />
+                    </div>
+                </form>
+            ) : (
+                /* In-Page Sync View */
+                <SyncPolicyView 
+                    policy={syncingPolicy} 
+                    onBack={() => setViewMode('list')} 
+                    onSync={handleConfirmSync} 
+                />
+            )}
+        </div>
     );
 
     if (embedded) {

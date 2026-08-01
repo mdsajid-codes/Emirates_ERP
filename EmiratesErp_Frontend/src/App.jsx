@@ -14,6 +14,7 @@ const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const HrDashboard = lazy(() => import('./pages/HrDashboard'));
 const Employee = lazy(() => import('./pages/Employee'));
+const AddEmployeePage = lazy(() => import('./pages/AddEmployeePage'));
 const MasterAdmin = lazy(() => import('./pages/MasterAdmin'));
 const EmployeeDashboard = lazy(() => import('./pages/EmployeeDashboard'));
 const UsersDetails = lazy(() => import('./pages/UsersDetails'));
@@ -359,9 +360,15 @@ function App() {
             {/* ── HRMS ──────────────────────────────────────────────── */}
             <Route path='/hrdashboard' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><HrDashboard /></ProtectedRoute>} />
             <Route path='/employees' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><Employee /></ProtectedRoute>} />
+            <Route path='/employees/add' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><AddEmployeePage /></ProtectedRoute>} />
             <Route path='/attendance' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><Attendance /></ProtectedRoute>} />
+            <Route path='/attendance/*' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><Attendance /></ProtectedRoute>} />
             <Route path='/leave' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><LeaveManagement /></ProtectedRoute>} />
+            <Route path='/leave/*' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><LeaveManagement /></ProtectedRoute>} />
             <Route path='/payroll-management' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><PayrollManagement /></ProtectedRoute>} />
+            <Route path='/payroll-management/*' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><PayrollManagement /></ProtectedRoute>} />
+            <Route path='/payroll' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><PayrollManagement /></ProtectedRoute>} />
+            <Route path='/payroll/*' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><PayrollManagement /></ProtectedRoute>} />
             <Route path='/sick-leave-settings' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><SickLeaveManagement /></ProtectedRoute>} />
             <Route path='/work-schedules' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><WorkScheduleManagement /></ProtectedRoute>} />
             <Route path='/work-calendar' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><WorkCalendarManagement /></ProtectedRoute>} />

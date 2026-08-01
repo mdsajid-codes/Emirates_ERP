@@ -1,24 +1,78 @@
 import React, { useState, useEffect } from 'react';
-import { Pencil, Check, X, Loader } from 'lucide-react';
+import { Pencil, Check, X, Loader, ChevronDown } from 'lucide-react';
 import axios from 'axios';
 
 // Reusable component for a field in a profile card
 const InfoField = ({ label, value }) => (
-    <div>
-        <p className="text-sm text-foreground-muted">{label}</p>
-        <p className="text-base font-medium text-foreground">{value || 'N/A'}</p>
+    <div className="bg-background/60 border border-border/60 rounded-xl p-2.5 space-y-0.5 shadow-2xs">
+        <p className="text-[10px] font-bold text-foreground-muted uppercase tracking-wider">{label}</p>
+        <p className="text-xs font-semibold text-foreground truncate">{value || 'N/A'}</p>
     </div>
 );
 
 // Reusable card component for profile sections
 const ProfileCard = ({ title, children }) => (
-    <div className="bg-background-muted rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-foreground border-b border-border pb-3 mb-4">{title}</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
+    <div className="bg-card border border-border rounded-2xl p-3 shadow-xs space-y-2.5">
+        <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
+            <h3 className="text-xs font-bold text-foreground tracking-tight">{title}</h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
             {children}
         </div>
     </div>
 );
+
+// Custom Container Dropdown Component
+const CustomSelect = ({ value, options, onChange, placeholder = "Select..." }) => {
+    const [open, setOpen] = useState(false);
+    const selectedOption = options.find(o => String(o.value) === String(value));
+
+    return (
+        <div className="relative w-full">
+            <button
+                type="button"
+                onClick={() => setOpen(!open)}
+                className="w-full bg-background border border-border hover:border-primary/50 rounded-lg px-2.5 py-1.5 text-xs text-foreground flex items-center justify-between transition-all shadow-xs"
+            >
+                <span className="truncate font-medium">{selectedOption ? selectedOption.label : placeholder}</span>
+                <ChevronDown className={`h-3.5 w-3.5 text-foreground-muted shrink-0 transition-transform duration-200 ${open ? 'rotate-180 text-primary' : ''}`} />
+            </button>
+
+            {open && (
+                <>
+                    <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+                    <div className="absolute left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-2xl py-1.5 z-50 max-h-48 overflow-y-auto no-scrollbar animate-in fade-in zoom-in-95 duration-100">
+                        {options.length > 0 ? (
+                            options.map((opt) => {
+                                const isSelected = String(opt.value) === String(value);
+                                return (
+                                    <button
+                                        key={opt.value}
+                                        type="button"
+                                        onClick={() => {
+                                            onChange(opt.value);
+                                            setOpen(false);
+                                        }}
+                                        className={`w-full px-3 py-1.5 text-xs text-left flex items-center justify-between transition-colors ${
+                                            isSelected 
+                                                ? 'bg-primary/10 text-primary font-bold' 
+                                                : 'text-foreground hover:bg-background-muted'
+                                        }`}
+                                    >
+                                        <span className="truncate">{opt.label}</span>
+                                        {isSelected && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
+                                    </button>
+                                );
+                            })
+                        ) : (
+                            <div className="px-3 py-2 text-xs text-foreground-muted text-center">No options available</div>
+                        )}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
 
 // Reusable component for an editable field
 const EditField = ({ label, name, value, onChange, type = 'text', options = [] }) => {
@@ -27,21 +81,28 @@ const EditField = ({ label, name, value, onChange, type = 'text', options = [] }
         name: name,
         value: value ?? '',
         onChange: onChange,
-        className: "input bg-background-muted border-border text-foreground"
+        className: "w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all"
     };
 
     return (
-        <div>
-            <label htmlFor={name} className="block text-sm font-medium text-foreground-muted">{label}</label>
+        <div className="space-y-1">
+            <label htmlFor={name} className="block text-[11px] font-bold text-foreground-muted uppercase tracking-wider">{label}</label>
             {type === 'textarea' ? (
-                <textarea {...commonProps} rows="3" />
+                <textarea {...commonProps} rows={2} />
             ) : type === 'select' ? (
-                <select {...commonProps}>
-                    <option value="">Select...</option>
-                    {options.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                </select>
+                <CustomSelect
+                    value={value}
+                    options={options}
+                    onChange={(val) => {
+                        onChange({
+                            target: {
+                                name: name,
+                                value: val,
+                            }
+                        });
+                    }}
+                    placeholder="Select..."
+                />
             ) : (
                 <input {...commonProps} type={type} />
             )}
@@ -139,19 +200,19 @@ const Address = ({ employee }) => {
     const currentData = isEditing ? formData : profile || {};
 
     return (
-        <div>
-            <div className="flex justify-end mb-4 gap-2">
+        <div className="space-y-2.5">
+            <div className="flex justify-end gap-2">
                 {isEditing ? (
                     <>
-                        <button onClick={handleCancel} className="btn-secondary">Cancel</button>
-                        <button onClick={handleSave} className="btn-primary flex items-center" disabled={saveLoading}>
-                            {saveLoading ? <Loader className="animate-spin h-4 w-4 mr-2" /> : <Check className="h-4 w-4 mr-2" />}
-                            Save
+                        <button onClick={handleCancel} className="px-3 py-1.5 rounded-lg border border-border hover:bg-background-muted text-xs font-semibold transition-colors" disabled={saveLoading}>Cancel</button>
+                        <button onClick={handleSave} className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs" disabled={saveLoading}>
+                            {saveLoading ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+                            Save Details
                         </button>
                     </>
                 ) : (
-                    <button onClick={() => setIsEditing(true)} className="btn-primary flex items-center">
-                        <Pencil className="h-4 w-4 mr-2" />
+                    <button onClick={() => setIsEditing(true)} className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs">
+                        <Pencil className="h-3.5 w-3.5" />
                         Edit Details
                     </button>
                 )}

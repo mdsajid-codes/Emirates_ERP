@@ -33,13 +33,16 @@ const AttendencePolicy = () => {
 
     if (activeItem) {
         return (
-            <div className="p-4 sm:p-6">
-                <div className="flex items-center mb-6">
-                    <button onClick={() => setActiveItem(null)} className="btn-secondary flex items-center mr-4">
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back
+            <div className="p-4 md:p-6 space-y-4">
+                <div className="flex items-center gap-2.5 pb-2 border-b border-border/60">
+                    <button 
+                        onClick={() => setActiveItem(null)} 
+                        className="p-1.5 hover:bg-background-muted rounded-lg border border-border flex items-center gap-1.5 text-xs font-semibold transition-colors"
+                    >
+                        <ArrowLeft className="h-3.5 w-3.5" />
+                        <span>Back to Policies</span>
                     </button>
-                    <h2 className="text-xl font-bold text-foreground">Manage {activeItem.name}</h2>
+                    <h2 className="text-xs font-bold text-foreground">Manage {activeItem.name}</h2>
                 </div>
                 {activeItem.component}
             </div>
@@ -47,19 +50,23 @@ const AttendencePolicy = () => {
     }
 
     return (
-        <div className="p-4 sm:p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            {policyItems.map((item) => (
-                <button
-                    key={item.name}
-                    onClick={() => handleItemClick(item)}
-                    className="aspect-square flex flex-col items-center justify-center bg-card p-6 rounded-theme shadow-sm border border-border/50 hover:shadow-md hover:bg-background-muted transition-all transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                >
-                    <div className={`p-4 ${item.bgColor} ${item.color} rounded-theme mb-4`}>
-                        <item.icon className="h-8 w-8" />
-                    </div>
-                    <span className="text-center text-sm font-medium text-foreground">{item.name}</span>
-                </button>
-            ))}
+        <div className="p-4 md:p-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5">
+                {policyItems.map((item) => (
+                    <button
+                        key={item.name}
+                        onClick={() => handleItemClick(item)}
+                        className="group flex flex-col items-center justify-center p-4 rounded-2xl bg-card border border-border/80 shadow-2xs hover:shadow-md hover:border-primary/40 hover:bg-background-muted/40 transition-all duration-200 focus:outline-none cursor-pointer"
+                    >
+                        <div className={`w-11 h-11 rounded-full flex items-center justify-center ${item.bgColor} ${item.color} mb-2.5 shadow-2xs border border-current/10 group-hover:scale-110 transition-transform duration-200`}>
+                            <item.icon className="h-5 w-5" />
+                        </div>
+                        <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors text-center line-clamp-2 leading-tight">
+                            {item.name}
+                        </span>
+                    </button>
+                ))}
+            </div>
         </div>
     );
 };

@@ -1,14 +1,66 @@
 import React, { useState, useEffect } from 'react';
-import { Pencil, Check, X, Loader } from 'lucide-react';
+import { Pencil, Check, X, Loader, ChevronDown } from 'lucide-react';
 import axios from 'axios';
 
 // Reusable component for a field in view mode
 const InfoField = ({ label, value }) => (
-    <div>
-        <p className="text-sm text-foreground-muted">{label}</p>
-        <p className="text-base font-medium text-foreground">{value || 'N/A'}</p>
+    <div className="bg-background/60 border border-border/60 rounded-xl p-2.5 space-y-0.5 shadow-2xs">
+        <p className="text-[10px] font-bold text-foreground-muted uppercase tracking-wider">{label}</p>
+        <p className="text-xs font-semibold text-foreground truncate">{value || 'N/A'}</p>
     </div>
 );
+
+// Custom Container Dropdown Component
+const CustomSelect = ({ value, options, onChange, placeholder = "Select..." }) => {
+    const [open, setOpen] = useState(false);
+    const selectedOption = options.find(o => String(o.value) === String(value));
+
+    return (
+        <div className="relative w-full">
+            <button
+                type="button"
+                onClick={() => setOpen(!open)}
+                className="w-full bg-background border border-border hover:border-primary/50 rounded-lg px-2.5 py-1.5 text-xs text-foreground flex items-center justify-between transition-all shadow-xs"
+            >
+                <span className="truncate font-medium">{selectedOption ? selectedOption.label : placeholder}</span>
+                <ChevronDown className={`h-3.5 w-3.5 text-foreground-muted shrink-0 transition-transform duration-200 ${open ? 'rotate-180 text-primary' : ''}`} />
+            </button>
+
+            {open && (
+                <>
+                    <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+                    <div className="absolute left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-2xl py-1.5 z-50 max-h-48 overflow-y-auto no-scrollbar animate-in fade-in zoom-in-95 duration-100">
+                        {options.length > 0 ? (
+                            options.map((opt) => {
+                                const isSelected = String(opt.value) === String(value);
+                                return (
+                                    <button
+                                        key={opt.value}
+                                        type="button"
+                                        onClick={() => {
+                                            onChange(opt.value);
+                                            setOpen(false);
+                                        }}
+                                        className={`w-full px-3 py-1.5 text-xs text-left flex items-center justify-between transition-colors ${
+                                            isSelected 
+                                                ? 'bg-primary/10 text-primary font-bold' 
+                                                : 'text-foreground hover:bg-background-muted'
+                                        }`}
+                                    >
+                                        <span className="truncate">{opt.label}</span>
+                                        {isSelected && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
+                                    </button>
+                                );
+                            })
+                        ) : (
+                            <div className="px-3 py-2 text-xs text-foreground-muted text-center">No options available</div>
+                        )}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
 
 // Reusable component for an editable field
 const EditField = ({ label, name, value, onChange, type = 'text', options = [] }) => {
@@ -17,19 +69,26 @@ const EditField = ({ label, name, value, onChange, type = 'text', options = [] }
         name: name,
         value: value ?? '',
         onChange: onChange,
-        className: "input bg-background-muted border-border text-foreground"
+        className: "w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all"
     };
 
     return (
-        <div>
-            <label htmlFor={name} className="block text-sm font-medium text-foreground-muted">{label}</label>
+        <div className="space-y-1">
+            <label htmlFor={name} className="block text-[11px] font-bold text-foreground-muted uppercase tracking-wider">{label}</label>
             {type === 'select' ? (
-                <select {...commonProps}>
-                    <option value="">Select...</option>
-                    {options.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                </select>
+                <CustomSelect
+                    value={value}
+                    options={options}
+                    onChange={(val) => {
+                        onChange({
+                            target: {
+                                name: name,
+                                value: val,
+                            }
+                        });
+                    }}
+                    placeholder="Select..."
+                />
             ) : (
                 <input {...commonProps} type={type} />
             )}
@@ -198,45 +257,37 @@ const TimeAttendence = ({ employee }) => {
     ];
 
     return (
-        <div>
-            <div className="flex justify-end mb-4 gap-2">
+        <div className="space-y-2.5">
+            <div className="flex justify-end gap-2">
                 {isEditing ? (
                     <>
-                        <button onClick={handleCancel} className="btn-secondary">Cancel</button>
-                        <button onClick={handleSave} className="btn-primary flex items-center" disabled={saveLoading}>
-                            {saveLoading ? <Loader className="animate-spin h-4 w-4 mr-2" /> : <Check className="h-4 w-4 mr-2" />}
-                            Save
+                        <button onClick={handleCancel} className="px-3 py-1.5 rounded-lg border border-border hover:bg-background-muted text-xs font-semibold transition-colors" disabled={saveLoading}>Cancel</button>
+                        <button onClick={handleSave} className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs" disabled={saveLoading}>
+                            {saveLoading ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+                            Save Policy
                         </button>
                     </>
                 ) : (
-                    <button onClick={() => setIsEditing(true)} className="btn-primary flex items-center">
-                        <Pencil className="h-4 w-4 mr-2" />
+                    <button onClick={() => setIsEditing(true)} className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs">
+                        <Pencil className="h-3.5 w-3.5" />
                         Edit Policy
                     </button>
                 )}
             </div>
-            {error && <div className="text-center text-red-600 p-3 bg-red-500/10 rounded-md mb-4">{error}</div>}
-            <div className="bg-background-muted rounded-lg p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-5">
+            {error && <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-600 rounded-xl text-xs font-semibold">{error}</div>}
+            
+            <div className="bg-card border border-border rounded-2xl p-3 shadow-xs space-y-2.5">
+                <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
+                    <h3 className="text-xs font-bold text-foreground tracking-tight">Time & Attendance Policy Assignments</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                     {fields.map(field => (
                         isEditing ? (
-                            <EditField key={field.name} {...field} value={formData[field.name]} onChange={handleChange} />
-                        ) : field.viewValue ? (
-                            <InfoField key={field.name} label={field.label} value={field.viewValue} />
+                            <EditField key={field.name} label={field.label} name={field.name} value={formData[field.name]} onChange={handleChange} type={field.type} options={field.options} />
                         ) : (
-                            <InfoField key={field.name} label={field.label} value={currentData[field.name]} />
+                            <InfoField key={field.name} label={field.label} value={field.viewValue} />
                         )
                     ))}
-                    {/* {isEditing ? (
-                        <div className="md:col-span-3">
-                            <label className="inline-flex items-center">
-                                <input type="checkbox" name="isRosterBasedEmployee" checked={formData.isRosterBasedEmployee} onChange={handleChange} className="h-4 w-4 rounded border-border text-primary" />
-                                <span className="ml-2 text-sm text-foreground-muted">Is Roster Based Employee</span>
-                            </label>
-                        </div>
-                    ) : (
-                        <InfoField label="Roster Based" value={currentData.isRosterBasedEmployee ? 'Yes' : 'No'} />
-                    )} */}
                 </div>
             </div>
         </div>

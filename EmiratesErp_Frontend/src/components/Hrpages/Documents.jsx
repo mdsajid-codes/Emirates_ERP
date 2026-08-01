@@ -1,11 +1,144 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Upload, Download, Eye, Edit, Trash2, Plus, Loader, AlertCircle, X, CheckCircle, ShieldCheck, XCircle } from 'lucide-react';
+import { Upload, Download, Eye, Edit, Trash2, Plus, Loader, AlertCircle, X, CheckCircle, ShieldCheck, XCircle, ChevronDown, Check } from 'lucide-react';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-const UploadDocumentModal = ({ isOpen, onClose, onSave, loading, documentTypes }) => {
+// Custom Container Dropdown Component
+const CustomSelect = ({ value, options, onChange, placeholder = "Select a type..." }) => {
+    const [open, setOpen] = useState(false);
+    const selectedOption = options.find(o => String(o.id || o.value) === String(value));
+
+    return (
+        <div className="relative w-full">
+            <button
+                type="button"
+                onClick={() => setOpen(!open)}
+                className="w-full bg-background border border-border hover:border-primary/50 rounded-lg px-2.5 py-1.5 text-xs text-foreground flex items-center justify-between transition-all shadow-xs"
+            >
+                <span className="truncate font-medium">{selectedOption ? (selectedOption.name || selectedOption.label) : placeholder}</span>
+                <ChevronDown className={`h-3.5 w-3.5 text-foreground-muted shrink-0 transition-transform duration-200 ${open ? 'rotate-180 text-primary' : ''}`} />
+            </button>
+
+            {open && (
+                <>
+                    <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+                    <div className="absolute left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-2xl py-1 z-50 max-h-40 overflow-y-auto no-scrollbar animate-in fade-in zoom-in-95 duration-100">
+                        {options.length > 0 ? (
+                            options.map((opt) => {
+                                const optVal = opt.id || opt.value;
+                                const optLabel = opt.name || opt.label;
+                                const isSelected = String(optVal) === String(value);
+                                return (
+                                    <button
+                                        key={optVal}
+                                        type="button"
+                                        onClick={() => {
+                                            onChange(optVal);
+                                            setOpen(false);
+                                        }}
+                                        className={`w-full px-3 py-1.5 text-xs text-left flex items-center justify-between transition-colors ${
+                                            isSelected 
+                                                ? 'bg-primary/10 text-primary font-bold' 
+                                                : 'text-foreground hover:bg-background-muted'
+                                        }`}
+                                    >
+                                        <span className="truncate">{optLabel}</span>
+                                        {isSelected && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
+                                    </button>
+                                );
+                            })
+                        ) : (
+                            <div className="px-3 py-2 text-xs text-foreground-muted text-center">No options available</div>
+                        )}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
+
+// Modal Component for Adding New Document Type
+const AddDocumentTypeModal = ({ isOpen, onClose, onSuccess }) => {
+    const [name, setName] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [err, setErr] = useState('');
+
+    if (!isOpen) return null;
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!name.trim()) {
+            setErr('Document Type name is required.');
+            return;
+        }
+        setLoading(true);
+        setErr('');
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.post(`${API_URL}/base/document-types`, { name: name.trim() }, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            onSuccess(response.data);
+            setName('');
+            onClose();
+        } catch (error) {
+            console.error("Error creating document type:", error);
+            setErr(error.response?.data?.message || 'Failed to create document type.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return createPortal(
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex justify-center items-center z-[110] p-3">
+            <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-xs sm:max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-3.5 py-2.5 border-b border-border/80 flex justify-between items-center bg-background/50">
+                    <h3 className="text-xs font-bold text-foreground">Add New Document Type</h3>
+                    <button type="button" onClick={onClose} className="p-1 rounded-lg text-foreground-muted hover:bg-background-muted hover:text-foreground transition-colors">
+                        <X className="h-4 w-4" />
+                    </button>
+                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="p-3.5 space-y-2.5">
+                        <div>
+                            <label className="block text-[10px] font-bold text-foreground-muted uppercase tracking-wider mb-1">
+                                Document Type Name <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="e.g. Passport, Visa, Emirates ID"
+                                required
+                                className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all"
+                            />
+                        </div>
+                        {err && (
+                            <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-xs font-medium">
+                                {err}
+                            </div>
+                        )}
+                    </div>
+                    <div className="px-3.5 py-2.5 border-t border-border bg-background-muted/40 flex justify-end gap-2">
+                        <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg border border-border hover:bg-background-muted text-xs font-semibold text-foreground transition-colors" disabled={loading}>
+                            Cancel
+                        </button>
+                        <button type="submit" className="px-3.5 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs" disabled={loading}>
+                            {loading ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                            <span>Add Document Type</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>,
+        document.body
+    );
+};
+
+// Inline Full-Width Form for Uploading Document
+const UploadDocumentPanel = ({ isOpen, onClose, onSave, loading, documentTypes, onAddDocTypeClick }) => {
     const [file, setFile] = useState(null);
     const [docTypeId, setDocTypeId] = useState('');
     const [documentId, setDocumentId] = useState('');
@@ -16,7 +149,6 @@ const UploadDocumentModal = ({ isOpen, onClose, onSave, loading, documentTypes }
 
     useEffect(() => {
         if (isOpen) {
-            // Reset form when modal opens
             setFile(null);
             setDocTypeId('');
             setDocumentId('');
@@ -53,95 +185,142 @@ const UploadDocumentModal = ({ isOpen, onClose, onSave, loading, documentTypes }
 
     if (!isOpen) return null;
 
-    return createPortal(
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[100] p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md">
-                <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                    <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">Upload Document</h2>
-                    <button onClick={onClose} className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"><X className="h-5 w-5" /></button>
+    return (
+        <div className="bg-card rounded-2xl border border-border p-3.5 shadow-xs space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="flex items-center justify-between border-b border-border pb-2">
+                <div className="flex items-center gap-2">
+                    <Upload className="h-4 w-4 text-primary" />
+                    <h3 className="text-xs font-bold text-foreground">Upload New Document</h3>
                 </div>
-                <form onSubmit={handleSubmit}>
-                    <div className="p-6 space-y-4">
-                        <div>
-                            <label htmlFor="file" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">File</label>
-                            <input
-                                id="file"
-                                type="file"
-                                onChange={handleFileChange}
-                                required
-                                className="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-300"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="docTypeId" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Document Type</label>
-                            <select
-                                id="docTypeId"
-                                value={docTypeId}
-                                onChange={(e) => setDocTypeId(e.target.value)}
-                                required
-                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-                            >
-                                <option value="">Select a type</option>
-                                {documentTypes.map(type => <option key={type.id} value={type.id}>{type.name}</option>)}
-                            </select>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label htmlFor="documentId" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Document ID (Optional)</label>
-                                <input
-                                    id="documentId"
-                                    value={documentId}
-                                    onChange={(e) => setDocumentId(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-                                />
-                            </div>
-                            <div>
-                                <label htmlFor="registrationDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Registration Date (Optional)</label>
-                                <input
-                                    id="registrationDate"
-                                    type="date"
-                                    value={registrationDate}
-                                    onChange={(e) => setRegistrationDate(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label htmlFor="endDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">End Date (Optional)</label>
-                            <input
-                                id="endDate"
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="remarks" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Remarks (Optional)</label>
-                            <textarea
-                                id="remarks"
-                                value={remarks}
-                                onChange={(e) => setRemarks(e.target.value)}
-                                rows="3"
-                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-                            />
-                        </div>
-                        {modalError && <p className="text-red-500 text-sm">{modalError}</p>}
-                    </div>
-                    <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-2 text-slate-700 dark:text-slate-300">
-                        <button type="button" onClick={onClose} className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" disabled={loading}>Cancel</button>
-                        <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center transition-colors" disabled={loading}>
-                            {loading && <Loader className="animate-spin h-4 w-4 mr-2" />} Upload
-                        </button>
-                    </div>
-                </form>
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="p-1 rounded-lg hover:bg-background-muted text-foreground-muted hover:text-foreground transition-colors"
+                >
+                    <X className="h-4 w-4" />
+                </button>
             </div>
-        </div>,
-        document.body
+            <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                        <div className="flex items-center justify-between mb-1">
+                            <label className="block text-[10px] font-bold text-foreground-muted uppercase tracking-wider">
+                                Document Type <span className="text-red-500">*</span>
+                            </label>
+                            {onAddDocTypeClick && (
+                                <button
+                                    type="button"
+                                    onClick={onAddDocTypeClick}
+                                    className="text-[10px] font-semibold text-primary hover:underline cursor-pointer flex items-center gap-0.5"
+                                >
+                                    + Add
+                                </button>
+                            )}
+                        </div>
+                        <CustomSelect
+                            value={docTypeId}
+                            options={documentTypes}
+                            onChange={(val) => setDocTypeId(val)}
+                            placeholder="Select document type..."
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="file" className="block text-[10px] font-bold text-foreground-muted uppercase tracking-wider mb-1">
+                            Choose File <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            id="file"
+                            type="file"
+                            onChange={handleFileChange}
+                            required
+                            className="w-full text-xs text-foreground bg-background border border-border rounded-lg px-2.5 py-1 file:mr-2 file:py-0.5 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="documentId" className="block text-[10px] font-bold text-foreground-muted uppercase tracking-wider mb-1">
+                            Document ID (Optional)
+                        </label>
+                        <input
+                            id="documentId"
+                            value={documentId}
+                            onChange={(e) => setDocumentId(e.target.value)}
+                            placeholder="e.g. DOC-9921"
+                            className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="registrationDate" className="block text-[10px] font-bold text-foreground-muted uppercase tracking-wider mb-1">
+                            Registration Date (Optional)
+                        </label>
+                        <input
+                            id="registrationDate"
+                            type="date"
+                            value={registrationDate}
+                            onChange={(e) => setRegistrationDate(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all"
+                        />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                        <label htmlFor="endDate" className="block text-[10px] font-bold text-foreground-muted uppercase tracking-wider mb-1">
+                            End / Expiry Date (Optional)
+                        </label>
+                        <input
+                            id="endDate"
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all"
+                        />
+                    </div>
+                    <div className="sm:col-span-3">
+                        <label htmlFor="remarks" className="block text-[10px] font-bold text-foreground-muted uppercase tracking-wider mb-1">
+                            Remarks (Optional)
+                        </label>
+                        <input
+                            id="remarks"
+                            value={remarks}
+                            onChange={(e) => setRemarks(e.target.value)}
+                            placeholder="Add notes or description..."
+                            className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all"
+                        />
+                    </div>
+                </div>
+
+                {modalError && (
+                    <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-xs font-medium flex items-center gap-1.5">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                        <span>{modalError}</span>
+                    </div>
+                )}
+
+                <div className="flex items-center justify-end gap-2 pt-1 border-t border-border">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-3 py-1.5 rounded-lg border border-border hover:bg-background-muted text-xs font-semibold text-foreground transition-colors"
+                        disabled={loading}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        className="px-4 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+                        disabled={loading}
+                    >
+                        {loading ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Upload className="h-3.5 w-3.5" />}
+                        <span>Upload Document</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     );
 };
 
-const EditDocumentModal = ({ isOpen, onClose, onSave, document, loading, documentTypes }) => {
+// Inline Full-Width Form for Editing Document
+const EditDocumentPanel = ({ isOpen, onClose, onSave, document, loading, documentTypes, onAddDocTypeClick }) => {
     const [formData, setFormData] = useState({ docTypeId: '', documentId: '', registrationDate: '', endDate: '', remarks: '', verified: false });
 
     useEffect(() => {
@@ -169,96 +348,124 @@ const EditDocumentModal = ({ isOpen, onClose, onSave, document, loading, documen
 
     if (!isOpen) return null;
 
-    return createPortal(
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[100] p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md">
-                <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                    <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">Edit Document Details</h2>
-                    <button onClick={onClose} className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"><X className="h-5 w-5" /></button>
+    return (
+        <div className="bg-card rounded-2xl border border-border p-3.5 shadow-xs space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="flex items-center justify-between border-b border-border pb-2">
+                <div className="flex items-center gap-2">
+                    <Edit className="h-4 w-4 text-primary" />
+                    <h3 className="text-xs font-bold text-foreground">Edit Document Details</h3>
                 </div>
-                <form onSubmit={handleSubmit}>
-                    <div className="p-6 space-y-4">
-                        <div>
-                            <label htmlFor="edit-docTypeId" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Document Type</label>
-                            <select
-                                id="edit-docTypeId"
-                                name="docTypeId"
-                                value={formData.docTypeId}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-                            >
-                                <option value="">Select a type</option>
-                                {documentTypes.map(type => <option key={type.id} value={type.id}>{type.name}</option>)}
-                            </select>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label htmlFor="edit-documentId" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Document ID</label>
-                                <input
-                                    id="edit-documentId"
-                                    name="documentId"
-                                    value={formData.documentId}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-                                />
-                            </div>
-                            <div>
-                                <label htmlFor="edit-registrationDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Registration Date</label>
-                                <input
-                                    id="edit-registrationDate"
-                                    name="registrationDate"
-                                    type="date"
-                                    value={formData.registrationDate}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label htmlFor="edit-endDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">End Date</label>
-                            <input
-                                id="edit-endDate"
-                                name="endDate"
-                                type="date"
-                                value={formData.endDate}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-                            />
-                        </div>
-                        <div>
-                            <label className="inline-flex items-center">
-                                <input
-                                    type="checkbox"
-                                    name="verified"
-                                    checked={formData.verified}
-                                    onChange={handleChange}
-                                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                                />
-                                <span className="ml-2 text-sm text-slate-700 dark:text-slate-300">Mark as Verified</span>
-                            </label>
-                        </div>
-                        <div>
-                            <label htmlFor="edit-remarks" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Remarks</label>
-                            <textarea
-                                id="edit-remarks"
-                                name="remarks"
-                                value={formData.remarks}
-                                onChange={handleChange}
-                                rows="3"
-                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
-                            />
-                        </div>
-                    </div>
-                    <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-2 text-slate-700 dark:text-slate-300">
-                        <button type="button" onClick={onClose} className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" disabled={loading}>Cancel</button>
-                        <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center transition-colors" disabled={loading}>
-                            {loading && <Loader className="animate-spin h-4 w-4 mr-2" />} Save
-                        </button>
-                    </div>
-                </form>
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="p-1 rounded-lg hover:bg-background-muted text-foreground-muted hover:text-foreground transition-colors"
+                >
+                    <X className="h-4 w-4" />
+                </button>
             </div>
-        </div>,
-        document.body
+            <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                        <div className="flex items-center justify-between mb-1">
+                            <label className="block text-[10px] font-bold text-foreground-muted uppercase tracking-wider">Document Type</label>
+                            {onAddDocTypeClick && (
+                                <button
+                                    type="button"
+                                    onClick={onAddDocTypeClick}
+                                    className="text-[10px] font-semibold text-primary hover:underline cursor-pointer flex items-center gap-0.5"
+                                >
+                                    + Add
+                                </button>
+                            )}
+                        </div>
+                        <CustomSelect
+                            value={formData.docTypeId}
+                            options={documentTypes}
+                            onChange={(val) => setFormData(prev => ({ ...prev, docTypeId: val }))}
+                            placeholder="Select type..."
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="edit-documentId" className="block text-[10px] font-bold text-foreground-muted uppercase tracking-wider mb-1">Document ID</label>
+                        <input
+                            id="edit-documentId"
+                            name="documentId"
+                            value={formData.documentId}
+                            onChange={handleChange}
+                            className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="edit-registrationDate" className="block text-[10px] font-bold text-foreground-muted uppercase tracking-wider mb-1">Registration Date</label>
+                        <input
+                            id="edit-registrationDate"
+                            name="registrationDate"
+                            type="date"
+                            value={formData.registrationDate}
+                            onChange={handleChange}
+                            className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="edit-endDate" className="block text-[10px] font-bold text-foreground-muted uppercase tracking-wider mb-1">End Date</label>
+                        <input
+                            id="edit-endDate"
+                            name="endDate"
+                            type="date"
+                            value={formData.endDate}
+                            onChange={handleChange}
+                            className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all"
+                        />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+                    <div className="flex items-center gap-2 pt-2">
+                        <input
+                            id="edit-verified"
+                            type="checkbox"
+                            name="verified"
+                            checked={formData.verified}
+                            onChange={handleChange}
+                            className="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                        />
+                        <label htmlFor="edit-verified" className="text-xs font-medium text-foreground cursor-pointer select-none">
+                            Mark as Verified
+                        </label>
+                    </div>
+                    <div className="md:col-span-3">
+                        <label htmlFor="edit-remarks" className="block text-[10px] font-bold text-foreground-muted uppercase tracking-wider mb-1">Remarks</label>
+                        <input
+                            id="edit-remarks"
+                            name="remarks"
+                            value={formData.remarks}
+                            onChange={handleChange}
+                            placeholder="Add notes..."
+                            className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all"
+                        />
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-1 border-t border-border">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-3 py-1.5 rounded-lg border border-border hover:bg-background-muted text-xs font-semibold text-foreground transition-colors"
+                        disabled={loading}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        className="px-4 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+                        disabled={loading}
+                    >
+                        {loading ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+                        <span>Save Changes</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     );
 };
 
@@ -271,6 +478,7 @@ const Documents = ({ employee }) => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingDocument, setEditingDocument] = useState(null);
     const [modalLoading, setModalLoading] = useState(false);
+    const [isAddDocTypeModalOpen, setIsAddDocTypeModalOpen] = useState(false);
 
     const fetchDocumentTypes = async () => {
         try {
@@ -398,59 +606,93 @@ const Documents = ({ employee }) => {
     if (!employee) return <div className="text-center text-slate-500">Please select an employee to view documents.</div>;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-2.5">
             <div className="flex justify-end">
-                <button onClick={() => setIsUploadModalOpen(true)} className="btn-primary flex items-center">
-                    <Plus className="h-5 w-5 mr-2" /> Upload Document
+                <button 
+                    onClick={() => {
+                        setIsEditModalOpen(false);
+                        setIsUploadModalOpen(!isUploadModalOpen);
+                    }} 
+                    className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+                >
+                    {isUploadModalOpen ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                    <span>{isUploadModalOpen ? 'Cancel Upload' : 'Upload Document'}</span>
                 </button>
             </div>
 
-            {loading && <div className="flex justify-center p-8"><Loader className="animate-spin h-8 w-8 text-blue-600" /></div>}
-            {error && <div className="text-center text-red-600 dark:text-red-400 p-4 bg-red-50 dark:bg-red-900/20 rounded-md">{error}</div>}
+            <UploadDocumentPanel 
+                isOpen={isUploadModalOpen} 
+                onClose={() => setIsUploadModalOpen(false)} 
+                onSave={handleUpload} 
+                loading={modalLoading} 
+                documentTypes={documentTypes} 
+                onAddDocTypeClick={() => setIsAddDocTypeModalOpen(true)}
+            />
+
+            {editingDocument && (
+                <EditDocumentPanel 
+                    isOpen={isEditModalOpen} 
+                    onClose={() => setIsEditModalOpen(false)} 
+                    onSave={handleUpdate} 
+                    document={editingDocument} 
+                    loading={modalLoading} 
+                    documentTypes={documentTypes} 
+                    onAddDocTypeClick={() => setIsAddDocTypeModalOpen(true)}
+                />
+            )}
+
+            <AddDocumentTypeModal
+                isOpen={isAddDocTypeModalOpen}
+                onClose={() => setIsAddDocTypeModalOpen(false)}
+                onSuccess={fetchDocumentTypes}
+            />
+
+            {loading && <div className="flex justify-center p-8"><Loader className="animate-spin h-6 w-6 text-primary" /></div>}
+            {error && <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-600 rounded-xl text-xs font-semibold">{error}</div>}
 
             {!loading && !error && (
-                <div className="bg-white dark:bg-slate-800/50 rounded-xl shadow-sm overflow-hidden border border-slate-200 dark:border-slate-700">
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full">
-                            <thead className="bg-slate-50 dark:bg-slate-700/50">
+                <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-xs">
+                    <div className="overflow-x-auto no-scrollbar">
+                        <table className="w-full text-left border-collapse">
+                            <thead className="bg-background-muted/70 border-b border-border text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
                                 <tr>
-                                    <th className="th-cell">Document Type</th>
-                                    <th className="th-cell">Document ID</th>
-                                    <th className="th-cell">File Name</th>
-                                    <th className="th-cell">Registration Date</th>
-                                    <th className="th-cell">End Date</th>
-                                    <th className="th-cell">Verified</th>
-                                    <th className="th-cell text-right">Actions</th>
+                                    <th className="px-3 py-2">Document Type</th>
+                                    <th className="px-3 py-2">Document ID</th>
+                                    <th className="px-3 py-2">File Name</th>
+                                    <th className="px-3 py-2">Registration Date</th>
+                                    <th className="px-3 py-2">End Date</th>
+                                    <th className="px-3 py-2">Verified</th>
+                                    <th className="px-3 py-2 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="text-slate-700 dark:text-slate-300">
+                            <tbody className="divide-y divide-border/50 text-xs text-foreground">
                                 {documents.length > 0 ? (
                                     documents.map(doc => (
-                                        <tr key={doc.id} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                                            <td className="td-cell font-medium text-slate-800 dark:text-slate-100">{doc.documentType?.name || 'N/A'}</td>
-                                            <td className="td-cell text-sm">{doc.documentId || '-'}</td>
-                                            <td className="td-cell text-sm">{doc.fileName}</td>
-                                            <td className="td-cell text-sm">{doc.registrationDate ? new Date(doc.registrationDate).toLocaleDateString() : '-'}</td>
-                                            <td className="td-cell text-sm">{doc.endDate ? new Date(doc.endDate).toLocaleDateString() : '-'}</td>
-                                            <td className="td-cell">
-                                                {doc.verified ? <CheckCircle className="h-5 w-5 text-green-600" /> : <XCircle className="h-5 w-5 text-slate-400" />}
+                                        <tr key={doc.id} className="hover:bg-background-muted/50 transition-colors">
+                                            <td className="px-3 py-2 font-bold text-foreground">{doc.documentType?.name || 'N/A'}</td>
+                                            <td className="px-3 py-2 text-foreground-muted">{doc.documentId || '-'}</td>
+                                            <td className="px-3 py-2 text-foreground truncate max-w-xs">{doc.fileName}</td>
+                                            <td className="px-3 py-2 text-foreground-muted">{doc.registrationDate ? new Date(doc.registrationDate).toLocaleDateString() : '-'}</td>
+                                            <td className="px-3 py-2 text-foreground-muted">{doc.endDate ? new Date(doc.endDate).toLocaleDateString() : '-'}</td>
+                                            <td className="px-3 py-2">
+                                                {doc.verified ? <CheckCircle className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-foreground-muted/60" />}
                                             </td>
-                                            <td className="td-cell text-right">
-                                                <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                                                    <button onClick={() => handleView(doc.id)} className="p-2 hover:text-blue-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700" title="View"><Eye className="h-4 w-4" /></button>
-                                                    <button onClick={() => handleDownload(doc.id)} className="p-2 hover:text-blue-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700" title="Download"><Download className="h-4 w-4" /></button>
-                                                    <button onClick={() => { setEditingDocument(doc); setIsEditModalOpen(true); }} className="p-2 hover:text-blue-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700" title="Edit"><Edit className="h-4 w-4" /></button>
-                                                    <button onClick={() => handleDelete(doc.id)} className="p-2 hover:text-red-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700" title="Delete"><Trash2 className="h-4 w-4" /></button>
+                                            <td className="px-3 py-2 text-right">
+                                                <div className="flex items-center justify-end gap-1 text-foreground-muted">
+                                                    <button onClick={() => handleView(doc.id)} className="p-1 hover:text-primary rounded-lg hover:bg-background-muted transition-colors" title="View"><Eye className="h-3.5 w-3.5" /></button>
+                                                    <button onClick={() => handleDownload(doc.id)} className="p-1 hover:text-primary rounded-lg hover:bg-background-muted transition-colors" title="Download"><Download className="h-3.5 w-3.5" /></button>
+                                                    <button onClick={() => { setIsUploadModalOpen(false); setEditingDocument(doc); setIsEditModalOpen(true); }} className="p-1 hover:text-primary rounded-lg hover:bg-background-muted transition-colors" title="Edit"><Edit className="h-3.5 w-3.5" /></button>
+                                                    <button onClick={() => handleDelete(doc.id)} className="p-1 hover:text-red-600 rounded-lg hover:bg-background-muted transition-colors" title="Delete"><Trash2 className="h-3.5 w-3.5" /></button>
                                                 </div>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="7" className="text-center py-10 text-slate-500">
-                                            <AlertCircle className="mx-auto h-12 w-12 text-foreground-muted/50" />
-                                            <h3 className="mt-2 text-sm font-medium text-foreground">No documents found</h3>
-                                            <p className="mt-1 text-sm text-foreground-muted">Upload a document to get started.</p>
+                                        <td colSpan="7" className="text-center py-8 text-foreground-muted">
+                                            <AlertCircle className="mx-auto h-8 w-8 text-foreground-muted/40 mb-1" />
+                                            <h3 className="text-xs font-bold text-foreground">No documents found</h3>
+                                            <p className="text-[11px] text-foreground-muted mt-0.5">Upload a document to get started.</p>
                                         </td>
                                     </tr>
                                 )}
@@ -459,11 +701,8 @@ const Documents = ({ employee }) => {
                     </div>
                 </div>
             )}
-
-            <UploadDocumentModal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} onSave={handleUpload} loading={modalLoading} documentTypes={documentTypes} />
-            {editingDocument && <EditDocumentModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} onSave={handleUpdate} document={editingDocument} loading={modalLoading} documentTypes={documentTypes} />}
         </div>
     );
-}
+};
 
 export default Documents;

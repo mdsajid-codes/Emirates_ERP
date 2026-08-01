@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { 
-    BookOpen, Users, Clock, Calendar as CalendarIcon, 
-    Target, Fingerprint, Server, HelpCircle, Link2, Settings, 
-    RefreshCw, Loader, ChevronRight, Menu, X
+import { useLocation, useNavigate } from 'react-router-dom';
+import {
+    BookOpen, Users, Clock, Calendar as CalendarIcon,
+    Target, Fingerprint, Server, HelpCircle, Link2, Settings,
+    RefreshCw, Loader, ChevronRight, Menu, X, PanelLeftClose, PanelLeftOpen, ArrowLeft
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import AttendanceLog from './components/AttendanceLog';
@@ -35,19 +35,32 @@ const attendanceNavLinks = [
 
 const Attendance = () => {
     const location = useLocation();
-    const queryParams = new URLSearchParams(location.search);
-    const initialTabId = queryParams.get('tab')?.toLowerCase() || 'log';
+    const navigate = useNavigate();
 
-    const [activeTab, setActiveTab] = useState(initialTabId);
+    // Determine active tab from URL path (e.g. /attendance/roster) or query param (?tab=roster)
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    const queryParams = new URLSearchParams(location.search);
+    const pathTab = pathParts.length > 1 ? pathParts[1].toLowerCase() : null;
+    const queryTab = queryParams.get('tab')?.toLowerCase();
+
+    const activeTab = pathTab || queryTab || 'log';
+
     const [isSyncing, setIsSyncing] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(() => {
+        return localStorage.getItem('attendance_sidebar_collapsed') === 'true';
+    });
 
-    useEffect(() => {
-        const tab = queryParams.get('tab')?.toLowerCase();
-        if (tab && attendanceNavLinks.some(link => link.id === tab)) {
-            setActiveTab(tab);
-        }
-    }, [location.search]);
+    const toggleCollapsed = () => {
+        setIsCollapsed(prev => {
+            const next = !prev;
+            localStorage.setItem('attendance_sidebar_collapsed', String(next));
+            return next;
+        });
+    };
+
+    const activeNavLink = attendanceNavLinks.find(link => link.id === activeTab) || attendanceNavLinks[0];
+    const ActiveComponent = activeNavLink.component;
 
     const handleRunAutoAbsentTask = async () => {
         if (!window.confirm("Run 'Auto-Mark Absent' task? This will mark employees who haven't checked in as absent.")) {
@@ -68,93 +81,100 @@ const Attendance = () => {
         }
     };
 
-    const activeLink = attendanceNavLinks.find(link => link.id === activeTab) || attendanceNavLinks[0];
-    const ActiveComponent = activeLink.component;
-
     return (
-        <DashboardLayout hideSidebar={true}>
-            <div className="flex flex-col lg:flex-row min-h-[calc(100vh-theme(spacing.16))] bg-background">
-                
+        <DashboardLayout hideSidebar={true} hideHeaderSearch={true}>
+            <div className="flex flex-col lg:flex-row min-h-full flex-1 w-full bg-background text-foreground">
+
                 {/* Module Sidebar */}
                 <aside className={`
-                    lg:w-64 border-r border-border bg-sidebar-bg text-sidebar-text z-20 transition-all duration-300
+                    shrink-0 border-r border-border bg-sidebar-bg text-sidebar-text z-20 transition-all duration-300
+                    sticky top-0 lg:h-[calc(100vh-3.5rem)] self-start
                     ${isSidebarOpen ? 'fixed inset-0 lg:relative' : 'hidden lg:block'}
+                    ${isCollapsed ? 'lg:w-[56px]' : 'lg:w-48'}
                 `}>
-                    <div className="h-full flex flex-col p-4">
-                        <div className="flex flex-col gap-4 mb-6 px-2 border-b border-white/10 pb-4">
+                    <div className="h-full flex flex-col p-2">
+                        <div className="flex flex-col gap-1.5 mb-2 px-1 border-b border-border pb-2">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-xl font-bold">
-                                    Attendance Hub
-                                </h2>
-                                <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 hover:bg-white/10 rounded-theme text-foreground-muted">
-                                    <X className="h-5 w-5" />
-                                </button>
+                                {!isCollapsed && (
+                                    <h2 className="text-xs font-bold tracking-tight truncate">
+                                        Attendance Hub
+                                    </h2>
+                                )}
+                                <div className={`flex items-center gap-1 ${isCollapsed ? 'mx-auto' : ''}`}>
+                                    <button
+                                        onClick={toggleCollapsed}
+                                        className="hidden lg:flex p-1 hover:bg-sidebar-hover rounded-md text-sidebar-text/70 hover:text-sidebar-text transition-colors"
+                                        title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                                    >
+                                        {isCollapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
+                                    </button>
+                                    <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-1 hover:bg-white/10 rounded-lg text-foreground-muted">
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
                             </div>
-                            <button 
-                                onClick={() => window.location.href = '/hrdashboard'} 
-                                className="flex items-center gap-2 text-sm font-medium hover:bg-sidebar-hover p-2 -ml-2 rounded-theme transition-colors opacity-80 hover:opacity-100"
+                            <button
+                                onClick={() => navigate('/hrdashboard')}
+                                title="Back to Dashboard"
+                                className={`flex items-center ${isCollapsed ? 'justify-center px-1' : 'gap-1.5 px-2'} text-[11px] font-semibold hover:bg-sidebar-hover py-1 rounded-lg transition-colors opacity-80 hover:opacity-100`}
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-                                Back to Dashboard
+                                <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
+                                {!isCollapsed && <span className="truncate">Back to Dashboard</span>}
                             </button>
                         </div>
 
-                        <nav className="space-y-1 flex-1 overflow-y-auto custom-scrollbar">
+                        <nav className="space-y-0.5 flex-1 overflow-y-auto custom-scrollbar">
                             {attendanceNavLinks.map((link) => (
                                 <button
                                     key={link.id}
                                     onClick={() => {
-                                        setActiveTab(link.id);
+                                        navigate(`/attendance/${link.id}`);
                                         setIsSidebarOpen(false);
                                     }}
+                                    title={isCollapsed ? link.name : undefined}
                                     className={`
-                                        w-full flex items-center gap-3 px-4 py-2.5 rounded-theme text-sm font-medium transition-colors group
-                                        ${activeTab === link.id 
-                                            ? 'bg-sidebar-active text-sidebar-text font-bold' 
+                                        w-full flex items-center ${isCollapsed ? 'justify-center px-1' : 'gap-2 px-2'} py-1.5 rounded-lg text-[11px] font-medium transition-colors group
+                                        ${activeTab === link.id
+                                            ? 'bg-sidebar-active text-sidebar-text font-bold shadow-2xs'
                                             : 'text-sidebar-text hover:bg-sidebar-hover opacity-80 hover:opacity-100'
                                         }
                                     `}
                                 >
-                                    <link.icon className={`h-5 w-5 flex-shrink-0 transition-colors group-hover:scale-110 ${activeTab === link.id ? 'text-sidebar-text' : 'text-orange-500'}`} />
-                                    <span className="flex-1 text-left">{link.name}</span>
+                                    <link.icon className={`h-3.5 w-3.5 flex-shrink-0 transition-colors group-hover:scale-105 ${activeTab === link.id ? 'text-sidebar-text' : 'text-orange-500'}`} />
+                                    {!isCollapsed && <span className="flex-1 text-left truncate">{link.name}</span>}
                                 </button>
                             ))}
                         </nav>
 
-                        <div className="pt-4 border-t border-border mt-4">
-                            <button 
+                        <div className="pt-2 border-t border-border mt-2">
+                            <button
                                 onClick={handleRunAutoAbsentTask}
                                 disabled={isSyncing}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-theme bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors font-semibold text-sm"
+                                title={isCollapsed ? "Auto-Mark Absent Task" : undefined}
+                                className={`w-full flex items-center justify-center ${isCollapsed ? 'px-1' : 'gap-1.5 px-2'} py-1.5 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors font-semibold text-[11px]`}
                             >
-                                {isSyncing ? <Loader className="animate-spin h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
-                                {isSyncing ? 'Processing...' : 'Auto-Absent Task'}
+                                {isSyncing ? <Loader className="animate-spin h-3.5 w-3.5 shrink-0" /> : <RefreshCw className="h-3.5 w-3.5 shrink-0" />}
+                                {!isCollapsed && <span className="truncate">{isSyncing ? 'Processing...' : 'Auto-Absent Task'}</span>}
                             </button>
                         </div>
                     </div>
                 </aside>
 
                 {/* Main Content Area */}
-                <main className="flex-1 flex flex-col min-w-0 bg-background/50">
-                    {/* Header/Breadcrumbs */}
-                    <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-card/30 backdrop-blur-sm sticky top-0 z-10">
-                        <div className="flex items-center gap-4">
-                            <button 
-                                onClick={() => setIsSidebarOpen(true)}
-                                className="lg:hidden p-2 hover:bg-background-muted rounded-theme border border-border"
-                            >
-                                <Menu className="h-5 w-5" />
-                            </button>
-                            <nav className="flex items-center justify-center h-full">
-                                <span className="font-bold text-foreground text-xl tracking-tight">{activeLink.name}</span>
-                            </nav>
-                        </div>
-                    </header>
-
+                <main className="flex-1 flex flex-col min-w-0 bg-background">
                     {/* Content */}
-                    <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar">
-                        <div className="w-full mx-auto animate-in fade-in duration-500">
-                             <ActiveComponent />
+                    <div className="flex-1 p-3 md:p-4 bg-background">
+                        <div className="lg:hidden mb-2">
+                            <button
+                                onClick={() => setIsSidebarOpen(true)}
+                                className="p-1.5 hover:bg-background-muted rounded-lg border border-border flex items-center gap-2 text-xs font-semibold"
+                            >
+                                <Menu className="h-4 w-4" />
+                                <span>Menu</span>
+                            </button>
+                        </div>
+                        <div className="w-full mx-auto animate-in fade-in duration-300">
+                            <ActiveComponent />
                         </div>
                     </div>
                 </main>
@@ -164,3 +184,4 @@ const Attendance = () => {
 };
 
 export default Attendance;
+
