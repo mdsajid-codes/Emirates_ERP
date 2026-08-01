@@ -5,6 +5,8 @@ import DashboardLayout from '../components/DashboardLayout';
 import AddEmployeeModal from './AddEmployeeModal';
 import BulkAddEmployeesModal from './BulkAddEmployeesModal';
 import axios from 'axios';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts';
+import { ArrowUpRight, ArrowDownRight, MoreHorizontal, BarChart2 } from 'lucide-react';
 
 // A reusable card component for displaying stats
 const StatCard = ({ icon: Icon, title, value, change, changeType, color = 'blue', onClick, index = 0 }) => (
@@ -153,115 +155,381 @@ const HrDashboard = () => {
         );
     }
 
+    const attendanceData = [
+        { name: 'Present', value: attendanceStats.present, color: '#10B981' },
+        { name: 'Absent', value: attendanceStats.absent, color: '#EF4444' },
+        { name: 'On Leave', value: attendanceStats.onLeave, color: '#F59E0B' }
+    ];
+
+    const totalAttendance = attendanceStats.present + attendanceStats.absent + attendanceStats.onLeave;
+
+    const payrollData = [
+        { name: 'Jan', amount: 4000 },
+        { name: 'Feb', amount: 3000 },
+        { name: 'Mar', amount: 2000 },
+        { name: 'Apr', amount: 2780 },
+        { name: 'May', amount: 1890 },
+        { name: 'Jun', amount: 2390 },
+        { name: 'Jul', amount: 3490 },
+    ];
+
+    const sparklineData1 = [{ v: 10 }, { v: 15 }, { v: 13 }, { v: 20 }, { v: 18 }, { v: 25 }, { v: 22 }];
+    const sparklineData2 = [{ v: 20 }, { v: 18 }, { v: 24 }, { v: 22 }, { v: 28 }, { v: 26 }, { v: 30 }];
+    const sparklineData3 = [{ v: 5 }, { v: 8 }, { v: 4 }, { v: 9 }, { v: 5 }, { v: 10 }, { v: 7 }];
+
+    const departmentData = [
+        { name: 'Engineering', value: 35, color: '#3b82f6' },
+        { name: 'Sales', value: 20, color: '#10b981' },
+        { name: 'Marketing', value: 15, color: '#8b5cf6' },
+        { name: 'HR', value: 10, color: '#06b6d4' },
+        { name: 'Finance', value: 10, color: '#f59e0b' },
+        { name: 'Others', value: 10, color: '#64748b' },
+    ];
+
     return (
         <DashboardLayout>
-            <div className="p-6 md:p-8">
-                <div className="flex flex-wrap justify-between items-center gap-4 mb-6 bg-background text-foreground">
-                    <h1 className="text-3xl font-bold text-foreground">HR Dashboard</h1>
-                    <div className="flex items-center gap-2">
-                        <div className="relative">
-                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground-muted" />
-                            <select 
-                                value={selectedLocation}
-                                onChange={(e) => setSelectedLocation(e.target.value)}
-                                className="input pl-10 appearance-none bg-background-muted border-border text-foreground-muted"
-                            >
-                                <option value="all">All Locations</option>
-                                {locations.map((loc) => (
-                                    <option key={loc.id} value={loc.id}>
-                                        {loc.name}
-                                    </option>
-                                ))}
-                            </select>
+            <div className="p-2 space-y-2 max-w-[1600px] mx-auto font-sans bg-transparent text-foreground">
+                
+                {/* Top KPI Row */}
+                <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
+                    {/* Total Employees */}
+                    <div className="bg-card rounded-xl p-2.5 border border-border shadow-sm flex items-center gap-2 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/employees')}>
+                        <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                            <Users className="h-5 w-5" />
                         </div>
-                        <button
-                            onClick={() => setIsBulkModalOpen(true)}
-                            className="btn-secondary flex items-center">
-                            <UploadCloud className="h-5 w-5 mr-2" />
-                            Bulk Add
-                        </button>
-                        <button 
-                            onClick={() => setIsModalOpen(true)} className="btn-primary">
-                            <UserPlus className="h-5 w-5 mr-2" />
-                            Add Employee
-                        </button>
+                        <div className="flex-1">
+                            <p className="text-xs font-bold text-foreground-muted mb-0.5">Total Employees</p>
+                            <div className="flex items-baseline gap-2">
+                                <p className="text-xl font-extrabold text-foreground">{dashboardData?.totalEmployees || 0}</p>
+                                <div className="flex items-center text-success text-[10px] font-semibold">
+                                    <ArrowUpRight className="h-3 w-3 mr-0.5" />
+                                    <span>12 this month</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Pending Leaves */}
+                    <div className="bg-card rounded-xl p-2.5 border border-border shadow-sm flex items-center gap-2 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/leave')}>
+                        <div className="h-10 w-10 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
+                            <CalendarClock className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-xs font-bold text-foreground-muted mb-0.5">Pending Leaves</p>
+                            <div className="flex items-baseline gap-2">
+                                <p className="text-xl font-extrabold text-foreground">{dashboardData?.pendingLeaves || 0}</p>
+                                <span className="text-[10px] text-foreground-muted">2.1% of employees</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Pending Loans */}
+                    <div className="bg-card rounded-xl p-2.5 border border-border shadow-sm flex items-center gap-2 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/payroll-management')}>
+                        <div className="h-10 w-10 rounded-full bg-success/10 text-success flex items-center justify-center shrink-0">
+                            <HandCoins className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-xs font-bold text-foreground-muted mb-0.5">Pending Loans</p>
+                            <div className="flex items-baseline gap-2">
+                                <p className="text-xl font-extrabold text-foreground">{dashboardData?.pendingLoans || 0}</p>
+                                <span className="text-[10px] text-foreground-muted">Requests</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Pending Expenses */}
+                    <div className="bg-card rounded-xl p-2.5 border border-border shadow-sm flex items-center gap-2 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/payroll-management')}>
+                        <div className="h-10 w-10 rounded-full bg-warning/10 text-warning flex items-center justify-center shrink-0">
+                            <Receipt className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-xs font-bold text-foreground-muted mb-0.5">Pending Expenses</p>
+                            <div className="flex items-baseline gap-2">
+                                <p className="text-xl font-extrabold text-foreground">{dashboardData?.pendingExpenses || 0}</p>
+                                <span className="text-[10px] text-foreground-muted">Requests</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Open Positions */}
+                    <div className="bg-card rounded-xl p-2.5 border border-border shadow-sm flex items-center gap-2 cursor-pointer hover:shadow-md transition-shadow">
+                        <div className="h-10 w-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+                            <Briefcase className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-xs font-bold text-foreground-muted mb-0.5">Open Positions</p>
+                            <div className="flex items-baseline gap-2">
+                                <p className="text-xl font-extrabold text-foreground">12</p>
+                                <span className="text-[10px] text-foreground-muted">Active</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* New Hires */}
+                    <div className="bg-card rounded-xl p-2.5 border border-border shadow-sm flex items-center gap-2 cursor-pointer hover:shadow-md transition-shadow">
+                        <div className="h-10 w-10 rounded-full bg-teal-500/10 text-teal-500 flex items-center justify-center shrink-0">
+                            <UserPlus className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-xs font-bold text-foreground-muted mb-0.5">New Hires</p>
+                            <div className="flex items-baseline gap-2">
+                                <p className="text-xl font-extrabold text-foreground">{dashboardData?.newHiresThisMonth || 0}</p>
+                                <span className="text-[10px] text-foreground-muted">This month</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {stats.length > 0 && stats.map((stat, index) => (
-                        <StatCard key={index} {...stat} />
-                    ))}
-                </div>
-
-                {/* Main Content Area */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-                    {/* Today's Attendance */}
-                    <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.2 }}
-                        className="lg:col-span-2 bg-card text-card-foreground p-6 rounded-theme border border-border shadow-sm h-full"
-                    >
-                        <h2 className="text-xl font-semibold text-foreground mb-4">Today's Attendance Summary</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            {attendanceCards.map((stat, index) => (
-                                <StatCard key={index} index={index + 4} {...stat} />
-                            ))}
-                        </div>
-                        <div className="mt-6">
-                            <h3 className="text-lg font-medium text-foreground-muted mb-3">Recent Check-ins</h3>
-                            <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                                {dashboardData?.todaysAttendance.filter(a => a.status === 'PRESENT' || a.status === 'HALF_DAY').map((att, idx) => (
-                                    <motion.div 
-                                        key={att.id} 
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ delay: 0.3 + (idx * 0.05) }}
-                                        className="flex justify-between items-center p-3 bg-background-muted rounded-theme border border-border"
-                                    >
-                                        <div>
-                                            <p className="font-medium text-sm">{att.employeeName}</p>
-                                            <p className="text-xs text-foreground-muted">{att.employeeCode}</p>
+                {/* Main Content Grid (3 Columns) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 items-stretch">
+                    
+                    {/* LEFT COLUMN: Donut Chart & Activity */}
+                    <div className="lg:col-span-4 flex flex-col gap-2">
+                        {/* Attendance Summary Donut */}
+                        <div className="bg-card rounded-xl p-2.5 border border-border shadow-sm">
+                            <h2 className="text-sm font-bold text-foreground mb-4">Today's Attendance Summary</h2>
+                            <div className="flex items-center justify-between">
+                                <div className="relative w-[140px] h-[140px] shrink-0">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={attendanceData}
+                                                innerRadius={45}
+                                                outerRadius={65}
+                                                paddingAngle={2}
+                                                dataKey="value"
+                                            >
+                                                {attendanceData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                            <RechartsTooltip contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                        <span className="text-xl font-extrabold text-foreground">{totalAttendance}</span>
+                                        <span className="text-[10px] font-medium text-foreground-muted">Total</span>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col space-y-3">
+                                    {attendanceData.map((item) => (
+                                        <div key={item.name} className="flex flex-col">
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
+                                                <span className="font-semibold text-xs text-foreground">{item.name}</span>
+                                            </div>
+                                            <span className="text-[10px] text-foreground-muted ml-3.5">
+                                                {item.value} ({totalAttendance > 0 ? Math.round((item.value / totalAttendance) * 100) : 0}%)
+                                            </span>
                                         </div>
-                                        <p className="text-sm font-mono bg-success/10 text-success px-2 py-1 rounded-theme font-medium">{att.checkIn}</p>
-                                    </motion.div>
-                                ))}
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 bg-primary/10 rounded-md"><Users className="h-3 w-3 text-primary" /></div>
+                                    <span className="text-xs font-semibold text-foreground-muted">Attendance rate</span>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm font-bold text-foreground">88.6%</p>
+                                    <div className="flex items-center text-success text-[9px] font-semibold">
+                                        <ArrowUpRight className="h-2 w-2 mr-0.5" />
+                                        <span>3.2% vs last month</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </motion.div>
 
-                    {/* Recent Activity Feed */}
-                    <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.4 }}
-                        className="bg-card text-card-foreground p-6 rounded-theme border border-border shadow-sm"
-                    >
-                        <h2 className="text-xl font-semibold text-foreground mb-4">Recent Activity</h2>
-                        <div className="space-y-5">
-                            {dashboardData?.recentLeaveRequests.map((req, idx) => (
-                                <ActivityItem 
-                                    key={req.id} 
-                                    index={idx}
-                                    icon={CalendarClock} 
-                                    iconColor="bg-warning text-warning-foreground" 
-                                    title={`${req.employeeName} requested leave`} 
-                                    description={`${req.leaveType} from ${new Date(req.fromDate).toLocaleDateString()}`} 
-                                />
-                            ))}
+                        {/* Recent HR Activity */}
+                        <div className="bg-card rounded-xl p-2.5 border border-border shadow-sm flex-1 flex flex-col">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-sm font-bold text-foreground">Recent HR Activity</h2>
+                                <button className="text-primary text-[11px] font-bold">View all</button>
+                            </div>
+                            <div className="space-y-4">
+                                {dashboardData?.recentLeaveRequests?.length > 0 ? (
+                                    dashboardData.recentLeaveRequests.slice(0, 4).map((req, idx) => (
+                                        <div key={req.id} className="flex items-center justify-between gap-2 group">
+                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                                                    {req.employeeName.charAt(0)}
+                                                </div>
+                                                <p className="text-xs text-foreground truncate">
+                                                    <span className="font-semibold">{req.employeeName}</span> requested {req.leaveType}
+                                                </p>
+                                            </div>
+                                            <span className="text-[10px] text-foreground-muted whitespace-nowrap">
+                                                {new Date(req.createdAt || req.fromDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-xs text-foreground-muted text-center py-4">No activity yet.</p>
+                                )}
+                            </div>
                         </div>
-                    </motion.div>
+                    </div>
+
+                    {/* MIDDLE COLUMN: Recent Check-ins */}
+                    <div className="lg:col-span-4 bg-card rounded-xl p-2.5 border border-border shadow-sm flex flex-col">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-sm font-bold text-foreground">Recent Check-ins</h2>
+                            <button className="text-primary text-[11px] font-bold">View all</button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto pr-1 space-y-4">
+                            {dashboardData?.todaysAttendance?.filter(a => a.status === 'PRESENT' || a.status === 'HALF_DAY').length > 0 ? (
+                                dashboardData.todaysAttendance.filter(a => a.status === 'PRESENT' || a.status === 'HALF_DAY').slice(0, 7).map((att) => (
+                                    <div key={att.id} className="flex justify-between items-center group">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                                                {att.employeeName.charAt(0)}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <p className="font-bold text-xs text-foreground">{att.employeeName}</p>
+                                                <p className="text-[10px] text-foreground-muted">{att.employeeCode}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-xs font-bold text-foreground">{att.checkIn}</span>
+                                            <span className="text-[9px] font-semibold text-success bg-success/10 px-1.5 py-0.5 rounded-sm mt-0.5">On Time</span>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="h-40 flex items-center justify-center">
+                                    <p className="text-xs text-foreground-muted font-medium">No recent check-ins.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* RIGHT COLUMN: Sparklines, Pie, Birthdays, Growth */}
+                    <div className="lg:col-span-4 flex flex-col gap-2">
+                        
+                        {/* Sparkline Cards */}
+                        <div className="grid grid-cols-1 gap-2">
+                            <div className="bg-card rounded-xl p-2.5 border border-border shadow-sm flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 bg-warning/10 text-warning rounded-md"><Plane className="h-4 w-4" /></div>
+                                    <div>
+                                        <p className="text-[11px] font-bold text-foreground">On Leave Today</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-lg font-extrabold text-foreground">{attendanceStats.onLeave}</span>
+                                            <span className="text-[9px] text-foreground-muted">12% of workforce</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="h-8 w-16">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={sparklineData3}><Line type="monotone" dataKey="v" stroke="#F59E0B" strokeWidth={2} dot={false} /></LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            <div className="bg-card rounded-xl p-2.5 border border-border shadow-sm flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 bg-success/10 text-success rounded-md"><UserCheck className="h-4 w-4" /></div>
+                                    <div>
+                                        <p className="text-[11px] font-bold text-foreground">Present Today</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-lg font-extrabold text-foreground">{attendanceStats.present}</span>
+                                            <span className="text-[9px] text-foreground-muted">75% of workforce</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="h-8 w-16">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={sparklineData2}><Line type="monotone" dataKey="v" stroke="#10B981" strokeWidth={2} dot={false} /></LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            <div className="bg-card rounded-xl p-2.5 border border-border shadow-sm flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 bg-destructive/10 text-destructive rounded-md"><UserX className="h-4 w-4" /></div>
+                                    <div>
+                                        <p className="text-[11px] font-bold text-foreground">Absent Today</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-lg font-extrabold text-foreground">{attendanceStats.absent}</span>
+                                            <span className="text-[9px] text-foreground-muted">13% of workforce</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="h-8 w-16">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={sparklineData1}><Line type="monotone" dataKey="v" stroke="#EF4444" strokeWidth={2} dot={false} /></LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Department Split & Birthdays */}
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-card rounded-xl p-2.5 border border-border shadow-sm flex flex-col">
+                                <h3 className="text-[11px] font-bold text-foreground mb-2">Department Split</h3>
+                                <div className="flex-1 flex items-center justify-center">
+                                    <div className="w-[80px] h-[80px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie data={departmentData} innerRadius={25} outerRadius={35} paddingAngle={2} dataKey="value">
+                                                    {departmentData.map((e, i) => <Cell key={`c-${i}`} fill={e.color} />)}
+                                                </Pie>
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-card rounded-xl p-2.5 border border-border shadow-sm flex flex-col justify-between">
+                                <h3 className="text-[11px] font-bold text-foreground mb-1">Upcoming Birthdays</h3>
+                                <div className="space-y-1">
+                                    <div className="flex justify-between text-[10px]">
+                                        <span className="font-semibold text-foreground">Ava Thompson</span>
+                                        <span className="text-foreground-muted">May 23</span>
+                                    </div>
+                                    <div className="flex justify-between text-[10px]">
+                                        <span className="font-semibold text-foreground">Noah Williams</span>
+                                        <span className="text-foreground-muted">May 25</span>
+                                    </div>
+                                    <div className="flex justify-between text-[10px]">
+                                        <span className="font-semibold text-foreground">Olivia Martinez</span>
+                                        <span className="text-foreground-muted">May 29</span>
+                                    </div>
+                                </div>
+                                <span className="text-[10px] text-primary font-bold mt-1 block cursor-pointer">+ 3 more</span>
+                            </div>
+                        </div>
+
+                        {/* Workforce Growth */}
+                        <div className="bg-card rounded-xl p-2.5 border border-border shadow-sm flex-1 flex flex-col justify-between">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-1.5">
+                                    <BarChart2 className="h-3 w-3 text-primary" />
+                                    <h3 className="text-[11px] font-bold text-foreground">Workforce Growth</h3>
+                                </div>
+                            </div>
+                            <div className="flex items-end gap-3 h-[60px]">
+                                <div className="mb-1">
+                                    <span className="text-xl font-extrabold text-foreground">256</span>
+                                    <div className="flex items-center text-success text-[9px] font-semibold">
+                                        <ArrowUpRight className="h-2 w-2 mr-0.5" /><span>12 this month</span>
+                                    </div>
+                                </div>
+                                <div className="flex-1 h-full pt-2">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={payrollData}>
+                                            <Bar dataKey="amount" fill="var(--primary)" radius={[2, 2, 0, 0]} maxBarSize={15} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
+
             </div>
-            {isBulkModalOpen && (
-                <BulkAddEmployeesModal
-                    isOpen={isBulkModalOpen}
-                    onClose={() => setIsBulkModalOpen(false)}
-                />
-            )}
-            <AddEmployeeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onEmployeeAdded={handleEmployeeAdded} />
         </DashboardLayout>
     );
 }

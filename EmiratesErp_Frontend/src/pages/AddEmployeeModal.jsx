@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Loader, ArrowRight, ArrowLeft, Check, Eye, EyeOff } from 'lucide-react';
+import { X, Loader, ArrowRight, ArrowLeft, Check, Eye, EyeOff, Sparkles } from 'lucide-react';
 import axios from 'axios';
 
 // Reusable component for an editable field
-const EditField = ({ label, name, value, onChange, type = 'text', options = [], required = false, ...rest }) => {
+const EditField = ({ label, name, value, onChange, type = 'text', options = [], required = false, onGenerate = null, onAddClick = null, ...rest }) => {
     const [showPassword, setShowPassword] = useState(false);
 
     const commonProps = {
@@ -19,9 +19,20 @@ const EditField = ({ label, name, value, onChange, type = 'text', options = [], 
 
     return (
         <div>
-            <label htmlFor={name} className="block text-sm font-medium text-slate-700">
-                {label} {required && <span className="text-red-500">*</span>}
-            </label>
+            <div className="flex items-center justify-between">
+                <label htmlFor={name} className="block text-sm font-medium text-slate-700">
+                    {label} {required && <span className="text-red-500">*</span>}
+                </label>
+                {onAddClick && (
+                    <button 
+                        type="button" 
+                        onClick={onAddClick}
+                        className="text-xs font-semibold text-blue-600 hover:underline cursor-pointer flex items-center gap-0.5"
+                    >
+                        + Add
+                    </button>
+                )}
+            </div>
             {type === 'select' ? (
                 <select 
                     {...commonProps} 
@@ -37,7 +48,7 @@ const EditField = ({ label, name, value, onChange, type = 'text', options = [], 
                     <input 
                         {...commonProps} 
                         type={isPassword ? (showPassword ? 'text' : 'password') : type} 
-                        className={`block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-600 focus:border-blue-600 sm:text-sm ${isPassword ? 'pr-10' : ''}`}
+                        className={`block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-600 focus:border-blue-600 sm:text-sm ${isPassword || onGenerate ? 'pr-10' : ''}`}
                     />
                     {isPassword && (
                         <button
@@ -48,14 +59,319 @@ const EditField = ({ label, name, value, onChange, type = 'text', options = [], 
                             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                         </button>
                     )}
+                    {onGenerate && (
+                        <button
+                            type="button"
+                            onClick={onGenerate}
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                            title="Auto Generate Employee Code (EMP+4 digits)"
+                        >
+                            <Sparkles className="h-4 w-4" />
+                        </button>
+                    )}
                 </div>
             )}
         </div>
     );
 };
 
+// --- Modal Component for Adding Department ---
+const AddDepartmentModal = ({ isOpen, onClose, onSuccess, API_URL }) => {
+    const [name, setName] = useState('');
+    const [code, setCode] = useState('');
+    const [description, setDescription] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [err, setErr] = useState('');
+
+    if (!isOpen) return null;
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!name || !code) {
+            setErr('Department name and code are required.');
+            return;
+        }
+        setLoading(true);
+        setErr('');
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post(`${API_URL}/departments`, { name, code, description }, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            onSuccess(name);
+            setName(''); setCode(''); setDescription('');
+            onClose();
+        } catch (error) {
+            setErr(error.response?.data?.message || 'Failed to add department');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xl w-full max-w-md space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <h3 className="text-sm font-bold text-slate-800">Add New Department</h3>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X className="h-4 w-4" /></button>
+                </div>
+                {err && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-600 rounded-lg text-xs font-semibold">{err}</div>}
+                <form onSubmit={handleSubmit} className="space-y-3">
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Department Name *</label>
+                        <input value={name} onChange={e => setName(e.target.value)} required className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-md text-xs" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Department Code *</label>
+                        <div className="relative">
+                            <input 
+                                value={code} 
+                                onChange={e => setCode(e.target.value)} 
+                                required 
+                                className="w-full px-3 py-1.5 pr-8 bg-white border border-slate-300 rounded-md text-xs font-medium"
+                                placeholder="e.g. DEPT1001"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const randomCode = 'DEPT' + Math.floor(1000 + Math.random() * 9000);
+                                    setCode(randomCode);
+                                }}
+                                className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                                title="Auto Generate Department Code (DEPT + 4 digits)"
+                            >
+                                <Sparkles className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
+                        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-md text-xs" />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
+                        <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-md border border-slate-300 text-xs font-semibold">Cancel</button>
+                        <button type="submit" disabled={loading} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold flex items-center gap-1">
+                            {loading ? <Loader className="animate-spin h-3.5 w-3.5" /> : 'Save Department'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+// --- Modal Component for Adding Designation ---
+const AddDesignationModal = ({ isOpen, onClose, onSuccess, departments, API_URL }) => {
+    const [title, setTitle] = useState('');
+    const [level, setLevel] = useState('');
+    const [departmentCode, setDepartmentCode] = useState('');
+    const [description, setDescription] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [err, setErr] = useState('');
+
+    if (!isOpen) return null;
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!title || !level || !departmentCode) {
+            setErr('Title, Level, and Department are required.');
+            return;
+        }
+        setLoading(true);
+        setErr('');
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post(`${API_URL}/designations/for-department/${departmentCode}`, { title, level: String(level), description }, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            onSuccess(title);
+            setTitle(''); setLevel(''); setDepartmentCode(''); setDescription('');
+            onClose();
+        } catch (error) {
+            setErr(error.response?.data?.message || 'Failed to add designation');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xl w-full max-w-md space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <h3 className="text-sm font-bold text-slate-800">Add New Designation</h3>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X className="h-4 w-4" /></button>
+                </div>
+                {err && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-600 rounded-lg text-xs font-semibold">{err}</div>}
+                <form onSubmit={handleSubmit} className="space-y-3">
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Designation Title *</label>
+                        <input value={title} onChange={e => setTitle(e.target.value)} required className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-md text-xs" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Department *</label>
+                        <select value={departmentCode} onChange={e => setDepartmentCode(e.target.value)} required className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-md text-xs">
+                            <option value="">Select Department...</option>
+                            {departments.map(d => (
+                                <option key={d.id} value={d.code}>{d.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Level *</label>
+                        <input value={level} onChange={e => setLevel(e.target.value)} required className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-md text-xs" placeholder="e.g. L4 or Junior" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
+                        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-md text-xs" />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
+                        <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-md border border-slate-300 text-xs font-semibold">Cancel</button>
+                        <button type="submit" disabled={loading} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold flex items-center gap-1">
+                            {loading ? <Loader className="animate-spin h-3.5 w-3.5" /> : 'Save Designation'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+// --- Modal Component for Adding Job Band ---
+const AddJobBandModal = ({ isOpen, onClose, onSuccess, designations, API_URL }) => {
+    const [name, setName] = useState('');
+    const [level, setLevel] = useState('');
+    const [designationId, setDesignationId] = useState('');
+    const [minSalary, setMinSalary] = useState('');
+    const [maxSalary, setMaxSalary] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [err, setErr] = useState('');
+
+    if (!isOpen) return null;
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!name || !designationId) {
+            setErr('Band name and Designation are required.');
+            return;
+        }
+        setLoading(true);
+        setErr('');
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post(`${API_URL}/jobBands/for-designation/${designationId}`, {
+                name,
+                level: String(level || ''),
+                minSalary: minSalary ? Number(minSalary) : 0,
+                maxSalary: maxSalary ? Number(maxSalary) : 0
+            }, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            onSuccess(name);
+            setName(''); setLevel(''); setDesignationId(''); setMinSalary(''); setMaxSalary('');
+            onClose();
+        } catch (error) {
+            setErr(error.response?.data?.message || 'Failed to add job band');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xl w-full max-w-md space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <h3 className="text-sm font-bold text-slate-800">Add New Job Band</h3>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X className="h-4 w-4" /></button>
+                </div>
+                {err && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-600 rounded-lg text-xs font-semibold">{err}</div>}
+                <form onSubmit={handleSubmit} className="space-y-3">
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Band Name *</label>
+                        <input value={name} onChange={e => setName(e.target.value)} required className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-md text-xs" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Designation *</label>
+                        <select value={designationId} onChange={e => setDesignationId(e.target.value)} required className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-md text-xs">
+                            <option value="">Select Designation...</option>
+                            {designations.map(d => (
+                                <option key={d.id} value={d.id}>{d.title}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1">Level</label>
+                            <input value={level} onChange={e => setLevel(e.target.value)} className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-md text-xs" placeholder="e.g. 4" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1">Min (AED)</label>
+                            <input type="number" value={minSalary} onChange={e => setMinSalary(e.target.value)} className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-md text-xs" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-700 mb-1">Max (AED)</label>
+                            <input type="number" value={maxSalary} onChange={e => setMaxSalary(e.target.value)} className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-md text-xs" />
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
+                        <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-md border border-slate-300 text-xs font-semibold">Cancel</button>
+                        <button type="submit" disabled={loading} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold flex items-center gap-1">
+                            {loading ? <Loader className="animate-spin h-3.5 w-3.5" /> : 'Save Job Band'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, simplified = false, employeeToEdit = null }) => {
     const [currentStep, setCurrentStep] = useState(1);
+    const [activeMasterModal, setActiveMasterModal] = useState(null);
+
+    const fetchAllMasterOptions = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const headers = { "Authorization": `Bearer ${token}` };
+            const [deptRes, desigRes, jobBandRes] = await Promise.all([
+                axios.get(`${API_URL}/departments`, { headers }),
+                axios.get(`${API_URL}/designations`, { headers }),
+                axios.get(`${API_URL}/jobBands`, { headers })
+            ]);
+            setSelectOptions(prev => ({
+                ...prev,
+                departments: deptRes.data,
+                designations: desigRes.data,
+                jobBands: jobBandRes.data,
+            }));
+        } catch (err) {
+            console.error("Error fetching options:", err);
+        }
+    };
+
+    const handleDepartmentAdded = async (newDeptName) => {
+        await fetchAllMasterOptions();
+        setFormData(prev => ({
+            ...prev,
+            jobDetails: { ...prev.jobDetails, department: newDeptName }
+        }));
+    };
+
+    const handleDesignationAdded = async (newDesigTitle) => {
+        await fetchAllMasterOptions();
+        setFormData(prev => ({
+            ...prev,
+            jobDetails: { ...prev.jobDetails, designation: newDesigTitle }
+        }));
+    };
+
+    const handleJobBandAdded = async (newJobBandName) => {
+        await fetchAllMasterOptions();
+        setFormData(prev => ({
+            ...prev,
+            jobDetails: { ...prev.jobDetails, jobBand: newJobBandName }
+        }));
+    };
+
     const [formData, setFormData] = useState({
         // User Details
         user: {
@@ -368,6 +684,18 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, simplified = false
     const simplifiedSteps = [{ title: 'User & Core Employee Details' }, { title: 'Job Details' }];
     const steps = simplified ? simplifiedSteps : allSteps;
 
+    const handleAutoGenerateCode = () => {
+        const randomDigits = Math.floor(1000 + Math.random() * 9000);
+        const autoCode = `EMP${randomDigits}`;
+        setFormData(prev => ({
+            ...prev,
+            employee: {
+                ...prev.employee,
+                employeeCode: autoCode,
+            }
+        }));
+    };
+
     const isEditing = !!employeeToEdit;
 
     const renderSimplifiedStepContent = () => {
@@ -382,7 +710,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, simplified = false
                         <EditField label="Confirm Password" name="confirmPassword" value={formData.user.confirmPassword} onChange={handleNestedChange('user')} type="password" required={!isEditing} />
 
                         <h3 className="col-span-full font-semibold text-lg mt-4 mb-2">Core Employee Details</h3>
-                        <EditField label="Employee Code" name="employeeCode" value={formData.employee.employeeCode} onChange={handleNestedChange('employee')} required disabled={isEditing} />
+                        <EditField label="Employee Code" name="employeeCode" value={formData.employee.employeeCode} onChange={handleNestedChange('employee')} onGenerate={isEditing ? null : handleAutoGenerateCode} required disabled={isEditing} />
                         <EditField label="First Name" name="firstName" value={formData.employee.firstName} onChange={handleNestedChange('employee')} required />
                         <EditField label="Middle Name" name="middleName" value={formData.employee.middleName} onChange={handleNestedChange('employee')} />
                         <EditField label="Last Name" name="lastName" value={formData.employee.lastName} onChange={handleNestedChange('employee')} required />
@@ -398,9 +726,9 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, simplified = false
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <h3 className="col-span-full font-semibold text-lg mb-2">Job Details</h3>
-                        <EditField label="Department" name="department" value={formData.jobDetails.department} onChange={handleNestedChange('jobDetails')} type="select" options={selectOptions.departments.map(d => ({ value: d.name, label: d.name }))} />
-                        <EditField label="Designation" name="designation" value={formData.jobDetails.designation} onChange={handleNestedChange('jobDetails')} type="select" options={selectOptions.designations.map(d => ({ value: d.title, label: `${d.title} (${d.departmentName})` }))} />
-                        <EditField label="Job Band" name="jobBand" value={formData.jobDetails.jobBand} onChange={handleNestedChange('jobDetails')} type="select" options={selectOptions.jobBands.map(d => ({ value: d.name, label: `${d.name} (${d.designationTitle})` }))} />
+                        <EditField label="Department" name="department" value={formData.jobDetails.department} onChange={handleNestedChange('jobDetails')} type="select" options={selectOptions.departments.map(d => ({ value: d.name, label: d.name }))} onAddClick={() => setActiveMasterModal('department')} />
+                        <EditField label="Designation" name="designation" value={formData.jobDetails.designation} onChange={handleNestedChange('jobDetails')} type="select" options={selectOptions.designations.map(d => ({ value: d.title, label: `${d.title} (${d.departmentName})` }))} onAddClick={() => setActiveMasterModal('designation')} />
+                        <EditField label="Job Band" name="jobBand" value={formData.jobDetails.jobBand} onChange={handleNestedChange('jobDetails')} type="select" options={selectOptions.jobBands.map(d => ({ value: d.name, label: `${d.name} (${d.designationTitle})` }))} onAddClick={() => setActiveMasterModal('jobBand')} />
                         <EditField label="Date of Joining" name="dateOfJoining" value={formData.jobDetails.dateOfJoining} onChange={handleNestedChange('jobDetails')} type="date" />
                         <EditField label="Probation End Date" name="probationEndDate" value={formData.jobDetails.probationEndDate} onChange={handleNestedChange('jobDetails')} type="date" />
                         <EditField label="Reports To" name="reportsTo" value={formData.jobDetails.reportsTo} onChange={handleNestedChange('jobDetails')} />
@@ -481,6 +809,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, simplified = false
                             onChange={handleNestedChange('jobDetails')}
                             type="select"
                             options={selectOptions.departments.map(d => ({ value: d.name, label: d.name }))}
+                            onAddClick={() => setActiveMasterModal('department')}
                         />
                         <EditField
                             label="Designation"
@@ -489,6 +818,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, simplified = false
                             onChange={handleNestedChange('jobDetails')}
                             type="select"
                             options={selectOptions.designations.map(d => ({ value: d.title, label: `${d.title} (${d.departmentName})` }))}
+                            onAddClick={() => setActiveMasterModal('designation')}
                         />
                         <EditField
                             label="Job Band"
@@ -497,6 +827,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, simplified = false
                             onChange={handleNestedChange('jobDetails')}
                             type="select"
                             options={selectOptions.jobBands.map(d => ({ value: d.name, label: `${d.name} (${d.designationTitle})` }))}
+                            onAddClick={() => setActiveMasterModal('jobBand')}
                         />
                         <EditField label="Date of Joining" name="dateOfJoining" value={formData.jobDetails.dateOfJoining} onChange={handleNestedChange('jobDetails')} type="date" />
                         <EditField label="Probation End Date" name="probationEndDate" value={formData.jobDetails.probationEndDate} onChange={handleNestedChange('jobDetails')} type="date" />
@@ -652,6 +983,28 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, simplified = false
                     </div>
                 </div>
             </div>
+
+            {/* Modals for Adding Master Data */}
+            <AddDepartmentModal
+                isOpen={activeMasterModal === 'department'}
+                onClose={() => setActiveMasterModal(null)}
+                onSuccess={handleDepartmentAdded}
+                API_URL={API_URL}
+            />
+            <AddDesignationModal
+                isOpen={activeMasterModal === 'designation'}
+                onClose={() => setActiveMasterModal(null)}
+                onSuccess={handleDesignationAdded}
+                departments={selectOptions.departments}
+                API_URL={API_URL}
+            />
+            <AddJobBandModal
+                isOpen={activeMasterModal === 'jobBand'}
+                onClose={() => setActiveMasterModal(null)}
+                onSuccess={handleJobBandAdded}
+                designations={selectOptions.designations}
+                API_URL={API_URL}
+            />
         </div>
     );
 };

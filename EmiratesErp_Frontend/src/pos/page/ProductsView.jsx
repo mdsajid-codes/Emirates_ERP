@@ -2,9 +2,11 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { Search, PlusCircle, Edit, Trash2, Loader, X, Package, Save, ArrowLeft, UploadCloud, Image, Download, Barcode, Eye, EyeOff, Printer } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { toast } from 'react-toastify';
 import BulkAddProductsModal from '../components/BulkAddProductsModal';
 import ProductForm from '../components/ProductForm';
 import BulkImageUploadModal from '../components/BulkImageUploadModal';
+import { POS_FALLBACK_THEME } from '../../utils/themeUtils';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -31,12 +33,8 @@ const constructImageUrl = (relativeUrl) => {
         return relativeUrl;
     }
 
-    // Backend returns paths relative to the uploads root (e.g., "tenantId/folder/file.ext")
-    // The view endpoint is /api/pos/uploads/view/**
-
     const cleanPath = relativeUrl.startsWith('/') ? relativeUrl.slice(1) : relativeUrl;
 
-    // Handle potential legacy paths starting with 'uploads/'
     if (cleanPath.startsWith('uploads/')) {
         return `${API_URL}/pos/uploads/view/${cleanPath.replace('uploads/', '')}`;
     }
@@ -68,23 +66,24 @@ const BarcodeModal = ({ isOpen, onClose, product }) => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        toast.info(`Downloading QR Code for SKU: ${variant.sku}`);
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4" onClick={onClose}>
-            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm text-center" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex justify-center items-center z-50 p-4" onClick={onClose}>
+            <div className="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm text-center border border-slate-100" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">Barcode: {product.name}</h3>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-                        <X size={20} />
+                    <h3 className="text-base font-bold text-slate-800">Barcode: {product.name}</h3>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors">
+                        <X size={18} />
                     </button>
                 </div>
 
                 {variants.length > 1 && (
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-slate-700 mb-1 text-left">Select Variant</label>
+                    <div className="mb-4 text-left">
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Select Variant</label>
                         <select
-                            className="w-full p-2 border rounded-md bg-slate-50"
+                            className="w-full p-2 border-0 bg-slate-100 rounded-xl text-xs font-medium focus:ring-2 focus:ring-slate-900 outline-none"
                             value={variants.indexOf(variant)}
                             onChange={(e) => setSelectedVariant(variants[e.target.value])}
                         >
@@ -97,20 +96,20 @@ const BarcodeModal = ({ isOpen, onClose, product }) => {
                     </div>
                 )}
 
-                <div className="mb-2">
-                    <p className="text-sm text-slate-500">SKU: {variant.sku}</p>
-                    <p className="font-mono text-lg font-bold tracking-wider my-1">{variant.barcode || 'No Barcode'}</p>
+                <div className="mb-3">
+                    <p className="text-xs text-slate-400 font-medium">SKU: {variant.sku}</p>
+                    <p className="font-mono text-base font-bold text-slate-800 tracking-wider my-0.5">{variant.barcode || 'No Barcode'}</p>
                 </div>
 
                 {variant.barcodeImageUrl ? (
-                    <img src={constructImageUrl(variant.barcodeImageUrl)} alt={`Barcode for ${variant.sku}`} className="mx-auto border rounded-md w-48 h-48 object-contain bg-white" />
+                    <img src={constructImageUrl(variant.barcodeImageUrl)} alt={`Barcode for ${variant.sku}`} className="mx-auto border border-slate-100 rounded-2xl w-44 h-44 object-contain bg-white p-2 shadow-xs" />
                 ) : (
-                    <div className="h-48 w-48 mx-auto border rounded-md flex items-center justify-center bg-slate-50 text-slate-400">
-                        <span>No Image</span>
+                    <div className="h-44 w-44 mx-auto border rounded-2xl flex items-center justify-center bg-slate-50 text-slate-400 text-xs">
+                        <span>No Barcode Image</span>
                     </div>
                 )}
 
-                <div className="flex flex-col gap-2 mt-6">
+                <div className="flex flex-col gap-2 mt-5">
                     <button onClick={() => {
                         const imgUrl = constructImageUrl(variant.barcodeImageUrl);
                         const win = window.open('', '_blank');
@@ -126,10 +125,10 @@ const BarcodeModal = ({ isOpen, onClose, product }) => {
                             </html>
                         `);
                         win.document.close();
-                    }} disabled={!variant.barcodeImageUrl} className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <Printer size={16} /> Print
+                    }} disabled={!variant.barcodeImageUrl} className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+                        <Printer size={16} /> Print Barcode
                     </button>
-                    <button onClick={handleDownload} disabled={!variant.barcodeImageUrl} className="btn-secondary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button onClick={handleDownload} disabled={!variant.barcodeImageUrl} className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                         <Download size={16} /> Download
                     </button>
                 </div>
@@ -138,7 +137,8 @@ const BarcodeModal = ({ isOpen, onClose, product }) => {
     );
 };
 
-const ProductsView = () => {
+const ProductsView = ({ posTheme: propPosTheme }) => {
+    const posTheme = propPosTheme || POS_FALLBACK_THEME;
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -151,7 +151,6 @@ const ProductsView = () => {
     const [barcodeModalProduct, setBarcodeModalProduct] = useState(null);
     const [showInactive, setShowInactive] = useState(false);
 
-
     const { isPosAdmin, canManage } = usePosAuth();
 
     const fetchProducts = useCallback(() => {
@@ -159,7 +158,10 @@ const ProductsView = () => {
         const token = localStorage.getItem('token');
         axios.get(`${API_URL}/pos/products`, { headers: { "Authorization": `Bearer ${token}` } })
             .then(res => setProducts(res.data))
-            .catch(() => setError('Failed to fetch products.'))
+            .catch(() => {
+                setError('Failed to fetch products.');
+                toast.error('Failed to fetch products list.');
+            })
             .finally(() => setLoading(false));
     }, []);
 
@@ -176,11 +178,8 @@ const ProductsView = () => {
         const url = productData.id ? `${API_URL}/pos/products/${productData.id}` : `${API_URL}/pos/products`;
 
         try {
-            // The backend seems to expect JSON, not FormData, for creating/updating products.
-            // We only use FormData for the image upload itself.
             const payload = {
                 ...productData,
-                // We don't need to send the local imageFile to the product endpoint
                 variants: productData.variants.map(({ imageFile, ...variant }) => variant),
             };
 
@@ -188,37 +187,38 @@ const ProductsView = () => {
                 headers: { "Authorization": `Bearer ${token}` }
             });
 
-            alert(`Product ${productData.id ? 'updated' : 'saved'} successfully!`);
+            toast.success(`Product ${productData.id ? 'updated' : 'saved'} successfully!`);
             handleClosePanel();
             fetchProducts();
         } catch (err) {
-            alert(`Error: ${err.response?.data?.message || 'Could not save product.'}`);
+            toast.error(`Error: ${err.response?.data?.message || 'Could not save product.'}`);
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleDelete = async (productId) => {
-        if (window.confirm('Are you sure you want to delete this product? It will be deactivated if it has history.')) {
+        if (window.confirm('Are you sure you want to deactivate this product?')) {
             const token = localStorage.getItem('token');
             try {
                 await axios.delete(`${API_URL}/pos/products/${productId}`, { headers: { "Authorization": `Bearer ${token}` } });
+                toast.warning('Product deactivated.');
                 fetchProducts();
             } catch (err) {
-                alert('Failed to delete product.');
+                toast.error('Failed to deactivate product.');
             }
         }
     };
 
     const handleHardDelete = async (productId) => {
-        if (window.confirm('WARNING: This will PERMANENTLY delete the product and all history. This cannot be undone. Are you sure?')) {
+        if (window.confirm('WARNING: This will PERMANENTLY delete the product and all history. Are you sure?')) {
             const token = localStorage.getItem('token');
             try {
                 await axios.delete(`${API_URL}/pos/products/${productId}/hard`, { headers: { "Authorization": `Bearer ${token}` } });
                 fetchProducts();
-                alert('Product permanently deleted.');
+                toast.error('Product permanently deleted.');
             } catch (err) {
-                alert(`Failed to hard delete: ${err.response?.data?.message || err.message}`);
+                toast.error(`Failed to hard delete: ${err.response?.data?.message || err.message}`);
             }
         }
     };
@@ -235,109 +235,169 @@ const ProductsView = () => {
     };
 
     return (
-        <div className="p-6 md:p-8 h-full flex flex-col">
-            <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+        <div className="p-4 sm:p-5 h-full flex flex-col font-sans space-y-3.5">
+            {/* Header section with compact actions */}
+            <div className="flex flex-wrap justify-between items-center gap-3">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800">Products</h1>
-                    <p className="text-slate-500 mt-1">Manage your product catalog and variants.</p>
+                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Product Management</h1>
+                    <p className="text-xs text-slate-500 mt-0.5">Catalog overview and quick stock controls.</p>
                 </div>
                 {canManage && (
-                    <div className="flex gap-2">
-                        <button onClick={() => setIsBulkModalOpen(true)} className="btn-secondary flex items-center gap-2">
-                            <UploadCloud size={18} /> Bulk Add Products
+                    <div className="flex flex-wrap items-center gap-2">
+                        <button 
+                            onClick={() => setIsBulkModalOpen(true)} 
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs transition-all"
+                        >
+                            <UploadCloud size={15} /> Bulk Add
                         </button>
-                        <button onClick={() => setIsBulkImageModalOpen(true)} className="btn-secondary flex items-center gap-2">
-                            <UploadCloud size={18} /> Bulk Image Add
+                        <button 
+                            onClick={() => setIsBulkImageModalOpen(true)} 
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs transition-all"
+                        >
+                            <UploadCloud size={15} /> Bulk Images
                         </button>
-                        <button onClick={handleAdd} className="btn-primary flex items-center gap-2">
-                            <PlusCircle size={18} /> Add Product
+                        <button 
+                            onClick={handleAdd} 
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-white shadow-sm transition-all hover:opacity-90 cursor-pointer"
+                            style={{ backgroundColor: posTheme.primary || '#0f172a' }}
+                        >
+                            <PlusCircle size={15} /> Add Product
                         </button>
                     </div>
                 )}
             </div>
 
-            <div className="relative mb-4 flex gap-4">
+            {/* Filter & Search Bar */}
+            <div className="flex items-center gap-2.5">
                 <div className="relative flex-grow">
-                    <input type="text" placeholder="Search by name or SKU..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="input w-full pl-10" />
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Search by product name or SKU..."
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-white rounded-full text-xs border-0 shadow-xs outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 transition-all"
+                    />
                 </div>
                 <button
                     onClick={() => setShowInactive(!showInactive)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${showInactive
-                        ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                        }`}
-                    title={showInactive ? "Hide Inactive Products" : "Show Inactive Products"}
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium border shadow-xs transition-all ${
+                        showInactive
+                            ? 'bg-amber-50 border-amber-200 text-amber-800'
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
                 >
-                    {showInactive ? <Eye size={18} /> : <EyeOff size={18} />}
-                    <span className="text-sm font-medium hidden md:inline">
-                        {showInactive ? 'Inactive' : 'Active Only'}
-                    </span>
+                    {showInactive ? <Eye size={15} /> : <EyeOff size={15} />}
+                    <span>{showInactive ? 'Showing Inactive' : 'Active Only'}</span>
                 </button>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden flex-grow">
-                <div className="overflow-x-auto h-full">
-                    <table className="min-w-full divide-y divide-slate-200">
-                        <thead className="bg-slate-50 sticky top-0">
-                            <tr>
-                                <th className="th-cell">Name</th><th className="th-cell">SKU</th><th className="th-cell">Barcode</th><th className="th-cell">Status</th><th className="th-cell text-center">Variants</th>
-                                {canManage && <th className="th-cell">Actions</th>}
+            {/* Compact Table Card Sheet */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden flex-grow flex flex-col">
+                <div className="overflow-x-auto flex-grow">
+                    <table className="w-full text-left border-collapse">
+                        <thead className="bg-slate-50/80 sticky top-0 border-b border-slate-200/60 z-10">
+                            <tr className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                                <th className="py-2.5 px-4">Product Name</th>
+                                <th className="py-2.5 px-4">SKU</th>
+                                <th className="py-2.5 px-4">Barcode</th>
+                                <th className="py-2.5 px-4">Price Range</th>
+                                <th className="py-2.5 px-4">Status</th>
+                                <th className="py-2.5 px-4 text-center">Variants</th>
+                                {canManage && <th className="py-2.5 px-4 text-right">Actions</th>}
                             </tr>
                         </thead>
-                        <tbody className="text-slate-700">
+                        <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
                             {loading ? (
-                                <tr><td colSpan={canManage ? 5 : 4} className="text-center py-10"><Loader className="h-8 w-8 animate-spin text-blue-600 mx-auto" /></td></tr>
+                                <tr>
+                                    <td colSpan={canManage ? 7 : 6} className="text-center py-12">
+                                        <Loader className="h-6 w-6 animate-spin text-slate-900 mx-auto" />
+                                    </td>
+                                </tr>
                             ) : error ? (
-                                <tr><td colSpan={canManage ? 5 : 4} className="text-center py-10 text-red-500">{error}</td></tr>
+                                <tr>
+                                    <td colSpan={canManage ? 7 : 6} className="text-center py-12 text-rose-500 font-medium">{error}</td>
+                                </tr>
                             ) : filteredProducts.length > 0 ? (
-                                filteredProducts.map(product => (
-                                    <tr key={product.id} className="border-b border-slate-200 hover:bg-slate-50">
-                                        <td className="td-cell font-medium">{product.name}</td>
-                                        <td className="td-cell text-sm text-slate-500">{product.sku || '-'}</td>
-                                        <td className="td-cell text-sm text-slate-500">{product.variants?.[0]?.barcode || '-'}</td>
-                                        <td className="td-cell">
-                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${product.active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-600'}`}>
-                                                {product.active ? 'Active' : 'Inactive'}
-                                            </span>
-                                        </td>
-                                        <td className="td-cell text-center">{product.variants?.length || 0}</td>
-                                        {canManage && (
-                                            <td className="td-cell">
-                                                <div className="flex items-center gap-2">
-                                                    <button onClick={() => handleEdit(product)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-full" title="Edit"><Edit size={16} /></button>
-                                                    {product.variants?.length > 0 && (
-                                                        <button onClick={() => handleViewBarcodes(product)} className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-full" title="View/Print Barcodes">
-                                                            <Printer size={16} />
-                                                        </button>
-                                                    )}
-                                                    {isPosAdmin && (
-                                                        <>
-                                                            {product.active ? (
-                                                                <button onClick={() => handleDelete(product.id)} className="p-1.5 text-red-600 hover:bg-red-100 rounded-full" title="Delete (Soft)"><Trash2 size={16} /></button>
-                                                            ) : (
-                                                                <button onClick={() => handleHardDelete(product.id)} className="p-1.5 text-red-800 hover:bg-red-200 rounded-full border border-red-200" title="Delete Permanently (Hard)"><Trash2 size={16} /></button>
-                                                            )}
-                                                        </>
-                                                    )}
-                                                </div>
+                                filteredProducts.map(product => {
+                                    const minPrice = product.variants?.length ? Math.min(...product.variants.map(v => v.priceCents || 0)) : 0;
+                                    return (
+                                        <tr key={product.id} className="hover:bg-slate-50/80 transition-colors">
+                                            <td className="py-2.5 px-4 font-bold text-slate-900">{product.name}</td>
+                                            <td className="py-2.5 px-4 font-mono text-[11px] text-slate-500">{product.sku || '-'}</td>
+                                            <td className="py-2.5 px-4 font-mono text-[11px] text-slate-500">{product.variants?.[0]?.barcode || '-'}</td>
+                                            <td className="py-2.5 px-4 font-extrabold text-slate-900">{formatPrice(minPrice)}</td>
+                                            <td className="py-2.5 px-4">
+                                                <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                                    product.active 
+                                                        ? 'bg-emerald-100 text-emerald-800' 
+                                                        : 'bg-slate-100 text-slate-600'
+                                                }`}>
+                                                    {product.active ? 'Active' : 'Inactive'}
+                                                </span>
                                             </td>
-                                        )}
-                                    </tr>
-                                ))
+                                            <td className="py-2.5 px-4 text-center font-bold">{product.variants?.length || 0}</td>
+                                            {canManage && (
+                                                <td className="py-2.5 px-4 text-right">
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <button 
+                                                            onClick={() => handleEdit(product)} 
+                                                            className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors" 
+                                                            title="Edit"
+                                                        >
+                                                            <Edit size={15} />
+                                                        </button>
+                                                        {product.variants?.length > 0 && (
+                                                            <button 
+                                                                onClick={() => handleViewBarcodes(product)} 
+                                                                className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors" 
+                                                                title="View Barcode"
+                                                            >
+                                                                <Printer size={15} />
+                                                            </button>
+                                                        )}
+                                                        {isPosAdmin && (
+                                                            <>
+                                                                {product.active ? (
+                                                                    <button 
+                                                                        onClick={() => handleDelete(product.id)} 
+                                                                        className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" 
+                                                                        title="Deactivate"
+                                                                    >
+                                                                        <Trash2 size={15} />
+                                                                    </button>
+                                                                ) : (
+                                                                    <button 
+                                                                        onClick={() => handleHardDelete(product.id)} 
+                                                                        className="p-1.5 text-rose-700 hover:bg-rose-100 rounded-lg transition-colors" 
+                                                                        title="Permanent Delete"
+                                                                    >
+                                                                        <Trash2 size={15} />
+                                                                    </button>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            )}
+                                        </tr>
+                                    );
+                                })
                             ) : (
-                                <tr><td colSpan={canManage ? 5 : 4} className="text-center py-10 text-slate-500">
-                                    <Package className="mx-auto h-12 w-12 text-slate-400" />
-                                    <h3 className="mt-2 text-sm font-semibold text-slate-900">No products found</h3>
-                                    <p className="mt-1 text-sm text-slate-500">Get started by adding a new product.</p>
-                                </td></tr>
+                                <tr>
+                                    <td colSpan={canManage ? 7 : 6} className="text-center py-12 text-slate-400">
+                                        <Package className="mx-auto h-10 w-10 opacity-40 mb-2" />
+                                        <h3 className="text-xs font-bold text-slate-700">No products found</h3>
+                                        <p className="text-[11px] text-slate-400 mt-0.5">Try searching or adding a new product.</p>
+                                    </td>
+                                </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {/* Side Panel for Add/Edit */}
+            {/* Compact Side Panel for Add/Edit Form */}
             <AnimatePresence>
                 {isPanelOpen && (
                     <>
@@ -345,24 +405,28 @@ const ProductsView = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="fixed inset-0 bg-black bg-opacity-60 z-40"
+                            className="fixed inset-0 bg-black/50 z-40 backdrop-blur-xs"
                             onClick={handleClosePanel}
                         />
                         <motion.div
                             initial={{ x: '100%' }}
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                            className="fixed top-0 right-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col"
+                            transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+                            className="fixed top-0 right-0 h-full w-full max-w-xl bg-white shadow-2xl z-50 flex flex-col rounded-l-3xl overflow-hidden"
                         >
-                            <div className="p-4 border-b flex-shrink-0 flex items-center gap-4">
-                                <button onClick={handleClosePanel} className="p-1.5 rounded-full hover:bg-slate-100">
-                                    <ArrowLeft size={20} />
+                            <div className="px-5 py-4 border-b flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <button onClick={handleClosePanel} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-600 transition-colors">
+                                        <ArrowLeft size={18} />
+                                    </button>
+                                    <h2 className="text-base font-bold text-slate-900">
+                                        {selectedProduct ? 'Edit Product' : 'Add New Product'}
+                                    </h2>
+                                </div>
+                                <button onClick={handleClosePanel} className="p-1 rounded-full hover:bg-slate-100 text-slate-400">
+                                    <X size={18} />
                                 </button>
-                                <h2 className="text-xl font-semibold text-slate-800">
-                                    {selectedProduct ? 'Edit Product' : 'Add New Product'}
-                                </h2>
                             </div>
                             <ProductForm
                                 product={selectedProduct}
@@ -371,9 +435,19 @@ const ProductsView = () => {
                                 isSubmitting={isSubmitting}
                                 onGenerateBarcode={() => handleViewBarcodes(selectedProduct)}
                             />
-                            <div className="p-4 border-t bg-slate-50 flex-shrink-0 flex justify-end sticky gap-2 bottom-0 z-50">
-                                <button type="button" onClick={handleClosePanel} className="btn-secondary" disabled={isSubmitting}>Cancel</button>
-                                <button id="product-form-submit-button" type="submit" form="product-form" className="btn-primary flex items-center gap-2 w-36 justify-center" disabled={isSubmitting}> {isSubmitting && <Loader className="animate-spin h-4 w-4" />} <Save size={16} /> Save Product </button>
+                            <div className="p-4 border-t bg-slate-50 flex justify-end gap-2 sticky bottom-0 z-50">
+                                <button type="button" onClick={handleClosePanel} className="px-4 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition-all" disabled={isSubmitting}>Cancel</button>
+                                <button 
+                                    id="product-form-submit-button" 
+                                    type="submit" 
+                                    form="product-form" 
+                                    className="px-5 py-2 rounded-xl text-xs font-bold text-white transition-all flex items-center justify-center gap-2 min-w-[120px] shadow-sm hover:opacity-90 cursor-pointer" 
+                                    style={{ backgroundColor: posTheme.primary || '#0f172a' }}
+                                    disabled={isSubmitting}
+                                > 
+                                    {isSubmitting ? <Loader className="animate-spin h-4 w-4" /> : <Save size={15} />} 
+                                    Save Product 
+                                </button>
                             </div>
                         </motion.div>
                     </>
@@ -383,9 +457,7 @@ const ProductsView = () => {
             <BulkAddProductsModal
                 isOpen={isBulkModalOpen}
                 onClose={() => setIsBulkModalOpen(false)}
-                onUploadSuccess={() => {
-                    fetchProducts(); // Refresh product list on successful upload
-                }}
+                onUploadSuccess={() => fetchProducts()}
             />
 
             <BulkImageUploadModal
@@ -400,6 +472,6 @@ const ProductsView = () => {
             />
         </div>
     );
-}
+};
 
 export default ProductsView;

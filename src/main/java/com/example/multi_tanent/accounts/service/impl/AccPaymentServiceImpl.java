@@ -22,6 +22,9 @@ import com.example.multi_tanent.accounts.entity.enums.AccountSection;
 import com.example.multi_tanent.accounts.entity.enums.DocumentType;
 import com.example.multi_tanent.accounts.entity.enums.PaymentMethod;
 import com.example.multi_tanent.spersusers.repository.PartyRepository;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
+import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.config.TenantContext;
 import com.example.multi_tanent.accounts.service.AccCashFlowRecorder;
 import com.example.multi_tanent.accounts.service.AccPaymentService;
 import com.example.multi_tanent.accounts.service.journal.JournalEntryService;
@@ -46,9 +49,38 @@ public class AccPaymentServiceImpl implements AccPaymentService {
     private final PartyGLAccountRepository partyGLAccountRepository;
     private final ChartOfAccountRepository chartOfAccountRepository;
     private final PartyRepository partyRepository;
+    private final TenantRepository tenantRepository;
     private final JournalEntryService journalEntryService;
     private final AccCashFlowRecorder cashFlowRecorder;
     private final ApplicationEventPublisher eventPublisher;
+
+    /**
+     * Resolves a tenant identifier (numeric string or slug like "star_1111") to a Long ID.
+     * First tries a direct numeric parse; if that fails, looks up the tenant by tenantId
+     * string or name in the database.
+     */
+    private Long getTenantIdLong(String tenantIdStr) {
+        if (tenantIdStr == null || tenantIdStr.trim().isEmpty()) {
+            tenantIdStr = TenantContext.getTenantId();
+        }
+        if (tenantIdStr == null) return 1L;
+        try {
+            return Long.parseLong(tenantIdStr);
+        } catch (NumberFormatException e) {
+            String finalTenantIdStr = tenantIdStr;
+            return tenantRepository.findByTenantId(finalTenantIdStr)
+                    .or(() -> tenantRepository.findByName(finalTenantIdStr))
+                    .map(Tenant::getId)
+                    .orElseGet(() -> {
+                        try {
+                            String numOnly = finalTenantIdStr.replaceAll("\\D+", "");
+                            return numOnly.isEmpty() ? 1L : Long.parseLong(numOnly);
+                        } catch (Exception ex) {
+                            return 1L;
+                        }
+                    });
+        }
+    }
 
     @Override
     @Transactional
@@ -137,7 +169,7 @@ public class AccPaymentServiceImpl implements AccPaymentService {
         jeReq.setDocumentType(docType);
         
         // Find Party GL
-        Long tenantIdLong = Long.valueOf(tenantId.replace("neon", ""));
+        Long tenantIdLong = getTenantIdLong(tenantId);
         com.example.multi_tanent.accounts.entity.PartyGLAccount partyGL = partyGLAccountRepository.findByPartyTypeAndPartyIdAndTenant(
                 com.example.multi_tanent.accounts.entity.enums.PartyType.valueOf(payment.getPartnerType()), payment.getPartnerId(), tenantIdLong)
                 .orElse(null);

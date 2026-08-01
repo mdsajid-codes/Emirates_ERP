@@ -7,15 +7,24 @@ import EndOfServiceTab from './EndOfServiceTab';
 // --- Helper Components & Functions ---
 const InputField = ({ label, id, type = 'text', ...props }) => (
     <div>
-        <label htmlFor={id} className="block text-sm font-medium text-slate-700">{label}</label>
-        <input id={id} type={type} {...props} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
+        {label && <label htmlFor={id} className="block text-xs font-medium text-foreground-muted mb-1">{label}</label>}
+        <input
+            id={id}
+            type={type}
+            {...props}
+            className="w-full px-2.5 py-1.5 text-xs bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+        />
     </div>
 );
 
 const SelectField = ({ label, id, children, ...props }) => (
     <div>
-        <label htmlFor={id} className="block text-sm font-medium text-slate-700">{label}</label>
-        <select id={id} {...props} className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+        {label && <label htmlFor={id} className="block text-xs font-medium text-foreground-muted mb-1">{label}</label>}
+        <select
+            id={id}
+            {...props}
+            className="w-full px-2.5 py-1.5 text-xs bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+        >
             {children}
         </select>
     </div>
@@ -87,18 +96,12 @@ const SalaryStructureTab = ({ employee }) => {
             newComponents.forEach((comp, i) => {
                 if (comp.formula) {
                     try {
-                        // Replace 'basic' keyword with the actual numeric value
                         const formula = comp.formula.toLowerCase().replace(/basic/g, basic);
 
-                        // ── Safe formula evaluation ─────────────────────────────────────
-                        // Only allow: digits, decimal points, +, -, *, /, (, ), and spaces.
-                        // Reject anything else (e.g. function calls, variable names) to
-                        // prevent code injection — no eval() involved.
                         if (!/^[\d+\-*/.() ]+$/.test(formula)) {
                             console.warn(`Formula blocked (unsafe characters): ${comp.formula}`);
                             return;
                         }
-                        // eslint-disable-next-line no-new-func
                         const result = new Function(`"use strict"; return (${formula})`)();
                         if (isFinite(result)) {
                             newComponents[i].value = result.toFixed(2);
@@ -130,26 +133,26 @@ const SalaryStructureTab = ({ employee }) => {
         }
     };
 
-    if (loading) return <div className="flex justify-center items-center p-8"><Loader className="animate-spin h-8 w-8 text-blue-600" /></div>;
+    if (loading) return <div className="flex justify-center items-center p-8"><Loader className="animate-spin h-6 w-6 text-primary" /></div>;
 
     if (!isEditing && structure) {
         return (
-            <div>
-                <div className="flex justify-between items-center mb-4">
+            <div className="space-y-4">
+                <div className="flex justify-between items-center pb-2 border-b border-border">
                     <div>
-                        <h3 className="text-lg font-semibold">{structure.structureName}</h3>
-                        <p className="text-sm text-slate-500">Effective from: {new Date(structure.effectiveDate).toLocaleDateString()}</p>
+                        <h3 className="text-sm font-bold text-foreground">{structure.structureName}</h3>
+                        <p className="text-[11px] text-foreground-muted">Effective from: {new Date(structure.effectiveDate).toLocaleDateString()}</p>
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={() => setIsSyncModalOpen(true)} className="btn-secondary flex items-center gap-2"><Share2 size={16} /> Sync Structure</button>
-                        <button onClick={() => setIsEditing(true)} className="btn-secondary flex items-center gap-2"><Edit size={16} /> Edit</button>
+                        <button onClick={() => setIsSyncModalOpen(true)} className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border bg-background hover:bg-background-muted transition-colors flex items-center gap-1.5 text-foreground"><Share2 size={14} /> Sync Structure</button>
+                        <button onClick={() => setIsEditing(true)} className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border bg-background hover:bg-background-muted transition-colors flex items-center gap-1.5 text-foreground"><Edit size={14} /> Edit</button>
                     </div>
                 </div>
                 <div className="space-y-2">
                     {structure.components?.map(c => (
-                        <div key={c.id} className="flex justify-between p-2 bg-slate-50 rounded">
-                            <span>{c.componentName} ({c.componentCode})</span>
-                            <span className="font-medium">{formatCurrency(c.value)}</span>
+                        <div key={c.id} className="flex justify-between items-center p-2.5 bg-background-muted/40 rounded-lg border border-border text-xs">
+                            <span className="font-medium text-foreground">{c.componentName} ({c.componentCode})</span>
+                            <span className="font-bold text-foreground">{formatCurrency(c.value)}</span>
                         </div>
                     ))}
                 </div>
@@ -164,30 +167,42 @@ const SalaryStructureTab = ({ employee }) => {
     }
 
     return (
-        <div className="space-y-6">
-            <h3 className="text-lg font-semibold">{structure ? 'Edit Salary Structure' : 'Create Salary Structure'}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4">
+            <h3 className="text-sm font-bold text-foreground">{structure ? 'Edit Salary Structure' : 'Create Salary Structure'}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <InputField label="Structure Name" value={formData.structureName} onChange={e => setFormData(p => ({ ...p, structureName: e.target.value }))} />
                 <InputField label="Effective Date" type="date" value={formData.effectiveDate} onChange={e => setFormData(p => ({ ...p, effectiveDate: e.target.value }))} />
             </div>
-            <div className="space-y-4">
-                <h4 className="font-medium">Components</h4>
+            <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                    <h4 className="text-xs font-bold text-foreground">Components</h4>
+                    <button onClick={handleAddComponent} className="text-primary hover:underline text-xs font-semibold flex items-center gap-1">
+                        <PlusCircle size={14} /> Add Component
+                    </button>
+                </div>
                 {formData.components.map((comp, index) => (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-2 items-end p-3 bg-slate-50 rounded-lg">
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-2 items-end p-2.5 bg-background-muted/40 rounded-lg border border-border">
                         <SelectField label="Component" value={comp.componentCode} onChange={e => handleComponentChange(index, 'componentCode', e.target.value)}>
                             <option value="">Select Component</option>
                             {allComponents.map(c => <option key={c.code} value={c.code}>{c.name} ({c.type})</option>)}
                         </SelectField>
                         <InputField label="Value/Amount" type="number" value={comp.value} onChange={e => handleComponentChange(index, 'value', e.target.value)} />
                         <InputField label="Formula (if any)" value={comp.formula} onChange={e => handleComponentChange(index, 'formula', e.target.value)} />
-                        <button onClick={() => handleRemoveComponent(index)} className="btn-secondary bg-red-50 text-red-600 hover:bg-red-100 p-2 h-10"><Trash2 size={16} /></button>
+                        <button onClick={() => handleRemoveComponent(index)} className="p-1.5 text-foreground-muted hover:text-rose-600 rounded-md transition-colors border border-border bg-background hover:bg-rose-500/10 flex justify-center items-center h-8" title="Remove">
+                            <Trash2 size={14} />
+                        </button>
                     </div>
                 ))}
-                <button onClick={handleAddComponent} className="btn-secondary flex items-center gap-2"><PlusCircle size={16} /> Add Component</button>
             </div>
-            <div className="flex justify-end gap-2">
-                {structure && <button onClick={() => setIsEditing(false)} className="btn-secondary">Cancel</button>}
-                <button onClick={handleSave} className="btn-primary flex items-center gap-2"><Save size={16} /> Save Structure</button>
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
+                {structure && (
+                    <button onClick={() => setIsEditing(false)} className="px-3.5 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-background-muted rounded-lg transition-colors border border-border">
+                        Cancel
+                    </button>
+                )}
+                <button onClick={handleSave} className="px-4 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-1.5 shadow-2xs">
+                    <Save size={14} /> Save Structure
+                </button>
             </div>
         </div>
     );
@@ -453,12 +468,11 @@ const PayslipsTab = ({ employee }) => {
 };
 
 // --- Main Component ---
-const EmployeePayroll = () => {
+const EmployeePayroll = ({ searchTerm = "" }) => {
     const [allEmployees, setAllEmployees] = useState([]);
     const [employee, setEmployee] = useState(null);
     const [listLoading, setListLoading] = useState(true);
     const [error, setError] = useState('');
-    const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState('Salary Structure');
     const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -482,10 +496,11 @@ const EmployeePayroll = () => {
 
     const filteredEmployees = useMemo(() => {
         if (!searchTerm) return allEmployees;
-        const lowercasedFilter = searchTerm.toLowerCase();
+        const lowercasedFilter = searchTerm.toLowerCase().trim();
         return allEmployees.filter(emp =>
             (emp.firstName && emp.firstName.toLowerCase().includes(lowercasedFilter)) ||
             (emp.lastName && emp.lastName.toLowerCase().includes(lowercasedFilter)) ||
+            (`${emp.firstName || ''} ${emp.lastName || ''}`.toLowerCase().includes(lowercasedFilter)) ||
             (emp.employeeCode && emp.employeeCode.toLowerCase().includes(lowercasedFilter))
         );
     }, [allEmployees, searchTerm]);
@@ -496,25 +511,6 @@ const EmployeePayroll = () => {
 
     const handleBackToList = () => {
         setEmployee(null);
-        setSearchTerm("");
-    };
-
-    const handleSearchAndSelect = async (e) => {
-        e.preventDefault();
-        const searchTarget = searchTerm.trim();
-        if (!searchTarget) return;
-        setListLoading(true);
-        try {
-            const token = localStorage.getItem('token');
-            // Use the more specific endpoint to find an employee by their code
-            const response = await axios.get(`${API_URL}/employees/${searchTarget}`, { headers: { "Authorization": `Bearer ${token}` } });
-            setEmployee(response.data);
-        } catch (err) {
-            // If direct search fails, we just rely on the filtered list
-            console.warn("Direct search failed, relying on filter.");
-        } finally {
-            setListLoading(false);
-        }
     };
 
     const subTabs = [
@@ -527,56 +523,55 @@ const EmployeePayroll = () => {
     const ActiveSubComponent = subTabs.find(tab => tab.name === activeTab)?.component;
 
     return (
-        <div>
-            {!employee ? (
-                <form onSubmit={handleSearchAndSelect} className="relative mb-6">
-                    <input
-                        type="text"
-                        placeholder="Search by name or employee ID..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="input w-full pl-10"
-                    />
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                </form>
-            ) : (
-                <div className="flex items-center gap-4 mb-6">
-                    <button onClick={handleBackToList} className="btn-secondary p-2 flex items-center gap-2">
-                        <ArrowLeft className="h-4 w-4" /> Back to List
+        <div className="space-y-3">
+            {employee && (
+                <div className="flex items-center gap-4 mb-3">
+                    <button
+                        onClick={handleBackToList}
+                        className="px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-border bg-background hover:bg-background-muted transition-colors flex items-center gap-1.5 text-foreground"
+                    >
+                        <ArrowLeft className="h-3.5 w-3.5" /> Back to Employee List
                     </button>
                 </div>
             )}
 
-            {error && <div className="text-center text-red-600 p-4 bg-red-50 rounded-md">{error}</div>}
+            {error && (
+                <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-lg border border-rose-500/20">
+                    {error}
+                </div>
+            )}
 
             {!employee ? (
                 listLoading ? (
-                    <div className="flex justify-center items-center p-8"><Loader className="animate-spin h-8 w-8 text-blue-600" /></div>
+                    <div className="flex justify-center items-center p-8 bg-card rounded-lg border border-border">
+                        <Loader className="animate-spin h-6 w-6 text-primary" />
+                    </div>
                 ) : (
-                    <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                        <table className="min-w-full divide-y divide-slate-200">
-                            <thead className="bg-slate-50">
+                    <div className="overflow-x-auto rounded-lg border border-border">
+                        <table className="min-w-full bg-card text-foreground divide-y divide-border">
+                            <thead className="bg-background-muted/60">
                                 <tr>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Name</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Employee Code</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Work Email</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
+                                    <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Name</th>
+                                    <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Employee Code</th>
+                                    <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Work Email</th>
+                                    <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Status</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-slate-200 text-slate-700">
+                            <tbody className="divide-y divide-border/40">
                                 {filteredEmployees.length > 0 ? filteredEmployees.map(emp => (
-                                    <tr key={emp.employeeCode} onClick={() => handleSelectEmployee(emp)} className="cursor-pointer hover:bg-slate-50">
-                                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">{emp.firstName} {emp.lastName}</td>
-                                        <td className="px-4 py-3 whitespace-nowrap text-sm">{emp.employeeCode}</td>
-                                        <td className="px-4 py-3 whitespace-nowrap text-sm">{emp.emailWork}</td>
-                                        <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                            <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-full capitalize ${emp.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                                }`}>{emp.status?.toLowerCase()}</span>
+                                    <tr key={emp.employeeCode || emp.id} onClick={() => handleSelectEmployee(emp)} className="cursor-pointer hover:bg-background-muted/40 transition-colors">
+                                        <td className="px-3 py-2 text-xs font-semibold text-foreground">{emp.firstName} {emp.lastName}</td>
+                                        <td className="px-3 py-2 text-xs text-foreground-muted font-medium">{emp.employeeCode}</td>
+                                        <td className="px-3 py-2 text-xs text-foreground-muted">{emp.emailWork || '-'}</td>
+                                        <td className="px-3 py-2 text-xs">
+                                            <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${emp.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 border-rose-500/20'}`}>
+                                                {emp.status?.toLowerCase() || 'active'}
+                                            </span>
                                         </td>
                                     </tr>
                                 )) : (
                                     <tr>
-                                        <td colSpan="4" className="text-center py-10 text-slate-500">No employees found.</td>
+                                        <td colSpan="4" className="text-center py-8 text-foreground-muted text-xs">No employees found matching your search.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -584,26 +579,29 @@ const EmployeePayroll = () => {
                     </div>
                 )
             ) : (
-                <div>
-                    <div className="flex items-center gap-4 p-4 mb-4 bg-slate-50 rounded-lg">
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2.5 p-2 bg-card border border-border rounded-lg">
+                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-xs border border-primary/20 shrink-0">
+                            {employee.firstName?.charAt(0).toUpperCase()}
+                        </div>
                         <div>
-                            <h3 className="font-bold text-lg text-slate-800">{employee.firstName} {employee.lastName}</h3>
-                            <p className="text-sm text-slate-500">{employee.employeeCode}</p>
+                            <h3 className="font-bold text-xs text-foreground leading-tight">{employee.firstName} {employee.lastName}</h3>
+                            <p className="text-[10px] text-foreground-muted leading-tight">{employee.employeeCode}</p>
                         </div>
                     </div>
 
-                    <div className="border-b border-slate-200 mb-6">
-                        <nav className="-mb-px flex space-x-6" aria-label="Sub-tabs">
+                    <div className="border-b border-border pb-0.5 mb-3">
+                        <nav className="-mb-px flex space-x-3 overflow-x-auto" aria-label="Sub-tabs">
                             {subTabs.map((tab) => (
                                 <button
                                     key={tab.name}
                                     onClick={() => setActiveTab(tab.name)}
-                                    className={`whitespace-nowrap flex items-center py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.name
-                                        ? 'border-blue-600 text-blue-600'
-                                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                    className={`whitespace-nowrap flex items-center gap-1.5 py-1 px-0.5 border-b-2 font-medium text-[11px] transition-colors ${activeTab === tab.name
+                                        ? 'border-primary text-primary font-bold'
+                                        : 'border-transparent text-foreground-muted hover:text-foreground hover:border-border'
                                         }`}
                                 >
-                                    <tab.icon className="mr-2 h-5 w-5" />
+                                    <tab.icon className="h-3.5 w-3.5" />
                                     {tab.name}
                                 </button>
                             ))}

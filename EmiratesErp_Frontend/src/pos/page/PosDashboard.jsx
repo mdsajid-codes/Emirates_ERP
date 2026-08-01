@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Link, useNavigate, useSearchParams, NavLink } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard,
     ShoppingCart,
@@ -20,17 +21,18 @@ import {
     CreditCard,
     ArrowRightLeft,
     Shield,
-    Sliders
+    Sliders,
+    PanelLeftClose,
+    PanelLeftOpen
 } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { usePosTheme } from './usePosTheme';
-import PosSettingsView from './PosSettingsView';
-import CustomersView from './CustomersView';
+import PosDashboardView from './PosDashboardView';
 import ProductsView from './ProductsView';
 import SalesView from './SalesView';
 import InventoryView from './InventoryView';
-import PosDashboardView from './PosDashboardView';
+import CustomersView from './CustomersView';
 import ReportsView from './ReportsView';
+import PosSettingsView from './PosSettingsView';
+import { usePosTheme } from './usePosTheme';
 
 const navLinksOverview = [
     { name: 'Dashboard', icon: LayoutDashboard, Component: PosDashboardView },
@@ -48,6 +50,8 @@ const navLinksOther = [
 const PosDashboard = () => {
     const { posTheme } = usePosTheme();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
+    const [isHovered, setIsHovered] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
     const activeItem = searchParams.get('view') || 'Dashboard';
     const navigate = useNavigate();
@@ -96,6 +100,8 @@ const PosDashboard = () => {
         navigate('/login');
     };
 
+    const isExpanded = !isDesktopCollapsed || isHovered;
+
     const renderContent = () => {
         const allLinks = [...navLinksOverview, ...navLinksOther];
         const activeLink = allLinks.find(link => link.name === activeItem) || navLinksOverview[0];
@@ -103,29 +109,51 @@ const PosDashboard = () => {
         return <Component key={activeItem} setActiveItem={setActiveItem} posTheme={posTheme} />;
     };
 
-    const SidebarNav = () => (
-        <div 
-            className="flex flex-col h-full text-white p-5 justify-between select-none transition-colors duration-300"
+    const SidebarNav = ({ isCollapsedMode = false }) => (
+        <div
+            className={`flex flex-col h-full text-white p-3.5 sm:p-4 justify-between select-none transition-all duration-300 ${isCollapsedMode ? 'items-center px-2' : ''}`}
             style={{ backgroundColor: posTheme.sidebarBg, color: posTheme.sidebarText }}
         >
             <div>
-                {/* Logo Section */}
-                <div className="flex items-center gap-3 px-2 py-3 mb-6">
-                    <div 
-                        className="w-9 h-9 rounded-2xl flex items-center justify-center shadow-xs"
-                        style={{ backgroundColor: posTheme.sidebarActive, color: posTheme.sidebarActiveFg }}
+                {/* Logo & Toggle Section */}
+                <div className={`flex items-center mb-6 py-2 px-1 ${isCollapsedMode ? 'justify-center flex-col gap-2' : 'justify-between gap-2'}`}>
+                    <div className="flex items-center gap-3 overflow-hidden">
+                        <div
+                            className="w-9 h-9 rounded-2xl flex items-center justify-center shadow-xs flex-shrink-0 cursor-pointer"
+                            onClick={() => setIsDesktopCollapsed(prev => !prev)}
+                            style={{ backgroundColor: posTheme.sidebarActive, color: posTheme.sidebarActiveFg }}
+                            title={isDesktopCollapsed ? "Click to toggle sidebar" : undefined}
+                        >
+                            <Sparkles className="h-5 w-5 fill-current" />
+                        </div>
+                        {!isCollapsedMode && (
+                            <div className="min-w-0 flex-1">
+                                <span className="text-xl font-extrabold tracking-tight truncate block" style={{ color: posTheme.sidebarText }}>{tenantName}</span>
+                                <p className="text-[9px] uppercase font-bold tracking-widest -mt-0.5 opacity-90 truncate" style={{ color: posTheme.sidebarActive }}>PROFILES ELASTOMERES</p>
+                            </div>
+                        )}
+                    </div>
+                    {/* Toggle button for desktop */}
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsDesktopCollapsed(prev => !prev);
+                        }}
+                        className="hidden lg:flex items-center justify-center p-1.5 rounded-xl opacity-80 hover:opacity-100 hover:bg-white/10 transition-all cursor-pointer"
+                        title={isDesktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                     >
-                        <Sparkles className="h-5 w-5 fill-current" />
-                    </div>
-                    <div>
-                        <span className="text-2xl font-extrabold tracking-tight" style={{ color: posTheme.sidebarText }}>{tenantName}</span>
-                        <p className="text-[9px] uppercase font-bold tracking-widest -mt-1 opacity-90" style={{ color: posTheme.sidebarActive }}>PROFILES ELASTOMERES</p>
-                    </div>
+                        {isDesktopCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+                    </button>
                 </div>
 
                 {/* Overview Section */}
                 <div className="mb-6">
-                    <p className="text-xs font-semibold uppercase tracking-wider px-3 mb-3 opacity-70" style={{ color: posTheme.sidebarText }}>Overview</p>
+                    {!isCollapsedMode ? (
+                        <p className="text-xs font-semibold uppercase tracking-wider px-3 mb-2.5 opacity-70" style={{ color: posTheme.sidebarText }}>Overview</p>
+                    ) : (
+                        <div className="h-px bg-white/10 mb-3 mx-2" />
+                    )}
                     <nav className="space-y-1.5">
                         {navLinksOverview.map((item) => {
                             const isActive = activeItem === item.name;
@@ -137,16 +165,17 @@ const PosDashboard = () => {
                                         setActiveItem(item.name);
                                         setSidebarOpen(false);
                                     }}
-                                    className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
-                                        isActive ? 'shadow-md font-bold' : 'opacity-80 hover:opacity-100'
-                                    }`}
+                                    title={isCollapsedMode ? item.name : undefined}
+                                    className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-2xl text-sm font-semibold transition-all ${
+                                        isCollapsedMode ? 'justify-center px-0' : ''
+                                    } ${isActive ? 'shadow-md font-bold' : 'opacity-80 hover:opacity-100'}`}
                                     style={{
                                         backgroundColor: isActive ? posTheme.sidebarActive : 'transparent',
                                         color: isActive ? posTheme.sidebarActiveFg : posTheme.sidebarText,
                                     }}
                                 >
-                                    <Icon className="h-5 w-5" style={{ color: isActive ? posTheme.sidebarActiveFg : posTheme.sidebarText }} />
-                                    <span>{item.name}</span>
+                                    <Icon className="h-5 w-5 flex-shrink-0" style={{ color: isActive ? posTheme.sidebarActiveFg : posTheme.sidebarText }} />
+                                    {!isCollapsedMode && <span className="truncate">{item.name}</span>}
                                 </button>
                             );
                         })}
@@ -155,7 +184,11 @@ const PosDashboard = () => {
 
                 {/* Other Section */}
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider px-3 mb-3 opacity-70" style={{ color: posTheme.sidebarText }}>Other</p>
+                    {!isCollapsedMode ? (
+                        <p className="text-xs font-semibold uppercase tracking-wider px-3 mb-2.5 opacity-70" style={{ color: posTheme.sidebarText }}>Other</p>
+                    ) : (
+                        <div className="h-px bg-white/10 mb-3 mx-2" />
+                    )}
                     <nav className="space-y-1.5">
                         {navLinksOther.map((item) => {
                             const isActive = activeItem === item.name;
@@ -167,16 +200,17 @@ const PosDashboard = () => {
                                         setActiveItem(item.name);
                                         setSidebarOpen(false);
                                     }}
-                                    className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
-                                        isActive ? 'shadow-md font-bold' : 'opacity-80 hover:opacity-100'
-                                    }`}
+                                    title={isCollapsedMode ? item.name : undefined}
+                                    className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-2xl text-sm font-semibold transition-all ${
+                                        isCollapsedMode ? 'justify-center px-0' : ''
+                                    } ${isActive ? 'shadow-md font-bold' : 'opacity-80 hover:opacity-100'}`}
                                     style={{
                                         backgroundColor: isActive ? posTheme.sidebarActive : 'transparent',
                                         color: isActive ? posTheme.sidebarActiveFg : posTheme.sidebarText,
                                     }}
                                 >
-                                    <Icon className="h-5 w-5" style={{ color: isActive ? posTheme.sidebarActiveFg : posTheme.sidebarText }} />
-                                    <span>{item.name}</span>
+                                    <Icon className="h-5 w-5 flex-shrink-0" style={{ color: isActive ? posTheme.sidebarActiveFg : posTheme.sidebarText }} />
+                                    {!isCollapsedMode && <span className="truncate">{item.name}</span>}
                                 </button>
                             );
                         })}
@@ -184,85 +218,34 @@ const PosDashboard = () => {
                         {isSuperAdmin && (
                             <NavLink
                                 to="/company-dashboard"
-                                className="w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold opacity-80 hover:opacity-100 transition-all"
+                                title={isCollapsedMode ? "Company Hub" : undefined}
+                                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-2xl text-sm font-semibold opacity-80 hover:opacity-100 transition-all ${
+                                    isCollapsedMode ? 'justify-center px-0' : ''
+                                }`}
                                 style={{ color: posTheme.sidebarText }}
                             >
-                                <Home className="h-5 w-5" style={{ color: posTheme.sidebarText }} />
-                                <span>Company Hub</span>
+                                <Home className="h-5 w-5 flex-shrink-0" style={{ color: posTheme.sidebarText }} />
+                                {!isCollapsedMode && <span className="truncate">Company Hub</span>}
                             </NavLink>
                         )}
                     </nav>
                 </div>
             </div>
-
-            {/* Bottom Rocket Card */}
-            <div className="mt-8 relative pt-8">
-                <div 
-                    className="rounded-3xl p-5 pt-8 text-center relative shadow-lg"
-                    style={{ backgroundColor: posTheme.accent, color: posTheme.accentFg }}
-                >
-                    {/* Rocket Icon floating at top */}
-                    <div 
-                        className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full flex items-center justify-center border-4 shadow-md"
-                        style={{ backgroundColor: posTheme.sidebarBg, borderColor: posTheme.sidebarBg }}
-                    >
-                        <Rocket className="h-7 w-7 text-rose-500 fill-amber-400" />
-                    </div>
-
-                    <h4 className="text-sm font-extrabold leading-tight mt-1" style={{ color: posTheme.accentFg }}>
-                        New update available
-                    </h4>
-                    <p className="text-xs font-medium mt-0.5 mb-3 opacity-80" style={{ color: posTheme.accentFg }}>
-                        click to update
-                    </p>
-
-                    <button
-                        onClick={() => alert('App updated successfully!')}
-                        className="w-full text-xs font-bold py-2.5 px-4 rounded-full transition-colors shadow-md hover:opacity-90"
-                        style={{ backgroundColor: posTheme.sidebarBg, color: posTheme.sidebarText }}
-                    >
-                        Update!
-                    </button>
-                </div>
-            </div>
         </div>
     );
 
-// Helper: Character-by-character letter animation with proper word wrapping
-function AnimatedWelcomeText({ text }) {
-    const words = text.split(' ');
-    let globalCharIndex = 0;
-
-    return (
-        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex flex-wrap">
-            {words.map((word, wordIndex) => (
-                <span key={wordIndex} className="inline-flex whitespace-nowrap mr-2 last:mr-0">
-                    {word.split('').map((char, charIndex) => {
-                        const i = globalCharIndex++;
-                        return (
-                            <motion.span
-                                key={charIndex}
-                                initial={{ opacity: 0, filter: 'blur(5px)', y: 10 }}
-                                animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
-                                transition={{ delay: 0.04 * i, duration: 0.25, ease: 'easeOut' }}
-                                style={{ display: 'inline-block' }}
-                            >
-                                {char}
-                            </motion.span>
-                        );
-                    })}
-                </span>
-            ))}
-        </h1>
-    );
-}
-
     return (
         <div className="min-h-screen bg-[#f3f4f6] flex font-sans">
-            {/* Desktop Fixed Dark Sidebar (Matching Reference Image) */}
-            <aside className="hidden lg:block w-64 xl:w-72 flex-shrink-0 p-3">
+            {/* Desktop Fixed Dark Sidebar with Collapsible / Hover Expand behavior */}
+            <aside
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                className={`hidden lg:block flex-shrink-0 p-3 transition-all duration-300 ease-in-out ${
+                    isExpanded ? 'w-64 xl:w-72' : 'w-20'
+                }`}
+            >
                 <div className="h-[calc(100vh-24px)] sticky top-3 rounded-[32px] overflow-hidden shadow-xl">
-                    <SidebarNav />
+                    <SidebarNav isCollapsedMode={!isExpanded} />
                 </div>
             </aside>
 
@@ -277,9 +260,9 @@ function AnimatedWelcomeText({ text }) {
                         >
                             <Menu className="h-6 w-6" />
                         </button>
-                        <div>
+                        {/* <div>
                             <AnimatedWelcomeText key={username} text={`Welcome back, ${username}!`} />
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* Right side search & user avatar */}

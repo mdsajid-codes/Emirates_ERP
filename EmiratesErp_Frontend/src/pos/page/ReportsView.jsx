@@ -2,22 +2,30 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { Loader, AlertCircle, Calendar } from 'lucide-react';
+import { Loader, AlertCircle, Calendar, ArrowUpRight, TrendingUp, ShoppingBag, DollarSign } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { POS_FALLBACK_THEME } from '../../utils/themeUtils';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const formatPrice = (cents) => `AED ${(cents / 100).toFixed(2)}`;
 
-const StatCard = ({ title, value }) => (
-    <div className="bg-white p-6 rounded-xl shadow-sm">
-        <p className="text-sm font-medium text-slate-500">{title}</p>
-        <p className="text-3xl font-bold text-slate-800 mt-1">{value}</p>
+const StatCard = ({ title, value, icon: Icon, colorClass, bgClass }) => (
+    <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200/60 flex items-center justify-between">
+        <div>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">{title}</p>
+            <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{value}</p>
+        </div>
+        <div className={`p-3 rounded-2xl ${bgClass} ${colorClass}`}>
+            <Icon size={20} />
+        </div>
     </div>
 );
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+const COLORS = ['#0f172a', '#3b82f6', '#10b981', '#f59e0b', '#6366f1'];
 
-const ReportsView = () => {
+const ReportsView = ({ posTheme: propPosTheme }) => {
+    const posTheme = propPosTheme || POS_FALLBACK_THEME;
     const navigate = useNavigate();
     const [sales, setSales] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -44,8 +52,8 @@ const ReportsView = () => {
                 });
                 setSales(response.data);
             } catch (err) {
-                setError('Failed to load sales data.');
-                console.error("Error fetching sales:", err);
+                setError('Failed to load sales analytics data.');
+                toast.error("Failed to load sales report data.");
             } finally {
                 setLoading(false);
             }
@@ -58,7 +66,7 @@ const ReportsView = () => {
         if (!filteredSales.length) return { filteredSales: [], salesByDay: [], topProducts: [] };
 
         const salesByDay = filteredSales.reduce((acc, sale) => {
-            const day = new Date(sale.invoiceDate).toLocaleDateString('en-CA'); // YYYY-MM-DD
+            const day = new Date(sale.invoiceDate).toLocaleDateString('en-CA');
             if (!acc[day]) {
                 acc[day] = { date: day, revenue: 0 };
             }
@@ -92,105 +100,111 @@ const ReportsView = () => {
 
     const dateTickFormatter = (tick) => {
         const date = new Date(tick);
-        // Show month and day, but if it's the first of the month, also show the year.
         if (date.getDate() === 1) {
             return date.toLocaleDateString('en-US', { year: '2-digit', month: 'short', day: 'numeric' });
         }
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     };
 
-    if (loading) return <div className="p-8 flex justify-center items-center h-full"><Loader className="h-8 w-8 animate-spin text-blue-600" /></div>;
-    if (error) return <div className="p-8 text-center text-red-500"><AlertCircle className="mx-auto h-12 w-12" />{error}</div>;
+    if (loading) return <div className="p-12 flex justify-center items-center h-full"><Loader className="h-6 w-6 animate-spin text-slate-900" /></div>;
+    if (error) return <div className="p-6 text-center text-rose-600 font-semibold bg-rose-50 rounded-2xl text-xs">{error}</div>;
 
     return (
-        <div className="p-6 md:p-8 space-y-6">
-            <div className="flex flex-wrap justify-between items-center gap-4">
+        <div className="p-4 sm:p-5 font-sans space-y-4">
+            {/* Header & Date Range Picker */}
+            <div className="flex flex-wrap justify-between items-center gap-3">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800">Reports & Analytics</h1>
-                    <p className="text-slate-500 mt-1">Analyze your sales performance.</p>
+                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">POS Reports & Analytics</h1>
+                    <p className="text-xs text-slate-500 mt-0.5">Track revenue performance, top items, and financial trends.</p>
                 </div>
-                <div className="flex items-center gap-4 bg-white p-2 rounded-lg shadow-sm">
-                    <Calendar className="h-5 w-5 text-slate-400" />
-                    <input type="date" value={dateRange.start} onChange={e => setDateRange(prev => ({ ...prev, start: e.target.value }))} className="input-sm" />
-                    <span className="text-slate-500">to</span>
-                    <input type="date" value={dateRange.end} onChange={e => setDateRange(prev => ({ ...prev, end: e.target.value }))} className="input-sm" />
+                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-xs border border-slate-200/60 text-xs font-semibold text-slate-700">
+                    <Calendar className="h-4 w-4 text-slate-400" />
+                    <input type="date" value={dateRange.start} onChange={e => setDateRange(prev => ({ ...prev, start: e.target.value }))} className="bg-transparent outline-none font-medium cursor-pointer" />
+                    <span className="text-slate-400 font-bold">to</span>
+                    <input type="date" value={dateRange.end} onChange={e => setDateRange(prev => ({ ...prev, end: e.target.value }))} className="bg-transparent outline-none font-medium cursor-pointer" />
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatCard title="Total Revenue" value={formatPrice(stats.totalRevenue)} />
-                <StatCard title="Transactions" value={stats.totalTransactions.toLocaleString()} />
-                <StatCard title="Avg. Sale Value" value={formatPrice(stats.avgTransactionValue)} />
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <StatCard title="Total Revenue" value={formatPrice(stats.totalRevenue)} icon={DollarSign} colorClass="text-emerald-700" bgClass="bg-emerald-50" />
+                <StatCard title="Total Transactions" value={stats.totalTransactions.toLocaleString()} icon={ShoppingBag} colorClass="text-blue-700" bgClass="bg-blue-50" />
+                <StatCard title="Avg. Sale Value" value={formatPrice(stats.avgTransactionValue)} icon={TrendingUp} colorClass="text-amber-700" bgClass="bg-amber-50" />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                <div className="lg:col-span-3 bg-white p-6 rounded-xl shadow-sm">
-                    <h2 className="text-xl font-semibold text-slate-800 mb-4">Sales Over Time</h2>
-                    <ResponsiveContainer width="100%" height={300}>
+            {/* Charts Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-3.5">
+                <div className="lg:col-span-3 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Revenue Trend Over Time</h2>
+                    <ResponsiveContainer width="100%" height={260}>
                         <LineChart data={filteredData.salesByDay}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} tickFormatter={dateTickFormatter} />
-                            <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `AED ${value}`} />
-                            <Tooltip formatter={(value) => formatPrice(value * 100)} />
-                            <Legend />
-                            <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                            <XAxis dataKey="date" fontSize={11} tickLine={false} axisLine={false} tickFormatter={dateTickFormatter} stroke="#64748b" />
+                            <YAxis fontSize={11} tickLine={false} axisLine={false} tickFormatter={(value) => `AED ${value}`} stroke="#64748b" />
+                            <Tooltip formatter={(value) => formatPrice(value * 100)} contentStyle={{ borderRadius: '12px', borderColor: '#e2e8f0', fontSize: '12px' }} />
+                            <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                            <Line type="monotone" dataKey="revenue" stroke={posTheme?.primary || '#0f172a'} strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
-                <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm">
-                    <h2 className="text-xl font-semibold text-slate-800 mb-4">Top Selling Products</h2>
-                    <ResponsiveContainer width="100%" height={300}>
+                <div className="lg:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Top 5 Selling Items</h2>
+                    <ResponsiveContainer width="100%" height={260}>
                         <PieChart>
-                            <Pie data={filteredData.topProducts} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label>
+                            <Pie data={filteredData.topProducts} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={85} fill="#8884d8" label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
                                 {filteredData.topProducts.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                             </Pie>
-                            <Tooltip formatter={(value) => `${value} units sold`} />
-                            <Legend />
+                            <Tooltip formatter={(value) => `${value} units sold`} contentStyle={{ borderRadius: '12px', fontSize: '12px' }} />
                         </PieChart>
                     </ResponsiveContainer>
                 </div>
             </div>
 
-            {/* Detailed Reports Section */}
-            <div className="bg-white p-6 rounded-xl shadow-sm">
-                <h2 className="text-xl font-semibold text-slate-800 mb-6 border-b pb-2">Detailed Reports</h2>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {/* Detailed Reports Catalog */}
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60">
+                <h2 className="text-sm font-bold text-slate-900 mb-3 border-b border-slate-100 pb-2">Available Report Sheets</h2>
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                     {[
                         {
                             title: "Business Summary",
                             path: "/pos-reports/business-summary",
-                            description: "This essential tool provides a concise yet thorough overview of your company's sales activities. It presents key information such as item counts and total amounts across crucial categories including gross sales, net sales, returns, discounts, and total VAT.",
+                            description: "Comprehensive summary of gross sales, net sales, returns, discounts, and VAT across all store channels.",
                         },
                         {
-                            title: "Abstract Report",
-                            description: "Designed primarily for comparative purposes, this report empowers you to efficiently evaluate total sales figures across different company brands. By utilizing this insightful report, you can gain a comprehensive understanding of the performance variations between your various brands.",
+                            title: "Abstract Brand Report",
+                            description: "Evaluates total sales figures across different company brands for clear comparative performance analysis.",
                         },
                         {
                             title: "Weekly Sales Analysis",
-                            description: "This insightful report provides a comprehensive overview of sales performance on a weekly basis. By tracking sales trends over time, the report allows you to analyze and compare the growth between the current and previous weeks.",
+                            description: "Tracks sales trends over time on a weekly basis, highlighting growth between current and prior weeks.",
                         },
                         {
                             title: "Daily Sales Report",
-                            description: "This report provides a concise overview of the sales made on a daily basis. It serves as an end-of-day summary, offering valuable insights into the revenue generated during each business day.",
+                            description: "Concise overview of daily transactions serving as an end-of-day revenue summary.",
                         },
                         {
                             title: "Total Daily Sales Report",
-                            description: "This report provides a concise and comprehensive summary of sales for each selected date. By generating this report, you gain valuable insights into the total sales achieved on a daily basis.",
+                            description: "Aggregated financial breakdown for each selected business date.",
                         },
                         {
                             title: "Closing Report",
-                            description: "This comprehensive report serves as an end-of-day summary, providing you with detailed information about the day's sales activities. It offers a comprehensive breakdown of sales details, enabling you to review key metrics and track performance effectively.",
+                            description: "End-of-day register summary enabling register audits, payment channel balance checks, and cashier review.",
                         },
                     ].map((report, index) => (
-                        <div key={index} onClick={() => report.path && navigate(report.path)} className="group cursor-pointer hover:bg-slate-50 p-4 rounded-xl border border-transparent hover:border-slate-100 transition-all duration-200">
-                            <h3 className="text-base font-bold text-blue-600 mb-2 group-hover:underline decoration-blue-300 underline-offset-2">
-                                {report.title}
-                            </h3>
-                            <p className="text-sm text-slate-500 leading-relaxed text-justify">
-                                {report.description}
-                            </p>
+                        <div key={index} onClick={() => report.path && navigate(report.path)} className="group cursor-pointer bg-slate-50/70 hover:bg-slate-100/80 p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 transition-all duration-200 flex flex-col justify-between">
+                            <div>
+                                <div className="flex items-center justify-between gap-1 mb-1">
+                                    <h3 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                                        {report.title}
+                                    </h3>
+                                    <ArrowUpRight size={14} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+                                </div>
+                                <p className="text-[11px] text-slate-500 leading-normal">
+                                    {report.description}
+                                </p>
+                            </div>
                         </div>
                     ))}
                 </div>

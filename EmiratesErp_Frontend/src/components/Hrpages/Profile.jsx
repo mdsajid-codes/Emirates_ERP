@@ -4,17 +4,19 @@ import axios from 'axios';
 
 // Reusable component for a field in a profile card
 const InfoField = ({ label, value }) => (
-    <div>
-        <p className="text-sm text-foreground-muted">{label}</p>
-        <p className="text-base font-medium text-foreground">{value || 'N/A'}</p>
+    <div className="bg-background/60 border border-border/60 rounded-xl p-2.5 space-y-0.5 shadow-2xs">
+        <p className="text-[10px] font-bold text-foreground-muted uppercase tracking-wider">{label}</p>
+        <p className="text-xs font-semibold text-foreground truncate">{value || 'N/A'}</p>
     </div>
 );
 
 // Reusable card component for profile sections
 const ProfileCard = ({ title, children }) => (
-    <div className="bg-background-muted rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-foreground border-b border-border pb-3 mb-4">{title}</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
+    <div className="bg-card border border-border rounded-2xl p-3 shadow-xs space-y-2.5">
+        <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
+            <h3 className="text-xs font-bold text-foreground tracking-tight">{title}</h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
             {children}
         </div>
     </div>
@@ -27,14 +29,15 @@ const EditField = ({ label, name, value, onChange, type = 'text', options = [] }
         name: name,
         value: value ?? '',
         onChange: onChange,
-        className: "input bg-background-muted border-border text-foreground"
+        className: "w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:border-primary transition-all"
     };
 
     return (
-        <div>
-            <label htmlFor={name} className="block text-sm font-medium text-foreground-muted">{label}</label>
+        <div className="space-y-1">
+            <label htmlFor={name} className="block text-[11px] font-bold text-foreground-muted uppercase tracking-wider">{label}</label>
             {type === 'select' ? (
-                <select {...commonProps}>
+                <select {...commonProps} className={`${commonProps.className} cursor-pointer`}>
+                    <option value="">Select...</option>
                     {options.map(option => (
                         <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
@@ -102,25 +105,26 @@ const Profile = ({ employee, onUpdate }) => {
     const statusOptions = [ { value: 'ACTIVE', label: 'Active' }, { value: 'INACTIVE', label: 'Inactive' }, { value: 'ON_PROBATION', label: 'On Probation' }, { value: 'TERMINATED', label: 'Terminated' } ];
 
     return (
-        <div>
-            <div className="flex justify-end mb-4 gap-2">
+        <div className="space-y-2.5">
+            <div className="flex justify-end gap-2">
                 {isEditing ? (
                     <>
-                        <button onClick={handleCancel} className="btn-secondary" disabled={loading}>Cancel</button>
-                        <button onClick={handleSave} className="btn-primary flex items-center" disabled={loading}>
-                            {loading ? <Loader className="animate-spin h-4 w-4 mr-2" /> : <Check className="h-4 w-4 mr-2" />}
-                            Save
+                        <button onClick={handleCancel} className="px-3 py-1.5 rounded-lg border border-border hover:bg-background-muted text-xs font-semibold transition-colors" disabled={loading}>Cancel</button>
+                        <button onClick={handleSave} className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs" disabled={loading}>
+                            {loading ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+                            Save Profile
                         </button>
                     </>
                 ) : (
-                    <button onClick={() => setIsEditing(true)} className="btn-primary flex items-center">
-                        <Pencil className="h-4 w-4 mr-2" />
+                    <button onClick={() => setIsEditing(true)} className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs">
+                        <Pencil className="h-3.5 w-3.5" />
                         Edit Profile
                     </button>
                 )}
             </div>
-            {error && <div className="text-center text-red-600 dark:text-red-400 p-3 bg-red-50 dark:bg-red-900/20 rounded-md mb-4">{error}</div>}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {error && <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-600 rounded-xl text-xs font-semibold">{error}</div>}
+            
+            <div className="space-y-2.5">
                 <ProfileCard title="Primary Details">
                     {isEditing ? <>
                         <EditField label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} />

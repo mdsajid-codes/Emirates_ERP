@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { Loader } from 'lucide-react';
+import { toast } from 'react-toastify';
 import CustomerForm from '../components/CustomerForm';
 import Modal from '../components/Modal';
 import SalesHeader from '../sales/components/SalesHeader';
@@ -13,10 +14,12 @@ import SaleSuccessModal from '../sales/components/SaleSuccessModal';
 import BillModal from '../sales/components/BillModal';
 import ProductPanel from '../sales/components/ProductPanel';
 import { formatPrice } from '../sales/utils';
+import { POS_FALLBACK_THEME } from '../../utils/themeUtils';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-const SalesView = () => {
+const SalesView = ({ posTheme: propPosTheme }) => {
+    const posTheme = propPosTheme || POS_FALLBACK_THEME;
     const [products, setProducts] = useState([]);
     const [customers, setCustomers] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -62,7 +65,7 @@ const SalesView = () => {
                 }
             } catch (err) {
                 console.error("Error fetching initial POS data:", err);
-                alert("Failed to load required data. Please refresh the page.");
+                toast.error("Failed to load POS data. Please refresh.");
             } finally {
                 setLoading({ products: false, customers: false, stores: false, sale: false });
             }
@@ -90,19 +93,22 @@ const SalesView = () => {
         try {
             const payload = { ...productData, variants: productData.variants.map(({ imageFile, ...v }) => v) };
             await axios.post(`${API_URL}/pos/products`, payload, { headers: { "Authorization": `Bearer ${token}` } });
-            alert('Product saved successfully!');
+            toast.success('Product saved successfully!');
             setProductPanelOpen(false);
             fetchProducts();
-        } catch (err) { alert(`Error: ${err.response?.data?.message || 'Could not save product.'}`); } finally { setIsSubmittingProduct(false); }
+        } catch (err) { 
+            toast.error(`Error: ${err.response?.data?.message || 'Could not save product.'}`); 
+        } finally { 
+            setIsSubmittingProduct(false); 
+        }
     };
 
     const handleAddToCart = (product, variant, quantityAvailable) => {
         setCart(prevCart => {
             const existingItem = prevCart.find(item => item.productVariantId === variant.id);
 
-            // Prevent adding if out of stock
             if (quantityAvailable <= 0 && !existingItem) {
-                alert(`${product.name} is out of stock.`);
+                toast.warning(`${product.name} is out of stock.`);
                 return prevCart;
             }
 
@@ -116,9 +122,10 @@ const SalesView = () => {
 
             if (existingItem) {
                 if (existingItem.quantity >= quantityAvailable) {
-                    alert(`No more stock available for ${product.name}.`);
+                    toast.warning(`No more stock available for ${product.name}.`);
                     return prevCart;
                 }
+                toast.info(`Added another ${product.name}`);
                 return prevCart.map(item =>
                     item.productVariantId === variant.id
                         ? { ...item, quantity: item.quantity + 1 }
@@ -126,6 +133,7 @@ const SalesView = () => {
                 );
             }
 
+            toast.success(`Added ${product.name} to cart`);
             return [...prevCart, {
                 productVariantId: variant.id,
                 productName: product.name,
@@ -133,7 +141,7 @@ const SalesView = () => {
                 taxRate: taxRateObj,
                 attributes: variant.attributes,
                 quantity: 1,
-                availableQuantity: quantityAvailable, // Store available stock
+                availableQuantity: quantityAvailable,
             }];
         });
     };
@@ -143,8 +151,8 @@ const SalesView = () => {
             if (item.productVariantId === variantId) {
                 const newQuantity = item.quantity + change;
                 if (change > 0 && newQuantity > item.availableQuantity) {
-                    alert(`Only ${item.availableQuantity} units of ${item.productName} are available.`);
-                    return item; // Do not update
+                    toast.warning(`Only ${item.availableQuantity} units of ${item.productName} available.`);
+                    return item;
                 }
                 return { ...item, quantity: Math.max(1, newQuantity) };
             }
@@ -154,6 +162,7 @@ const SalesView = () => {
 
     const handleRemoveItem = (variantId) => {
         setCart(prevCart => prevCart.filter(item => item.productVariantId !== variantId));
+        toast.info("Item removed from cart");
     };
 
     const handleClearCart = () => {
@@ -170,14 +179,14 @@ const SalesView = () => {
                 if (!showInactive && !product.active) continue;
                 const variant = product.variants.find(v => v.barcode === barcode.trim());
                 if (variant) {
-                    handleAddToCart(product, variant);
+                    handleAddToCart(product, variant, variant.quantity);
                     found = true;
                     break;
                 }
             }
 
-            if (!found) alert(`Product with barcode "${barcode}" not found.`);
-            setBarcode(''); // Clear input after scan
+            if (!found) toast.error(`Barcode "${barcode}" not found.`);
+            setBarcode('');
         }
     };
 
@@ -205,10 +214,11 @@ const SalesView = () => {
             setBillModalOpen(false);
             setPaymentModalOpen(false);
             setResumedSaleDetails(null);
-            setCompletedSale(response.data); // Capture the completed sale data
+            setCompletedSale(response.data);
+            toast.success("Sale completed successfully!");
         } catch (err) {
             console.error("Sale creation failed:", err);
-            alert(`Sale failed: ${err.response?.data?.message || err.message || 'Please try again.'}`);
+            toast.error(`Sale failed: ${err.response?.data?.message || err.message || 'Please try again.'}`);
         } finally {
             setLoading(prev => ({ ...prev, sale: false }));
         }
@@ -216,7 +226,7 @@ const SalesView = () => {
 
     const handleParkSale = async (orderId, saleDetails = {}) => {
         if (cart.length === 0) {
-            alert("Cannot park an empty sale.");
+            toast.warning("Cannot park an empty sale.");
             return;
         }
         setLoading(prev => ({ ...prev, sale: true }));
@@ -226,8 +236,8 @@ const SalesView = () => {
             customerId: selectedCustomer || null,
             orderId: orderId,
             items: cart.map(item => ({ productVariantId: item.productVariantId, quantity: item.quantity })),
-            status: 'pending', // Explicitly set status for parked sales
-            payments: [], // No payment for a parked sale
+            status: 'pending',
+            payments: [],
             orderType: saleDetails.orderType || 'DINE_IN',
             adultsCount: saleDetails.adultsCount || 0,
             kidsCount: saleDetails.kidsCount || 0,
@@ -237,19 +247,18 @@ const SalesView = () => {
         try {
             const token = localStorage.getItem('token');
             await axios.post(`${API_URL}/pos/sales`, saleRequest, { headers: { "Authorization": `Bearer ${token}` } });
-            alert('Sale has been parked and can be found in the Lookup > Pending tab.');
+            toast.info('Sale parked in Lookup > Pending tab.');
             handleClearCart();
             setBillModalOpen(false);
         } catch (err) {
-            alert(`Parking sale failed: ${err.response?.data?.message || err.message || 'Please try again.'}`);
+            toast.error(`Parking sale failed: ${err.response?.data?.message || err.message || 'Please try again.'}`);
         } finally {
             setLoading(prev => ({ ...prev, sale: false }));
         }
     };
 
     const handleResumeSale = async (saleId) => {
-        // First, clear the current cart to avoid merging issues.
-        if (cart.length > 0 && !window.confirm('This will clear your current cart. Are you sure you want to resume this sale?')) {
+        if (cart.length > 0 && !window.confirm('This will clear your current cart. Resume sale?')) {
             return;
         }
         handleClearCart();
@@ -257,18 +266,9 @@ const SalesView = () => {
 
         try {
             const token = localStorage.getItem('token');
-            // Fetch the full sale details
             const response = await axios.get(`${API_URL}/pos/sales/${saleId}`, { headers: { "Authorization": `Bearer ${token}` } });
             const saleToResume = response.data;
-            console.log("Resuming Sale Data:", saleToResume);
-            if (saleToResume.items) {
-                console.log("Sale Items:", saleToResume.items);
-                saleToResume.items.forEach((item, index) => {
-                    console.log(`Item ${index}:`, item, "ProductVariant:", item.productVariant);
-                });
-            }
 
-            // Reconstruct the cart
             const newCart = saleToResume.items.map(item => {
                 if (!item.productVariant) return null;
                 return {
@@ -287,7 +287,7 @@ const SalesView = () => {
             }).filter(Boolean);
 
             if (newCart.length === 0) {
-                alert("Could not resume sale: No valid items found.");
+                toast.error("Could not resume sale: No valid items found.");
                 setLoading(prev => ({ ...prev, sale: false }));
                 return;
             }
@@ -303,28 +303,26 @@ const SalesView = () => {
                 salesSource: saleToResume.salesSource
             });
 
-            // Close the lookup modal and open the bill modal directly
             setLookupModalOpen(false);
             setBillModalOpen(true);
+            toast.success("Parked sale resumed!");
 
         } catch (err) {
-            alert(`Resuming sale failed: ${err.response?.data?.message || 'Please try again.'}`);
+            toast.error(`Resuming sale failed: ${err.response?.data?.message || 'Please try again.'}`);
         } finally {
             setLoading(prev => ({ ...prev, sale: false }));
         }
     };
 
     const handleRemoveSale = async (saleId) => {
-        if (!window.confirm('Are you sure you want to permanently remove this parked sale?')) return;
+        if (!window.confirm('Are you sure you want to remove this parked sale?')) return;
         try {
             const token = localStorage.getItem('token');
             await axios.delete(`${API_URL}/pos/sales/${saleId}`, { headers: { "Authorization": `Bearer ${token}` } });
-            alert('Parked sale removed successfully.');
-            // The modal will refetch sales on its own next time it opens, or we could pass a refetch function.
-            // For now, we just close it. The list will be updated on the next open.
+            toast.info('Parked sale removed.');
             setLookupModalOpen(false);
         } catch (err) {
-            alert(`Removing sale failed: ${err.response?.data?.message || 'Please try again.'}`);
+            toast.error(`Removing sale failed: ${err.response?.data?.message || 'Please try again.'}`);
         }
     };
 
@@ -335,14 +333,14 @@ const SalesView = () => {
             const response = await axios.post(`${API_URL}/pos/customers`, customerData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            // Refetch customers and select the new one
             const newCustomer = response.data;
             setCustomers(prev => [...prev, newCustomer].sort((a, b) => a.name.localeCompare(b.name)));
             setSelectedCustomer(newCustomer.id);
             setCustomerModalOpen(false);
+            toast.success("New customer saved!");
         } catch (err) {
             console.error("Failed to save customer:", err);
-            alert(`Error: ${err.response?.data?.message || 'Could not save customer.'}`);
+            toast.error(`Error: ${err.response?.data?.message || 'Could not save customer.'}`);
         } finally {
             setLoading(prev => ({ ...prev, customers: false }));
         }
@@ -359,30 +357,27 @@ const SalesView = () => {
         )
         , [products, searchTerm, selectedCategory, showInactive]);
 
-    // Centralized calculation logic
     const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.priceCents * item.quantity, 0), [cart]);
     const tax = useMemo(() => cart.reduce((sum, item) => {
         const itemTotal = item.priceCents * item.quantity;
-        // Note: This is a frontend estimation. The backend's calculation is the source of truth.
         return sum + (item.taxRate ? Math.round(itemTotal * (item.taxRate.percent / 100)) : 0);
     }, 0), [cart]);
     const total = subtotal + tax - discountCents;
 
-    const handleOpenPaymentModal = () => {
-        if (!selectedStore) {
-            alert("Please select a store before proceeding to payment.");
+    const handleOpenBillModal = () => {
+        if (cart.length === 0) {
+            toast.warning("Your cart is empty.");
             return;
         }
-        setPaymentModalOpen(true);
-    };
-
-    const handleOpenBillModal = () => {
-        if (cart.length === 0 || !selectedStore) return;
+        if (!selectedStore) {
+            toast.warning("Please select a store before proceeding.");
+            return;
+        }
         setBillModalOpen(true);
     };
 
     const handleDownloadBarcode = async (e, variantId, sku) => {
-        e.stopPropagation(); // Prevent adding to cart
+        e.stopPropagation();
         try {
             const token = localStorage.getItem('token');
             const response = await axios.get(`${API_URL}/pos/barcodes/qr/variant/${variantId}`, {
@@ -398,16 +393,17 @@ const SalesView = () => {
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
+            toast.info(`Downloaded QR barcode for ${sku}`);
         } catch (err) {
             console.error("Failed to download barcode", err);
-            alert("Could not download barcode.");
+            toast.error("Could not download barcode.");
         }
     };
 
     return (
-        <div className="flex h-full bg-slate-100">
-            {/* Main Content - Product Grid */}
-            <div className="flex-1 flex flex-col p-4">
+        <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] bg-[#f3f4f6] p-3 sm:p-4 gap-3.5 font-sans overflow-hidden">
+            {/* Main Content Area: Header & Product Grid */}
+            <div className="flex-1 flex flex-col min-w-0">
                 <SalesHeader
                     searchTerm={searchTerm} onSearchTermChange={setSearchTerm}
                     barcode={barcode} onBarcodeChange={setBarcode} onBarcodeScan={handleBarcodeScan}
@@ -420,18 +416,19 @@ const SalesView = () => {
                     onToggleInactive={() => setShowInactive(!showInactive)}
                 />
                 {loading.products || loading.stores ? (
-                    <div className="flex-grow flex justify-center items-center"><Loader className="animate-spin h-10 w-10 text-blue-600" /></div>
+                    <div className="flex-grow flex justify-center items-center"><Loader className="animate-spin h-8 w-8 text-slate-900" /></div>
                 ) : (
                     <ProductGrid
                         products={filteredProducts}
                         onAddToCart={handleAddToCart}
                         onDownloadBarcode={handleDownloadBarcode}
+                        posTheme={posTheme}
                     />
                 )}
             </div>
 
-            {/* Right Sidebar - Cart */}
-            <div className="w-80 flex-shrink-0 border-l border-slate-200 flex flex-col">
+            {/* Right Cart Sidebar */}
+            <div className="w-full md:w-80 lg:w-96 flex-shrink-0 flex flex-col h-full">
                 <Cart
                     cart={cart}
                     onUpdateQuantity={handleUpdateQuantity}
@@ -440,15 +437,8 @@ const SalesView = () => {
                     discountCents={discountCents}
                     onOpenLookup={() => setLookupModalOpen(true)} onOpenDiscountModal={() => setDiscountModalOpen(true)} onOpenBillModal={handleOpenBillModal}
                     onDiscountChange={setDiscountCents}
+                    posTheme={posTheme}
                 />
-                <div className="p-4 border-t">
-                    <button
-                        disabled
-                        className="w-full btn-primary text-lg"
-                    >
-                        Total Amount {formatPrice(total)}
-                    </button>
-                </div>
             </div>
 
             {isPaymentModalOpen && (

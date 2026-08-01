@@ -1,31 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../DashboardLayout';
-import { Plus, Edit, Trash2, Loader, AlertCircle, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader, AlertCircle, ArrowLeft, BookCopy } from 'lucide-react';
 import axios from 'axios';
 
-// Modal for adding/editing leave types
-const LeaveTypeModal = ({ isOpen, onClose, onSave, leaveType, loading }) => {
+// Inline screen form for adding/editing leave types
+const LeaveTypeFormView = ({ onClose, onSave, leaveType, loading }) => {
     const [formData, setFormData] = useState({
-        leaveType: '',
-        description: '',
-        isPaid: true,
-        maxDaysPerYear: ''
+        leaveType: leaveType?.leaveType || '',
+        description: leaveType?.description || '',
+        isPaid: leaveType ? (leaveType.isPaid || false) : true,
+        maxDaysPerYear: leaveType?.maxDaysPerYear ?? ''
     });
-    const [modalError, setModalError] = useState('');
-
-    useEffect(() => {
-        if (leaveType) {
-            setFormData({
-                leaveType: leaveType.leaveType || '',
-                description: leaveType.description || '',
-                isPaid: leaveType.isPaid || false,
-                maxDaysPerYear: leaveType.maxDaysPerYear ?? ''
-            });
-        } else {
-            setFormData({ leaveType: '', description: '', isPaid: true, maxDaysPerYear: '' });
-        }
-        setModalError('');
-    }, [leaveType, isOpen]);
+    const [formError, setFormError] = useState('');
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -36,54 +22,106 @@ const LeaveTypeModal = ({ isOpen, onClose, onSave, leaveType, loading }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!formData.leaveType.trim()) {
-            setModalError('Leave Type name is required.');
+            setFormError('Leave Type name is required.');
             return;
         }
         onSave(formData);
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-                <div className="p-4 border-b flex justify-between items-center">
-                    <h2 className="text-xl font-semibold">{leaveType ? 'Edit' : 'Add'} Leave Type</h2>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100">
-                        <X className="h-5 w-5" />
+        <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Sub-header with Back Button */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-border pb-3">
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={onClose}
+                        className="px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-border bg-background hover:bg-background-muted transition-colors flex items-center gap-1.5 text-foreground"
+                    >
+                        <ArrowLeft className="h-3.5 w-3.5" /> Back to Leave Types
+                    </button>
+                    <div>
+                        <h2 className="text-sm font-bold text-foreground">
+                            {leaveType ? 'Edit Leave Type' : 'Add New Leave Type'}
+                        </h2>
+                        <p className="text-[11px] text-foreground-muted">Configure leave type name, yearly allowance, and paid status</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="bg-card text-foreground rounded-xl border border-border p-4 shadow-2xs space-y-4 max-w-2xl">
+                {formError && <div className="p-2.5 bg-rose-500/10 text-rose-500 text-xs rounded-md">{formError}</div>}
+
+                <div className="space-y-3">
+                    <div>
+                        <label htmlFor="leaveType" className="block text-xs font-medium text-foreground-muted mb-1">Leave Type Name</label>
+                        <input
+                            id="leaveType"
+                            name="leaveType"
+                            value={formData.leaveType}
+                            onChange={handleChange}
+                            required
+                            className="w-full px-2.5 py-1.5 text-xs bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                            placeholder="e.g. Annual Leave, Casual Leave"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="description" className="block text-xs font-medium text-foreground-muted mb-1">Description</label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            rows="3"
+                            className="w-full px-2.5 py-1.5 text-xs bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                            placeholder="Provide details or guidelines for this leave type..."
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="maxDaysPerYear" className="block text-xs font-medium text-foreground-muted mb-1">Max Days Per Year</label>
+                        <input
+                            id="maxDaysPerYear"
+                            name="maxDaysPerYear"
+                            type="number"
+                            value={formData.maxDaysPerYear}
+                            onChange={handleChange}
+                            className="w-full px-2.5 py-1.5 text-xs bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                            placeholder="e.g., 12"
+                        />
+                    </div>
+                    <div>
+                        <label className="inline-flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                name="isPaid"
+                                checked={formData.isPaid}
+                                onChange={handleChange}
+                                className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary"
+                            />
+                            <span className="text-xs font-medium text-foreground">Is Paid Leave</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-3 border-t border-border">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-3.5 py-1.5 text-xs font-semibold text-foreground-muted hover:bg-background-muted rounded-lg transition-colors border border-border"
+                        disabled={loading}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        className="px-4 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
+                        disabled={loading}
+                    >
+                        {loading && <Loader className="animate-spin h-3.5 w-3.5" />}
+                        Save Leave Type
                     </button>
                 </div>
-                <form onSubmit={handleSubmit}>
-                    <div className="p-6 space-y-4">
-                        <div>
-                            <label htmlFor="leaveType" className="block text-sm font-medium text-slate-700">Leave Type Name</label>
-                            <input id="leaveType" name="leaveType" value={formData.leaveType} onChange={handleChange} required className="input" />
-                        </div>
-                        <div>
-                            <label htmlFor="description" className="block text-sm font-medium text-slate-700">Description</label>
-                            <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows="3" className="input" />
-                        </div>
-                        <div>
-                            <label htmlFor="maxDaysPerYear" className="block text-sm font-medium text-slate-700">Max Days Per Year</label>
-                            <input id="maxDaysPerYear" name="maxDaysPerYear" type="number" value={formData.maxDaysPerYear} onChange={handleChange} className="input" placeholder="e.g., 12" />
-                        </div>
-                        <div>
-                            <label className="inline-flex items-center">
-                                <input type="checkbox" name="isPaid" checked={formData.isPaid} onChange={handleChange} className="h-4 w-4 rounded" />
-                                <span className="ml-2 text-sm">Is Paid Leave</span>
-                            </label>
-                        </div>
-                        {modalError && <p className="text-red-500 text-sm">{modalError}</p>}
-                    </div>
-                    <div className="p-4 border-t bg-slate-50 flex justify-end gap-2">
-                        <button type="button" onClick={onClose} className="btn-secondary" disabled={loading}>Cancel</button>
-                        <button type="submit" className="btn-primary flex items-center" disabled={loading}>
-                            {loading && <Loader className="animate-spin h-4 w-4 mr-2" />}
-                            Save
-                        </button>
-                    </div>
-                </form>
-            </div>
+            </form>
         </div>
     );
 };
@@ -91,9 +129,9 @@ const LeaveTypeModal = ({ isOpen, onClose, onSave, leaveType, loading }) => {
 const LeaveType = ({ embedded = false }) => {
     const [leaveTypes, setLeaveTypes] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [modalLoading, setModalLoading] = useState(false);
+    const [formLoading, setFormLoading] = useState(false);
     const [error, setError] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingLeaveType, setEditingLeaveType] = useState(null);
 
     const API_URL = import.meta.env.VITE_API_BASE_URL;
@@ -121,12 +159,17 @@ const LeaveType = ({ embedded = false }) => {
 
     const handleAdd = () => {
         setEditingLeaveType(null);
-        setIsModalOpen(true);
+        setIsFormOpen(true);
     };
 
     const handleEdit = (leaveType) => {
         setEditingLeaveType(leaveType);
-        setIsModalOpen(true);
+        setIsFormOpen(true);
+    };
+
+    const handleCloseForm = () => {
+        setIsFormOpen(false);
+        setEditingLeaveType(null);
     };
 
     const handleDelete = async (leaveTypeId, leaveTypeName) => {
@@ -145,7 +188,7 @@ const LeaveType = ({ embedded = false }) => {
     };
 
     const handleSave = async (leaveTypeData) => {
-        setModalLoading(true);
+        setFormLoading(true);
         setError('');
         try {
             const token = localStorage.getItem('token');
@@ -158,94 +201,105 @@ const LeaveType = ({ embedded = false }) => {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
             }
-            setIsModalOpen(false);
+            handleCloseForm();
             fetchLeaveTypes();
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to save leave type. The name might already exist.');
             console.error(err);
         } finally {
-            setModalLoading(false);
+            setFormLoading(false);
         }
     };
 
-    const content = (
-        <>
-            <div className="p-6 md:p-8">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-3xl font-bold text-slate-800">Leave Types</h1>
-                    <button
-                        onClick={handleAdd}
-                        className="btn-primary flex items-center">
-                        <Plus className="h-5 w-5 mr-2" />
-                        Add Leave Type
-                    </button>
-                </div>
-
-                {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                        <strong className="font-bold">Error: </strong>
-                        <span className="block sm:inline">{error}</span>
-                    </div>
-                )}
-
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                    {loading ? (
-                        <div className="flex justify-center items-center h-80"><Loader className="h-8 w-8 animate-spin text-blue-600" /></div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full bg-white">
-                                <thead className="bg-slate-50">
-                                    <tr>
-                                        <th className="th-cell">Leave Type</th>
-                                        <th className="th-cell">Description</th>
-                                        <th className="th-cell">Paid</th>
-                                        <th className="th-cell">Max Days/Year</th>
-                                        <th className="th-cell">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-slate-700">
-                                    {leaveTypes.length > 0 ? (
-                                        leaveTypes.map(lt => (
-                                            <tr key={lt.id} className="border-b border-slate-200 hover:bg-slate-50">
-                                                <td className="td-cell font-medium">{lt.leaveType}</td>
-                                                <td className="td-cell text-sm text-slate-500 max-w-xs truncate" title={lt.description}>{lt.description}</td>
-                                                <td className="td-cell text-sm text-slate-500">{lt.isPaid ? 'Yes' : 'No'}</td>
-                                                <td className="td-cell text-sm text-slate-500">{lt.maxDaysPerYear ?? 'N/A'}</td>
-                                                <td className="td-cell">
-                                                    <div className="flex items-center gap-2">
-                                                        <button onClick={() => handleEdit(lt)} className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-100 rounded-full" title="Edit">
-                                                            <Edit className="h-4 w-4" />
-                                                        </button>
-                                                        <button onClick={() => handleDelete(lt.id, lt.leaveType)} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-100 rounded-full" title="Delete">
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="5" className="text-center py-10 text-slate-500">
-                                                <AlertCircle className="mx-auto h-12 w-12 text-slate-400" />
-                                                <h3 className="mt-2 text-sm font-medium text-slate-900">No leave types found</h3>
-                                                <p className="mt-1 text-sm text-slate-500">Get started by creating a new leave type.</p>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-            </div>
-            <LeaveTypeModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+    if (isFormOpen) {
+        return (
+            <LeaveTypeFormView
+                onClose={handleCloseForm}
                 onSave={handleSave}
                 leaveType={editingLeaveType}
-                loading={modalLoading}
+                loading={formLoading}
             />
-        </>
+        );
+    }
+
+    const content = (
+        <div className={embedded ? 'space-y-3' : 'p-4 md:p-6 space-y-3 bg-background'}>
+            <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
+                        <BookCopy className="h-4 w-4" />
+                    </div>
+                    <div>
+                        <h2 className="text-sm font-bold text-foreground">Leave Types</h2>
+                        <p className="text-[11px] text-foreground-muted">Define and manage company leave categories and yearly limits</p>
+                    </div>
+                </div>
+                <button
+                    onClick={handleAdd}
+                    className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1.5 shadow-2xs"
+                >
+                    <Plus size={14} /> Add Leave Type
+                </button>
+            </div>
+
+            {error && (
+                <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-lg flex items-center gap-2 border border-rose-500/20">
+                    <AlertCircle size={14} /> {error}
+                </div>
+            )}
+
+            <div className="overflow-x-auto rounded-lg border border-border">
+                {loading ? (
+                    <div className="flex justify-center items-center h-48 bg-card"><Loader className="h-6 w-6 animate-spin text-primary" /></div>
+                ) : (
+                    <table className="min-w-full bg-card text-foreground divide-y divide-border">
+                        <thead className="bg-background-muted/60">
+                            <tr>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Leave Type</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Description</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Paid</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Max Days/Year</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/40">
+                            {leaveTypes.length > 0 ? (
+                                leaveTypes.map(lt => (
+                                    <tr key={lt.id} className="hover:bg-background-muted/40 transition-colors">
+                                        <td className="px-3 py-2 text-xs font-semibold text-foreground">{lt.leaveType}</td>
+                                        <td className="px-3 py-2 text-xs text-foreground-muted max-w-xs truncate" title={lt.description}>{lt.description || '-'}</td>
+                                        <td className="px-3 py-2 text-xs">
+                                            <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${lt.isPaid ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 border-amber-500/20'}`}>
+                                                {lt.isPaid ? 'Yes' : 'No'}
+                                            </span>
+                                        </td>
+                                        <td className="px-3 py-2 text-xs text-foreground-muted font-medium">{lt.maxDaysPerYear ?? 'N/A'}</td>
+                                        <td className="px-3 py-2 text-xs text-right">
+                                            <div className="flex justify-end gap-1">
+                                                <button onClick={() => handleEdit(lt)} className="p-1 text-primary hover:bg-primary/10 rounded-md transition-colors" title="Edit">
+                                                    <Edit size={14} />
+                                                </button>
+                                                <button onClick={() => handleDelete(lt.id, lt.leaveType)} className="p-1 text-rose-600 hover:bg-rose-500/10 rounded-md transition-colors" title="Delete">
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="5" className="text-center py-8 text-foreground-muted">
+                                        <BookCopy className="mx-auto h-8 w-8 text-foreground-muted/40 mb-1.5" />
+                                        <h3 className="text-xs font-semibold text-foreground">No leave types found</h3>
+                                        <p className="mt-0.5 text-[11px] text-foreground-muted">Get started by creating a new leave type.</p>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+        </div>
     );
 
     if (embedded) {
@@ -255,6 +309,6 @@ const LeaveType = ({ embedded = false }) => {
     return (
         <DashboardLayout>{content}</DashboardLayout>
     );
-}
+};
 
 export default LeaveType;
