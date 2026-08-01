@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { Search, PlusCircle, Edit, Trash2, Loader, AlertCircle, X, UserPlus } from 'lucide-react';
+import { toast } from 'react-toastify';
+import Modal from '../components/Modal';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
-
-import Modal from '../components/Modal';
 
 // --- Customer Form Component ---
 const CustomerForm = ({ customer, onSave, onCancel, isSubmitting }) => {
@@ -22,24 +22,23 @@ const CustomerForm = ({ customer, onSave, onCancel, isSubmitting }) => {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
             <div>
-                <label htmlFor="name" className="block text-sm font-medium text-slate-700">Name</label>
-                <input id="name" name="name" value={formData.name} onChange={handleChange} required className="input mt-1" />
+                <label htmlFor="name" className="block font-bold text-slate-700 mb-1">Name *</label>
+                <input id="name" name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" />
             </div>
             <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700">Email</label>
-                <input id="email" name="email" type="email" value={formData.email} onChange={handleChange} className="input mt-1" />
+                <label htmlFor="email" className="block font-bold text-slate-700 mb-1">Email</label>
+                <input id="email" name="email" type="email" value={formData.email} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" />
             </div>
             <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-slate-700">Phone</label>
-                <input id="phone" name="phone" value={formData.phone} onChange={handleChange} className="input mt-1" />
+                <label htmlFor="phone" className="block font-bold text-slate-700 mb-1">Phone</label>
+                <input id="phone" name="phone" value={formData.phone} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" />
             </div>
-            <div className="flex justify-end gap-2 pt-4">
-                <button type="button" onClick={onCancel} className="btn-secondary" disabled={isSubmitting}>Cancel</button>
-                <button type="submit" className="btn-primary flex items-center" disabled={isSubmitting}>
-                    {isSubmitting && <Loader className="animate-spin h-4 w-4 mr-2" />}
-                    Save Customer
+            <div className="flex justify-end gap-2 pt-3">
+                <button type="button" onClick={onCancel} className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all" disabled={isSubmitting}>Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-all flex items-center justify-center min-w-[100px]" disabled={isSubmitting}>
+                    {isSubmitting ? <Loader className="animate-spin h-4 w-4" /> : 'Save Customer'}
                 </button>
             </div>
         </form>
@@ -77,7 +76,10 @@ const CustomersView = () => {
         const token = localStorage.getItem('token');
         axios.get(`${API_URL}/pos/customers`, { headers: { "Authorization": `Bearer ${token}` } })
             .then(res => setCustomers(res.data))
-            .catch(() => setError('Failed to fetch customers.'))
+            .catch(() => {
+                setError('Failed to fetch customers.');
+                toast.error('Failed to fetch customers.');
+            })
             .finally(() => setLoading(false));
     }, []);
 
@@ -96,11 +98,12 @@ const CustomersView = () => {
         try {
             await axios[method](url, customerData, {
                 headers: { Authorization: `Bearer ${token}` }
-                });
+            });
+            toast.success(`Customer ${customerData.id ? 'updated' : 'created'} successfully!`);
             fetchCustomers();
             handleCloseModal();
         } catch (err) {
-            alert(`Error: ${err.response?.data?.message || 'Could not save customer.'}`);
+            toast.error(`Error: ${err.response?.data?.message || 'Could not save customer.'}`);
         } finally {
             setIsSubmitting(false);
         }
@@ -111,9 +114,10 @@ const CustomersView = () => {
             const token = localStorage.getItem('token');
             try {
                 await axios.delete(`${API_URL}/pos/customers/${customerId}`, { headers: { "Authorization": `Bearer ${token}` } });
+                toast.info('Customer deleted.');
                 fetchCustomers();
             } catch (err) {
-                alert('Failed to delete customer.');
+                toast.error('Failed to delete customer.');
             }
         }
     };
@@ -126,54 +130,66 @@ const CustomersView = () => {
         ), [customers, searchTerm]);
 
     return (
-        <div className="p-6 md:p-8">
-            <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+        <div className="p-4 sm:p-5 font-sans space-y-3.5">
+            <div className="flex flex-wrap justify-between items-center gap-3">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800">Customers</h1>
-                    <p className="text-slate-500 mt-1">Manage your customer database.</p>
+                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Customer Management</h1>
+                    <p className="text-xs text-slate-500 mt-0.5">Manage registered POS customer details.</p>
                 </div>
                 {canManage && (
-                    <button onClick={handleAdd} className="btn-primary flex items-center gap-2">
-                        <UserPlus size={18} /> Add Customer
+                    <button onClick={handleAdd} className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 shadow-sm transition-all">
+                        <UserPlus size={15} /> Add Customer
                     </button>
                 )}
             </div>
 
-            <div className="relative mb-4">
-                <input type="text" placeholder="Search by name, email, or phone..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="input w-full max-w-sm pl-10" />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <div className="relative max-w-md">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input 
+                    type="text" 
+                    placeholder="Search by name, email, or phone..." 
+                    value={searchTerm} 
+                    onChange={e => setSearchTerm(e.target.value)} 
+                    className="w-full pl-10 pr-4 py-2 bg-white rounded-full text-xs border-0 shadow-xs outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 transition-all"
+                />
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-slate-200">
-                        <thead className="bg-slate-50">
+                    <table className="w-full text-left border-collapse">
+                        <thead className="bg-slate-50/80 border-b border-slate-200/60 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                             <tr>
-                                <th className="th-cell">Name</th><th className="th-cell">Email</th><th className="th-cell">Phone</th><th className="th-cell text-right">Loyalty Points</th>
-                                {canManage && <th className="th-cell">Actions</th>}
+                                <th className="py-2.5 px-4">Name</th>
+                                <th className="py-2.5 px-4">Email</th>
+                                <th className="py-2.5 px-4">Phone</th>
+                                <th className="py-2.5 px-4 text-right">Loyalty Points</th>
+                                {canManage && <th className="py-2.5 px-4 text-right">Actions</th>}
                             </tr>
                         </thead>
-                        <tbody className="text-slate-700">
+                        <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
                             {loading ? (
-                                <tr><td colSpan={canManage ? 5 : 4} className="text-center py-10"><Loader className="h-8 w-8 animate-spin text-blue-600 mx-auto" /></td></tr>
+                                <tr><td colSpan={canManage ? 5 : 4} className="text-center py-10"><Loader className="h-6 w-6 animate-spin text-slate-900 mx-auto" /></td></tr>
                             ) : error ? (
-                                <tr><td colSpan={canManage ? 5 : 4} className="text-center py-10 text-red-500">{error}</td></tr>
+                                <tr><td colSpan={canManage ? 5 : 4} className="text-center py-10 text-rose-500 font-medium">{error}</td></tr>
                             ) : filteredCustomers.length > 0 ? (
                                 filteredCustomers.map(customer => (
-                                    <tr key={customer.id} className="border-b border-slate-200 hover:bg-slate-50">
-                                        <td className="td-cell font-medium">{customer.name}</td><td className="td-cell">{customer.email || '-'}</td><td className="td-cell">{customer.phone || '-'}</td><td className="td-cell text-right">{customer.loyaltyPoints}</td>
+                                    <tr key={customer.id} className="hover:bg-slate-50/80 transition-colors">
+                                        <td className="py-2.5 px-4 font-bold text-slate-900">{customer.name}</td>
+                                        <td className="py-2.5 px-4 text-slate-600">{customer.email || '-'}</td>
+                                        <td className="py-2.5 px-4 font-mono text-slate-600">{customer.phone || '-'}</td>
+                                        <td className="py-2.5 px-4 text-right font-extrabold text-slate-900">{customer.loyaltyPoints || 0}</td>
                                         {canManage && (
-                                            <td className="td-cell">
-                                                <div className="flex items-center gap-2">
-                                                    <button onClick={() => handleEdit(customer)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-full" title="Edit"><Edit size={16} /></button>
-                                                    {isPosAdmin && <button onClick={() => handleDelete(customer.id)} className="p-1.5 text-red-600 hover:bg-red-100 rounded-full" title="Delete"><Trash2 size={16} /></button>}
+                                            <td className="py-2.5 px-4 text-right">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <button onClick={() => handleEdit(customer)} className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors" title="Edit"><Edit size={15} /></button>
+                                                    {isPosAdmin && <button onClick={() => handleDelete(customer.id)} className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Delete"><Trash2 size={15} /></button>}
                                                 </div>
                                             </td>
                                         )}
                                     </tr>
                                 ))
                             ) : (
-                                <tr><td colSpan={canManage ? 5 : 4} className="text-center py-10 text-slate-500">No customers found.</td></tr>
+                                <tr><td colSpan={canManage ? 5 : 4} className="text-center py-10 text-slate-400">No customers found.</td></tr>
                             )}
                         </tbody>
                     </table>
