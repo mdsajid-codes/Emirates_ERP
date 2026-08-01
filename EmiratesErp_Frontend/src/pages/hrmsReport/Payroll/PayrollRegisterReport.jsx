@@ -1,23 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Loader, Calendar, AlertCircle, Search } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import { Download, Loader, AlertCircle, FileText } from 'lucide-react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 
 const PayrollRegisterReport = () => {
+    const { searchTerm: headerSearchTerm = '' } = useOutletContext() || {};
     const [exporting, setExporting] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
     const [error, setError] = useState('');
 
-    // Table Data
     const [tableData, setTableData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
 
     const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-    // Generate years (current year - 5 to current year + 1)
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 7 }, (_, i) => currentYear - 5 + i);
 
@@ -41,10 +40,10 @@ const PayrollRegisterReport = () => {
     }, [selectedYear, selectedMonth]);
 
     useEffect(() => {
-        if (!searchTerm) {
+        if (!headerSearchTerm) {
             setFilteredData(tableData);
         } else {
-            const lowerTerm = searchTerm.toLowerCase();
+            const lowerTerm = headerSearchTerm.toLowerCase().trim();
             const filtered = tableData.filter(row =>
                 Object.values(row).some(val =>
                     String(val).toLowerCase().includes(lowerTerm)
@@ -52,7 +51,7 @@ const PayrollRegisterReport = () => {
             );
             setFilteredData(filtered);
         }
-    }, [searchTerm, tableData]);
+    }, [headerSearchTerm, tableData]);
 
     const fetchReportPreview = async () => {
         setLoading(true);
@@ -62,7 +61,6 @@ const PayrollRegisterReport = () => {
 
         try {
             const token = localStorage.getItem('token');
-            // Using the export endpoint to get the file, then parsing it for preview
             const response = await axios.get(`${API_URL}/reports/payroll/register/export`, {
                 params: { year: selectedYear, month: selectedMonth },
                 headers: { "Authorization": `Bearer ${token}` },
@@ -72,14 +70,12 @@ const PayrollRegisterReport = () => {
             const workbook = XLSX.read(response.data, { type: 'array' });
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
-            // defval: "" ensures empty cells are treated as empty strings rather than undefined
             const data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
             setTableData(data);
             setFilteredData(data);
         } catch (err) {
             console.error("Preview failed:", err);
-            // It's possible 404 means no file/data, or connection error
             setError("Could not load report preview. Data might be missing for this period.");
         } finally {
             setLoading(false);
@@ -112,27 +108,22 @@ const PayrollRegisterReport = () => {
         }
     };
 
-    // Get table headers from the first row of data if available
     const tableHeaders = tableData.length > 0 ? Object.keys(tableData[0]) : [];
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Payroll Register Report</h2>
-                    <p className="text-sm text-gray-500">View and export monthly payroll register.</p>
+                    <h2 className="text-xs font-bold text-foreground">Payroll Register Report</h2>
+                    <p className="text-[11px] text-foreground-muted">View and export monthly payroll register</p>
                 </div>
-            </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end mb-4">
-                    {/* Year Selector */}
+                <div className="flex items-center gap-2">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year</label>
                         <select
                             value={selectedYear}
                             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="px-2.5 py-1 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary h-7"
                         >
                             {years.map(year => (
                                 <option key={year} value={year}>{year}</option>
@@ -140,13 +131,11 @@ const PayrollRegisterReport = () => {
                         </select>
                     </div>
 
-                    {/* Month Selector */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Month</label>
                         <select
                             value={selectedMonth}
                             onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="px-2.5 py-1 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary h-7"
                         >
                             {months.map(month => (
                                 <option key={month.value} value={month.value}>{month.label}</option>
@@ -154,79 +143,70 @@ const PayrollRegisterReport = () => {
                         </select>
                     </div>
 
-                    {/* Search */}
-                    <div className="sm:col-span-1">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                    </div>
-
                     <button
                         onClick={handleExport}
                         disabled={exporting}
-                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed h-[42px]"
+                        className="px-2.5 py-1 text-xs font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1 shadow-2xs h-7 disabled:opacity-70"
                     >
-                        {exporting ? <Loader className="animate-spin h-4 w-4" /> : <Download size={18} />}
-                        <span>Export</span>
+                        {exporting ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Download size={13} />}
+                        <span>Export Excel</span>
                     </button>
                 </div>
+            </div>
 
-                {error && (
-                    <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg flex items-center gap-2 text-sm">
-                        <AlertCircle size={16} />
+            {error && (
+                <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-md border border-rose-500/20 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle size={14} />
                         <span>{error}</span>
                     </div>
-                )}
+                    <button onClick={fetchReportPreview} className="text-xs underline hover:opacity-80">Try Again</button>
+                </div>
+            )}
 
-                {/* Table View */}
+            <div className="overflow-x-auto rounded-lg border border-border">
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center p-12">
-                        <Loader className="animate-spin h-8 w-8 text-purple-600 mb-4" />
-                        <p className="text-gray-500">Loading payroll data...</p>
+                    <div className="flex justify-center items-center p-8 bg-card">
+                        <Loader className="animate-spin h-5 w-5 text-primary" />
                     </div>
                 ) : (
-                    <div className="overflow-x-auto border rounded-lg">
-                        <table className="w-full text-sm text-left whitespace-nowrap">
-                            <thead className="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
-                                <tr>
-                                    {tableHeaders.map((header) => (
-                                        <th key={header} className="px-6 py-3 border-b dark:border-gray-600">{header}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                {filteredData.length > 0 ? (
-                                    filteredData.map((row, idx) => (
-                                        <tr key={idx} className="bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50">
-                                            {tableHeaders.map((header, i) => (
-                                                <td key={i} className="px-6 py-4 text-gray-900 dark:text-gray-300">
-                                                    {row[header]}
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={tableHeaders.length || 1} className="px-6 py-8 text-center text-gray-500">
-                                            {tableData.length === 0 ? "No payroll records found for this period." : "No records match your search."}
-                                        </td>
+                    <table className="min-w-full bg-card text-foreground divide-y divide-border">
+                        <thead className="bg-background-muted/60">
+                            <tr>
+                                {tableHeaders.map((header) => (
+                                    <th key={header} className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider whitespace-nowrap">{header}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/40">
+                            {filteredData.length > 0 ? (
+                                filteredData.map((row, idx) => (
+                                    <tr key={idx} className="hover:bg-background-muted/40 transition-colors">
+                                        {tableHeaders.map((header, i) => (
+                                            <td key={i} className="px-3 py-2 text-xs font-medium text-foreground whitespace-nowrap">
+                                                {row[header]}
+                                            </td>
+                                        ))}
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={tableHeaders.length || 1} className="text-center py-8 text-foreground-muted text-xs">
+                                        <FileText className="mx-auto h-7 w-7 text-foreground-muted/40 mb-1" />
+                                        <h3 className="text-xs font-bold text-foreground">No records found</h3>
+                                        <p className="text-[11px] text-foreground-muted">
+                                            {tableData.length === 0 ? "No payroll records found for this period." : "No records match your search."}
+                                        </p>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 )}
-                <div className="p-2 mt-2 text-xs text-center text-gray-400">
-                    Showing {filteredData.length} records
-                </div>
+            </div>
+
+            <div className="text-[11px] text-foreground-muted text-right pr-1">
+                Showing {filteredData.length} records
             </div>
         </div>
     );

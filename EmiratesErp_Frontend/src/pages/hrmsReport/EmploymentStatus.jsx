@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Download, Loader, Briefcase, CheckCircle } from 'lucide-react';
 import axios from 'axios';
@@ -24,15 +23,8 @@ const EmploymentStatus = () => {
                 const token = localStorage.getItem('token');
                 const headers = { "Authorization": `Bearer ${token}` };
 
-                // Fetch basic list (contains Status)
                 const employeesRes = await axios.get(`${API_URL}/employees/all`, { headers });
-                const employees = employeesRes.data;
-
-                // For Contract Type and Probation, we need Job Details again
-                // Optimization: If status is 'TERMINATED' or 'INACTIVE', we might skip certain checks, 
-                // but let's fetch consistent details for active employees at least.
-                // Actually, for Employment Status, user expects full data. 
-                // We will fetch job details for ALL.
+                const employees = employeesRes.data || [];
 
                 const employeesWithDetails = await Promise.all(
                     employees.map(async (emp) => {
@@ -54,7 +46,7 @@ const EmploymentStatus = () => {
         };
 
         fetchData();
-    }, []);
+    }, [API_URL]);
 
     const processStats = (data) => {
         const newStats = {
@@ -70,16 +62,12 @@ const EmploymentStatus = () => {
         const today = new Date();
 
         data.forEach(emp => {
-            // Status
             const status = emp.status || 'Unknown';
             newStats.byStatus[status] = (newStats.byStatus[status] || 0) + 1;
 
-            // Contract Type
-            const contractType = emp.jobDetails?.contractType || 'Permanent'; // Default per backend logic
+            const contractType = emp.jobDetails?.contractType || 'Permanent';
             newStats.byContractType[contractType] = (newStats.byContractType[contractType] || 0) + 1;
 
-            // Probation
-            // Only relevant if Active usually, but let's count all based on end date
             if (emp.jobDetails?.probationEndDate) {
                 const probationEnd = new Date(emp.jobDetails.probationEndDate);
                 if (probationEnd > today) {
@@ -88,7 +76,7 @@ const EmploymentStatus = () => {
                     newStats.byProbation['Confirmed']++;
                 }
             } else {
-                newStats.byProbation['Confirmed']++; // Default if no probation date
+                newStats.byProbation['Confirmed']++;
             }
         });
 
@@ -121,55 +109,55 @@ const EmploymentStatus = () => {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center h-96">
-                <Loader className="animate-spin h-8 w-8 text-blue-600 mb-4" />
-                <p className="text-gray-500">Loading employment status data...</p>
-                <p className="text-xs text-gray-400 mt-2">Checking contract details</p>
+            <div className="flex flex-col items-center justify-center p-8 bg-card rounded-lg border border-border">
+                <Loader className="animate-spin h-6 w-6 text-primary mb-2" />
+                <p className="text-xs text-foreground-muted">Loading employment status data...</p>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-3">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Employment Status</h2>
-                    <p className="text-sm text-gray-500">Contract Types and Status Distribution</p>
+                    <h2 className="text-xs font-bold text-foreground">Employment Status</h2>
+                    <p className="text-[11px] text-foreground-muted">Contract Types and Status Distribution</p>
                 </div>
                 <button
                     onClick={handleExport}
                     disabled={exporting}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70"
+                    className="px-2.5 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-2xs h-7 disabled:opacity-70"
                 >
-                    {exporting ? <Loader className="animate-spin h-4 w-4" /> : <Download size={18} />}
+                    {exporting ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Download size={13} />}
                     <span>Export Excel</span>
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {/* Status Table */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-green-50 dark:bg-green-900/20 flex items-center gap-2">
-                        <CheckCircle size={18} className="text-green-600" />
-                        <h3 className="font-semibold text-gray-700 dark:text-gray-200">Current Status</h3>
+                <div className="rounded-lg border border-border overflow-hidden bg-card text-foreground">
+                    <div className="p-2.5 border-b border-border bg-background-muted/60 flex items-center gap-2">
+                        <CheckCircle size={14} className="text-emerald-600" />
+                        <h3 className="text-xs font-bold text-foreground">Current Status</h3>
                     </div>
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400">
+                    <table className="min-w-full divide-y divide-border">
+                        <thead className="bg-background-muted/40">
                             <tr>
-                                <th className="px-6 py-3">Status</th>
-                                <th className="px-6 py-3 text-right">Count</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Status</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Count</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody className="divide-y divide-border/40">
                             {Object.entries(stats.byStatus).map(([key, val]) => (
-                                <tr key={key} className="bg-white dark:bg-slate-800">
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${key === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                            }`}>
+                                <tr key={key} className="hover:bg-background-muted/40 transition-colors">
+                                    <td className="px-3 py-2 text-xs font-semibold">
+                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                                            key === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 border-rose-500/20'
+                                        }`}>
                                             {key}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-right">{val}</td>
+                                    <td className="px-3 py-2 text-xs text-right font-medium text-foreground">{val}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -177,23 +165,23 @@ const EmploymentStatus = () => {
                 </div>
 
                 {/* Contract Type Table */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20 flex items-center gap-2">
-                        <Briefcase size={18} className="text-blue-600" />
-                        <h3 className="font-semibold text-gray-700 dark:text-gray-200">Contract Types</h3>
+                <div className="rounded-lg border border-border overflow-hidden bg-card text-foreground">
+                    <div className="p-2.5 border-b border-border bg-background-muted/60 flex items-center gap-2">
+                        <Briefcase size={14} className="text-primary" />
+                        <h3 className="text-xs font-bold text-foreground">Contract Types</h3>
                     </div>
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400">
+                    <table className="min-w-full divide-y divide-border">
+                        <thead className="bg-background-muted/40">
                             <tr>
-                                <th className="px-6 py-3">Type</th>
-                                <th className="px-6 py-3 text-right">Count</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Type</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Count</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody className="divide-y divide-border/40">
                             {Object.entries(stats.byContractType).map(([key, val]) => (
-                                <tr key={key} className="bg-white dark:bg-slate-800">
-                                    <td className="px-6 py-4 capitalize">{key.toLowerCase().replace('_', ' ')}</td>
-                                    <td className="px-6 py-4 text-right">{val}</td>
+                                <tr key={key} className="hover:bg-background-muted/40 transition-colors">
+                                    <td className="px-3 py-2 text-xs font-semibold text-foreground capitalize">{key.toLowerCase().replace('_', ' ')}</td>
+                                    <td className="px-3 py-2 text-xs text-right font-medium text-foreground">{val}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -201,29 +189,28 @@ const EmploymentStatus = () => {
                 </div>
 
                 {/* Probation Table */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-yellow-50 dark:bg-yellow-900/20 flex items-center gap-2">
-                        <CheckCircle size={18} className="text-yellow-600" />
-                        <h3 className="font-semibold text-gray-700 dark:text-gray-200">Confirmation Status</h3>
+                <div className="rounded-lg border border-border overflow-hidden bg-card text-foreground">
+                    <div className="p-2.5 border-b border-border bg-background-muted/60 flex items-center gap-2">
+                        <CheckCircle size={14} className="text-amber-600" />
+                        <h3 className="text-xs font-bold text-foreground">Confirmation Status</h3>
                     </div>
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400">
+                    <table className="min-w-full divide-y divide-border">
+                        <thead className="bg-background-muted/40">
                             <tr>
-                                <th className="px-6 py-3">Status</th>
-                                <th className="px-6 py-3 text-right">Count</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Status</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Count</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody className="divide-y divide-border/40">
                             {Object.entries(stats.byProbation).map(([key, val]) => (
-                                <tr key={key} className="bg-white dark:bg-slate-800">
-                                    <td className="px-6 py-4">{key}</td>
-                                    <td className="px-6 py-4 text-right">{val}</td>
+                                <tr key={key} className="hover:bg-background-muted/40 transition-colors">
+                                    <td className="px-3 py-2 text-xs font-semibold text-foreground">{key}</td>
+                                    <td className="px-3 py-2 text-xs text-right font-medium text-foreground">{val}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
-
             </div>
         </div>
     );

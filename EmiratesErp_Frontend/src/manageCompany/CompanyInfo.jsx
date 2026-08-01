@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Building, Edit, PlusCircle, Loader, Save } from 'lucide-react';
+import { Building, Edit, PlusCircle, Loader, Save, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
@@ -8,7 +8,6 @@ const constructImageUrl = (relativeUrl) => {
     if (!relativeUrl) return '';
     if (relativeUrl.startsWith('data:') || relativeUrl.startsWith('http')) return relativeUrl;
 
-    // Backend returns paths relative to the uploads root (e.g., "tenantId/folder/file.ext")
     const cleanPath = relativeUrl.startsWith('/') ? relativeUrl.slice(1) : relativeUrl;
 
     if (cleanPath.startsWith('uploads/')) {
@@ -29,7 +28,6 @@ const api = {
         return response.data;
     },
     saveCompanyInfo: async (data) => {
-        // The backend uses POST for both create and update.
         const response = await axios.post(`${API_URL}/company-info`, data, { headers: getAuthHeaders() });
         return response.data;
     },
@@ -51,17 +49,21 @@ const api = {
 };
 
 // --- Reusable Components ---
-const InputField = ({ label, id, ...props }) => (
-    <div>
-        <label htmlFor={id} className="block text-sm font-medium text-foreground-muted mb-1">{label}</label>
-        <input id={id} {...props} className="input bg-background-muted border-border text-foreground" />
+const InputField = ({ label, id, className = '', ...props }) => (
+    <div className={className}>
+        {label && <label htmlFor={id} className="block text-[11px] font-medium text-foreground-muted mb-0.5">{label}</label>}
+        <input
+            id={id}
+            {...props}
+            className="w-full px-2.5 py-1 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-colors h-7"
+        />
     </div>
 );
 
 const InfoDisplay = ({ label, value }) => (
     <div>
-        <p className="text-sm text-foreground-muted">{label}</p>
-        <p className="font-medium text-foreground">
+        <p className="text-[11px] text-foreground-muted font-medium">{label}</p>
+        <p className="text-xs font-semibold text-foreground">
             {value !== null && value !== undefined && value !== '' ? value : <span className="text-foreground-muted/50">N/A</span>}
         </p>
     </div>
@@ -98,7 +100,7 @@ const CompanyInfo = () => {
                         api.getLogo()
                             .then(url => {
                                 setFetchedLogoUrl(url);
-                                setLogoPreview(url); // Also set preview for edit mode if needed
+                                setLogoPreview(url);
                             })
                             .catch(e => console.error("Failed to fetch logo image", e));
                     }
@@ -138,13 +140,12 @@ const CompanyInfo = () => {
             let savedData = await api.saveCompanyInfo(formData);
 
             if (logoFile) {
-                // Re-assign savedData with the response from logo upload which contains the updated logoUrl
                 savedData = await api.uploadLogo(logoFile);
             }
 
             setCompanyInfo(savedData);
             setFormData(savedData);
-            setLogoFile(null); // Clear the file input after successful upload
+            setLogoFile(null);
             setIsEditing(false);
             alert('Company information saved successfully!');
         } catch (err) {
@@ -153,39 +154,55 @@ const CompanyInfo = () => {
             alert(`Error: ${errorMessage}`);
         } finally {
             setSaving(false);
-            // No need to call fetchCompanyInfo() as we are setting state from the response.
         }
     };
 
     const handleCancel = () => {
         setIsEditing(false);
         setFormData(companyInfo || initialFormData);
-        setFormData(companyInfo || initialFormData);
         setLogoPreview(fetchedLogoUrl);
     };
 
     if (loading) {
-        return <div className="flex justify-center items-center p-10"><Loader className="animate-spin text-blue-600" /></div>;
+        return <div className="flex justify-center items-center p-8"><Loader className="animate-spin h-5 w-5 text-primary" /></div>;
     }
 
     if (isEditing) {
         return (
-            <form onSubmit={handleSubmit} className="p-6 bg-white rounded-lg shadow-sm space-y-8">
-                {error && <div className="bg-red-100 text-red-700 p-3 rounded-md text-sm">{error}</div>}
+            <form onSubmit={handleSubmit} className="p-3.5 bg-card border border-border rounded-lg text-foreground space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-border">
+                    <h3 className="text-xs font-bold text-foreground">Edit Company Details</h3>
+                    <button
+                        type="button"
+                        onClick={handleCancel}
+                        className="px-2 py-1 text-xs font-semibold rounded-md border border-border bg-background hover:bg-background-muted text-foreground transition-colors flex items-center gap-1"
+                    >
+                        <ArrowLeft size={13} /> Back
+                    </button>
+                </div>
+
+                {error && <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-md border border-rose-500/20">{error}</div>}
+
                 <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Company Logo</h3>
-                    <div className="flex items-center gap-6">
+                    <h4 className="text-xs font-bold text-foreground mb-2">Company Logo</h4>
+                    <div className="flex items-center gap-4">
                         {logoPreview ? (
-                            <img src={logoPreview} alt="Logo" className="h-20 w-20 object-contain rounded-md border p-1 bg-card" />
+                            <img src={logoPreview} alt="Logo" className="h-14 w-14 object-contain rounded-md border border-border p-1 bg-background" />
                         ) : (
-                            <div className="h-20 w-20 flex items-center justify-center bg-background-muted rounded-md text-foreground-muted text-sm">No Logo</div>
+                            <div className="h-14 w-14 flex items-center justify-center bg-background-muted border border-border rounded-md text-foreground-muted text-xs">No Logo</div>
                         )}
                         <div className="flex-1">
-                            <input type="file" accept="image/*" onChange={handleFileChange} className="block w-full text-sm text-foreground-muted file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" />
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="w-full text-xs text-foreground-muted border border-border rounded-md bg-background px-2 py-1 file:mr-2 file:py-0.5 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                            />
                         </div>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <InputField label="Company Name" id="companyName" name="companyName" value={formData.companyName || ''} onChange={handleChange} required className="md:col-span-3" />
                     <InputField label="Email" id="email" name="email" type="email" value={formData.email || ''} onChange={handleChange} />
                     <InputField label="Phone" id="phone" name="phone" value={formData.phone || ''} onChange={handleChange} />
@@ -195,13 +212,10 @@ const CompanyInfo = () => {
                     <InputField label="Emirate" id="emirate" name="emirate" value={formData.emirate || ''} onChange={handleChange} />
                     <InputField label="P.O. Box" id="poBox" name="poBox" value={formData.poBox || ''} onChange={handleChange} />
                     <InputField label="Country" id="country" name="country" value={formData.country || ''} onChange={handleChange} />
-                    {/* <InputField label="PAN / TRN" id="pan" name="pan" value={formData.pan || ''} onChange={handleChange} /> */}
-                    {/* <InputField label="GSTIN / TAN" id="tan" name="tan" value={formData.tan || ''} onChange={handleChange} /> */}
-                    {/* <InputField label="PF Registration No." id="pfRegistrationNumber" name="pfRegistrationNumber" value={formData.pfRegistrationNumber || ''} onChange={handleChange} /> */}
                     <InputField label="ESI Registration No." id="esiRegistrationNumber" name="esiRegistrationNumber" value={formData.esiRegistrationNumber || ''} onChange={handleChange} />
 
-                    <div className="md:col-span-3 border-t border-border mt-4 mb-2 pt-4">
-                        <h4 className="font-semibold text-foreground-muted mb-4">UAE WPS & Statutory Details</h4>
+                    <div className="md:col-span-3 border-t border-border mt-2 pt-3">
+                        <h4 className="text-xs font-bold text-foreground mb-3">UAE WPS & Statutory Details</h4>
                     </div>
                     <InputField label="MOHRE Establishment ID" id="mohreEstablishmentId" name="mohreEstablishmentId" value={formData.mohreEstablishmentId || ''} onChange={handleChange} />
                     <InputField label="Employer Bank Routing Code (Agent ID)" id="employerBankRoutingCode" name="employerBankRoutingCode" value={formData.employerBankRoutingCode || ''} onChange={handleChange} />
@@ -210,10 +224,11 @@ const CompanyInfo = () => {
                     <InputField label="Trade License Expiry" id="tradeLicenseExpiry" name="tradeLicenseExpiry" type="date" value={formData.tradeLicenseExpiry || ''} onChange={handleChange} />
                     <InputField label="TRN (Tax Registration No.)" id="trn" name="trn" value={formData.trn || ''} onChange={handleChange} />
                 </div>
-                <div className="flex justify-end gap-2 pt-4 border-t border-border">
-                    <button type="button" onClick={handleCancel} className="btn-secondary" disabled={saving}>Cancel</button>
-                    <button type="submit" className="btn-primary flex items-center gap-2" disabled={saving}>
-                        {saving ? <Loader className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
+
+                <div className="flex justify-end gap-2 pt-3 border-t border-border">
+                    <button type="button" onClick={handleCancel} className="px-3 py-1 text-xs font-semibold text-foreground-muted hover:bg-background-muted rounded-md transition-colors border border-border" disabled={saving}>Cancel</button>
+                    <button type="submit" className="px-3.5 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-2xs h-7" disabled={saving}>
+                        {saving ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
                         Save Changes
                     </button>
                 </div>
@@ -223,13 +238,13 @@ const CompanyInfo = () => {
 
     if (!companyInfo) {
         return (
-            <div className="text-center py-16 bg-card rounded-lg shadow-sm border-2 border-dashed border-border">
-                <Building className="mx-auto h-12 w-12 text-foreground-muted/50" />
-                <h3 className="mt-2 text-lg font-medium text-foreground">No Company Information</h3>
-                <p className="mt-1 text-sm text-foreground-muted">Get started by adding your company's details.</p>
-                <div className="mt-6">
-                    <button onClick={() => setIsEditing(true)} className="btn-primary flex items-center mx-auto gap-2">
-                        <PlusCircle size={16} /> Add Company Details
+            <div className="text-center py-10 bg-card rounded-lg border border-dashed border-border text-foreground space-y-2">
+                <Building className="mx-auto h-8 w-8 text-foreground-muted/50" />
+                <h3 className="text-xs font-bold text-foreground">No Company Information</h3>
+                <p className="text-[11px] text-foreground-muted">Get started by adding your company's details.</p>
+                <div className="pt-2">
+                    <button onClick={() => setIsEditing(true)} className="px-3 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center mx-auto gap-1 shadow-2xs">
+                        <PlusCircle size={13} /> Add Company Details
                     </button>
                 </div>
             </div>
@@ -237,17 +252,17 @@ const CompanyInfo = () => {
     }
 
     return (
-        <div className="p-6 bg-card rounded-lg shadow-sm">
-            <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-foreground">Company Profile</h3>
-                <button onClick={() => setIsEditing(true)} className="btn-secondary flex items-center gap-2">
-                    <Edit size={16} /> Edit
+        <div className="p-3.5 bg-card border border-border rounded-lg text-foreground space-y-3">
+            <div className="flex justify-between items-center pb-2 border-b border-border">
+                <h3 className="text-xs font-bold text-foreground">Company Profile</h3>
+                <button onClick={() => setIsEditing(true)} className="px-2.5 py-1 text-xs font-semibold border border-border bg-background hover:bg-background-muted text-foreground rounded-md transition-colors flex items-center gap-1">
+                    <Edit size={13} /> Edit
                 </button>
             </div>
-            <div className="space-y-6">
+            <div className="space-y-3">
                 {companyInfo.logoUrl && (
                     <Section title="Company Logo">
-                        <img src={fetchedLogoUrl || constructImageUrl(companyInfo.logoUrl)} alt="Company Logo" className="h-24 w-auto object-contain rounded-md border p-2 bg-white" />
+                        <img src={fetchedLogoUrl || constructImageUrl(companyInfo.logoUrl)} alt="Company Logo" className="h-16 w-auto object-contain rounded-md border border-border p-1 bg-background" />
                     </Section>
                 )}
                 <Section title="General Information">
@@ -264,9 +279,6 @@ const CompanyInfo = () => {
                     <InfoDisplay label="Country" value={companyInfo.country} />
                 </Section>
                 <Section title="Statutory Details">
-                    {/* <InfoDisplay label="PAN / TRN" value={companyInfo.pan} /> */}
-                    {/* <InfoDisplay label="GSTIN / TAN" value={companyInfo.tan} /> */}
-                    {/* <InfoDisplay label="PF Registration No." value={companyInfo.pfRegistrationNumber} /> */}
                     <InfoDisplay label="ESI Registration No." value={companyInfo.esiRegistrationNumber} />
                 </Section>
                 <Section title="UAE WPS & Compliance">
@@ -283,9 +295,9 @@ const CompanyInfo = () => {
 };
 
 const Section = ({ title, children }) => (
-    <div className="p-4 border border-border rounded-lg bg-background-muted">
-        <h4 className="font-semibold mb-4 text-foreground-muted">{title}</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="p-3 border border-border rounded-lg bg-background-muted/40">
+        <h4 className="text-[11px] font-bold mb-2.5 text-foreground-muted uppercase tracking-wider">{title}</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {children}
         </div>
     </div>

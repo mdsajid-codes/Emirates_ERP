@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import axios from 'axios';
-import { Loader, UserMinus, ChevronDown, ChevronUp, AlertCircle, Download } from 'lucide-react';
+import { Loader, UserMinus, ChevronDown, ChevronUp, AlertCircle, Download, FileText } from 'lucide-react';
 
 const TerminationReasonReport = () => {
+    const { searchTerm: headerSearchTerm = '' } = useOutletContext() || {};
     const [loading, setLoading] = useState(false);
     const [reportData, setReportData] = useState([]);
     const [error, setError] = useState('');
@@ -22,8 +24,7 @@ const TerminationReasonReport = () => {
             const response = await axios.get(`${API_URL}/reports/eos/termination-reason`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
-            console.log("Termination Reason Report Data:", response.data);
-            setReportData(response.data);
+            setReportData(response.data || []);
         } catch (err) {
             console.error("Error fetching Termination Reason report:", err);
             setError('Failed to load termination reason report.');
@@ -60,79 +61,103 @@ const TerminationReasonReport = () => {
         }));
     };
 
-    return (
-        <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Summary Cards could go here if we calculated totals */}
-                {/* e.g. Total Exits */}
-            </div>
+    const filteredReportData = useMemo(() => {
+        if (!headerSearchTerm) return reportData;
+        const term = headerSearchTerm.toLowerCase().trim();
+        return reportData.map(group => {
+            const reasonMatches = group.reason && group.reason.toLowerCase().includes(term);
+            const matchingEmps = (group.employees || []).filter(emp =>
+                (emp.employeeName && emp.employeeName.toLowerCase().includes(term)) ||
+                (emp.employeeCode && emp.employeeCode.toLowerCase().includes(term))
+            );
+            if (reasonMatches || matchingEmps.length > 0) {
+                return {
+                    ...group,
+                    employees: reasonMatches ? group.employees : matchingEmps,
+                    employeeCount: reasonMatches ? group.employeeCount : matchingEmps.length
+                };
+            }
+            return null;
+        }).filter(Boolean);
+    }, [reportData, headerSearchTerm]);
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-between items-center">
-                    <div>
-                        <h3 className="font-semibold text-gray-700 dark:text-gray-200">Exits by Reason</h3>
-                        <p className="text-xs text-slate-500">Breakdown of employee exits grouped by termination reason</p>
-                    </div>
-                    <button onClick={handleDownloadExcel} className="btn-secondary flex items-center gap-2 text-sm bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg transition-colors">
-                        <Download size={16} /> Export
-                    </button>
+    return (
+        <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h2 className="text-xs font-bold text-foreground">Exits by Reason</h2>
+                    <p className="text-[11px] text-foreground-muted">Breakdown of employee exits grouped by termination reason</p>
                 </div>
 
-                {loading ? (
-                    <div className="flex justify-center items-center py-20">
-                        <Loader className="animate-spin text-blue-600 h-8 w-8" />
+                <button
+                    onClick={handleDownloadExcel}
+                    className="px-2.5 py-1 text-xs font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1 shadow-2xs h-7"
+                >
+                    <Download size={13} />
+                    <span>Export Excel</span>
+                </button>
+            </div>
+
+            {error && (
+                <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-md border border-rose-500/20 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle size={14} />
+                        <span>{error}</span>
                     </div>
-                ) : error ? (
-                    <div className="p-6 text-center text-red-600 bg-red-50 dark:bg-red-900/20">
-                        <p>{error}</p>
-                        <button onClick={fetchReport} className="text-sm underline hover:text-red-800 mt-2">Retry</button>
+                    <button onClick={fetchReport} className="text-xs underline hover:opacity-80">Try Again</button>
+                </div>
+            )}
+
+            <div className="rounded-lg border border-border overflow-hidden bg-card text-foreground">
+                {loading ? (
+                    <div className="flex justify-center items-center p-8 bg-card">
+                        <Loader className="animate-spin h-5 w-5 text-primary" />
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {reportData.length > 0 ? (
-                            reportData.map((group) => (
-                                <div key={group.reason} className="bg-white dark:bg-slate-800">
+                    <div className="divide-y divide-border">
+                        {filteredReportData.length > 0 ? (
+                            filteredReportData.map((group) => (
+                                <div key={group.reason} className="bg-card">
                                     <div
-                                        className="px-6 py-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+                                        className="px-3 py-2.5 flex justify-between items-center cursor-pointer hover:bg-background-muted/50 transition-colors"
                                         onClick={() => toggleRow(group.reason)}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg text-red-600 dark:text-red-400">
-                                                <UserMinus size={20} />
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="p-1.5 bg-rose-500/10 text-rose-500 rounded-md">
+                                                <UserMinus size={15} />
                                             </div>
                                             <div>
-                                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white capitalize">
+                                                <h4 className="text-xs font-bold text-foreground capitalize leading-tight">
                                                     {group.reason ? group.reason.replace(/_/g, ' ') : 'Unknown'}
                                                 </h4>
-                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                <span className="text-[10px] text-foreground-muted">
                                                     {group.employeeCount} Employee{group.employeeCount !== 1 ? 's' : ''}
                                                 </span>
                                             </div>
                                         </div>
 
                                         {expandedRows[group.reason] ?
-                                            <ChevronUp size={20} className="text-gray-400" /> :
-                                            <ChevronDown size={20} className="text-gray-400" />
+                                            <ChevronUp size={16} className="text-foreground-muted" /> :
+                                            <ChevronDown size={16} className="text-foreground-muted" />
                                         }
                                     </div>
 
-                                    {/* Expanded Details */}
                                     {expandedRows[group.reason] && (
-                                        <div className="bg-gray-50 dark:bg-slate-900/50 px-6 py-3 border-t border-gray-100 dark:border-gray-800">
-                                            <table className="min-w-full text-sm">
+                                        <div className="bg-background-muted/40 px-3 py-2 border-t border-border">
+                                            <table className="min-w-full text-xs">
                                                 <thead>
-                                                    <tr>
-                                                        <th className="text-left font-medium text-gray-500 py-2">Code</th>
-                                                        <th className="text-left font-medium text-gray-500 py-2">Name</th>
-                                                        <th className="text-right font-medium text-gray-500 py-2">Last Working Day</th>
+                                                    <tr className="border-b border-border text-[11px] font-bold text-foreground-muted uppercase">
+                                                        <th className="text-left py-1.5">Code</th>
+                                                        <th className="text-left py-1.5">Name</th>
+                                                        <th className="text-right py-1.5">Last Working Day</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody>
+                                                <tbody className="divide-y divide-border/30">
                                                     {group.employees.map((emp, idx) => (
-                                                        <tr key={idx} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
-                                                            <td className="py-2 text-gray-700 dark:text-gray-300">{emp.employeeCode}</td>
-                                                            <td className="py-2 text-gray-700 dark:text-gray-300">{emp.employeeName}</td>
-                                                            <td className="py-2 text-right text-gray-700 dark:text-gray-300">{emp.lastWorkingDay}</td>
+                                                        <tr key={idx}>
+                                                            <td className="py-1.5 font-semibold text-foreground">{emp.employeeCode}</td>
+                                                            <td className="py-1.5 text-foreground">{emp.employeeName}</td>
+                                                            <td className="py-1.5 text-right text-foreground-muted">{emp.lastWorkingDay}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -142,8 +167,10 @@ const TerminationReasonReport = () => {
                                 </div>
                             ))
                         ) : (
-                            <div className="p-10 text-center text-gray-500 dark:text-gray-400">
-                                No termination data found.
+                            <div className="p-8 text-center text-foreground-muted text-xs">
+                                <FileText className="mx-auto h-7 w-7 text-foreground-muted/40 mb-1" />
+                                <h3 className="text-xs font-bold text-foreground">No termination data found</h3>
+                                <p className="text-[11px] text-foreground-muted">No records match your search criteria.</p>
                             </div>
                         )}
                     </div>

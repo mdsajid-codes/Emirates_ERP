@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Edit, Trash2, PlusCircle, Loader, X } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, Loader, ArrowLeft, Save } from 'lucide-react';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
@@ -28,46 +28,57 @@ const api = {
     },
 };
 
-// --- Reusable Components ---
+const InputField = ({ label, id, ...props }) => (
+    <div>
+        {label && <label htmlFor={id} className="block text-[11px] font-medium text-foreground-muted mb-0.5">{label}</label>}
+        <input
+            id={id}
+            {...props}
+            className="w-full px-2.5 py-1 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-colors h-7"
+        />
+    </div>
+);
 
-const Modal = ({ isOpen, onClose, title, children }) => {
-    if (!isOpen) return null;
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4" onClick={onClose}>
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
-                <div className="p-4 border-b flex justify-between items-center">
-                    <h3 className="text-xl font-semibold">{title}</h3>
-                    <button onClick={onClose} className="p-1 rounded-full hover:bg-slate-100"><X size={20} /></button>
-                </div>
-                <div className="p-6">{children}</div>
-            </div>
-        </div>
-    );
-};
-
-const BankAccountForm = ({ item, onSave, onCancel, saving }) => {
+const BankAccountFormView = ({ item, onSave, onCancel, saving }) => {
     const [formData, setFormData] = useState(item || { bankName: '', accountNumber: '', ifscCode: '', accountHolderName: '', branchName: '', primary: false });
     const handleChange = e => setFormData({ ...formData, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
     const handleSubmit = e => { e.preventDefault(); onSave(formData); };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <input type="text" name="bankName" value={formData.bankName} onChange={handleChange} placeholder="Bank Name" className="input" required />
-            <input type="text" name="accountHolderName" value={formData.accountHolderName} onChange={handleChange} placeholder="Account Holder Name" className="input" required />
-            <input type="text" name="accountNumber" value={formData.accountNumber} onChange={handleChange} placeholder="Account Number" className="input" required />
-            <input type="text" name="ifscCode" value={formData.ifscCode} onChange={handleChange} placeholder="IFSC Code" className="input" required />
-            <input type="text" name="branchName" value={formData.branchName} onChange={handleChange} placeholder="Branch Name" className="input" />
-            <label className="flex items-center gap-2">
-                <input type="checkbox" name="primary" checked={formData.primary} onChange={handleChange} className="h-4 w-4 rounded" />
-                <span>Set as primary account</span>
-            </label>
-            <div className="flex justify-end gap-2 pt-4">
-                <button type="button" onClick={onCancel} className="btn-secondary" disabled={saving}>Cancel</button>
-                <button type="submit" className="btn-primary" disabled={saving}>
-                    {saving ? <Loader className="animate-spin h-5 w-5" /> : 'Save Account'}
+        <div className="p-3.5 bg-card border border-border rounded-lg text-foreground space-y-3 max-w-lg">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+                <h3 className="text-xs font-bold text-foreground">
+                    {item ? 'Edit Bank Account' : 'Add Bank Account'}
+                </h3>
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="px-2 py-1 text-xs font-semibold rounded-md border border-border bg-background hover:bg-background-muted text-foreground transition-colors flex items-center gap-1"
+                >
+                    <ArrowLeft size={13} /> Back
                 </button>
             </div>
-        </form>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+                <InputField label="Bank Name" name="bankName" value={formData.bankName} onChange={handleChange} required />
+                <InputField label="Account Holder Name" name="accountHolderName" value={formData.accountHolderName} onChange={handleChange} required />
+                <InputField label="Account Number" name="accountNumber" value={formData.accountNumber} onChange={handleChange} required />
+                <InputField label="IFSC Code" name="ifscCode" value={formData.ifscCode} onChange={handleChange} required />
+                <InputField label="Branch Name" name="branchName" value={formData.branchName} onChange={handleChange} />
+                
+                <div className="flex items-center gap-2 pt-1">
+                    <input type="checkbox" id="primary" name="primary" checked={formData.primary} onChange={handleChange} className="h-3.5 w-3.5 rounded border-border text-primary" />
+                    <label htmlFor="primary" className="text-xs font-medium text-foreground">Set as primary account</label>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-3 border-t border-border">
+                    <button type="button" onClick={onCancel} className="px-3 py-1 text-xs font-semibold text-foreground-muted hover:bg-background-muted rounded-md transition-colors border border-border" disabled={saving}>Cancel</button>
+                    <button type="submit" className="px-3.5 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-2xs h-7" disabled={saving}>
+                        {saving ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Save size={13} />} Save Account
+                    </button>
+                </div>
+            </form>
+        </div>
     );
 };
 
@@ -76,7 +87,7 @@ const BankDetails = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [viewMode, setViewMode] = useState('list'); // 'list' | 'form'
     const [editingAccount, setEditingAccount] = useState(null);
 
     const fetchAccounts = useCallback(() => {
@@ -91,9 +102,9 @@ const BankDetails = () => {
         fetchAccounts();
     }, [fetchAccounts]);
 
-    const handleAdd = () => { setEditingAccount(null); setIsModalOpen(true); };
-    const handleEdit = (account) => { setEditingAccount(account); setIsModalOpen(true); };
-    const handleCloseModal = () => { setIsModalOpen(false); setEditingAccount(null); };
+    const handleAdd = () => { setEditingAccount(null); setViewMode('form'); };
+    const handleEdit = (account) => { setEditingAccount(account); setViewMode('form'); };
+    const handleCloseForm = () => { setViewMode('list'); setEditingAccount(null); };
 
     const handleSave = async (data) => {
         setSaving(true);
@@ -104,7 +115,7 @@ const BankDetails = () => {
                 await api.createBankAccount(data);
             }
             fetchAccounts();
-            handleCloseModal();
+            handleCloseForm();
         } catch (err) {
             alert(`Error: ${err.response?.data?.message || 'Failed to save account.'}`);
         } finally {
@@ -123,40 +134,61 @@ const BankDetails = () => {
         }
     };
 
-    if (loading) return <div className="flex justify-center p-10"><Loader className="animate-spin text-blue-600" /></div>;
-    if (error) return <div className="text-center text-red-500 p-4">{error}</div>;
+    if (loading) return <div className="flex justify-center p-8"><Loader className="animate-spin h-5 w-5 text-primary" /></div>;
+    if (error) return <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-md border border-rose-500/20">{error}</div>;
+
+    if (viewMode === 'form') {
+        return <BankAccountFormView item={editingAccount} onSave={handleSave} onCancel={handleCloseForm} saving={saving} />;
+    }
 
     return (
-        <div className="p-6 bg-white rounded-lg shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold text-slate-800">Bank Accounts</h3>
-                <button onClick={handleAdd} className="btn-primary flex items-center gap-2"><PlusCircle size={16} /> Add Account</button>
+        <div className="space-y-3">
+            <div className="flex justify-between items-center">
+                <h3 className="text-xs font-bold text-foreground">Bank Accounts</h3>
+                <button onClick={handleAdd} className="px-2.5 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-2xs">
+                    <PlusCircle size={13} /> Add Account
+                </button>
             </div>
-            <div className="overflow-x-auto border rounded-lg">
-                <table className="min-w-full divide-y divide-slate-200">
-                    <thead className="bg-slate-50">
-                        <tr>
-                            <th className="th-cell">Bank Name</th><th className="th-cell">Account Number</th><th className="th-cell">IFSC</th><th className="th-cell">Primary</th><th className="th-cell">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                        {accounts.map(acc => (
-                            <tr key={acc.id} className="hover:bg-slate-50">
-                                <td className="td-cell font-medium">{acc.bankName}</td><td className="td-cell">{acc.accountNumber}</td><td className="td-cell">{acc.ifscCode}</td><td className="td-cell">{acc.primary ? 'Yes' : 'No'}</td>
-                                <td className="td-cell space-x-2">
-                                    <button onClick={() => handleEdit(acc)} className="p-1 text-blue-600 hover:text-blue-800"><Edit size={16} /></button>
-                                    <button onClick={() => handleDelete(acc.id)} className="p-1 text-red-600 hover:text-red-800"><Trash2 size={16} /></button>
-                                </td>
+
+            {accounts.length === 0 ? (
+                <div className="p-6 text-center border border-border rounded-lg bg-card text-foreground">
+                    <p className="text-xs text-foreground-muted">No bank accounts found for this company.</p>
+                </div>
+            ) : (
+                <div className="overflow-x-auto rounded-lg border border-border">
+                    <table className="min-w-full bg-card text-foreground divide-y divide-border">
+                        <thead className="bg-background-muted/60">
+                            <tr>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Bank Name</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Account Number</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">IFSC</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Primary</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingAccount ? 'Edit Bank Account' : 'Add Bank Account'}>
-                <BankAccountForm item={editingAccount} onSave={handleSave} onCancel={handleCloseModal} saving={saving} />
-            </Modal>
+                        </thead>
+                        <tbody className="divide-y divide-border/40">
+                            {accounts.map(acc => (
+                                <tr key={acc.id} className="hover:bg-background-muted/40 transition-colors">
+                                    <td className="px-3 py-2 text-xs font-semibold text-foreground">{acc.bankName}</td>
+                                    <td className="px-3 py-2 text-xs font-medium text-foreground">{acc.accountNumber}</td>
+                                    <td className="px-3 py-2 text-xs text-foreground-muted">{acc.ifscCode}</td>
+                                    <td className="px-3 py-2 text-xs">
+                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${acc.primary ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-background-muted text-foreground-muted border-border'}`}>
+                                            {acc.primary ? 'Yes' : 'No'}
+                                        </span>
+                                    </td>
+                                    <td className="px-3 py-2 text-xs text-right whitespace-nowrap space-x-1">
+                                        <button onClick={() => handleEdit(acc)} className="p-1 text-primary hover:bg-primary/10 rounded-md transition-colors border border-border bg-background" title="Edit"><Edit size={13} /></button>
+                                        <button onClick={() => handleDelete(acc.id)} className="p-1 text-rose-600 hover:bg-rose-500/10 rounded-md transition-colors border border-border bg-background" title="Delete"><Trash2 size={13} /></button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
     );
-}
+};
 
 export default BankDetails;

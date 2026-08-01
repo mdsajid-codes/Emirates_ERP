@@ -1,58 +1,124 @@
-import React from 'react';
-import { NavLink, Outlet, Link } from 'react-router-dom';
-import { Users, CalendarClock, Calendar, DollarSign, ArrowLeft, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Users, CalendarClock, Calendar, DollarSign, ShieldCheck, Menu, X, PanelLeftClose, PanelLeftOpen, BarChart3, Search } from 'lucide-react';
+import DashboardLayout from '../../components/DashboardLayout';
 
 const reportCategories = [
-    { name: 'Employee', href: '/reports/employee', icon: Users, color: 'text-blue-500', activeColor: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-    { name: 'Attendance', href: '/reports/attendance', icon: CalendarClock, color: 'text-purple-500', activeColor: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-    { name: 'Leave', href: '/reports/leave', icon: Calendar, color: 'text-amber-500', activeColor: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20' },
-    { name: 'Payroll', href: '/reports/payroll', icon: DollarSign, color: 'text-emerald-500', activeColor: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-    { name: 'End of Service', href: '/reports/eos', icon: Users, color: 'text-rose-500', activeColor: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20' },
-    { name: 'HR Compliance', href: '/reports/compliance', icon: ShieldCheck, color: 'text-cyan-500', activeColor: 'text-cyan-600', bg: 'bg-cyan-50 dark:bg-cyan-900/20' },
+    { id: 'employee', name: 'Employee Reports', href: '/reports/employee', icon: Users },
+    { id: 'attendance', name: 'Attendance Reports', href: '/reports/attendance', icon: CalendarClock },
+    { id: 'leave', name: 'Leave Reports', href: '/reports/leave', icon: Calendar },
+    { id: 'payroll', name: 'Payroll Reports', href: '/reports/payroll', icon: DollarSign },
+    { id: 'eos', name: 'End of Service', href: '/reports/eos', icon: Users },
+    { id: 'compliance', name: 'HR Compliance', href: '/reports/compliance', icon: ShieldCheck },
 ];
 
 const ReportsLayout = () => {
-    return (
-        <div className="flex h-screen bg-background text-foreground">
-            {/* Reports Sidebar */}
-            <div className="w-full md:w-64 bg-sidebar-bg text-sidebar-text border-r border-border flex-shrink-0 flex flex-col">
-                <div className="p-4 border-b border-border">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Link to="/hrdashboard" className="p-1 hover:bg-black/5 rounded-full transition-colors" title="Back to Dashboard">
-                            <ArrowLeft size={20} className="text-sidebar-text opacity-70" />
-                        </Link>
-                        <h2 className="text-lg font-bold">Reports</h2>
-                    </div>
-                    <p className="text-sm text-foreground-muted ml-1">Select a category</p>
-                </div>
-                <nav className="p-3 space-y-1 flex-1 overflow-y-auto">
-                    {reportCategories.map((category) => (
-                        <NavLink
-                            key={category.name}
-                            to={category.href}
-                            className={({ isActive }) =>
-                                `flex items-center gap-3 px-3 py-2.5 rounded-theme text-sm font-medium transition-all duration-200 group ${isActive
-                                    ? `bg-sidebar-active text-sidebar-text shadow-sm font-bold border border-white/10`
-                                    : 'text-sidebar-text opacity-70 hover:bg-sidebar-hover hover:opacity-100'
-                                }`
-                            }
-                        >
-                            {({ isActive }) => (
-                                <>
-                                    <category.icon size={20} className={isActive ? 'text-sidebar-text' : category.color} />
-                                    <span>{category.name}</span>
-                                </>
-                            )}
-                        </NavLink>
-                    ))}
-                </nav>
-            </div>
+    const location = useLocation();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(() => {
+        return localStorage.getItem('reports_sidebar_collapsed') === 'true';
+    });
 
-            {/* Main Content Area */}
-            <div className="flex-1 overflow-auto bg-background-muted">
-                <Outlet />
-            </div>
+    const toggleCollapsed = () => {
+        setIsCollapsed(prev => {
+            const next = !prev;
+            localStorage.setItem('reports_sidebar_collapsed', String(next));
+            return next;
+        });
+    };
+
+    const headerSearchElement = (
+        <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted pointer-events-none" />
+            <input
+                type="text"
+                placeholder="Search reports by employee, code, status..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+            />
         </div>
+    );
+
+    return (
+        <DashboardLayout hideSidebar={true} headerSearch={headerSearchElement}>
+            <div className="flex flex-col lg:flex-row min-h-full flex-1 w-full bg-background text-foreground">
+
+                {/* Mobile menu header */}
+                <div className="lg:hidden flex items-center justify-between p-3 border-b border-border bg-sidebar-bg text-sidebar-text">
+                    <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
+                            <BarChart3 className="h-4 w-4" />
+                        </div>
+                        <span className="font-bold text-sm">Reports Hub</span>
+                    </div>
+                    <button
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        className="p-1.5 rounded-lg border border-border bg-background text-foreground hover:bg-background-muted"
+                    >
+                        {isSidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                    </button>
+                </div>
+
+                {/* Module Sidebar */}
+                <aside className={`
+                    shrink-0 border-r border-border bg-sidebar-bg text-sidebar-text z-20 transition-all duration-300
+                    sticky top-0 lg:h-[calc(100vh-3.5rem)] self-start
+                    ${isSidebarOpen ? 'fixed inset-0 lg:relative' : 'hidden lg:block'}
+                    ${isCollapsed ? 'lg:w-[56px]' : 'lg:w-48'}
+                `}>
+                    <div className="h-full flex flex-col p-2">
+                        <div className="flex flex-col gap-1.5 mb-2 px-1 border-b border-border pb-2">
+                            <div className="flex items-center justify-between">
+                                {!isCollapsed && (
+                                    <h2 className="text-xs font-bold tracking-tight truncate">
+                                        Reports Hub
+                                    </h2>
+                                )}
+                                <button
+                                    onClick={toggleCollapsed}
+                                    className="hidden lg:flex p-1 rounded-md text-sidebar-text/70 hover:text-sidebar-text hover:bg-sidebar-hover transition-colors"
+                                    title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                                >
+                                    {isCollapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Category Navigation Links */}
+                        <nav className="flex-1 space-y-0.5 overflow-y-auto">
+                            {reportCategories.map((category) => {
+                                const isActive = location.pathname.startsWith(category.href);
+                                return (
+                                    <NavLink
+                                        key={category.id}
+                                        to={category.href}
+                                        onClick={() => setIsSidebarOpen(false)}
+                                        title={isCollapsed ? category.name : undefined}
+                                        className={`
+                                            flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors
+                                            ${isActive
+                                                ? 'bg-primary/10 text-primary font-bold shadow-2xs'
+                                                : 'text-sidebar-text/80 hover:bg-sidebar-hover hover:text-sidebar-text'}
+                                            ${isCollapsed ? 'justify-center px-0' : ''}
+                                        `}
+                                    >
+                                        <category.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-sidebar-text/70'}`} />
+                                        {!isCollapsed && <span className="truncate">{category.name}</span>}
+                                    </NavLink>
+                                );
+                            })}
+                        </nav>
+                    </div>
+                </aside>
+
+                {/* Main Content Area */}
+                <main className="flex-1 min-w-0 p-3 lg:p-4 bg-background overflow-y-auto">
+                    <Outlet context={{ searchTerm }} />
+                </main>
+            </div>
+        </DashboardLayout>
     );
 };
 

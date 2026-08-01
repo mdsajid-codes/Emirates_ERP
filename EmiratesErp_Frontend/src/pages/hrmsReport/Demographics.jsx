@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Download, Loader, User, BarChart } from 'lucide-react';
 import axios from 'axios';
@@ -21,44 +20,14 @@ const Demographics = () => {
                 const token = localStorage.getItem('token');
                 const headers = { "Authorization": `Bearer ${token}` };
 
-                // Fetch basic list (contains Gender, Marital Status usually)
                 const employeesRes = await axios.get(`${API_URL}/employees/all`, { headers });
-                const employees = employeesRes.data;
+                const employees = employeesRes.data || [];
 
-                // Fetch full profile for DOB to calculate Age
-                // We use Promise.all to fetch JobDetails/Profile or just rely on what we can find.
-                // Assuming DOB is in Employee Profile which might require a different endpoint or included in 'all' if expanded.
-                // Based on backend 'Employee' entity has 'dob', so we MIGHT have it in /all if the DTO includes it.
-                // MasterEmployeeReport didn't use DOB. Let's check if 'dob' is in the basic fetch.
-                // If not, we might need to fetch individual records. 
-                // Given the HeadCount pattern, we will fetch individual records to be safe and accurate.
-
-                // Note: Employee entity has 'dob'. Let's hope /all returns it. 
-                // If the user's backend code: 'employees = employeeRepository.findAll();' 
-                // The Controller likely returns the Entity or a DTO. If Entity, 'dob' is there.
-                // If DTO, maybe not. To be safe, let's assume we might need to fetch if 'dob' is missing.
-
-                // However, fetching 100s of profiles is slow. 
-                // We will try to calculate from 'employees' first. If 'dob' is missing, we fetch details.
-
-                // Actually, let's just do the fetching to be consistent with HeadCount and guarantee data.
-                // We need 'dob' for Age.
-
-                // In Employee.jsx, DOB seemed to be part of the form/profile.
-
-                setStats(processStats(employees)); // Try to process with basic data first? 
-                // No, sticking to safe robust method:
-
-                // Optimization: Check the first employee. If 'dob' exists, use it. Else fetch.
                 let dataToProcess = employees;
                 if (employees.length > 0 && !employees[0].dob) {
                     const employeesWithDetails = await Promise.all(
                         employees.map(async (emp) => {
                             try {
-                                // Maybe fetch profile? Or just job-details?
-                                // Backend service uses 'EmployeeProfile' for some fields but 'Employee' entity has 'dob'.
-                                // If 'dob' is null in /all response, we are stuck unless we fetch full employee object.
-                                // Endpoint /employees/{id} usually returns full object.
                                 const fullEmpRes = await axios.get(`${API_URL}/employees/${emp.employeeCode}`, { headers });
                                 return fullEmpRes.data;
                             } catch (err) {
@@ -70,7 +39,6 @@ const Demographics = () => {
                 }
 
                 setStats(processStats(dataToProcess));
-
             } catch (err) {
                 console.error("Error fetching data:", err);
             } finally {
@@ -79,7 +47,7 @@ const Demographics = () => {
         };
 
         fetchData();
-    }, []);
+    }, [API_URL]);
 
     const calculateAge = (dobString) => {
         if (!dobString) return -1;
@@ -106,16 +74,12 @@ const Demographics = () => {
         };
 
         data.forEach(emp => {
-            // Gender
             const gender = emp.gender || 'Unspecified';
             newStats.byGender[gender] = (newStats.byGender[gender] || 0) + 1;
 
-            // Marital Status
-            // Check spelling: 'MartialStatus' (sic) in backend entity based on previous context, or 'maritalStatus'
             const marital = emp.martialsStatus || emp.maritalStatus || 'Unspecified';
             newStats.byMaritalStatus[marital] = (newStats.byMaritalStatus[marital] || 0) + 1;
 
-            // Age
             const age = calculateAge(emp.dob);
             if (age === -1) {
                 newStats.byAgeGroup['Unknown']++;
@@ -163,50 +127,49 @@ const Demographics = () => {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center h-96">
-                <Loader className="animate-spin h-8 w-8 text-blue-600 mb-4" />
-                <p className="text-gray-500">Loading demographic data...</p>
-                <p className="text-xs text-gray-400 mt-2">Determining age and distribution</p>
+            <div className="flex flex-col items-center justify-center p-8 bg-card rounded-lg border border-border">
+                <Loader className="animate-spin h-6 w-6 text-primary mb-2" />
+                <p className="text-xs text-foreground-muted">Loading demographic data...</p>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-3">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Demographic Analysis</h2>
-                    <p className="text-sm text-gray-500">Age, Gender, and Marital Status Distribution</p>
+                    <h2 className="text-xs font-bold text-foreground">Demographic Analysis</h2>
+                    <p className="text-[11px] text-foreground-muted">Age, Gender, and Marital Status Distribution</p>
                 </div>
                 <button
                     onClick={handleExport}
                     disabled={exporting}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70"
+                    className="px-2.5 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-2xs h-7 disabled:opacity-70"
                 >
-                    {exporting ? <Loader className="animate-spin h-4 w-4" /> : <Download size={18} />}
+                    {exporting ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Download size={13} />}
                     <span>Export Excel</span>
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {/* Gender Table */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-purple-50 dark:bg-purple-900/20 flex items-center gap-2">
-                        <User size={18} className="text-purple-600" />
-                        <h3 className="font-semibold text-gray-700 dark:text-gray-200">Gender Distribution</h3>
+                <div className="rounded-lg border border-border overflow-hidden bg-card text-foreground">
+                    <div className="p-2.5 border-b border-border bg-background-muted/60 flex items-center gap-2">
+                        <User size={14} className="text-primary" />
+                        <h3 className="text-xs font-bold text-foreground">Gender Distribution</h3>
                     </div>
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400">
+                    <table className="min-w-full divide-y divide-border">
+                        <thead className="bg-background-muted/40">
                             <tr>
-                                <th className="px-6 py-3">Gender</th>
-                                <th className="px-6 py-3 text-right">Count</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Gender</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Count</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody className="divide-y divide-border/40">
                             {Object.entries(stats.byGender).map(([key, val]) => (
-                                <tr key={key} className="bg-white dark:bg-slate-800">
-                                    <td className="px-6 py-4 capitalize">{key.toLowerCase()}</td>
-                                    <td className="px-6 py-4 text-right">{val}</td>
+                                <tr key={key} className="hover:bg-background-muted/40 transition-colors">
+                                    <td className="px-3 py-2 text-xs font-semibold text-foreground capitalize">{key.toLowerCase()}</td>
+                                    <td className="px-3 py-2 text-xs text-right font-medium text-foreground">{val}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -214,23 +177,23 @@ const Demographics = () => {
                 </div>
 
                 {/* Marital Status Table */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-pink-50 dark:bg-pink-900/20 flex items-center gap-2">
-                        <User size={18} className="text-pink-600" />
-                        <h3 className="font-semibold text-gray-700 dark:text-gray-200">Marital Status</h3>
+                <div className="rounded-lg border border-border overflow-hidden bg-card text-foreground">
+                    <div className="p-2.5 border-b border-border bg-background-muted/60 flex items-center gap-2">
+                        <User size={14} className="text-primary" />
+                        <h3 className="text-xs font-bold text-foreground">Marital Status</h3>
                     </div>
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400">
+                    <table className="min-w-full divide-y divide-border">
+                        <thead className="bg-background-muted/40">
                             <tr>
-                                <th className="px-6 py-3">Status</th>
-                                <th className="px-6 py-3 text-right">Count</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Status</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Count</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody className="divide-y divide-border/40">
                             {Object.entries(stats.byMaritalStatus).map(([key, val]) => (
-                                <tr key={key} className="bg-white dark:bg-slate-800">
-                                    <td className="px-6 py-4 capitalize">{key.toLowerCase().replace('_', ' ')}</td>
-                                    <td className="px-6 py-4 text-right">{val}</td>
+                                <tr key={key} className="hover:bg-background-muted/40 transition-colors">
+                                    <td className="px-3 py-2 text-xs font-semibold text-foreground capitalize">{key.toLowerCase().replace('_', ' ')}</td>
+                                    <td className="px-3 py-2 text-xs text-right font-medium text-foreground">{val}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -238,23 +201,23 @@ const Demographics = () => {
                 </div>
 
                 {/* Age Group Table */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-orange-50 dark:bg-orange-900/20 flex items-center gap-2">
-                        <BarChart size={18} className="text-orange-600" />
-                        <h3 className="font-semibold text-gray-700 dark:text-gray-200">Age Groups</h3>
+                <div className="rounded-lg border border-border overflow-hidden bg-card text-foreground">
+                    <div className="p-2.5 border-b border-border bg-background-muted/60 flex items-center gap-2">
+                        <BarChart size={14} className="text-primary" />
+                        <h3 className="text-xs font-bold text-foreground">Age Groups</h3>
                     </div>
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400">
+                    <table className="min-w-full divide-y divide-border">
+                        <thead className="bg-background-muted/40">
                             <tr>
-                                <th className="px-6 py-3">Age Range</th>
-                                <th className="px-6 py-3 text-right">Count</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Age Range</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Count</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                            {Object.entries(stats.byAgeGroup).map(([key, val]) => (
-                                <tr key={key} className="bg-white dark:bg-slate-800">
-                                    <td className="px-6 py-4">{key}</td>
-                                    <td className="px-6 py-4 text-right">{val}</td>
+                        <tbody className="divide-y divide-border/40">
+                            {Object.entries(stats.byAgeGroup).map(([range, count]) => (
+                                <tr key={range} className="hover:bg-background-muted/40 transition-colors">
+                                    <td className="px-3 py-2 text-xs font-semibold text-foreground">{range}</td>
+                                    <td className="px-3 py-2 text-xs text-right font-medium text-foreground">{count}</td>
                                 </tr>
                             ))}
                         </tbody>
