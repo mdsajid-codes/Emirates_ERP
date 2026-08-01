@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Loader, AlertCircle, CheckCircle, XCircle, Clock, PieChart } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useOutletContext } from 'react-router-dom';
+import { Download, Loader, AlertCircle, CheckCircle, XCircle, Clock, PieChart, FileText } from 'lucide-react';
 import axios from 'axios';
 
 const WpsComplianceReport = () => {
+    const { searchTerm: headerSearchTerm = '' } = useOutletContext() || {};
     const [loading, setLoading] = useState(false);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
@@ -73,30 +75,32 @@ const WpsComplianceReport = () => {
         }
     };
 
-    // Helper for status badge
-    const getStatusBadge = (status) => {
-        if (status === 'PAID') return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"><CheckCircle size={12} className="mr-1" /> Paid</span>;
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"><XCircle size={12} className="mr-1" /> Unpaid</span>;
-    };
+    const filteredDetails = useMemo(() => {
+        if (!reportData || !reportData.details) return [];
+        if (!headerSearchTerm) return reportData.details;
+        const term = headerSearchTerm.toLowerCase().trim();
+        return reportData.details.filter(row =>
+            (row.employeeName && row.employeeName.toLowerCase().includes(term)) ||
+            (row.employeeCode && row.employeeCode.toLowerCase().includes(term)) ||
+            (row.status && row.status.toLowerCase().includes(term)) ||
+            (row.remarks && row.remarks.toLowerCase().includes(term))
+        );
+    }, [reportData, headerSearchTerm]);
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">WPS Compliance Report</h2>
-                    <p className="text-sm text-gray-500">Monitor salary payments and delay tracking for compliance.</p>
+                    <h2 className="text-xs font-bold text-foreground">WPS Compliance Report</h2>
+                    <p className="text-[11px] text-foreground-muted">Monitor salary payments and delay tracking for WPS compliance</p>
                 </div>
-            </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4">
-                <div className="flex gap-4 mb-6">
-                    {/* Year Selector */}
+                <div className="flex items-center gap-2">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year</label>
                         <select
                             value={selectedYear}
                             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                            className="w-32 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="px-2.5 py-1 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary h-7"
                         >
                             {years.map(year => (
                                 <option key={year} value={year}>{year}</option>
@@ -104,116 +108,140 @@ const WpsComplianceReport = () => {
                         </select>
                     </div>
 
-                    {/* Month Selector */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Month</label>
                         <select
                             value={selectedMonth}
                             onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                            className="w-40 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="px-2.5 py-1 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary h-7"
                         >
                             {months.map(month => (
                                 <option key={month.value} value={month.value}>{month.label}</option>
                             ))}
                         </select>
                     </div>
-                </div>
 
-                {loading ? (
-                    <div className="flex flex-col items-center justify-center p-12">
-                        <Loader className="animate-spin h-8 w-8 text-blue-600 mb-4" />
-                        <p className="text-gray-500">Calculating compliance metrics...</p>
-                    </div>
-                ) : error ? (
-                    <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg flex items-center gap-2">
-                        <AlertCircle size={20} />
+                    <button
+                        onClick={handleExportReport}
+                        disabled={loading || !reportData}
+                        className="px-2.5 py-1 text-xs font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1 shadow-2xs h-7 disabled:opacity-70"
+                    >
+                        <Download size={13} />
+                        <span>Export Excel</span>
+                    </button>
+                </div>
+            </div>
+
+            {error && (
+                <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-md border border-rose-500/20 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle size={14} />
                         <span>{error}</span>
                     </div>
-                ) : reportData && (
-                    <div className="space-y-6">
-                        {/* Stats Cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg flex items-center gap-4">
-                                <div className="p-3 bg-indigo-100 dark:bg-indigo-800 rounded-full text-indigo-600 dark:text-indigo-200">
-                                    <PieChart size={24} />
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Compliance Rate</p>
-                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{reportData.compliantPercentage}%</h3>
-                                </div>
-                            </div>
+                    <button onClick={handleGenerateReport} className="text-xs underline hover:opacity-80">Try Again</button>
+                </div>
+            )}
 
-                            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg flex items-center gap-4">
-                                <div className="p-3 bg-green-100 dark:bg-green-800 rounded-full text-green-600 dark:text-green-200">
-                                    <CheckCircle size={24} />
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Paid Employees</p>
-                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{reportData.paidEmployees}</h3>
-                                </div>
+            {loading ? (
+                <div className="flex justify-center items-center p-8 bg-card border border-border rounded-lg">
+                    <Loader className="animate-spin h-5 w-5 text-primary" />
+                </div>
+            ) : reportData && (
+                <div className="space-y-3">
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div className="p-3 bg-card border border-border rounded-lg text-foreground flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 text-primary rounded-md">
+                                <PieChart size={18} />
                             </div>
-
-                            <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg flex items-center gap-4">
-                                <div className="p-3 bg-red-100 dark:bg-red-800 rounded-full text-red-600 dark:text-red-200">
-                                    <XCircle size={24} />
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Unpaid Employees</p>
-                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{reportData.unpaidEmployees}</h3>
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg flex items-center gap-4">
-                                <div className="p-3 bg-gray-200 dark:bg-gray-600 rounded-full text-gray-600 dark:text-gray-200">
-                                    <Clock size={24} />
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Total Employees</p>
-                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{reportData.totalEmployees}</h3>
-                                </div>
+                            <div>
+                                <p className="text-[11px] text-foreground-muted font-medium">Compliance Rate</p>
+                                <h3 className="text-base font-bold text-foreground leading-tight">{reportData.compliantPercentage}%</h3>
                             </div>
                         </div>
 
-                        {/* Details Table */}
-                        <div className="overflow-x-auto border rounded-lg">
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
-                                    <tr>
-                                        <th className="px-6 py-3">Employee</th>
-                                        <th className="px-6 py-3">Status</th>
-                                        <th className="px-6 py-3">Pay Date</th>
-                                        <th className="px-6 py-3">Delay (Days)</th>
-                                        <th className="px-6 py-3">Remarks</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                    {reportData.details.map((row, index) => (
-                                        <tr key={index} className="bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50">
-                                            <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-300">
-                                                <div>{row.employeeName}</div>
-                                                <div className="text-xs text-gray-500">{row.employeeCode}</div>
-                                            </td>
-                                            <td className="px-6 py-4">{getStatusBadge(row.status)}</td>
-                                            <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{row.payDate || '-'}</td>
-                                            <td className={`px-6 py-4 font-medium ${row.delayDays > 0 ? 'text-red-600' : 'text-gray-500'}`}>
-                                                {row.delayDays}
-                                            </td>
-                                            <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{row.remarks}</td>
-                                        </tr>
-                                    ))}
-                                    {reportData.details.length === 0 && (
-                                        <tr>
-                                            <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
-                                                No employee records found.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                        <div className="p-3 bg-card border border-border rounded-lg text-foreground flex items-center gap-3">
+                            <div className="p-2 bg-emerald-500/10 text-emerald-600 rounded-md">
+                                <CheckCircle size={18} />
+                            </div>
+                            <div>
+                                <p className="text-[11px] text-foreground-muted font-medium">Paid Employees</p>
+                                <h3 className="text-base font-bold text-foreground leading-tight">{reportData.paidEmployees}</h3>
+                            </div>
+                        </div>
+
+                        <div className="p-3 bg-card border border-border rounded-lg text-foreground flex items-center gap-3">
+                            <div className="p-2 bg-rose-500/10 text-rose-600 rounded-md">
+                                <XCircle size={18} />
+                            </div>
+                            <div>
+                                <p className="text-[11px] text-foreground-muted font-medium">Unpaid Employees</p>
+                                <h3 className="text-base font-bold text-foreground leading-tight">{reportData.unpaidEmployees}</h3>
+                            </div>
+                        </div>
+
+                        <div className="p-3 bg-card border border-border rounded-lg text-foreground flex items-center gap-3">
+                            <div className="p-2 bg-background-muted text-foreground-muted rounded-md border border-border">
+                                <Clock size={18} />
+                            </div>
+                            <div>
+                                <p className="text-[11px] text-foreground-muted font-medium">Total Employees</p>
+                                <h3 className="text-base font-bold text-foreground leading-tight">{reportData.totalEmployees}</h3>
+                            </div>
                         </div>
                     </div>
-                )}
-            </div>
+
+                    {/* Details Table */}
+                    <div className="overflow-x-auto rounded-lg border border-border">
+                        <table className="min-w-full bg-card text-foreground divide-y divide-border">
+                            <thead className="bg-background-muted/60">
+                                <tr>
+                                    <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Employee</th>
+                                    <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Status</th>
+                                    <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Pay Date</th>
+                                    <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Delay (Days)</th>
+                                    <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/40">
+                                {filteredDetails.length > 0 ? (
+                                    filteredDetails.map((row, index) => (
+                                        <tr key={index} className="hover:bg-background-muted/40 transition-colors">
+                                            <td className="px-3 py-2 text-xs font-semibold text-foreground whitespace-nowrap">
+                                                <div>{row.employeeName}</div>
+                                                <div className="text-[10px] text-foreground-muted">{row.employeeCode}</div>
+                                            </td>
+                                            <td className="px-3 py-2 text-xs whitespace-nowrap">
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                                                    row.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 border-rose-500/20'
+                                                }`}>
+                                                    {row.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-3 py-2 text-xs text-foreground-muted whitespace-nowrap">{row.payDate || '-'}</td>
+                                            <td className={`px-3 py-2 text-xs font-semibold whitespace-nowrap ${row.delayDays > 0 ? 'text-rose-500' : 'text-foreground-muted'}`}>
+                                                {row.delayDays}
+                                            </td>
+                                            <td className="px-3 py-2 text-xs text-foreground-muted">{row.remarks || '-'}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="text-center py-8 text-foreground-muted text-xs">
+                                            <FileText className="mx-auto h-7 w-7 text-foreground-muted/40 mb-1" />
+                                            <h3 className="text-xs font-bold text-foreground">No records found</h3>
+                                            <p className="text-[11px] text-foreground-muted">No employee compliance records match your search.</p>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="text-[11px] text-foreground-muted text-right pr-1">
+                        Showing {filteredDetails.length} records
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

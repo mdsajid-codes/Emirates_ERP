@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Download, Loader, Users, PieChart, Briefcase } from 'lucide-react';
+import { Download, Loader, Briefcase, AlertCircle } from 'lucide-react';
 
 const CompanyQuotaReport = () => {
     const [loading, setLoading] = useState(false);
@@ -21,7 +21,6 @@ const CompanyQuotaReport = () => {
             const response = await axios.get(`${API_URL}/reports/compliance/company-quota`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
-            console.log("Company Quota Report Data:", response.data);
             setReportData(response.data);
         } catch (err) {
             console.error("Error fetching Company Quota report:", err);
@@ -53,101 +52,86 @@ const CompanyQuotaReport = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-3">
             <div className="flex justify-between items-center">
                 <div>
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Company Visa Quota</h3>
-                    <p className="text-sm text-gray-500">Utilization of allocated visa quota</p>
+                    <h2 className="text-xs font-bold text-foreground">Company Visa Quota</h2>
+                    <p className="text-[11px] text-foreground-muted">Utilization of allocated company visa quota</p>
                 </div>
-                <button onClick={handleDownloadExcel} className="btn-secondary flex items-center gap-2 text-sm bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg transition-colors">
-                    <Download size={16} /> Export Report
+                <button
+                    onClick={handleDownloadExcel}
+                    className="px-2.5 py-1 text-xs font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1 shadow-2xs h-7"
+                >
+                    <Download size={13} />
+                    <span>Export Excel</span>
                 </button>
             </div>
 
             {loading ? (
-                <div className="flex justify-center items-center py-20">
-                    <Loader className="animate-spin text-blue-600 h-8 w-8" />
+                <div className="flex justify-center items-center p-8 bg-card border border-border rounded-lg">
+                    <Loader className="animate-spin h-5 w-5 text-primary" />
                 </div>
             ) : error ? (
-                <div className="p-6 text-center text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                    <p>{error}</p>
-                    <button onClick={fetchReport} className="text-sm underline hover:text-red-800 mt-2">Retry</button>
+                <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-md border border-rose-500/20 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle size={14} />
+                        <span>{error}</span>
+                    </div>
+                    <button onClick={fetchReport} className="text-xs underline hover:opacity-80">Try Again</button>
                 </div>
             ) : reportData ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {/* Quota Summary Card */}
-                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4 opacity-10">
-                            <Briefcase size={120} className="text-blue-500" />
-                        </div>
-
-                        <div className="mb-6">
-                            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Company Name</h4>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{reportData.companyName || 'N/A'}</p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase">Total Quota</span>
-                                <div className="text-3xl font-bold text-blue-700 dark:text-blue-300 mt-1">{reportData.totalVisaQuota}</div>
+                    <div className="p-4 bg-card border border-border rounded-lg text-foreground space-y-3">
+                        <div className="flex items-center gap-2 border-b border-border pb-2">
+                            <div className="p-1.5 bg-primary/10 text-primary rounded-md">
+                                <Briefcase size={16} />
                             </div>
-                            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                                <span className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase">Available</span>
-                                <div className="text-3xl font-bold text-green-700 dark:text-green-300 mt-1">{reportData.availableVisaQuota}</div>
+                            <div>
+                                <span className="text-[10px] text-foreground-muted uppercase tracking-wider font-semibold">Company Name</span>
+                                <h3 className="text-sm font-bold text-foreground leading-none mt-0.5">{reportData.companyName || 'N/A'}</h3>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 pt-1">
+                            <div className="p-3 bg-background border border-border rounded-md">
+                                <span className="text-[10px] font-bold text-foreground-muted uppercase">Total Quota</span>
+                                <div className="text-xl font-extrabold text-foreground mt-0.5">{reportData.totalVisaQuota}</div>
+                            </div>
+                            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
+                                <span className="text-[10px] font-bold text-emerald-600 uppercase">Available</span>
+                                <div className="text-xl font-extrabold text-emerald-600 mt-0.5">{reportData.availableVisaQuota}</div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Utilization Chart Card */}
-                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 flex flex-col justify-center items-center relative">
-                        <div className="absolute top-4 left-4">
-                            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Utilization</h4>
+                    {/* Utilization Progress Card */}
+                    <div className="p-4 bg-card border border-border rounded-lg text-foreground flex flex-col justify-between">
+                        <div className="flex justify-between items-center pb-2 border-b border-border">
+                            <span className="text-xs font-bold text-foreground">Quota Utilization</span>
+                            <span className="text-sm font-extrabold text-primary">{reportData.utilizationPercentage}%</span>
                         </div>
 
-                        <div className="relative w-48 h-48 flex items-center justify-center">
-                            {/* Simple CSS-based circular progress or just percentage for now */}
-                            <svg className="w-full h-full transform -rotate-90">
-                                <circle
-                                    className="text-gray-200 dark:text-gray-700"
-                                    strokeWidth="12"
-                                    stroke="currentColor"
-                                    fill="transparent"
-                                    r="70"
-                                    cx="96"
-                                    cy="96"
-                                />
-                                <circle
-                                    className={`${reportData.utilizationPercentage > 90 ? 'text-red-500' : 'text-blue-500'}`}
-                                    strokeWidth="12"
-                                    strokeDasharray={440}
-                                    strokeDashoffset={440 - (440 * reportData.utilizationPercentage) / 100}
-                                    strokeLinecap="round"
-                                    stroke="currentColor"
-                                    fill="transparent"
-                                    r="70"
-                                    cx="96"
-                                    cy="96"
-                                />
-                            </svg>
-                            <div className="absolute flex flex-col items-center">
-                                <span className="text-4xl font-bold text-gray-900 dark:text-white">{reportData.utilizationPercentage}%</span>
-                                <span className="text-xs text-gray-500">Used</span>
+                        <div className="space-y-2 py-3">
+                            <div className="flex justify-between text-xs font-medium">
+                                <span className="text-foreground-muted">Used Visas</span>
+                                <span className="text-foreground font-bold">{reportData.usedVisaQuota} / {reportData.totalVisaQuota}</span>
+                            </div>
+                            <div className="w-full bg-background border border-border rounded-full h-2.5 overflow-hidden">
+                                <div
+                                    className={`h-full rounded-full transition-all duration-300 ${reportData.utilizationPercentage > 90 ? 'bg-rose-500' : 'bg-primary'}`}
+                                    style={{ width: `${Math.min(reportData.utilizationPercentage, 100)}%` }}
+                                ></div>
                             </div>
                         </div>
 
-                        <div className="mt-6 w-full px-10">
-                            <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-600 dark:text-gray-400">Used Quota</span>
-                                <span className="font-semibold text-gray-900 dark:text-white">{reportData.usedVisaQuota}</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                                <div className={`h-2.5 rounded-full ${reportData.utilizationPercentage > 90 ? 'bg-red-500' : 'bg-blue-600'}`} style={{ width: `${Math.min(reportData.utilizationPercentage, 100)}%` }}></div>
-                            </div>
+                        <div className="text-[11px] text-foreground-muted">
+                            {reportData.availableVisaQuota} visa{reportData.availableVisaQuota !== 1 ? 's' : ''} remaining for allocation.
                         </div>
                     </div>
                 </div>
             ) : (
-                <div className="p-10 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-slate-800 rounded-xl border-dashed border-2 border-gray-300">
+                <div className="p-8 text-center text-foreground-muted text-xs bg-card rounded-lg border border-border">
                     No company quota information available.
                 </div>
             )}

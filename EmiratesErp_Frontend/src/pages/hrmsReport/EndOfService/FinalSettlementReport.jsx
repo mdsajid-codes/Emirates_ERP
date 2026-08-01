@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import axios from 'axios';
-import { Download, Loader, Search, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Download, Loader, AlertCircle, CheckCircle, Clock, FileText } from 'lucide-react';
 
 const FinalSettlementReport = () => {
+    const { searchTerm: headerSearchTerm = '' } = useOutletContext() || {};
     const [loading, setLoading] = useState(false);
     const [reportData, setReportData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [error, setError] = useState('');
-    const [searchTerm, setSearchTerm] = useState('');
 
     const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -23,9 +24,8 @@ const FinalSettlementReport = () => {
             const response = await axios.get(`${API_URL}/reports/eos/final-settlement`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
-            console.log("Final Settlement Report Data:", response.data);
-            setReportData(response.data);
-            setFilteredData(response.data);
+            setReportData(response.data || []);
+            setFilteredData(response.data || []);
         } catch (err) {
             console.error("Error fetching Final Settlement report:", err);
             setError('Failed to load final settlement report.');
@@ -35,17 +35,18 @@ const FinalSettlementReport = () => {
     };
 
     useEffect(() => {
-        if (!searchTerm) {
+        if (!headerSearchTerm) {
             setFilteredData(reportData);
         } else {
-            const lowerSearch = searchTerm.toLowerCase();
+            const lowerSearch = headerSearchTerm.toLowerCase().trim();
             const filtered = reportData.filter(item =>
                 (item.employeeName && item.employeeName.toLowerCase().includes(lowerSearch)) ||
-                (item.employeeCode && item.employeeCode.toLowerCase().includes(lowerSearch))
+                (item.employeeCode && item.employeeCode.toLowerCase().includes(lowerSearch)) ||
+                (item.status && item.status.toLowerCase().includes(lowerSearch))
             );
             setFilteredData(filtered);
         }
-    }, [searchTerm, reportData]);
+    }, [headerSearchTerm, reportData]);
 
     const handleDownloadExcel = async () => {
         try {
@@ -68,102 +69,89 @@ const FinalSettlementReport = () => {
         }
     };
 
-    const getStatusBadge = (status) => {
-        if (status === 'PAID') {
-            return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"><CheckCircle size={12} className="mr-1" /> Paid</span>;
-        } else {
-            return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"><Clock size={12} className="mr-1" /> Pending</span>;
-        }
-    };
-
     return (
-        <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50 dark:bg-gray-900/50">
-                    <div>
-                        <h3 className="font-semibold text-gray-700 dark:text-gray-200">Final Settlement Details</h3>
-                        <p className="text-xs text-slate-500">Summary of final payouts for exited employees</p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                        <button onClick={handleDownloadExcel} className="btn-secondary flex items-center gap-2 text-sm bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg transition-colors">
-                            <Download size={16} /> Export
-                        </button>
-                    </div>
+        <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h2 className="text-xs font-bold text-foreground">Final Settlement Details</h2>
+                    <p className="text-[11px] text-foreground-muted">Summary of final payouts for exited employees</p>
                 </div>
 
-                {loading ? (
-                    <div className="flex justify-center items-center py-20">
-                        <Loader className="animate-spin text-blue-600 h-8 w-8" />
+                <button
+                    onClick={handleDownloadExcel}
+                    className="px-2.5 py-1 text-xs font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1 shadow-2xs h-7"
+                >
+                    <Download size={13} />
+                    <span>Export Excel</span>
+                </button>
+            </div>
+
+            {error && (
+                <div className="p-3 bg-rose-500/10 text-rose-500 text-xs rounded-md border border-rose-500/20 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle size={14} />
+                        <span>{error}</span>
                     </div>
-                ) : error ? (
-                    <div className="p-6 text-center text-red-600 bg-red-50 dark:bg-red-900/20">
-                        <p>{error}</p>
-                        <button onClick={fetchReport} className="text-sm underline hover:text-red-800 mt-2">Retry</button>
+                    <button onClick={fetchReport} className="text-xs underline hover:opacity-80">Try Again</button>
+                </div>
+            )}
+
+            <div className="overflow-x-auto rounded-lg border border-border">
+                {loading ? (
+                    <div className="flex justify-center items-center p-8 bg-card">
+                        <Loader className="animate-spin h-5 w-5 text-primary" />
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead className="bg-gray-50 dark:bg-gray-800">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Employee</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Working Day</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Gratuity</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Leave Encashment</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Deductions</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Net Payable</th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                {filteredData.length > 0 ? (
-                                    filteredData.map((item) => (
-                                        <tr key={item.employeeId} className="hover:bg-gray-50 dark:hover:bg-slate-700/50">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900 dark:text-white">{item.employeeName}</div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400">{item.employeeCode}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                {item.lastWorkingDay}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-700 dark:text-gray-300">
-                                                {item.gratuityAmount?.toLocaleString()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-700 dark:text-gray-300">
-                                                {item.leaveEncashmentAmount?.toLocaleString()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-red-600 dark:text-red-400">
-                                                {item.totalDeductions?.toLocaleString()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-900 dark:text-white">
-                                                {item.netPayable?.toLocaleString()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                {getStatusBadge(item.status)}
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="7" className="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
-                                            No Final Settlement records found.
+                    <table className="min-w-full bg-card text-foreground divide-y divide-border">
+                        <thead className="bg-background-muted/60">
+                            <tr>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider whitespace-nowrap">Employee</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider whitespace-nowrap">Last Working Day</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider whitespace-nowrap">Gratuity (AED)</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider whitespace-nowrap">Leave Encashment (AED)</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider whitespace-nowrap">Deductions (AED)</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider whitespace-nowrap">Net Payable (AED)</th>
+                                <th className="px-3 py-2 text-center text-[11px] font-bold text-foreground-muted uppercase tracking-wider whitespace-nowrap">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/40">
+                            {filteredData.length > 0 ? (
+                                filteredData.map((item) => (
+                                    <tr key={item.employeeId} className="hover:bg-background-muted/40 transition-colors">
+                                        <td className="px-3 py-2 text-xs whitespace-nowrap">
+                                            <div className="font-semibold text-foreground">{item.employeeName}</div>
+                                            <div className="text-[10px] text-foreground-muted">{item.employeeCode}</div>
+                                        </td>
+                                        <td className="px-3 py-2 text-xs text-foreground-muted whitespace-nowrap">{item.lastWorkingDay}</td>
+                                        <td className="px-3 py-2 text-xs text-right text-foreground whitespace-nowrap">{item.gratuityAmount?.toLocaleString()}</td>
+                                        <td className="px-3 py-2 text-xs text-right text-foreground whitespace-nowrap">{item.leaveEncashmentAmount?.toLocaleString()}</td>
+                                        <td className="px-3 py-2 text-xs text-right text-rose-500 font-medium whitespace-nowrap">{item.totalDeductions?.toLocaleString()}</td>
+                                        <td className="px-3 py-2 text-xs text-right font-bold text-foreground whitespace-nowrap">{item.netPayable?.toLocaleString()}</td>
+                                        <td className="px-3 py-2 text-xs text-center whitespace-nowrap">
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                                                item.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                                            }`}>
+                                                {item.status === 'PAID' ? 'Paid' : 'Pending'}
+                                            </span>
                                         </td>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="7" className="text-center py-8 text-foreground-muted text-xs">
+                                        <FileText className="mx-auto h-7 w-7 text-foreground-muted/40 mb-1" />
+                                        <h3 className="text-xs font-bold text-foreground">No Final Settlement records found</h3>
+                                        <p className="text-[11px] text-foreground-muted">No records match your search criteria.</p>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 )}
+            </div>
+
+            <div className="text-[11px] text-foreground-muted text-right pr-1">
+                Showing {filteredData.length} records
             </div>
         </div>
     );

@@ -423,38 +423,49 @@ const PayslipsTab = ({ employee }) => {
         }
     };
 
-    if (loading) return <div className="flex justify-center items-center p-8"><Loader className="animate-spin h-8 w-8 text-blue-600" /></div>;
+    if (loading) return <div className="flex justify-center items-center p-6"><Loader className="animate-spin h-5 w-5 text-primary" /></div>;
 
     return (
-        <div>
-            <h3 className="text-lg font-semibold mb-4">Payslip History</h3>
+        <div className="space-y-3">
+            <h3 className="text-xs font-bold text-foreground">Payslip History</h3>
             {payslips.length === 0 ? (
-                <p className="text-slate-500">No payslips found for this employee.</p>
+                <div className="p-6 text-center border border-border rounded-lg bg-card">
+                    <FileText className="mx-auto h-7 w-7 text-foreground-muted/40 mb-1" />
+                    <p className="text-xs text-foreground-muted">No payslips found for this employee.</p>
+                </div>
             ) : (
-                <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                    <table className="min-w-full divide-y divide-slate-200">
-                        <thead className="bg-slate-50">
+                <div className="overflow-x-auto rounded-lg border border-border">
+                    <table className="min-w-full bg-card text-foreground divide-y divide-border">
+                        <thead className="bg-background-muted/60">
                             <tr>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Pay Period</th>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Net Salary</th>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Actions</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Pay Period</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Net Salary</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Status</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-slate-200 text-slate-700">
+                        <tbody className="divide-y divide-border/40">
                             {payslips.map(p => (
-                                <tr key={p.id}>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm">
+                                <tr key={p.id} className="hover:bg-background-muted/40 transition-colors">
+                                    <td className="px-3 py-2 whitespace-nowrap text-xs font-semibold text-foreground">
                                         {p.payDate ? new Date(p.payDate).toLocaleString('default', { month: 'long', year: 'numeric' }) : 'N/A'}
                                         {p.gratuityPayout > 0 && (
-                                            <span className="ml-2 text-xs font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">Final Settlement</span>
+                                            <span className="ml-2 text-[10px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full border border-primary/20">Final Settlement</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm">{formatCurrency(p.netSalary)}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm">{p.status}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                        <button onClick={() => handleDownload(p.id)} className="btn-secondary py-1 px-2 text-xs" disabled={downloadingId === p.id}>
-                                            {downloadingId === p.id ? <Loader className="animate-spin h-4 w-4" /> : 'Download'}
+                                    <td className="px-3 py-2 whitespace-nowrap text-xs font-medium text-foreground">{formatCurrency(p.netSalary)}</td>
+                                    <td className="px-3 py-2 whitespace-nowrap text-xs">
+                                        <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                                            {p.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-3 py-2 whitespace-nowrap text-xs text-right">
+                                        <button
+                                            onClick={() => handleDownload(p.id)}
+                                            className="px-2 py-1 text-xs font-semibold rounded-md border border-border bg-background hover:bg-background-muted transition-colors text-foreground inline-flex items-center gap-1"
+                                            disabled={downloadingId === p.id}
+                                        >
+                                            {downloadingId === p.id ? <Loader className="animate-spin h-3.5 w-3.5" /> : 'Download'}
                                         </button>
                                     </td>
                                 </tr>

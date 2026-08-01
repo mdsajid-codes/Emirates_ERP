@@ -4,33 +4,18 @@ import { Loader, PlusCircle, Edit, Trash2, HandCoins, Eye, Download } from 'luci
 import EmployeeBenefitProvisionForm from './EmployeeBenefitProvisionForm';
 import ProvisionPayoutForm from './ProvisionPayoutForm';
 
-const Modal = ({ isOpen, onClose, title, children }) => {
-    if (!isOpen) return null;
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">{title}</h3>
-                    <button onClick={onClose} className="text-slate-500 hover:text-slate-800">&times;</button>
-                </div>
-                {children}
-            </div>
-        </div>
-    );
-};
-
 const statusStyles = {
-    ACCRUING: 'bg-yellow-100 text-yellow-800',
-    PAID_OUT: 'bg-green-100 text-green-800',
-    EXPIRED: 'bg-slate-100 text-slate-600',
-    CANCELLED: 'bg-red-100 text-red-600',
+    ACCRUING: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+    PAID_OUT: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+    EXPIRED: 'bg-foreground-muted/10 text-foreground-muted border-border',
+    CANCELLED: 'bg-rose-500/10 text-rose-600 border-rose-500/20',
 };
 
 const StatusBadge = ({ status }) => {
-    const style = statusStyles[status] || 'bg-gray-100 text-gray-800';
+    const style = statusStyles[status] || 'bg-foreground-muted/10 text-foreground-muted border-border';
     return (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${style}`}>
-            {status.replace('_', ' ').toLowerCase()}
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border capitalize ${style}`}>
+            {status?.replace('_', ' ').toLowerCase() || 'unknown'}
         </span>
     );
 };
@@ -42,8 +27,9 @@ const EmployeeBenefitProvisionTab = ({ employee }) => {
     const [salaryStructure, setSalaryStructure] = useState(null);
     const [benefitTypes, setBenefitTypes] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
+    
+    // View state: 'list' | 'add' | 'payout'
+    const [viewMode, setViewMode] = useState('list');
     const [payoutProvision, setPayoutProvision] = useState(null);
     const [editingProvision, setEditingProvision] = useState(null);
     const API_URL = import.meta.env.VITE_API_BASE_URL;
@@ -74,7 +60,7 @@ const EmployeeBenefitProvisionTab = ({ employee }) => {
 
     const handleAdd = () => {
         setEditingProvision(null);
-        setIsModalOpen(true);
+        setViewMode('add');
     };
 
     const handleEdit = (provision) => {
@@ -83,7 +69,7 @@ const EmployeeBenefitProvisionTab = ({ employee }) => {
             cycleStartDate: provision.cycleStartDate?.split('T')[0] || '',
             cycleEndDate: provision.cycleEndDate?.split('T')[0] || '',
         });
-        setIsModalOpen(true);
+        setViewMode('add');
     };
 
     const handleDelete = async (id) => {
@@ -107,7 +93,7 @@ const EmployeeBenefitProvisionTab = ({ employee }) => {
         try {
             await request;
             fetchProvisions();
-            setIsModalOpen(false);
+            setViewMode('list');
         } catch (error) {
             alert(error.response?.data?.message || 'Failed to save provision.');
         }
@@ -115,7 +101,7 @@ const EmployeeBenefitProvisionTab = ({ employee }) => {
 
     const handlePayout = (provision) => {
         setPayoutProvision(provision);
-        setIsPayoutModalOpen(true);
+        setViewMode('payout');
     };
 
     const handleSavePayout = async (formData) => {
@@ -129,31 +115,22 @@ const EmployeeBenefitProvisionTab = ({ employee }) => {
                 }
             });
             fetchProvisions();
-            setIsPayoutModalOpen(false);
+            setViewMode('list');
         } catch (error) {
             alert(error.response?.data?.message || 'Failed to save payout.');
         }
     };
 
     const handleViewConfirmation = async (filePath) => {
-        // This function now needs a specific file path to view.
-        // The backend should provide a way to get a file by its path or ID.
-        // Assuming a generic file download endpoint exists at `/files/{filePath}`.
-        // If not, this needs to be implemented in the backend.
         try {
             const token = localStorage.getItem('token');
-            // A more robust backend would be `GET /files/download?path=${filePath}`
-            // For now, let's assume a simple structure.
             const response = await axios.get(`${API_URL}/files/download/${filePath}`, {
                 headers: { "Authorization": `Bearer ${token}` },
                 responseType: 'blob'
             });
-            // Create a URL for the blob
             const file = new Blob([response.data], { type: response.headers['content-type'] });
             const fileURL = URL.createObjectURL(file);
-            // Open the URL in a new tab
             window.open(fileURL, '_blank');
-            // Revoke the object URL after some time to free up memory
             setTimeout(() => URL.revokeObjectURL(fileURL), 10000);
         } catch (err) {
             alert("Could not load the confirmation file. It may not exist or an error occurred.");
@@ -203,73 +180,101 @@ const EmployeeBenefitProvisionTab = ({ employee }) => {
         }
     };
 
-    if (loading) return <div className="flex justify-center items-center p-8"><Loader className="animate-spin h-8 w-8 text-blue-600" /></div>;
+    if (loading) return <div className="flex justify-center items-center p-6"><Loader className="animate-spin h-5 w-5 text-primary" /></div>;
+
+    if (viewMode === 'add') {
+        return (
+            <EmployeeBenefitProvisionForm
+                initialData={editingProvision}
+                onSave={handleSave}
+                onCancel={() => setViewMode('list')}
+                employeeCode={employee.employeeCode}
+            />
+        );
+    }
+
+    if (viewMode === 'payout') {
+        return (
+            <ProvisionPayoutForm
+                provision={payoutProvision}
+                onSave={handleSavePayout}
+                onCancel={() => setViewMode('list')}
+            />
+        );
+    }
 
     return (
-        <>
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Benefit Provisions</h3>
-                <button onClick={handleAdd} className="btn-primary flex items-center gap-2"><PlusCircle size={16} /> Add Provision</button>
+        <div className="space-y-3">
+            <div className="flex justify-between items-center">
+                <h3 className="text-xs font-bold text-foreground">Benefit Provisions</h3>
+                <button
+                    onClick={handleAdd}
+                    className="px-2.5 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-2xs"
+                >
+                    <PlusCircle size={13} /> Add Provision
+                </button>
             </div>
-            <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="min-w-full divide-y divide-slate-200">
-                    <thead className="bg-slate-50">
-                        <tr>
-                            <th className="th-cell">Benefit</th><th className="th-cell">Total Amount</th><th className="th-cell">Accrued</th><th className="th-cell">Cycle Dates</th><th className="th-cell">Status</th><th className="th-cell">Payout Info</th><th className="th-cell">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-slate-200 text-slate-700">
-                        {provisions.map(p => (
-                            <tr key={p.id}>
-                                <td className="td-cell">{p.benefitTypeName}</td><td className="td-cell">{formatCurrency(getProvisionTotalAmount(p))}</td><td className="td-cell">{formatCurrency(p.accruedAmount)}</td><td className="td-cell">{p.cycleStartDate} to {p.cycleEndDate}</td><td className="td-cell"><StatusBadge status={p.status} /></td>
-                                <td className="td-cell text-xs">
-                                    {p.paidOutDate && <div>Paid: {p.paidOutDate}</div>}
-                                    {p.paymentDetails && <div className="truncate max-w-[150px]" title={p.paymentDetails}>Details: {p.paymentDetails}</div>}
-                                    {p.confirmationFiles && p.confirmationFiles.length > 0 && (
-                                        <div className="mt-1 space-y-1">
-                                            {p.confirmationFiles.map(file => (
-                                                <button key={file.id} onClick={() => handleViewConfirmation(file.filePath)} className="text-blue-600 hover:underline flex items-center gap-1 w-full truncate">
-                                                    <Eye size={14}/> <span className="truncate">{file.originalFilename}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </td>
-                                <td className="td-cell">
-                                    {p.status === 'ACCRUING' && (
-                                        <div className="flex items-center gap-1">
-                                            <button onClick={() => handlePayout(p)} className="p-1.5 text-green-600 hover:bg-green-100 rounded-full" title="Pay Out"><HandCoins size={16} /></button>
-                                            <button onClick={() => handleEdit(p)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-full" title="Edit"><Edit size={16} /></button>
-                                            <button onClick={() => handleDelete(p.id)} className="p-1.5 text-red-600 hover:bg-red-100 rounded-full" title="Delete"><Trash2 size={16} /></button>
-                                        </div>
-                                    )}
-                                    {p.status === 'PAID_OUT' && (
-                                        <button onClick={() => handleDownloadVoucher(p.id)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-full" title="Download Voucher">
-                                            <Download size={16} />
-                                        </button>
-                                    )}
-                                </td>
+
+            {provisions.length === 0 ? (
+                <div className="p-6 text-center border border-border rounded-lg bg-card">
+                    <p className="text-xs text-foreground-muted">No benefit provisions found for this employee.</p>
+                </div>
+            ) : (
+                <div className="overflow-x-auto rounded-lg border border-border">
+                    <table className="min-w-full bg-card text-foreground divide-y divide-border">
+                        <thead className="bg-background-muted/60">
+                            <tr>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Benefit</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Total Amount</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Accrued</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Cycle Dates</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Status</th>
+                                <th className="px-3 py-2 text-left text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Payout Info</th>
+                                <th className="px-3 py-2 text-right text-[11px] font-bold text-foreground-muted uppercase tracking-wider">Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingProvision ? 'Edit Provision' : 'Add Provision'}>
-                <EmployeeBenefitProvisionForm
-                    initialData={editingProvision}
-                    onSave={handleSave}
-                    onCancel={() => setIsModalOpen(false)}
-                    employeeCode={employee.employeeCode}
-                />
-            </Modal>
-            <Modal isOpen={isPayoutModalOpen} onClose={() => setIsPayoutModalOpen(false)} title={`Pay Out: ${payoutProvision?.benefitTypeName}`}>
-                <ProvisionPayoutForm
-                    provision={payoutProvision}
-                    onSave={handleSavePayout}
-                    onCancel={() => setIsPayoutModalOpen(false)}
-                />
-            </Modal>
-        </>
+                        </thead>
+                        <tbody className="divide-y divide-border/40">
+                            {provisions.map(p => (
+                                <tr key={p.id} className="hover:bg-background-muted/40 transition-colors">
+                                    <td className="px-3 py-2 text-xs font-semibold text-foreground">{p.benefitTypeName}</td>
+                                    <td className="px-3 py-2 text-xs font-medium text-foreground">{formatCurrency(getProvisionTotalAmount(p))}</td>
+                                    <td className="px-3 py-2 text-xs text-foreground-muted">{formatCurrency(p.accruedAmount)}</td>
+                                    <td className="px-3 py-2 text-xs text-foreground-muted whitespace-nowrap">{p.cycleStartDate} to {p.cycleEndDate}</td>
+                                    <td className="px-3 py-2 text-xs"><StatusBadge status={p.status} /></td>
+                                    <td className="px-3 py-2 text-xs text-foreground-muted">
+                                        {p.paidOutDate && <div>Paid: {p.paidOutDate}</div>}
+                                        {p.paymentDetails && <div className="truncate max-w-[140px]" title={p.paymentDetails}>{p.paymentDetails}</div>}
+                                        {p.confirmationFiles && p.confirmationFiles.length > 0 && (
+                                            <div className="mt-0.5 space-y-0.5">
+                                                {p.confirmationFiles.map(file => (
+                                                    <button key={file.id} onClick={() => handleViewConfirmation(file.filePath)} className="text-primary hover:underline flex items-center gap-1 w-full truncate text-[11px]">
+                                                        <Eye size={12}/> <span className="truncate">{file.originalFilename}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </td>
+                                    <td className="px-3 py-2 text-xs text-right whitespace-nowrap">
+                                        {p.status === 'ACCRUING' && (
+                                            <div className="flex items-center justify-end gap-1">
+                                                <button onClick={() => handlePayout(p)} className="p-1 text-emerald-600 hover:bg-emerald-500/10 rounded-md transition-colors border border-border bg-background" title="Pay Out"><HandCoins size={13} /></button>
+                                                <button onClick={() => handleEdit(p)} className="p-1 text-primary hover:bg-primary/10 rounded-md transition-colors border border-border bg-background" title="Edit"><Edit size={13} /></button>
+                                                <button onClick={() => handleDelete(p.id)} className="p-1 text-rose-600 hover:bg-rose-500/10 rounded-md transition-colors border border-border bg-background" title="Delete"><Trash2 size={13} /></button>
+                                            </div>
+                                        )}
+                                        {p.status === 'PAID_OUT' && (
+                                            <button onClick={() => handleDownloadVoucher(p.id)} className="p-1 text-primary hover:bg-primary/10 rounded-md transition-colors border border-border bg-background" title="Download Voucher">
+                                                <Download size={13} />
+                                            </button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
     );
 };
 
