@@ -12,60 +12,107 @@ import {
     ArrowLeft,
     PieChart,
     Calendar,
-    TrendingUp
+    TrendingUp,
+    PanelLeftOpen,
+    PanelLeftClose
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { logout } from '../../utils/logout';
 
 const fixedAssetNavLinks = [
-    { name: 'Dashboard', icon: LayoutDashboard, href: '/fixed-asset-dashboard/dashboard', color: 'text-blue-500' },
-    { name: 'Assets List', icon: List, href: '/fixed-asset-dashboard/assets', color: 'text-green-500' },
-    { name: 'Categories', icon: PieChart, href: '/fixed-asset-dashboard/categories', color: 'text-purple-500' },
-    { name: 'Maintenance', icon: Settings, href: '/fixed-asset-dashboard/maintenance', color: 'text-orange-500' },
-    { name: 'Depreciation', icon: Calendar, href: '/fixed-asset-dashboard/depreciation', color: 'text-indigo-500' },
+    { name: 'Dashboard', icon: LayoutDashboard, href: '/fixed-asset-dashboard/dashboard', iconBg: 'bg-blue-500/35 text-blue-300' },
+    { name: 'Assets List', icon: List, href: '/fixed-asset-dashboard/assets', iconBg: 'bg-emerald-500/35 text-emerald-300' },
+    { name: 'Categories', icon: PieChart, href: '/fixed-asset-dashboard/categories', iconBg: 'bg-purple-500/35 text-purple-300' },
+    { name: 'Maintenance', icon: Settings, href: '/fixed-asset-dashboard/maintenance', iconBg: 'bg-amber-500/35 text-amber-300' },
+    { name: 'Depreciation', icon: Calendar, href: '/fixed-asset-dashboard/depreciation', iconBg: 'bg-indigo-500/35 text-indigo-300' },
 ];
 
-const SidebarContent = ({ onLinkClick }) => {
+const SidebarContent = ({ onLinkClick, isCollapsedMode = false, isDesktopCollapsed = true, setIsDesktopCollapsed }) => {
     const location = useLocation();
     const navigate = useNavigate();
 
     const handleLogout = () => logout(navigate);
 
     const NavItem = ({ item }) => {
-        const isActive = location.pathname === item.href;
         return (
             <NavLink
                 to={item.href}
                 onClick={onLinkClick}
-                end
+                end={item.href === '/fixed-asset-dashboard/dashboard'}
+                title={isCollapsedMode ? item.name : undefined}
                 className={({ isActive }) =>
-                    `flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-colors group ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-foreground-muted hover:bg-background-muted'
+                    `flex items-center ${isCollapsedMode ? 'justify-center px-0' : 'px-2.5'} py-2 text-sm font-bold rounded-xl transition-all duration-200 mb-1 group ${
+                        isActive ? 'bg-sidebar-active/20 text-sidebar-text shadow-sm' : 'text-sidebar-text/80 hover:text-sidebar-text hover:bg-sidebar-hover'
                     }`
                 }
             >
-                <item.icon className={`h-5 w-5 mr-3 flex-shrink-0 ${isActive ? '' : item.color}`} />
-                <span>{item.name}</span>
+                {({ isActive }) => (
+                    <>
+                        <div className={`p-1.5 rounded-full flex items-center justify-center flex-shrink-0 ${item.iconBg || 'bg-slate-500/35 text-slate-300'}`}>
+                            <item.icon className="h-4 w-4 stroke-[2.5] transition-transform group-hover:scale-110" />
+                        </div>
+                        {!isCollapsedMode && <span className={`ml-2.5 truncate ${isActive ? 'font-bold text-sidebar-text' : ''}`}>{item.name}</span>}
+                    </>
+                )}
             </NavLink>
         );
     };
 
     return (
-        <div className="flex flex-col h-full bg-card text-card-foreground">
-            <div className="p-4 border-b border-border flex-shrink-0">
-                <button onClick={() => navigate('/company-dashboard')} className="flex items-center gap-3 w-full text-left">
-                    <ArrowLeft className="h-6 w-6 text-primary" />
-                    <span className="font-bold text-xl text-foreground">Company Hub</span>
-                </button>
+        <div className="flex flex-col h-full bg-sidebar-bg text-sidebar-text select-none">
+            {/* Header section with pin toggle button matching POS position */}
+            <div className={`flex items-center py-3 px-3.5 border-b border-white/10 ${isCollapsedMode ? 'justify-center flex-col gap-2' : 'justify-between'}`}>
+                <div className="flex items-center gap-2.5 overflow-hidden">
+                    <div className="w-8 h-8 rounded-xl bg-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <Building2 className="h-4 w-4 text-white fill-current" />
+                    </div>
+                    {!isCollapsedMode && (
+                        <span className="text-sm font-extrabold text-white tracking-tight truncate">Fixed Assets</span>
+                    )}
+                </div>
+                {setIsDesktopCollapsed && (
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsDesktopCollapsed(prev => !prev);
+                        }}
+                        className="hidden lg:flex items-center justify-center p-1.5 rounded-xl opacity-80 hover:opacity-100 hover:bg-white/10 transition-all cursor-pointer flex-shrink-0"
+                        title={isDesktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    >
+                        {isDesktopCollapsed ? <PanelLeftOpen className="h-5 w-5 text-gray-300" /> : <PanelLeftClose className="h-5 w-5 text-gray-300" />}
+                    </button>
+                )}
             </div>
-            <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+
+            <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto no-scrollbar">
+                {/* Back to Hub */}
+                <button
+                    onClick={() => navigate('/company-dashboard')}
+                    title={isCollapsedMode ? "Back to Company Hub" : undefined}
+                    className={`w-full flex items-center ${isCollapsedMode ? 'justify-center px-0' : 'px-2.5'} py-2 text-sm font-bold rounded-xl transition-all duration-200 mb-2 group text-sidebar-text/80 hover:text-sidebar-text hover:bg-white/10 text-left`}
+                >
+                    <div className="p-1.5 rounded-full bg-slate-500/35 text-slate-300 flex items-center justify-center flex-shrink-0">
+                        <ArrowLeft className="h-4 w-4 stroke-[2.5]" />
+                    </div>
+                    {!isCollapsedMode && <span className="ml-2.5 truncate">Back to Hub</span>}
+                </button>
+
                 {fixedAssetNavLinks.map((item) => (
                     <NavItem key={item.name} item={item} />
                 ))}
             </nav>
-            <div className="p-4 border-t border-border flex-shrink-0">
-                <button onClick={handleLogout} className="w-full flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-foreground-muted hover:bg-background-muted group" title="Logout">
-                    <LogOut className="h-5 w-5 mr-3 text-foreground-muted group-hover:text-red-600" />
-                    <span>Logout</span>
+
+            <div className="p-3 border-t border-sidebar-text/10 space-y-1">
+                <button
+                    onClick={handleLogout}
+                    title={isCollapsedMode ? "Logout" : undefined}
+                    className={`flex items-center ${isCollapsedMode ? 'justify-center px-0' : 'px-2.5'} py-2 text-sm font-bold text-rose-400 hover:bg-rose-500/10 rounded-xl w-full text-left transition group`}
+                >
+                    <div className="p-1.5 rounded-full bg-rose-500/35 text-rose-300 flex items-center justify-center flex-shrink-0">
+                        <LogOut className="h-4 w-4 stroke-[2.5]" />
+                    </div>
+                    {!isCollapsedMode && <span className="ml-2.5 truncate">Logout</span>}
                 </button>
             </div>
         </div>
@@ -74,15 +121,24 @@ const SidebarContent = ({ onLinkClick }) => {
 
 const FixedAssetLayout = ({ children }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
+    const [isHovered, setIsHovered] = useState(false);
+    const isExpanded = !isDesktopCollapsed || isHovered;
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-background text-foreground font-sans">
             {/* Static sidebar for desktop */}
-            <div className="hidden lg:flex lg:flex-shrink-0">
-                <div className="flex flex-col w-64 border-r border-border">
-                    <SidebarContent />
-                </div>
-            </div>
+            <aside
+                className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 border-r border-border bg-sidebar-bg text-sidebar-text transition-all duration-300 ${isExpanded ? 'w-[220px]' : 'w-[68px]'}`}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+            >
+                <SidebarContent
+                    isCollapsedMode={!isExpanded}
+                    isDesktopCollapsed={isDesktopCollapsed}
+                    setIsDesktopCollapsed={setIsDesktopCollapsed}
+                />
+            </aside>
 
             {/* Mobile sidebar */}
             <AnimatePresence>

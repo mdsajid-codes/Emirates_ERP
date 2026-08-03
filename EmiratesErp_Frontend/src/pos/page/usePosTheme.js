@@ -29,8 +29,8 @@ export function usePosTheme() {
                     const mappedTheme = {
                         ...POS_FALLBACK_THEME,
                         sidebarBg: apiTheme.sidebarBgColor || apiTheme.primaryColor || POS_FALLBACK_THEME.sidebarBg,
-                        sidebarActive: apiTheme.sidebarActiveColor || apiTheme.accentColor || POS_FALLBACK_THEME.sidebarActive,
-                        sidebarActiveFg: '#ffffff',
+                        sidebarActive: apiTheme.sidebarActiveColor || apiTheme.secondaryColor || POS_FALLBACK_THEME.sidebarActive,
+                        sidebarActiveFg: '#065746ff',
                         sidebarText: apiTheme.sidebarTextColor || POS_FALLBACK_THEME.sidebarText,
                         sidebarHover: apiTheme.sidebarHoverColor || POS_FALLBACK_THEME.sidebarHover,
                         cardBg: apiTheme.surfaceColor || apiTheme.secondaryColor || POS_FALLBACK_THEME.cardBg,

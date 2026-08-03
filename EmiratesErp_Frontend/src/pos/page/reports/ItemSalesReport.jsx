@@ -12,7 +12,7 @@ const ItemSalesReport = () => {
     const [categoryId, setCategoryId] = useState('');
     const [itemName, setItemName] = useState('');
     const [showComboItems, setShowComboItems] = useState(false);
-    
+
     const [stores, setStores] = useState([]);
     const [categories, setCategories] = useState([]);
     const [reportData, setReportData] = useState([]);
@@ -135,7 +135,7 @@ const ItemSalesReport = () => {
 
             <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                     {/* Company Link (Static as per image or dynamic if needed, usually just displayed) */}
+                    {/* Company Link (Static as per image or dynamic if needed, usually just displayed) */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Company</label>
                         <input type="text" value="Service 4 U LLC" disabled className="input w-full bg-slate-50" />
@@ -143,8 +143,8 @@ const ItemSalesReport = () => {
 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Company Branch</label>
-                        <select 
-                            value={storeId} 
+                        <select
+                            value={storeId}
                             onChange={(e) => setStoreId(e.target.value)}
                             className="input w-full"
                         >
@@ -157,8 +157,8 @@ const ItemSalesReport = () => {
 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
-                        <select 
-                            value={categoryId} 
+                        <select
+                            value={categoryId}
                             onChange={(e) => setCategoryId(e.target.value)}
                             className="input w-full"
                         >
@@ -171,12 +171,12 @@ const ItemSalesReport = () => {
 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Item</label>
-                        <input 
-                            type="text" 
-                            placeholder="Item Name" 
-                            value={itemName} 
-                            onChange={(e) => setItemName(e.target.value)} 
-                            className="input w-full" 
+                        <input
+                            type="text"
+                            placeholder="Item Name"
+                            value={itemName}
+                            onChange={(e) => setItemName(e.target.value)}
+                            className="input w-full"
                         />
                     </div>
                 </div>
@@ -184,27 +184,27 @@ const ItemSalesReport = () => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">From</label>
-                        <input 
-                            type="date" 
-                            value={fromDate} 
-                            onChange={(e) => setFromDate(e.target.value)} 
-                            className="input w-full" 
+                        <input
+                            type="date"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                            className="input w-full"
                         />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">To</label>
-                        <input 
-                            type="date" 
-                            value={toDate} 
-                            onChange={(e) => setToDate(e.target.value)} 
-                            className="input w-full" 
+                        <input
+                            type="date"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                            className="input w-full"
                         />
                     </div>
-                    
+
                     <div className="pb-3">
-                         <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                             <label htmlFor="comboToggle" className="text-sm font-medium text-slate-700 cursor-pointer select-none">Show Combo Items</label>
-                            <div 
+                            <div
                                 className={`w-10 h-5 rounded-full p-1 cursor-pointer transition-colors ${showComboItems ? 'bg-blue-600' : 'bg-slate-300'}`}
                                 onClick={() => setShowComboItems(!showComboItems)}
                             >
@@ -214,8 +214,8 @@ const ItemSalesReport = () => {
                     </div>
 
                     <div>
-                        <button 
-                            onClick={fetchReport} 
+                        <button
+                            onClick={fetchReport}
                             disabled={loading}
                             className="btn-primary w-full flex items-center justify-center gap-2"
                         >
@@ -232,7 +232,7 @@ const ItemSalesReport = () => {
                             Item Sales Report - {storeId ? stores.find(s => s.id == storeId)?.name : 'All Branches'} from {fromDate} to {toDate}
                         </h2>
                         <div className="flex gap-2">
-                             <button onClick={handlePrint} className="btn-secondary flex items-center gap-2">
+                            <button onClick={handlePrint} className="btn-secondary flex items-center gap-2">
                                 <Printer size={16} /> Print
                             </button>
                             <button onClick={handleExport} className="btn-primary flex items-center gap-2">
@@ -241,7 +241,7 @@ const ItemSalesReport = () => {
                         </div>
                     </div>
 
-                   <div ref={componentRef} className="p-4">
+                    <div ref={componentRef} className="p-4">
                         {/* Print Header */}
                         <div className="hidden print:block mb-8 text-center">
                             <h1 className="text-2xl font-bold">Item Sales Report</h1>
@@ -288,10 +288,10 @@ const ItemSalesReport = () => {
                                 </tfoot>
                             </table>
                         </div>
-                   </div>
+                    </div>
                 </div>
             )}
-             {reportData.length === 0 && !loading && !error && (
+            {reportData.length === 0 && !loading && !error && (
                 <div className="text-center py-12 text-slate-500 bg-white rounded-xl shadow-sm">
                     <p>No data found for the selected criteria.</p>
                 </div>

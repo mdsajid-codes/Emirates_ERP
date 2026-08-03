@@ -173,9 +173,9 @@ const PaymentChangeReport = () => {
                             />
                         </div>
                     </div>
-                    
+
                     <div className="flex flex-wrap items-end gap-4">
-                         <div className="w-full sm:w-auto flex-1">
+                        <div className="w-full sm:w-auto flex-1">
                             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">From</label>
                             <input
                                 type="date"
@@ -214,7 +214,7 @@ const PaymentChangeReport = () => {
             )}
 
             {/* Report Header & Actions */}
-             <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-indigo-900">
                     Payment Change Report from <span className="text-slate-600">{filters.fromDate}</span> to <span className="text-slate-600">{filters.toDate}</span>
                 </h2>
@@ -223,10 +223,10 @@ const PaymentChangeReport = () => {
                         <Printer size={18} />
                     </button>
                     <button onClick={exportToExcel} className="p-2 bg-indigo-900 text-white rounded hover:bg-indigo-800 transition-colors" title="Export to Excel">
-                       <FileText size={18} />
+                        <FileText size={18} />
                     </button>
                     {/* Placeholder for PDF if library available, or just use print to PDF */}
-                     <button onClick={() => window.print()} className="p-2 bg-indigo-900 text-white rounded hover:bg-indigo-800 transition-colors" title="PDF">
+                    <button onClick={() => window.print()} className="p-2 bg-indigo-900 text-white rounded hover:bg-indigo-800 transition-colors" title="PDF">
                         <Download size={18} />
                     </button>
                 </div>
@@ -282,7 +282,7 @@ const PaymentChangeReport = () => {
                     </table>
                 </div>
             </div>
-            
+
             {/* Print Styles */}
             <style>{`
                 @media print {

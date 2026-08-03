@@ -166,20 +166,20 @@ const ProductForm = ({ product, onSave, onCancel, isSubmitting, onGenerateBarcod
         <form id="product-form" onSubmit={handleSubmit} className="p-5 flex-grow overflow-y-auto overflow-x-hidden space-y-5 text-xs">
             <div className="space-y-3">
                 <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">General Information</h3>
-                
+
                 {/* 1st Row: 3 Fields (Product Name, Base SKU, Category) */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                         <label htmlFor="name" className="block font-semibold text-slate-700 mb-1">Product Name *</label>
-                        <input id="name" name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" />
+                        <input id="name" name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" />
                     </div>
                     <div>
                         <label htmlFor="sku" className="block font-semibold text-slate-700 mb-1">Base SKU</label>
-                        <input id="sku" name="sku" value={formData.sku} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-mono focus:ring-2 focus:ring-slate-900 outline-none" />
+                        <input id="sku" name="sku" value={formData.sku} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono focus:ring-2 focus:ring-slate-900 outline-none" />
                     </div>
                     <div>
                         <label htmlFor="categoryId" className="block font-semibold text-slate-700 mb-1">Category</label>
-                        <select id="categoryId" name="categoryId" value={formData.categoryId || ''} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none">
+                        <select id="categoryId" name="categoryId" value={formData.categoryId || ''} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none">
                             <option value="">Uncategorized</option>
                             {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                         </select>
@@ -189,10 +189,10 @@ const ProductForm = ({ product, onSave, onCancel, isSubmitting, onGenerateBarcod
                 {/* Below 1st Row: Full Width Description */}
                 <div>
                     <label htmlFor="description" className="block font-semibold text-slate-700 mb-1">Description</label>
-                    <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows="2" className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" />
+                    <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows="2" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" />
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer pt-1">
-                    <input type="checkbox" name="active" checked={formData.active} onChange={handleChange} className="h-4 w-4 rounded-md text-slate-900 focus:ring-slate-900 border-slate-300" /> 
+                    <input type="checkbox" name="active" checked={formData.active} onChange={handleChange} className="h-4 w-4 rounded-md text-slate-900 focus:ring-slate-900 border-slate-300" />
                     <span className="font-semibold text-slate-800">Active Status</span>
                 </label>
             </div>
@@ -200,9 +200,9 @@ const ProductForm = ({ product, onSave, onCancel, isSubmitting, onGenerateBarcod
             <div className="pt-2">
                 <div className="flex justify-between items-center mb-3">
                     <h3 className="text-sm font-bold text-slate-800">Variants ({formData.variants.length})</h3>
-                    <button 
-                        type="button" 
-                        onClick={addVariant} 
+                    <button
+                        type="button"
+                        onClick={addVariant}
                         className="px-3.5 py-1.5 rounded-full text-xs font-bold text-white shadow-xs transition-all hover:opacity-90 cursor-pointer flex items-center gap-1.5"
                         style={{ backgroundColor: posTheme?.primary || '#0f172a' }}
                     >

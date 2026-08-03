@@ -105,7 +105,7 @@ const SalesDiscountReport = () => {
                 <form onSubmit={handleSearch}>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                         <div>
-                             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Discount Type</label>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Discount Type</label>
                             <select
                                 name="discountType"
                                 value={filters.discountType}
@@ -138,9 +138,9 @@ const SalesDiscountReport = () => {
                                 ))}
                             </select>
                         </div>
-                         
+
                     </div>
-                    
+
                     <div className="flex flex-wrap items-end gap-4">
                         <div className="w-full sm:w-auto flex-1">
                             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">From</label>
@@ -161,8 +161,8 @@ const SalesDiscountReport = () => {
                                 onChange={handleFilterChange}
                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             />
-                         </div>
-                         <div className="w-full sm:w-auto flex-1">
+                        </div>
+                        <div className="w-full sm:w-auto flex-1">
                             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Show Summary</label>
                             <select
                                 name="showSummary"
@@ -194,7 +194,7 @@ const SalesDiscountReport = () => {
             )}
 
             {/* Report Header & Actions */}
-             <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-indigo-900">
                     Sales Discount Report {filters.storeId ? stores.find(s => s.id == filters.storeId)?.name : 'All Branches'} from <span className="text-slate-600">{filters.fromDate}</span> to <span className="text-slate-600">{filters.toDate}</span>
                 </h2>
@@ -203,9 +203,9 @@ const SalesDiscountReport = () => {
                         <Printer size={18} />
                     </button>
                     <button onClick={exportToExcel} className="p-2 bg-indigo-900 text-white rounded hover:bg-indigo-800 transition-colors" title="Export to Excel">
-                       <FileText size={18} />
+                        <FileText size={18} />
                     </button>
-                     <button onClick={() => window.print()} className="p-2 bg-indigo-900 text-white rounded hover:bg-indigo-800 transition-colors" title="PDF">
+                    <button onClick={() => window.print()} className="p-2 bg-indigo-900 text-white rounded hover:bg-indigo-800 transition-colors" title="PDF">
                         <Download size={18} />
                     </button>
                 </div>
@@ -242,34 +242,34 @@ const SalesDiscountReport = () => {
                                 </tr>
                             ) : (
                                 <>
-                                {data.map((item, index) => (
-                                    <tr key={index} className="hover:bg-slate-50 transition-colors text-slate-700">
-                                        <td className="px-4 py-3 border-r border-slate-100">{item.branch}</td>
-                                        <td className="px-4 py-3 border-r border-slate-100">{item.discountType}</td>
-                                        <td className="px-4 py-3 border-r border-slate-100">{item.count}</td>
-                                        <td className="px-4 py-3 border-r border-slate-100 text-right">{item.orderAmountAfterDiscount?.toFixed(2)}</td>
-                                        <td className="px-4 py-3 border-r border-slate-100 text-right">{item.discountAmount?.toFixed(2)}</td>
-                                        <td className="px-4 py-3 border-r border-slate-100">{item.orderDate}</td>
-                                        <td className="px-4 py-3">{item.orderHour}</td>
+                                    {data.map((item, index) => (
+                                        <tr key={index} className="hover:bg-slate-50 transition-colors text-slate-700">
+                                            <td className="px-4 py-3 border-r border-slate-100">{item.branch}</td>
+                                            <td className="px-4 py-3 border-r border-slate-100">{item.discountType}</td>
+                                            <td className="px-4 py-3 border-r border-slate-100">{item.count}</td>
+                                            <td className="px-4 py-3 border-r border-slate-100 text-right">{item.orderAmountAfterDiscount?.toFixed(2)}</td>
+                                            <td className="px-4 py-3 border-r border-slate-100 text-right">{item.discountAmount?.toFixed(2)}</td>
+                                            <td className="px-4 py-3 border-r border-slate-100">{item.orderDate}</td>
+                                            <td className="px-4 py-3">{item.orderHour}</td>
+                                        </tr>
+                                    ))}
+                                    {/* Total Row */}
+                                    <tr className="bg-slate-50 font-bold text-slate-800">
+                                        <td className="px-4 py-3 border-r border-slate-200">Total:</td>
+                                        <td className="px-4 py-3 border-r border-slate-200"></td>
+                                        <td className="px-4 py-3 border-r border-slate-200">{totalCount}</td>
+                                        <td className="px-4 py-3 border-r border-slate-200 text-right">{totalOrderAmount.toFixed(2)}</td>
+                                        <td className="px-4 py-3 border-r border-slate-200 text-right">{totalDiscountAmount.toFixed(2)}</td>
+                                        <td className="px-4 py-3 border-r border-slate-200"></td>
+                                        <td className="px-4 py-3"></td>
                                     </tr>
-                                ))}
-                                {/* Total Row */}
-                                <tr className="bg-slate-50 font-bold text-slate-800">
-                                     <td className="px-4 py-3 border-r border-slate-200">Total:</td>
-                                     <td className="px-4 py-3 border-r border-slate-200"></td>
-                                     <td className="px-4 py-3 border-r border-slate-200">{totalCount}</td>
-                                     <td className="px-4 py-3 border-r border-slate-200 text-right">{totalOrderAmount.toFixed(2)}</td>
-                                     <td className="px-4 py-3 border-r border-slate-200 text-right">{totalDiscountAmount.toFixed(2)}</td>
-                                     <td className="px-4 py-3 border-r border-slate-200"></td>
-                                     <td className="px-4 py-3"></td>
-                                </tr>
                                 </>
                             )}
                         </tbody>
                     </table>
                 </div>
             </div>
-            
+
             {/* Print Styles */}
             <style>{`
                 @media print {
