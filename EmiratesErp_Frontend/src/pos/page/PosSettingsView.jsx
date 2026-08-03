@@ -37,7 +37,7 @@ const FormField = ({ label, name, value, onChange, type = 'text', required = fal
             value={value || ''}
             onChange={onChange}
             required={required}
-            className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none"
+            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none"
             {...props}
         />
     </div>
@@ -166,7 +166,7 @@ const UserForm = ({ item, onSave, onCancel, posTheme }) => {
 
             <div>
                 <label htmlFor="role" className="block font-bold text-slate-700 mb-1">Role *</label>
-                <select id="role" name="role" value={formData.role} onChange={handleChange} required className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none">
+                <select id="role" name="role" value={formData.role} onChange={handleChange} required className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none">
                     {posRoles.map(role => (
                         <option key={role} value={role}>{role.replace(/_/g, ' ')}</option>
                     ))}
@@ -178,7 +178,7 @@ const UserForm = ({ item, onSave, onCancel, posTheme }) => {
                 {storesLoading ? (
                     <Loader className="animate-spin h-4 w-4 text-slate-900 mt-1" />
                 ) : (
-                    <select id="storeId" name="storeId" value={formData.storeId || ''} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none">
+                    <select id="storeId" name="storeId" value={formData.storeId || ''} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none">
                         <option value="">No specific store</option>
                         {stores.map(store => (
                             <option key={store.id} value={store.id}>{store.name}</option>
@@ -418,10 +418,10 @@ const createCrudTab = (config) => ({ posTheme }) => {
         axios[method](url, dataToSend, {
             headers: { "Authorization": `Bearer ${token}` }
         })
-            .then(() => { 
+            .then(() => {
                 toast.success(`${config.singularName} saved!`);
-                fetchItems(); 
-                handleCloseModal(); 
+                fetchItems();
+                handleCloseModal();
             })
             .catch(err => toast.error(`Error saving ${config.singularName}: ${err.response?.data?.message || err.message}`));
     };
@@ -430,9 +430,9 @@ const createCrudTab = (config) => ({ posTheme }) => {
         if (window.confirm(`Are you sure you want to delete this ${config.singularName}?`)) {
             const token = localStorage.getItem('token');
             axios.delete(`${API_URL}${config.endpoints.delete}/${id}`, { headers: { "Authorization": `Bearer ${token}` } })
-                .then(() => { 
+                .then(() => {
                     toast.info(`${config.singularName} deleted.`);
-                    fetchItems(); 
+                    fetchItems();
                 })
                 .catch(err => toast.error(`Error deleting ${config.singularName}: ${err.response?.data?.message || err.message}`));
         }
@@ -620,9 +620,8 @@ const PosSettingsView = ({ posTheme: propPosTheme }) => {
                         <button
                             key={tab.name}
                             onClick={() => setActiveTab(tab.name)}
-                            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all cursor-pointer whitespace-nowrap ${
-                                isActive ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                            }`}
+                            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all cursor-pointer whitespace-nowrap ${isActive ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                                }`}
                         >
                             <Icon size={14} />
                             <span>{tab.name}</span>

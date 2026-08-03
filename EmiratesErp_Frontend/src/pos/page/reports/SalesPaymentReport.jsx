@@ -14,7 +14,7 @@ const SalesPaymentReport = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [stores, setStores] = useState([]);
-    
+
     // Filters
     const [dateRange, setDateRange] = useState({
         fromDate: new Date().toISOString().split('T')[0],
@@ -93,11 +93,11 @@ const SalesPaymentReport = () => {
 
     const handleExport = () => {
         const headers = [
-            "Type", "Order Ref", "Order Date", "Reference", "Customer", "Payment Date", 
-            "Paid Amount", "Amount", "Returned Amount", "Currency", "Bank Name", 
+            "Type", "Order Ref", "Order Date", "Reference", "Customer", "Payment Date",
+            "Paid Amount", "Amount", "Returned Amount", "Currency", "Bank Name",
             "Payment Method", "Card Number"
         ];
-        
+
         const csvContent = [
             headers.join(","),
             ...filteredData.map(item => [
@@ -136,7 +136,7 @@ const SalesPaymentReport = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Ref # Filter */}
                     <div className="space-y-1">
-                         <label className="text-sm font-medium text-slate-700">Ref #</label>
+                        <label className="text-sm font-medium text-slate-700">Ref #</label>
                         <div className="relative">
                             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input
@@ -226,9 +226,9 @@ const SalesPaymentReport = () => {
 
             {/* Actions */}
             <div className="flex justify-between items-center print:hidden">
-                 <h2 className="text-lg font-semibold text-slate-700">
+                <h2 className="text-lg font-semibold text-slate-700">
                     Payment Report from {dateRange.fromDate} to {dateRange.toDate}
-                 </h2>
+                </h2>
                 <div className="flex gap-2">
                     <button onClick={() => window.print()} className="btn-secondary p-2" title="Print">
                         <Printer size={20} />

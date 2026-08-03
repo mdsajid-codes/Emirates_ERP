@@ -23,34 +23,38 @@ const NavItem = ({ item, onLinkClick, isCollapsed }) => (
         onClick={onLinkClick}
         title={isCollapsed ? item.name : ''}
         className={({ isActive }) =>
-            `flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-3'} py-3 text-sm font-medium rounded-xl transition-all duration-200 mb-1.5 group ${isActive ? 'bg-sidebar-active/10 shadow-sm font-semibold' : 'hover:bg-sidebar-hover'}`
+            `flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-3'} py-2 text-sm font-medium rounded-xl transition-all duration-200 mb-1.5 group ${
+                isActive ? 'bg-sidebar-active/20 shadow-2xs font-bold' : 'hover:bg-sidebar-hover'
+            }`
         }
     >
         {({ isActive }) => (
             <>
-                <item.icon className={`h-5 w-5 flex-shrink-0 transition-colors ${item.color} ${isActive ? 'opacity-100 text-sidebar-text' : 'opacity-80 group-hover:opacity-100 text-sidebar-text/80 group-hover:text-sidebar-text'} ${isCollapsed ? '' : 'mr-3'}`} />
-                {!isCollapsed && <span className={`${isActive ? 'text-sidebar-text' : 'text-sidebar-text/80 group-hover:text-sidebar-text'}`}>{item.name}</span>}
+                <div className={`p-1.5 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${item.iconBg || 'bg-slate-500/35 text-slate-300'} ${isCollapsed ? '' : 'mr-3'}`}>
+                    <item.icon className="h-4.5 w-4.5 stroke-[2.5] transition-transform group-hover:scale-110" />
+                </div>
+                {!isCollapsed && <span className={`${isActive ? 'text-sidebar-text font-bold' : 'text-sidebar-text/80 group-hover:text-sidebar-text'}`}>{item.name}</span>}
             </>
         )}
     </NavLink>
 );
 
 const ALL_NAV_LINKS = [
-    { name: 'Dashboard', icon: LayoutDashboard, href: '/company-dashboard', color: 'text-indigo-500' },
-    { name: 'HRMS', icon: Briefcase, href: '/hrdashboard', module: 'HRMS_CORE', color: 'text-blue-500' },
-    { name: 'ATS', icon: UserPlus, href: '/ats-dashboard', module: 'ATS', color: 'text-sky-500' },
-    { name: 'POS', icon: Store, href: '/pos-dashboard', module: 'POS', color: 'text-green-500' },
-    { name: 'Sales', icon: TrendingUp, href: '/sales-dashboard', module: 'SALES', color: 'text-emerald-500' },
-    { name: 'Purchases', icon: ShoppingBag, href: '/purchase-dashboard', module: 'PURCHASE', color: 'text-orange-500' },
-    { name: 'CRM', icon: Headset, href: '/crm-dashboard', module: 'CRM', color: 'text-rose-500' },
-    { name: 'Account', icon: Landmark, href: '/account-dashboard', module: 'ACCOUNTS', color: 'text-amber-500' },
-    { name: 'Fixed Assets', icon: Monitor, href: '/fixed-asset-dashboard', module: 'FIXED_ASSETS', color: 'text-indigo-500' },
-    { name: 'Production', icon: Factory, href: '/production-dashboard', module: 'PRODUCTION', color: 'text-cyan-500' },
-    { name: 'Material', icon: Boxes, href: '/material-dashboard', module: 'MATERIAL', color: 'text-purple-500' },
-    { name: 'Warehouse', icon: Warehouse, href: '/warehouse-dashboard', module: 'WAREHOUSE', color: 'text-teal-500' },
-    { name: 'Notification', icon: Bell, href: '/notification-dashboard', module: 'NOTIFICATION', color: 'text-indigo-600' },
-    { name: 'Fleet Management', icon: Truck, href: '/fleet-dashboard', module: 'TRIP_MANAGEMENT', color: 'text-sky-500' },
-    { name: 'Settings', icon: Settings, href: '/company-settings', color: 'text-slate-500' },
+    { name: 'Dashboard', icon: LayoutDashboard, href: '/company-dashboard', iconBg: 'bg-indigo-500/35 text-indigo-300' },
+    { name: 'HRMS', icon: Briefcase, href: '/hrdashboard', module: 'HRMS_CORE', iconBg: 'bg-blue-500/35 text-blue-300' },
+    { name: 'ATS', icon: UserPlus, href: '/ats-dashboard', module: 'ATS', iconBg: 'bg-sky-500/35 text-sky-300' },
+    { name: 'POS', icon: Store, href: '/pos-dashboard', module: 'POS', iconBg: 'bg-green-500/35 text-green-300' },
+    { name: 'Sales', icon: TrendingUp, href: '/sales-dashboard', module: 'SALES', iconBg: 'bg-emerald-500/35 text-emerald-300' },
+    { name: 'Purchases', icon: ShoppingBag, href: '/purchase-dashboard', module: 'PURCHASE', iconBg: 'bg-orange-500/35 text-orange-300' },
+    { name: 'CRM', icon: Headset, href: '/crm-dashboard', module: 'CRM', iconBg: 'bg-rose-500/35 text-rose-300' },
+    { name: 'Account', icon: Landmark, href: '/account-dashboard', module: 'ACCOUNTS', iconBg: 'bg-amber-500/35 text-amber-300' },
+    { name: 'Fixed Assets', icon: Monitor, href: '/fixed-asset-dashboard', module: 'FIXED_ASSETS', iconBg: 'bg-indigo-500/35 text-indigo-300' },
+    { name: 'Production', icon: Factory, href: '/production-dashboard', module: 'PRODUCTION', iconBg: 'bg-cyan-500/35 text-cyan-300' },
+    { name: 'Material', icon: Boxes, href: '/material-dashboard', module: 'MATERIAL', iconBg: 'bg-purple-500/35 text-purple-300' },
+    { name: 'Warehouse', icon: Warehouse, href: '/warehouse-dashboard', module: 'WAREHOUSE', iconBg: 'bg-teal-500/35 text-teal-300' },
+    { name: 'Notification', icon: Bell, href: '/notification-dashboard', module: 'NOTIFICATION', iconBg: 'bg-indigo-600/35 text-indigo-300' },
+    { name: 'Fleet Management', icon: Truck, href: '/fleet-dashboard', module: 'TRIP_MANAGEMENT', iconBg: 'bg-sky-500/35 text-sky-300' },
+    { name: 'Settings', icon: Settings, href: '/company-settings', iconBg: 'bg-slate-500/35 text-slate-300' },
 ];
 
 const SidebarContent = ({ onLinkClick, isCollapsed }) => {
@@ -108,14 +112,14 @@ const CompanyHubLayout = ({ children }) => {
             try {
                 const headers = { Authorization: `Bearer ${token}` };
                 const res = await axios.get(`${API_URL}/company-info`, { headers });
-                
+
                 const realName = res.data.companyName;
                 const companyName = realName || 'Company Hub';
-                
+
                 if (realName) {
                     sessionStorage.setItem('company_name', realName);
                 }
-                
+
                 const rawLogoUrl = res.data.logoUrl;
                 if (rawLogoUrl) {
                     if (rawLogoUrl.startsWith('http://') || rawLogoUrl.startsWith('https://')) {
@@ -133,26 +137,33 @@ const CompanyHubLayout = ({ children }) => {
                         };
                         reader.readAsDataURL(logoRes.data);
                         return;
-                    } catch (imgErr) { 
-                        console.error('Failed to fetch company logo blob', imgErr); 
+                    } catch (imgErr) {
+                        console.error('Failed to fetch company logo blob', imgErr);
                     }
                 }
                 setCompanyInfo({ name: companyName, logoPath: rawLogoUrl, logoBlob: null });
-            } catch (err) { 
-                console.error('Failed to fetch company info for layout', err); 
+            } catch (err) {
+                console.error('Failed to fetch company info for layout', err);
             }
         };
         fetchCompanyInfo();
     }, [API_URL]);
 
+    const [isHovered, setIsHovered] = useState(false);
+    const isExpanded = !isDesktopSidebarCollapsed || isHovered;
+
     return (
         <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
-            
+
             {/* Static Sidebar for Desktop */}
-            <aside className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 ${isDesktopSidebarCollapsed ? 'w-[80px]' : 'w-[220px]'} bg-sidebar-bg text-sidebar-text z-40 shadow-xl transition-all duration-300 ease-in-out`}>
+            <aside
+                className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 ${isExpanded ? 'w-[220px]' : 'w-[68px]'} bg-sidebar-bg text-sidebar-text z-40 shadow-xl transition-all duration-300 ease-in-out`}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+            >
                 {/* Sidebar Header (Logo & Toggle) */}
-                <div className="h-14 flex items-center px-4 shrink-0 border-b border-white/10 justify-between">
-                    <Link to="/company-dashboard" className={`flex items-center gap-3 ${isDesktopSidebarCollapsed ? 'w-full justify-center' : 'w-full'} overflow-hidden`}>
+                <div className={`h-14 flex items-center px-3.5 shrink-0 border-b border-white/10 ${!isExpanded ? 'justify-center flex-col gap-2' : 'justify-between'}`}>
+                    <Link to="/company-dashboard" className="flex items-center gap-3 overflow-hidden">
                         {companyInfo.logoPath || companyInfo.logoBlob ? (
                             <img
                                 src={companyInfo.logoBlob || constructImageUrl(companyInfo.logoPath)}
@@ -164,32 +175,36 @@ const CompanyHubLayout = ({ children }) => {
                                 <Sparkles className="h-4 w-4" />
                             </div>
                         )}
-                        {!isDesktopSidebarCollapsed && (
+                        {isExpanded && (
                             <div className="flex flex-col overflow-hidden">
                                 <span className="font-bold text-sm truncate">{companyInfo.name}</span>
                                 <span className="text-[10px] text-white/50 tracking-wider">HUB</span>
                             </div>
                         )}
                     </Link>
-                </div>
-                
-                {/* Navigation */}
-                <SidebarContent isCollapsed={isDesktopSidebarCollapsed} />
-
-                {/* Sidebar Footer (Toggle) */}
-                <div className="p-3 border-t border-white/10 flex items-center justify-center shrink-0 mt-auto">
-                    <button onClick={toggleDesktopSidebar} className="text-sidebar-text/70 hover:text-sidebar-text hover:bg-white/10 p-1.5 rounded-md transition-colors w-full flex justify-center">
-                        {isDesktopSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleDesktopSidebar();
+                        }}
+                        className="hidden lg:flex items-center justify-center p-1.5 rounded-xl opacity-80 hover:opacity-100 hover:bg-white/10 transition-all cursor-pointer shrink-0"
+                        title={isDesktopSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    >
+                        {isDesktopSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5 text-gray-300" /> : <PanelLeftClose className="h-5 w-5 text-gray-300" />}
                     </button>
                 </div>
+
+                {/* Navigation */}
+                <SidebarContent isCollapsed={!isExpanded} />
             </aside>
 
             {/* Main Content Wrapper */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                
+
                 {/* Header (Right Side) */}
                 <header className="flex-shrink-0 h-14 bg-header-bg text-header-text shadow-sm border-b border-border flex items-center justify-between px-4 lg:px-6 z-30 relative">
-                    
+
                     {/* Left side of header (Mobile Menu + Search) */}
                     <div className="flex items-center gap-4 flex-1">
                         <button
@@ -199,12 +214,12 @@ const CompanyHubLayout = ({ children }) => {
                         >
                             <Menu className="h-6 w-6" />
                         </button>
-                        
+
                         <div className="hidden md:flex relative w-full max-w-md items-center">
                             <Search className="absolute left-3 h-4 w-4 text-gray-400" />
-                            <input 
-                                type="text" 
-                                placeholder="Search anything..." 
+                            <input
+                                type="text"
+                                placeholder="Search anything..."
                                 className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
                             />
                         </div>
@@ -212,7 +227,7 @@ const CompanyHubLayout = ({ children }) => {
 
                     {/* Right side of header (Dropdowns, Notification, User) */}
                     <div className="flex items-center gap-3 sm:gap-5 shrink-0">
-                        
+
                         {/* Notification Bell */}
                         <button className="relative p-2 text-foreground-muted hover:text-foreground hover:bg-black/5 rounded-full transition-colors">
                             <Bell className="h-5 w-5" />
@@ -232,10 +247,10 @@ const CompanyHubLayout = ({ children }) => {
                             </div>
                             <ChevronDown className="h-4 w-4 text-foreground-muted hidden sm:block" />
                         </div>
-                        
-                        <button 
-                            onClick={handleLogout} 
-                            className="text-foreground-muted hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors ml-1" 
+
+                        <button
+                            onClick={handleLogout}
+                            className="text-foreground-muted hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors ml-1"
                             title="Logout"
                         >
                             <LogOut className="h-5 w-5" />

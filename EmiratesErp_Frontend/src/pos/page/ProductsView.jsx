@@ -83,7 +83,7 @@ const BarcodeModal = ({ isOpen, onClose, product }) => {
                     <div className="mb-4 text-left">
                         <label className="block text-xs font-semibold text-slate-600 mb-1">Select Variant</label>
                         <select
-                            className="w-full p-2 border-0 bg-slate-100 rounded-xl text-xs font-medium focus:ring-2 focus:ring-slate-900 outline-none"
+                            className="w-full p-2 border border-slate-200 bg-white rounded-xl text-xs font-medium focus:ring-2 focus:ring-slate-900 outline-none"
                             value={variants.indexOf(variant)}
                             onChange={(e) => setSelectedVariant(variants[e.target.value])}
                         >
@@ -271,7 +271,7 @@ const ProductsView = ({ posTheme: propPosTheme, isExpanded = true }) => {
                         placeholder="Search by product name or SKU..."
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-white rounded-full text-xs border-0 shadow-xs outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 transition-all"
+                        className="w-full pl-10 pr-4 py-2 bg-white rounded-full text-xs border border-slate-200 shadow-xs outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 transition-all"
                     />
                 </div>
                 <button

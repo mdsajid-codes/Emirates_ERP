@@ -120,9 +120,8 @@ const LookupModal = ({ isOpen, onClose, onResumeSale, onRemoveSale }) => {
                                 <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">{new Date(sale.invoiceDate).toLocaleString()}</td>
                                 <td className="py-3 px-4 font-semibold text-slate-800">{sale.customerName || 'Walk-in Customer'}</td>
                                 <td className="py-3 px-4">
-                                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize ${
-                                        sale.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                                    }`}>
+                                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize ${sale.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                        }`}>
                                         {sale.status} ({sale.paymentStatus})
                                     </span>
                                 </td>
@@ -176,11 +175,10 @@ const LookupModal = ({ isOpen, onClose, onResumeSale, onRemoveSale }) => {
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                                activeTab === tab
+                            className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${activeTab === tab
                                     ? 'bg-slate-900 text-white shadow-xs'
                                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                            }`}
+                                }`}
                         >
                             {tab}
                         </button>
@@ -196,7 +194,7 @@ const LookupModal = ({ isOpen, onClose, onResumeSale, onRemoveSale }) => {
                             placeholder="Search by Invoice # or Customer Name..."
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-full text-xs font-medium border-0 shadow-xs outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 transition-all"
+                            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-xs font-medium shadow-xs outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 transition-all"
                         />
                     </div>
                 </div>

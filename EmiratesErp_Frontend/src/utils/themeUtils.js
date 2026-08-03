@@ -30,8 +30,8 @@ export const DEFAULT_THEME = {
 export const POS_FALLBACK_THEME = {
     // Layout
     sidebarBg: '#B9D9D5',
-    sidebarActive: '#97B3AE',
-    sidebarActiveFg: '#1b2421',
+    sidebarActive: '#126b58',
+    sidebarActiveFg: '#085c4fff',
     sidebarText: '#2d4542',
     sidebarHover: '#C4DADE',
     cardBg: '#C4DADE',
@@ -121,13 +121,13 @@ export const applyTheme = (theme) => {
     root.style.setProperty('--color-secondary', getVal('secondaryColor'));
     root.style.setProperty('--color-accent', getVal('accentColor'));
     root.style.setProperty('--color-background', getVal('backgroundColor'));
-    
+
     // Create muted background (slightly darker/lighter based on theme) - keeping simple for now
     root.style.setProperty('--color-background-muted', getVal('backgroundColor'));
 
     root.style.setProperty('--color-foreground', getVal('textColor'));
     root.style.setProperty('--color-foreground-muted', getVal('textColor')); // Simplified
-    
+
     root.style.setProperty('--color-error', getVal('errorColor'));
     root.style.setProperty('--color-success', getVal('successColor'));
     root.style.setProperty('--color-warning', getVal('warningColor'));
@@ -153,7 +153,7 @@ export const applyTheme = (theme) => {
 
     // Visual styles
     root.style.setProperty('--theme-border-radius', getVal('borderRadius'));
-    
+
     const fontFamily = getVal('fontFamily');
     if (fontFamily) {
         root.style.setProperty('--font-family-sans', `"${fontFamily}", sans-serif`);

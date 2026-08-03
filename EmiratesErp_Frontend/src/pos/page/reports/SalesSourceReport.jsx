@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 const SalesSourceReport = () => {
     const [loading, setLoading] = useState(false);
     const [stores, setStores] = useState([]);
-    
+
     // Filters
     const [selectedStore, setSelectedStore] = useState('');
     const [salesSource, setSalesSource] = useState('All');
@@ -53,7 +53,7 @@ const SalesSourceReport = () => {
                 }
             });
             setData(response.data);
-            
+
             // Calculate total
             const total = response.data.reduce((sum, item) => sum + (item.salesTotalAmount || 0), 0);
             setTotalAmount(total);
@@ -76,7 +76,7 @@ const SalesSourceReport = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">Branches</label>
-                        <select 
+                        <select
                             className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
                             value={selectedStore}
                             onChange={(e) => setSelectedStore(e.target.value)}
@@ -89,7 +89,7 @@ const SalesSourceReport = () => {
 
                     <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">Sales Source</label>
-                        <select 
+                        <select
                             className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
                             value={salesSource}
                             onChange={(e) => setSalesSource(e.target.value)}
@@ -107,7 +107,7 @@ const SalesSourceReport = () => {
 
                     <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">From:</label>
-                        <input 
+                        <input
                             type="date"
                             className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
                             value={fromDate}
@@ -117,7 +117,7 @@ const SalesSourceReport = () => {
 
                     <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">To:</label>
-                        <input 
+                        <input
                             type="date"
                             className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
                             value={toDate}
@@ -127,7 +127,7 @@ const SalesSourceReport = () => {
 
                     <div className="md:col-span-2">
                         <label className="block text-xs font-bold text-slate-700 mb-1">Sales Source Reference:</label>
-                        <input 
+                        <input
                             type="text"
                             placeholder="Enter reference..."
                             className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 bg-slate-50"
@@ -137,7 +137,7 @@ const SalesSourceReport = () => {
                     </div>
 
                     <div className="flex items-end">
-                        <button 
+                        <button
                             onClick={handleSearch}
                             disabled={loading || !selectedStore}
                             className="bg-blue-900 text-white px-6 py-2 rounded text-sm font-semibold hover:bg-blue-800 transition disabled:opacity-50"
@@ -151,7 +151,7 @@ const SalesSourceReport = () => {
             {/* Results Table */}
             <div className="bg-white rounded-lg shadow border border-slate-200 overflow-hidden">
                 <div className="p-4 border-b border-slate-200">
-                     <h2 className="text-sm font-bold text-blue-900">Transactions</h2>
+                    <h2 className="text-sm font-bold text-blue-900">Transactions</h2>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">

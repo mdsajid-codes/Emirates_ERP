@@ -90,13 +90,13 @@ const PurchaseOrderForm = ({ onSave, onCancel, stores, products, posTheme }) => 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 <div>
                     <label className="block font-bold text-slate-700 mb-1">Store *</label>
-                    <select name="storeId" value={formData.storeId} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required>
+                    <select name="storeId" value={formData.storeId} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required>
                         {stores.map(store => <option key={store.id} value={store.id}>{store.name}</option>)}
                     </select>
                 </div>
                 <div>
                     <label className="block font-bold text-slate-700 mb-1">Supplier Name *</label>
-                    <input name="supplierName" value={formData.supplierName} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required />
+                    <input name="supplierName" value={formData.supplierName} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required />
                 </div>
             </div>
             <h4 className="font-bold text-slate-900 pt-3 border-t border-slate-100">Order Items</h4>
@@ -171,17 +171,17 @@ const StockAdjustmentForm = ({ onSave, onCancel, item, stores, products, posThem
             <input type="hidden" name="productVariantId" value={formData.productVariantId} />
             <div>
                 <label className="block font-bold text-slate-700 mb-1">Store *</label>
-                <select name="storeId" value={formData.storeId} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required>
+                <select name="storeId" value={formData.storeId} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required>
                     {stores.map(store => <option key={store.id} value={store.id}>{store.name}</option>)}
                 </select>
             </div>
             <div>
                 <label className="block font-bold text-slate-700 mb-1">Quantity Change (+ to add, - to reduce) *</label>
-                <input name="changeQuantity" type="number" value={formData.changeQuantity} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-bold focus:ring-2 focus:ring-slate-900 outline-none" required />
+                <input name="changeQuantity" type="number" value={formData.changeQuantity} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-bold focus:ring-2 focus:ring-slate-900 outline-none" required />
             </div>
             <div>
                 <label className="block font-bold text-slate-700 mb-1">Reason *</label>
-                <input name="reason" value={formData.reason} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required />
+                <input name="reason" value={formData.reason} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required />
             </div>
             <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                 <button type="button" onClick={onCancel} className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">Cancel</button>
@@ -227,18 +227,18 @@ const AddStockItemForm = ({ onSave, onCancel, stores, products, existingVariantI
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
             <div>
                 <label className="block font-bold text-slate-700 mb-1">Product Variant *</label>
-                <select name="productVariantId" value={formData.productVariantId} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required>
+                <select name="productVariantId" value={formData.productVariantId} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required>
                     <option value="">Select a product variant...</option>
                     {availableVariants.map(v => <option key={v.id} value={v.id}>{v.productName} ({v.sku})</option>)}
                 </select>
             </div>
             <div>
                 <label className="block font-bold text-slate-700 mb-1">Initial Quantity *</label>
-                <input name="changeQuantity" type="number" min="0" value={formData.changeQuantity} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-bold focus:ring-2 focus:ring-slate-900 outline-none" required />
+                <input name="changeQuantity" type="number" min="0" value={formData.changeQuantity} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-bold focus:ring-2 focus:ring-slate-900 outline-none" required />
             </div>
             <div>
                 <label className="block font-bold text-slate-700 mb-1">Reason *</label>
-                <input name="reason" value={formData.reason} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 border-0 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required />
+                <input name="reason" value={formData.reason} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required />
             </div>
             <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                 <button type="button" onClick={onCancel} className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">Cancel</button>
@@ -527,9 +527,8 @@ const InventoryView = ({ posTheme: propPosTheme }) => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-1.5 px-4 py-2 rounded-full transition-all cursor-pointer ${
-                                isActive ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                            }`}
+                            className={`flex items-center gap-1.5 px-4 py-2 rounded-full transition-all cursor-pointer ${isActive ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                                }`}
                         >
                             <Icon size={14} />
                             <span>{tab.name}</span>

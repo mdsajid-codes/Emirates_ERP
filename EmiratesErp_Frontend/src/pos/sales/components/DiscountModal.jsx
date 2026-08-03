@@ -40,12 +40,11 @@ const DiscountModal = ({ isOpen, onClose, onApplyDiscount, subtotal, posTheme })
                 {/* Tab Switcher */}
                 <div className="p-1 bg-slate-100 rounded-full mx-5 mt-4 flex text-xs font-bold">
                     {TABS.map(tab => (
-                        <button 
-                            key={tab} 
-                            onClick={() => setActiveTab(tab)} 
-                            className={`flex-1 py-1.5 rounded-full transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                                activeTab === tab ? 'bg-white text-slate-900 shadow-2xs font-extrabold' : 'text-slate-500 hover:text-slate-900'
-                            }`}
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`flex-1 py-1.5 rounded-full transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === tab ? 'bg-white text-slate-900 shadow-2xs font-extrabold' : 'text-slate-500 hover:text-slate-900'
+                                }`}
                         >
                             {tab === 'Percentage' ? <Percent size={13} /> : <CircleDollarSign size={13} />}
                             {tab}
@@ -65,7 +64,7 @@ const DiscountModal = ({ isOpen, onClose, onApplyDiscount, subtotal, posTheme })
                                 max="100"
                                 value={percentage}
                                 onChange={(e) => setPercentage(e.target.value)}
-                                className="w-full px-3.5 py-2.5 bg-slate-50 border-0 rounded-xl font-bold text-sm focus:ring-2 focus:ring-slate-900 outline-none"
+                                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-sm focus:ring-2 focus:ring-slate-900 outline-none"
                                 placeholder="e.g., 10"
                                 autoFocus
                             />
@@ -80,7 +79,7 @@ const DiscountModal = ({ isOpen, onClose, onApplyDiscount, subtotal, posTheme })
                                 step="0.01"
                                 value={fixedAmount}
                                 onChange={(e) => setFixedAmount(e.target.value)}
-                                className="w-full px-3.5 py-2.5 bg-slate-50 border-0 rounded-xl font-bold text-sm focus:ring-2 focus:ring-slate-900 outline-none"
+                                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-sm focus:ring-2 focus:ring-slate-900 outline-none"
                                 placeholder="e.g., 25.00"
                                 autoFocus
                             />
@@ -90,16 +89,16 @@ const DiscountModal = ({ isOpen, onClose, onApplyDiscount, subtotal, posTheme })
 
                 {/* Footer Buttons */}
                 <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex justify-end gap-2">
-                    <button 
-                        type="button" 
-                        onClick={handleRemove} 
+                    <button
+                        type="button"
+                        onClick={handleRemove}
                         className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all cursor-pointer"
                     >
                         Remove Discount
                     </button>
-                    <button 
-                        type="button" 
-                        onClick={handleApply} 
+                    <button
+                        type="button"
+                        onClick={handleApply}
                         className="px-4 py-2.5 rounded-xl text-xs font-bold text-white shadow-sm transition-all hover:opacity-90 cursor-pointer"
                         style={{ backgroundColor: posTheme?.primary || '#0f172a' }}
                     >

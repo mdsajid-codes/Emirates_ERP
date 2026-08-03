@@ -30,7 +30,7 @@ const ProductCard = ({ product, variant, onAddToCart, onDownloadBarcode, posThem
             </div>
 
             {/* Product Image Container */}
-            <div 
+            <div
                 onClick={mainAction}
                 className="relative w-full h-18 sm:h-20 bg-slate-50/80 p-1 flex items-center justify-center border-b border-slate-100 cursor-pointer overflow-hidden"
             >
@@ -76,8 +76,8 @@ const ProductCard = ({ product, variant, onAddToCart, onDownloadBarcode, posThem
             {/* Content Details: Name on left, + icon button on right */}
             <div className="p-1.5 flex items-center justify-between gap-1 text-xs">
                 <div className="min-w-0 flex-1">
-                    <h3 
-                        className="font-bold text-slate-900 text-[10px] leading-tight truncate group-hover:text-blue-600 transition-colors cursor-pointer" 
+                    <h3
+                        className="font-bold text-slate-900 text-[10px] leading-tight truncate group-hover:text-blue-600 transition-colors cursor-pointer"
                         title={product.name}
                         onClick={mainAction}
                     >
@@ -107,7 +107,10 @@ const ProductCard = ({ product, variant, onAddToCart, onDownloadBarcode, posThem
 };
 
 const ProductGrid = ({ products, onAddToCart, onDownloadBarcode, posTheme }) => (
-    <div className="flex-grow overflow-y-auto p-1">
+    <div
+        className="flex-grow overflow-y-auto p-1 rounded-xl"
+        style={{ backgroundColor: posTheme?.accent || '#b9d9d5' }}
+    >
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 pb-4">
             <AnimatePresence>
                 {products.flatMap(product => product.variants.map(variant => (

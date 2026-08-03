@@ -19,10 +19,10 @@ import {
 } from 'lucide-react';
 
 const leaveNavLinks = [
-    { id: 'requests', name: 'Leave Requests', icon: FileClock, color: 'text-amber-500', component: AllLeaveRequests },
-    { id: 'balances', name: 'Leave Balances', icon: UserCheck, color: 'text-green-500', component: LeaveBalancesSection },
-    { id: 'sick-leave', name: 'Sick Leave', icon: HeartPulse, color: 'text-rose-500', component: (props) => <SickLeaveManagement embedded {...props} /> },
-    { id: 'types', name: 'Leave Types', icon: BookCopy, color: 'text-purple-500', component: (props) => <LeaveType embedded {...props} /> },
+    { id: 'requests', name: 'Leave Requests', icon: FileClock, iconBg: 'bg-amber-500/35 text-amber-300', component: AllLeaveRequests },
+    { id: 'balances', name: 'Leave Balances', icon: UserCheck, iconBg: 'bg-emerald-500/35 text-emerald-300', component: LeaveBalancesSection },
+    { id: 'sick-leave', name: 'Sick Leave', icon: HeartPulse, iconBg: 'bg-rose-500/35 text-rose-300', component: (props) => <SickLeaveManagement embedded {...props} /> },
+    { id: 'types', name: 'Leave Types', icon: BookCopy, iconBg: 'bg-purple-500/35 text-purple-300', component: (props) => <LeaveType embedded {...props} /> },
 ];
 
 const LeaveManagement = () => {
@@ -38,8 +38,13 @@ const LeaveManagement = () => {
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(() => {
-        return localStorage.getItem('leave_sidebar_collapsed') === 'true';
+        const stored = localStorage.getItem('leave_sidebar_collapsed');
+        return stored === null ? true : stored === 'true';
     });
+    const [isHovered, setIsHovered] = useState(false);
+
+    const isExpanded = !isCollapsed || isHovered;
+
     const [searchTerm, setSearchTerm] = useState('');
     const [isSyncingBalances, setIsSyncingBalances] = useState(false);
 
@@ -92,64 +97,75 @@ const LeaveManagement = () => {
             <div className="flex flex-col lg:flex-row min-h-full flex-1 w-full bg-background text-foreground">
 
                 {/* Module Sidebar */}
-                <aside className={`
-                    shrink-0 border-r border-border bg-sidebar-bg text-sidebar-text z-20 transition-all duration-300
-                    sticky top-0 lg:h-[calc(100vh-3.5rem)] self-start
-                    ${isSidebarOpen ? 'fixed inset-0 lg:relative' : 'hidden lg:block'}
-                    ${isCollapsed ? 'lg:w-[56px]' : 'lg:w-48'}
-                `}>
+                <aside
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                    className={`
+                        shrink-0 border-r border-border bg-sidebar-bg text-sidebar-text z-20 transition-all duration-300
+                        sticky top-0 lg:h-[calc(100vh-3.5rem)] self-start
+                        ${isSidebarOpen ? 'fixed inset-0 lg:relative' : 'hidden lg:flex lg:flex-col'}
+                        ${isExpanded ? 'lg:w-56' : 'lg:w-[64px]'}
+                    `}
+                >
                     <div className="h-full flex flex-col p-2">
-                        <div className="flex flex-col gap-1.5 mb-2 px-1 border-b border-border pb-2">
-                            <div className="flex items-center justify-between">
-                                {!isCollapsed && (
-                                    <h2 className="text-xs font-bold tracking-tight truncate">
-                                        Leave Hub
-                                    </h2>
-                                )}
-                                <div className={`flex items-center gap-1 ${isCollapsed ? 'mx-auto' : ''}`}>
-                                    <button
-                                        onClick={toggleCollapsed}
-                                        className="hidden lg:flex p-1 hover:bg-sidebar-hover rounded-md text-sidebar-text/70 hover:text-sidebar-text transition-colors"
-                                        title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-                                    >
-                                        {isCollapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
-                                    </button>
-                                    <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-1 hover:bg-white/10 rounded-lg text-foreground-muted">
-                                        <X className="h-4 w-4" />
-                                    </button>
+                        {/* Sidebar Header with Pin Button */}
+                        <div className={`flex items-center py-2 px-2.5 border-b border-border mb-2.5 ${isExpanded ? 'justify-between' : 'justify-center'}`}>
+                            {isExpanded && (
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                    <div className="p-1.5 bg-amber-500/35 text-amber-300 rounded-full flex-shrink-0">
+                                        <FileClock className="h-4 w-4 stroke-[2.5]" />
+                                    </div>
+                                    <span className="font-extrabold text-sm truncate">Leave Hub</span>
                                 </div>
-                            </div>
+                            )}
                             <button
-                                onClick={() => navigate('/hrdashboard')}
-                                title="Back to Dashboard"
-                                className={`flex items-center ${isCollapsed ? 'justify-center px-1' : 'gap-1.5 px-2'} text-[11px] font-semibold hover:bg-sidebar-hover py-1 rounded-lg transition-colors opacity-80 hover:opacity-100`}
+                                type="button"
+                                onClick={toggleCollapsed}
+                                className="hidden lg:flex items-center justify-center p-1.5 rounded-xl text-foreground-muted hover:text-foreground hover:bg-background-muted/60 transition-colors flex-shrink-0 cursor-pointer"
+                                title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
                             >
-                                <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
-                                {!isCollapsed && <span className="truncate">Back to Dashboard</span>}
+                                {isCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
                             </button>
                         </div>
 
-                        <nav className="space-y-0.5 flex-1 overflow-y-auto custom-scrollbar">
-                            {leaveNavLinks.map((link) => (
-                                <button
-                                    key={link.id}
-                                    onClick={() => {
-                                        navigate(`/leave/${link.id}`);
-                                        setIsSidebarOpen(false);
-                                    }}
-                                    title={isCollapsed ? link.name : undefined}
-                                    className={`
-                                        w-full flex items-center ${isCollapsed ? 'justify-center px-1' : 'gap-2 px-2'} py-1.5 rounded-lg text-[11px] font-medium transition-colors group
-                                        ${activeNavLink.id === link.id
-                                            ? 'bg-sidebar-active text-sidebar-text font-bold shadow-2xs'
-                                            : 'text-sidebar-text hover:bg-sidebar-hover opacity-80 hover:opacity-100'
-                                        }
-                                    `}
-                                >
-                                    <link.icon className={`h-3.5 w-3.5 flex-shrink-0 transition-colors group-hover:scale-105 ${activeNavLink.id === link.id ? 'text-sidebar-text' : link.color}`} />
-                                    {!isCollapsed && <span className="flex-1 text-left truncate">{link.name}</span>}
-                                </button>
-                            ))}
+                        {isExpanded && (
+                            <button
+                                type="button"
+                                onClick={() => navigate('/hrdashboard')}
+                                className="flex items-center gap-2 text-xs font-bold text-sidebar-text/80 hover:text-sidebar-text hover:bg-white/10 px-2.5 py-1.5 rounded-xl transition-all mb-2 cursor-pointer"
+                            >
+                                <ArrowLeft className="h-3.5 w-3.5" /> Back to Dashboard
+                            </button>
+                        )}
+
+                        <nav className="space-y-1.5 flex-1 overflow-y-auto no-scrollbar px-1">
+                            {leaveNavLinks.map((link) => {
+                                const Icon = link.icon;
+                                const isActive = activeNavLink.id === link.id;
+                                return (
+                                    <button
+                                        key={link.id}
+                                        onClick={() => {
+                                            navigate(`/leave/${link.id}`);
+                                            setIsSidebarOpen(false);
+                                        }}
+                                        title={!isExpanded ? link.name : undefined}
+                                        className={`
+                                            w-full flex items-center gap-3 py-2 rounded-xl text-xs font-bold transition-all text-left group
+                                            ${isActive
+                                                ? 'bg-primary text-primary-foreground shadow-2xs font-extrabold'
+                                                : 'text-foreground-muted hover:text-foreground hover:bg-background-muted/60'
+                                            }
+                                            ${!isExpanded ? 'justify-center px-0' : 'px-2.5'}
+                                        `}
+                                    >
+                                        <div className={`p-1.5 rounded-full flex items-center justify-center flex-shrink-0 ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : (link.iconBg || 'bg-slate-500/35 text-slate-300')}`}>
+                                            <Icon className="h-4 w-4 stroke-[2.5]" />
+                                        </div>
+                                        {isExpanded && <span className="truncate flex-1 font-bold">{link.name}</span>}
+                                    </button>
+                                );
+                            })}
                         </nav>
                     </div>
                 </aside>

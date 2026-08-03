@@ -29,16 +29,18 @@ import {
     Scissors,
     CheckSquare,
     BellOff,
-    Clipboard
+    Clipboard,
+    PanelLeftOpen,
+    PanelLeftClose
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 
 const atsNavLinks = [
-    { name: 'Dashboard', icon: LayoutDashboard, href: '/ats-dashboard/dashboard', color: 'text-blue-500' },
-    { name: 'Applicants', icon: Users, href: '/ats-dashboard/applicants', color: 'text-purple-500' },
-    { name: 'Clients', icon: Building, href: '/ats-dashboard/clients', color: 'text-teal-500' },
-    { name: 'Vendors', icon: Briefcase, href: '/ats-dashboard/vendors', color: 'text-emerald-500' },
+    { name: 'Dashboard', icon: LayoutDashboard, href: '/ats-dashboard/dashboard', iconBg: 'bg-blue-500/35 text-blue-300' },
+    { name: 'Applicants', icon: Users, href: '/ats-dashboard/applicants', iconBg: 'bg-purple-500/35 text-purple-300' },
+    { name: 'Clients', icon: Building, href: '/ats-dashboard/clients', iconBg: 'bg-teal-500/35 text-teal-300' },
+    { name: 'Vendors', icon: Briefcase, href: '/ats-dashboard/vendors', iconBg: 'bg-emerald-500/35 text-emerald-300' },
 ];
 
 const quickLinks = [
@@ -63,64 +65,102 @@ const quickLinks = [
     { name: 'View Clipboard', icon: Clipboard, color: 'text-slate-600 bg-slate-50 border-slate-100', path: '/ats-dashboard/clipboard', isPlaceholder: true },
 ];
 
-const SidebarContent = ({ onLinkClick }) => {
+const SidebarContent = ({ onLinkClick, isCollapsedMode = false, isDesktopCollapsed = true, setIsDesktopCollapsed }) => {
     const location = useLocation();
     const navigate = useNavigate();
 
     const handleLogout = () => logout(navigate);
 
     const NavItem = ({ item }) => {
-        const isActive = location.pathname.startsWith(item.href);
-        
         return (
-            <NavLink 
-                to={item.href} 
-                onClick={onLinkClick} 
-                className={`flex items-center w-full px-8 py-3 text-sm font-medium rounded-theme transition-colors group ${
-                    isActive 
-                        ? 'bg-sidebar-active text-sidebar-active-foreground font-bold shadow-md' 
-                        : 'text-sidebar-text hover:bg-sidebar-hover opacity-80 hover:opacity-100'
-                }`}
+            <NavLink
+                to={item.href}
+                onClick={onLinkClick}
+                end={item.href === '/ats-dashboard/dashboard'}
+                title={isCollapsedMode ? item.name : undefined}
+                className={({ isActive }) =>
+                    `flex items-center ${isCollapsedMode ? 'justify-center px-0' : 'px-2.5'} py-2 text-sm font-bold rounded-xl transition-all duration-200 mb-1 group ${
+                        isActive ? 'bg-sidebar-active/20 text-sidebar-text shadow-sm' : 'text-sidebar-text/80 hover:text-sidebar-text hover:bg-sidebar-hover'
+                    }`
+                }
             >
-                <item.icon className={`h-5 w-5 mr-3 flex-shrink-0 ${isActive ? '' : item.color}`} />
-                <span>{item.name}</span>
+                {({ isActive }) => (
+                    <>
+                        <div className={`p-1.5 rounded-full flex items-center justify-center flex-shrink-0 ${item.iconBg || 'bg-slate-500/35 text-slate-300'}`}>
+                            <item.icon className="h-4 w-4 stroke-[2.5] transition-transform group-hover:scale-110" />
+                        </div>
+                        {!isCollapsedMode && <span className={`ml-2.5 truncate ${isActive ? 'font-bold text-sidebar-text' : ''}`}>{item.name}</span>}
+                    </>
+                )}
             </NavLink>
         );
     };
 
     return (
-        <div className="flex flex-col h-full bg-sidebar-bg text-sidebar-text">
-            <div className="p-4 border-b border-white/10 flex-shrink-0">
-                <button onClick={() => navigate('/company-dashboard')} className="flex items-center gap-3 w-full text-left">
-                    <ArrowLeft className="h-5 w-5 text-primary" />
-                    <span className="font-bold text-lg text-sidebar-text">Company Hub</span>
-                </button>
+        <div className="flex flex-col h-full bg-sidebar-bg text-sidebar-text select-none">
+            {/* Header section with pin toggle button matching POS position */}
+            <div className={`flex items-center py-3 px-3.5 border-b border-white/10 ${isCollapsedMode ? 'justify-center flex-col gap-2' : 'justify-between'}`}>
+                <div className="flex items-center gap-2.5 overflow-hidden">
+                    <div className="w-8 h-8 rounded-xl bg-pink-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <UserPlus className="h-4 w-4 text-white fill-current" />
+                    </div>
+                    {!isCollapsedMode && (
+                        <span className="text-sm font-extrabold text-white tracking-tight truncate">ATS Hub</span>
+                    )}
+                </div>
+                {setIsDesktopCollapsed && (
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsDesktopCollapsed(prev => !prev);
+                        }}
+                        className="hidden lg:flex items-center justify-center p-1.5 rounded-xl opacity-80 hover:opacity-100 hover:bg-white/10 transition-all cursor-pointer flex-shrink-0"
+                        title={isDesktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    >
+                        {isDesktopCollapsed ? <PanelLeftOpen className="h-5 w-5 text-gray-300" /> : <PanelLeftClose className="h-5 w-5 text-gray-300" />}
+                    </button>
+                )}
             </div>
-            <nav className="flex-1 px-1 py-4 space-y-2 overflow-y-auto">
+
+            <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto no-scrollbar">
+                {/* Back to Hub */}
+                <button
+                    onClick={() => navigate('/company-dashboard')}
+                    title={isCollapsedMode ? "Back to Company Hub" : undefined}
+                    className={`w-full flex items-center ${isCollapsedMode ? 'justify-center px-0' : 'px-2.5'} py-2 text-sm font-bold rounded-xl transition-all duration-200 mb-2 group text-sidebar-text/80 hover:text-sidebar-text hover:bg-white/10 text-left`}
+                >
+                    <div className="p-1.5 rounded-full bg-slate-500/35 text-slate-300 flex items-center justify-center flex-shrink-0">
+                        <ArrowLeft className="h-4 w-4 stroke-[2.5]" />
+                    </div>
+                    {!isCollapsedMode && <span className="ml-2.5 truncate">Back to Hub</span>}
+                </button>
+
                 {atsNavLinks.map((item) => <NavItem key={item.name} item={item} />)}
             </nav>
-            <NavLink 
-                to="/ats-settings" 
-                onClick={onLinkClick} 
-                className={({ isActive }) => 
-                    `flex items-center w-full px-8 py-3 text-sm font-medium rounded-theme transition-colors group ${
-                        isActive 
-                            ? 'bg-sidebar-active text-sidebar-active-foreground font-bold shadow-md' 
-                            : 'text-sidebar-text hover:bg-sidebar-hover opacity-80 hover:opacity-100'
-                    }`
-                }
-            >
-                <Settings className="h-5 w-5 mr-3 text-cyan-500" />
-                <span>ATS Settings</span>
-            </NavLink>
-            <div className="p-4 border-t border-white/10 flex-shrink-0">
-                <button 
-                    onClick={handleLogout} 
-                    className="w-full flex items-center px-8 py-3 text-sm font-medium rounded-theme text-sidebar-text hover:bg-sidebar-hover opacity-80 hover:opacity-100 group transition-all"
-                    title="Logout"
+
+            <div className="p-3 border-t border-sidebar-text/10 space-y-1">
+                <NavLink
+                    to="/ats-settings"
+                    onClick={onLinkClick}
+                    title={isCollapsedMode ? "ATS Settings" : undefined}
+                    className={`flex items-center ${isCollapsedMode ? 'justify-center px-0' : 'px-2.5'} py-2 text-sidebar-text/80 hover:text-sidebar-text text-sm font-bold rounded-xl hover:bg-sidebar-hover transition group`}
                 >
-                    <LogOut className="h-5 w-5 mr-3 text-red-500 group-hover:text-red-600" />
-                    <span>Logout</span>
+                    <div className="p-1.5 rounded-full bg-cyan-500/35 text-cyan-300 flex items-center justify-center flex-shrink-0">
+                        <Settings className="h-4 w-4 stroke-[2.5]" />
+                    </div>
+                    {!isCollapsedMode && <span className="ml-2.5 truncate">ATS Settings</span>}
+                </NavLink>
+
+                <button
+                    onClick={handleLogout}
+                    title={isCollapsedMode ? "Logout" : undefined}
+                    className={`flex items-center ${isCollapsedMode ? 'justify-center px-0' : 'px-2.5'} py-2 text-sm font-bold text-rose-400 hover:bg-rose-500/10 rounded-xl w-full text-left transition group`}
+                >
+                    <div className="p-1.5 rounded-full bg-rose-500/35 text-rose-300 flex items-center justify-center flex-shrink-0">
+                        <LogOut className="h-4 w-4 stroke-[2.5]" />
+                    </div>
+                    {!isCollapsedMode && <span className="ml-2.5 truncate">Logout</span>}
                 </button>
             </div>
         </div>
@@ -129,6 +169,10 @@ const SidebarContent = ({ onLinkClick }) => {
 
 const AtsLayout = ({ children, showQuickLinks, setShowQuickLinks }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
+    const [isHovered, setIsHovered] = useState(false);
+    const isExpanded = !isDesktopCollapsed || isHovered;
+
     const navigate = useNavigate();
     const handleLogout = () => logout(navigate);
     const username = localStorage.getItem('username') || 'Admin';
@@ -173,7 +217,7 @@ const AtsLayout = ({ children, showQuickLinks, setShowQuickLinks }) => {
                         reader.onloadend = () => {
                             const logoDataUrl = reader.result;
                             sessionStorage.setItem('company_logo', logoDataUrl);
-                            setCompanyInfo({ name: companyName, logoPath: rawLogoUrl, logoBlob: logoDataUrl });
+                            setCompanyInfo({ name: companyName, logoPath: rawLogoUrl, logoBlob: rawLogoUrl });
                         };
                         reader.readAsDataURL(logoRes.data);
                         return;
@@ -249,8 +293,16 @@ const AtsLayout = ({ children, showQuickLinks, setShowQuickLinks }) => {
 
             <div className="flex flex-1 overflow-hidden relative">
                 {/* Static sidebar for desktop */}
-                <aside className="hidden lg:flex lg:flex-col lg:flex-shrink-0 w-64 border-r border-border bg-sidebar-bg text-sidebar-text">
-                    <SidebarContent />
+                <aside
+                    className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 border-r border-border bg-sidebar-bg text-sidebar-text transition-all duration-300 ${isExpanded ? 'w-[220px]' : 'w-[68px]'}`}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                >
+                    <SidebarContent
+                        isCollapsedMode={!isExpanded}
+                        isDesktopCollapsed={isDesktopCollapsed}
+                        setIsDesktopCollapsed={setIsDesktopCollapsed}
+                    />
                 </aside>
 
                 {/* Main content */}

@@ -25,13 +25,13 @@ import { useTenant } from "../context/TenantContext.jsx";
 import { logout } from '../utils/logout';
 
 const navLinks = [
-    { name: 'Dashboard', icon: LayoutDashboard, href: '/hrdashboard', module: 'HRMS_CORE', color: 'text-sky-700' },
-    { name: 'Employees', icon: Users, href: '/employees', module: 'HRMS_CORE', color: 'text-blue-700' },
-    { name: 'Attendance', icon: CalendarClock, href: '/attendance', module: 'HRMS_ATTENDANCE', color: 'text-orange-700' },
-    { name: 'Leave', icon: CalendarClock, href: '/leave', module: 'HRMS_LEAVE', color: 'text-yellow-700' },
-    { name: 'Payroll Management', icon: DollarSign, href: '/payroll-management', module: 'HRMS_PAYROLL', color: 'text-green-700' },
-    { name: 'Users', icon: ShieldCheck, href: '/users-details', color: 'text-purple-700' },
-    { name: 'Reports', icon: BarChart2, href: '/reports', color: 'text-rose-700' },
+    { name: 'Dashboard', icon: LayoutDashboard, href: '/hrdashboard', module: 'HRMS_CORE', iconBg: 'bg-sky-500/35 text-sky-300' },
+    { name: 'Employees', icon: Users, href: '/employees', module: 'HRMS_CORE', iconBg: 'bg-blue-500/35 text-blue-300' },
+    { name: 'Attendance', icon: CalendarClock, href: '/attendance', module: 'HRMS_ATTENDANCE', iconBg: 'bg-orange-500/35 text-orange-300' },
+    { name: 'Leave', icon: CalendarClock, href: '/leave', module: 'HRMS_LEAVE', iconBg: 'bg-amber-500/35 text-amber-300' },
+    { name: 'Payroll Management', icon: DollarSign, href: '/payroll-management', module: 'HRMS_PAYROLL', iconBg: 'bg-emerald-500/35 text-emerald-300' },
+    { name: 'Users', icon: ShieldCheck, href: '/users-details', iconBg: 'bg-purple-500/35 text-purple-300' },
+    { name: 'Reports', icon: BarChart2, href: '/reports', iconBg: 'bg-rose-500/35 text-rose-300' },
 ];
 
 const NavItem = ({ item, onClick, isCollapsed }) => (
@@ -40,14 +40,17 @@ const NavItem = ({ item, onClick, isCollapsed }) => (
         onClick={onClick}
         title={isCollapsed ? item.name : ''}
         className={({ isActive }) =>
-            `flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-3'} py-3 text-sm font-medium rounded-xl transition-all duration-200 mb-1.5 group ${isActive ? 'bg-sidebar-active/10 shadow-sm font-semibold' : 'hover:bg-sidebar-hover'
+            `flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-3'} py-2 text-sm font-medium rounded-xl transition-all duration-200 mb-1.5 group ${
+                isActive ? 'bg-sidebar-active/20 shadow-2xs font-bold' : 'hover:bg-sidebar-hover'
             }`
         }
     >
         {({ isActive }) => (
             <>
-                <item.icon className={`h-5 w-5 flex-shrink-0 transition-colors ${item.color} ${isActive ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'} ${isCollapsed ? '' : 'mr-3'}`} />
-                {!isCollapsed && <span className={`${isActive ? 'text-sidebar-text' : 'text-sidebar-text/80 group-hover:text-sidebar-text'}`}>{item.name}</span>}
+                <div className={`p-1.5 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${item.iconBg || 'bg-slate-500/35 text-slate-300'} ${isCollapsed ? '' : 'mr-3'}`}>
+                    <item.icon className="h-4.5 w-4.5 stroke-[2.5] transition-transform group-hover:scale-110" />
+                </div>
+                {!isCollapsed && <span className={`${isActive ? 'text-sidebar-text font-bold' : 'text-sidebar-text/80 group-hover:text-sidebar-text'}`}>{item.name}</span>}
             </>
         )}
     </NavLink>
@@ -70,7 +73,7 @@ const SidebarContent = ({ onLinkClick, isCollapsed }) => {
                 ))}
                 {isSuperAdmin && (
                     <div className="pt-4 mt-4 border-t border-white/10">
-                        <NavItem item={{ name: 'Company Hub', icon: Home, href: '/company-dashboard', color: 'text-indigo-700' }} onClick={onLinkClick} isCollapsed={isCollapsed} />
+                        <NavItem item={{ name: 'Company Hub', icon: Home, href: '/company-dashboard', iconBg: 'bg-indigo-500/35 text-indigo-300' }} onClick={onLinkClick} isCollapsed={isCollapsed} />
                     </div>
                 )}
             </nav>
@@ -93,10 +96,15 @@ const constructImageUrl = (relativeUrl) => {
 const DashboardLayout = ({ children, hideSidebar = false, headerSearch = null, headerExtra = null, hideHeaderSearch = false }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(() => {
-        return localStorage.getItem('sidebar_collapsed') === 'true';
+        const stored = localStorage.getItem('sidebar_collapsed');
+        return stored === null ? true : stored === 'true';
     });
+    const [isHovered, setIsHovered] = useState(false);
 
-    const toggleDesktopSidebar = () => {
+    const isExpanded = !isDesktopSidebarCollapsed || isHovered;
+
+    const toggleDesktopSidebar = (e) => {
+        if (e) e.stopPropagation();
         setIsDesktopSidebarCollapsed(prev => {
             const next = !prev;
             localStorage.setItem('sidebar_collapsed', String(next));
@@ -176,31 +184,39 @@ const DashboardLayout = ({ children, hideSidebar = false, headerSearch = null, h
                 )}
             </AnimatePresence>
 
-            {/* Desktop Sidebar */}
-            <aside className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 ${isDesktopSidebarCollapsed ? 'w-[80px]' : 'w-[220px]'} bg-sidebar-bg text-sidebar-text z-40 shadow-xl transition-all duration-300 ease-in-out`}>
-
-                {/* Sidebar Header (Company Info) */}
-                <div className="h-14 flex items-center px-4 shrink-0 border-b border-white/10 justify-between">
-                    <Link to="/company-dashboard" className="flex items-center gap-2 overflow-hidden">
-                        <div className="h-7 w-7 bg-primary rounded-md flex items-center justify-center text-primary-foreground font-bold shadow-sm shrink-0">
-                            <Sparkles className="h-4 w-4" />
-                        </div>
-                        {!isDesktopSidebarCollapsed && (
-                            <div className="flex flex-col overflow-hidden">
-                                <span className="font-bold text-sm truncate">Company Hub</span>
+            {/* Desktop Sidebar with Hover Expand */}
+            {!hideSidebar && (
+                <aside
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                    className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 ${isExpanded ? 'w-[220px]' : 'w-[72px]'} bg-sidebar-bg text-sidebar-text z-40 shadow-xl transition-all duration-300 ease-in-out`}
+                >
+                    {/* Sidebar Header (Company Info & Pin Button) */}
+                    <div className={`h-14 flex items-center px-4 shrink-0 border-b border-white/10 ${isExpanded ? 'justify-between' : 'justify-center'}`}>
+                        <Link to="/company-dashboard" className="flex items-center gap-2 overflow-hidden">
+                            <div className="h-8 w-8 bg-primary rounded-xl flex items-center justify-center text-primary-foreground font-bold shadow-sm shrink-0">
+                                <Sparkles className="h-4 w-4" />
                             </div>
-                        )}
-                    </Link>
-                </div>
-                {/* Navigation */}
-                <SidebarContent isCollapsed={isDesktopSidebarCollapsed} />
-                {/* Sidebar Footer (Toggle) */}
-                <div className="p-3 border-t border-white/10 flex items-center justify-center shrink-0 mt-auto">
-                    <button onClick={toggleDesktopSidebar} className="text-sidebar-text/70 hover:text-sidebar-text hover:bg-white/10 p-1.5 rounded-md transition-colors w-full flex justify-center">
-                        {isDesktopSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-                    </button>
-                </div>
-            </aside>
+                            {isExpanded && (
+                                <div className="flex flex-col overflow-hidden">
+                                    <span className="font-extrabold text-sm truncate">Company Hub</span>
+                                </div>
+                            )}
+                        </Link>
+                        <button
+                            type="button"
+                            onClick={toggleDesktopSidebar}
+                            className="hidden lg:flex items-center justify-center p-1.5 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/10 transition-all cursor-pointer flex-shrink-0"
+                            title={isDesktopSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                        >
+                            {isDesktopSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+                        </button>
+                    </div>
+
+                    {/* Navigation */}
+                    <SidebarContent isCollapsed={!isExpanded} />
+                </aside>
+            )}
 
             {/* Main Content Wrapper */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">

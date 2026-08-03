@@ -8,7 +8,9 @@ import {
     LogOut,
     Plus,
     Activity, LayoutDashboard,
-    Sparkles
+    Sparkles,
+    PanelLeftOpen,
+    PanelLeftClose
 } from 'lucide-react';
 import { logout } from '../../utils/logout';
 import LocationModal from '../../components/base/LocationModal';
@@ -27,22 +29,26 @@ const constructImageUrl = (relativeUrl) => {
 };
 
 export const productionNavLinks = [
-    { name: 'Dashboard', icon: Activity, href: '/production-dashboard/overview', color: 'text-indigo-600' },
-    { name: 'General', icon: Settings, color: 'text-cyan-500' },
-    { name: 'Workgroup', icon: Factory, color: 'text-orange-500' },
-    { name: 'Manage Process', icon: Layers, color: 'text-green-500' },
-    { name: 'Parameter', icon: SlidersHorizontal, color: 'text-indigo-500' },
-    { name: 'Categories', icon: LayoutGrid, color: 'text-rose-500' },
-    { name: 'Raw Materials', icon: Package, color: 'text-amber-500' },
-    { name: 'Semi Finished', icon: Box, color: 'text-teal-500' },
-    { name: 'Finished Good', icon: Box, color: 'text-blue-600' },
-    { name: 'BOM', icon: List, color: 'text-purple-500' },
+    { name: 'Dashboard', icon: Activity, href: '/production-dashboard/overview', iconBg: 'bg-indigo-500/35 text-indigo-300' },
+    { name: 'General', icon: Settings, iconBg: 'bg-cyan-500/35 text-cyan-300' },
+    { name: 'Workgroup', icon: Factory, iconBg: 'bg-orange-500/35 text-orange-300' },
+    { name: 'Manage Process', icon: Layers, iconBg: 'bg-green-500/35 text-green-300' },
+    { name: 'Parameter', icon: SlidersHorizontal, iconBg: 'bg-indigo-500/35 text-indigo-300' },
+    { name: 'Categories', icon: LayoutGrid, iconBg: 'bg-rose-500/35 text-rose-300' },
+    { name: 'Raw Materials', icon: Package, iconBg: 'bg-amber-500/35 text-amber-300' },
+    { name: 'Semi Finished', icon: Box, iconBg: 'bg-teal-500/35 text-teal-300' },
+    { name: 'Finished Good', icon: Box, iconBg: 'bg-blue-500/35 text-blue-300' },
+    { name: 'BOM', icon: List, iconBg: 'bg-purple-500/35 text-purple-300' },
 ];
 
 const ProductionLayout = ({ children, activeTab, onTabChange, title = "Production Configuration", headerActions }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
+    const [isHovered, setIsHovered] = useState(false);
+    const isExpanded = !isDesktopCollapsed || isHovered;
+
     const [locations, setLocations] = useState([]);
     const [selectedLocation, setSelectedLocation] = useState('');
     const [loading, setLoading] = useState(true);
@@ -137,7 +143,6 @@ const ProductionLayout = ({ children, activeTab, onTabChange, title = "Productio
         }
     };
 
-    // Helper to handle navigation
     const handleNavClick = (linkName, href) => {
         setIsSidebarOpen(false);
         if (href) {
@@ -147,16 +152,12 @@ const ProductionLayout = ({ children, activeTab, onTabChange, title = "Productio
         if (onTabChange) {
             onTabChange(linkName);
         } else {
-            // Default behavior: Navigate to settings with tab param
             navigate(`/production-settings?tab=${encodeURIComponent(linkName)}`);
         }
     };
 
-    const activeTabClass = 'bg-sidebar-active text-sidebar-text shadow-md rounded-theme';
-    const inactiveTabClass = 'text-sidebar-text hover:bg-sidebar-hover opacity-80 hover:opacity-100 rounded-theme';
-
     return (
-        <div className="flex flex-col h-screen bg-background overflow-hidden">
+        <div className="flex flex-col h-screen bg-background overflow-hidden select-none">
             {/* Header */}
             <header className="flex-shrink-0 h-16 bg-header-bg text-header-text shadow-sm border-b border-border flex items-center justify-between px-4 lg:px-6 z-30 relative">
                 <div className="flex items-center gap-4">
@@ -227,37 +228,75 @@ const ProductionLayout = ({ children, activeTab, onTabChange, title = "Productio
             />
 
             <div className="flex-grow flex overflow-hidden">
-                {/* Overlay for mobile */}
-                {isSidebarOpen && (
-                    <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>
-                )}
+                {/* Desktop Sidebar */}
+                <aside
+                    className={`hidden md:flex md:flex-col md:flex-shrink-0 bg-sidebar-bg text-sidebar-text border-r border-border transition-all duration-300 ${isExpanded ? 'w-[220px]' : 'w-[68px]'}`}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                >
+                    {/* Header section with pin toggle button matching POS position */}
+                    <div className={`flex items-center py-3 px-3.5 border-b border-white/10 ${!isExpanded ? 'justify-center flex-col gap-2' : 'justify-between'}`}>
+                        <div className="flex items-center gap-2.5 overflow-hidden">
+                            <div className="w-8 h-8 rounded-xl bg-lime-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <Factory className="h-4 w-4 text-white fill-current" />
+                            </div>
+                            {isExpanded && (
+                                <span className="text-sm font-extrabold text-white tracking-tight truncate">Production Hub</span>
+                            )}
+                        </div>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsDesktopCollapsed(prev => !prev);
+                            }}
+                            className="hidden md:flex items-center justify-center p-1.5 rounded-xl opacity-80 hover:opacity-100 hover:bg-white/10 transition-all cursor-pointer flex-shrink-0"
+                            title={isDesktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                        >
+                            {isDesktopCollapsed ? <PanelLeftOpen className="h-5 w-5 text-gray-300" /> : <PanelLeftClose className="h-5 w-5 text-gray-300" />}
+                        </button>
+                    </div>
 
-                {/* Sidebar */}
-                <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-sidebar-bg text-sidebar-text border-r border-border p-4 md:p-6 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} overflow-y-auto`}>
-                    <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-2 rounded-full hover:bg-black/5 absolute top-2 right-2">
-                        <X className="h-5 w-5" />
-                    </button>
+                    <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto no-scrollbar">
+                        {/* Back to Hub */}
+                        <button
+                            onClick={() => navigate('/company-dashboard')}
+                            title={!isExpanded ? "Back to Company Hub" : undefined}
+                            className={`w-full flex items-center ${!isExpanded ? 'justify-center px-0' : 'px-2.5'} py-2 text-sm font-bold rounded-xl transition-all duration-200 mb-2 group text-sidebar-text/80 hover:text-sidebar-text hover:bg-white/10 text-left`}
+                        >
+                            <div className="p-1.5 rounded-full bg-slate-500/35 text-slate-300 flex items-center justify-center flex-shrink-0">
+                                <ArrowLeft className="h-4 w-4 stroke-[2.5]" />
+                            </div>
+                            {isExpanded && <span className="ml-2.5 truncate">Back to Hub</span>}
+                        </button>
 
-                    <nav className="flex flex-col space-y-2 flex-1">
                         {productionNavLinks.map(link => (
                             <button
                                 key={link.name}
                                 onClick={() => handleNavClick(link.name, link.href)}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-theme text-sm font-medium transition-all ${activeTab === link.name ? activeTabClass : inactiveTabClass}`}
+                                title={!isExpanded ? link.name : undefined}
+                                className={`w-full flex items-center ${!isExpanded ? 'justify-center px-0' : 'px-2.5'} py-2 rounded-xl text-sm font-bold transition-all ${
+                                    activeTab === link.name ? 'bg-sidebar-active/20 text-sidebar-text shadow-sm font-bold' : 'text-sidebar-text/80 hover:text-sidebar-text hover:bg-sidebar-hover'
+                                }`}
                             >
-                                <link.icon className={`h-5 w-5 ${activeTab === link.name ? 'text-sidebar-text' : link.color}`} />
-                                <span>{link.name}</span>
+                                <div className={`p-1.5 rounded-full flex items-center justify-center flex-shrink-0 ${link.iconBg || 'bg-slate-500/35 text-slate-300'}`}>
+                                    <link.icon className="h-4 w-4 stroke-[2.5] transition-transform group-hover:scale-110" />
+                                </div>
+                                {isExpanded && <span className="ml-2.5 truncate">{link.name}</span>}
                             </button>
                         ))}
                     </nav>
 
-                    <div className="mt-auto pt-4 border-t border-border/50">
-                        <button 
-                            onClick={() => navigate('/production-settings')} 
-                            className={`flex items-center gap-3 px-3 py-2.5 w-full rounded-theme text-sm font-medium transition-all ${activeTab === 'Settings' ? activeTabClass : inactiveTabClass}`}
+                    <div className="p-3 border-t border-sidebar-text/10 space-y-1">
+                        <button
+                            onClick={() => navigate('/production-settings')}
+                            title={!isExpanded ? "Settings" : undefined}
+                            className={`w-full flex items-center ${!isExpanded ? 'justify-center px-0' : 'px-2.5'} py-2 text-sidebar-text/80 hover:text-sidebar-text text-sm font-bold rounded-xl hover:bg-sidebar-hover transition group`}
                         >
-                            <Settings className="h-5 w-5" />
-                            <span>Settings</span>
+                            <div className="p-1.5 rounded-full bg-slate-500/35 text-slate-300 flex items-center justify-center flex-shrink-0">
+                                <Settings className="h-4 w-4 stroke-[2.5]" />
+                            </div>
+                            {isExpanded && <span className="ml-2.5 truncate">Settings</span>}
                         </button>
                     </div>
                 </aside>

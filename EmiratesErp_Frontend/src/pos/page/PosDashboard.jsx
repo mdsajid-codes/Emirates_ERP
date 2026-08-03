@@ -35,16 +35,16 @@ import PosSettingsView from './PosSettingsView';
 import { usePosTheme } from './usePosTheme';
 
 const navLinksOverview = [
-    { name: 'Dashboard', icon: LayoutDashboard, Component: PosDashboardView },
-    { name: 'Products', icon: Package, Component: ProductsView },
-    { name: 'Sales', icon: ShoppingCart, Component: SalesView },
-    { name: 'Inventory', icon: ClipboardList, Component: InventoryView },
-    { name: 'Customers', icon: Users, Component: CustomersView },
+    { name: 'Dashboard', icon: LayoutDashboard, Component: PosDashboardView, iconBg: 'bg-indigo-500/35 text-indigo-300' },
+    { name: 'Products', icon: Package, Component: ProductsView, iconBg: 'bg-cyan-500/35 text-cyan-300' },
+    { name: 'Sales', icon: ShoppingCart, Component: SalesView, iconBg: 'bg-emerald-500/35 text-emerald-300' },
+    { name: 'Inventory', icon: ClipboardList, Component: InventoryView, iconBg: 'bg-orange-500/35 text-orange-300' },
+    { name: 'Customers', icon: Users, Component: CustomersView, iconBg: 'bg-sky-500/35 text-sky-300' },
 ];
 
 const navLinksOther = [
-    { name: 'Reports', icon: BarChart, Component: ReportsView },
-    { name: 'Settings', icon: Settings, Component: PosSettingsView },
+    { name: 'Reports', icon: BarChart, Component: ReportsView, iconBg: 'bg-purple-500/35 text-purple-300' },
+    { name: 'Settings', icon: Settings, Component: PosSettingsView, iconBg: 'bg-slate-500/35 text-slate-300' },
 ];
 
 const PosDashboard = () => {
@@ -166,7 +166,7 @@ const PosDashboard = () => {
                                         setSidebarOpen(false);
                                     }}
                                     title={isCollapsedMode ? item.name : undefined}
-                                    className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-2xl text-sm font-semibold transition-all ${
+                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
                                         isCollapsedMode ? 'justify-center px-0' : ''
                                     } ${isActive ? 'shadow-md font-bold' : 'opacity-80 hover:opacity-100'}`}
                                     style={{
@@ -174,7 +174,9 @@ const PosDashboard = () => {
                                         color: isActive ? posTheme.sidebarActiveFg : posTheme.sidebarText,
                                     }}
                                 >
-                                    <Icon className="h-5 w-5 flex-shrink-0" style={{ color: isActive ? posTheme.sidebarActiveFg : posTheme.sidebarText }} />
+                                    <div className={`p-1.5 rounded-full flex items-center justify-center flex-shrink-0 ${item.iconBg || 'bg-slate-500/35 text-slate-300'}`}>
+                                        <Icon className="h-4 w-4 stroke-[2.5]" />
+                                    </div>
                                     {!isCollapsedMode && <span className="truncate">{item.name}</span>}
                                 </button>
                             );
@@ -201,7 +203,7 @@ const PosDashboard = () => {
                                         setSidebarOpen(false);
                                     }}
                                     title={isCollapsedMode ? item.name : undefined}
-                                    className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-2xl text-sm font-semibold transition-all ${
+                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
                                         isCollapsedMode ? 'justify-center px-0' : ''
                                     } ${isActive ? 'shadow-md font-bold' : 'opacity-80 hover:opacity-100'}`}
                                     style={{
@@ -209,7 +211,9 @@ const PosDashboard = () => {
                                         color: isActive ? posTheme.sidebarActiveFg : posTheme.sidebarText,
                                     }}
                                 >
-                                    <Icon className="h-5 w-5 flex-shrink-0" style={{ color: isActive ? posTheme.sidebarActiveFg : posTheme.sidebarText }} />
+                                    <div className={`p-1.5 rounded-full flex items-center justify-center flex-shrink-0 ${item.iconBg || 'bg-slate-500/35 text-slate-300'}`}>
+                                        <Icon className="h-4 w-4 stroke-[2.5]" />
+                                    </div>
                                     {!isCollapsedMode && <span className="truncate">{item.name}</span>}
                                 </button>
                             );

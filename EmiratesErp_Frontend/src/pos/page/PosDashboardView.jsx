@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { 
-    Search, 
-    Upload, 
-    Download, 
-    TrendingUp, 
-    TrendingDown, 
-    Store, 
-    MoreHorizontal, 
+import {
+    Search,
+    Upload,
+    Download,
+    TrendingUp,
+    TrendingDown,
+    Store,
+    MoreHorizontal,
     ArrowUpRight,
     ArrowRight,
     ChevronDown,
@@ -152,10 +152,10 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
     const displayOrders = recentSales.length > 0 ? recentSales : defaultRecentOrders;
 
     const filteredOrders = searchQuery
-        ? displayOrders.filter(o => 
-            o.productName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        ? displayOrders.filter(o =>
+            o.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
             o.id.toLowerCase().includes(searchQuery.toLowerCase())
-          )
+        )
         : displayOrders;
 
     const barChartData = [
@@ -181,14 +181,14 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
     };
 
     return (
-        <div 
+        <div
             className="p-3.5 sm:p-4 lg:p-5 space-y-4 font-sans transition-colors duration-300"
             style={{ backgroundColor: posTheme.pageBg, color: posTheme.text }}
         >
             {/* Top Action Bar */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: posTheme.text }}>Dashboard</h1>
-                
+
                 <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
                     {/* Search Input */}
                     <div className="relative flex-1 sm:w-60">
@@ -204,7 +204,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                     </div>
 
                     {/* Export CSV Button */}
-                    <button 
+                    <button
                         onClick={() => alert('Exporting CSV...')}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium shadow-sm hover:opacity-90 transition-all border border-slate-200"
                         style={{ backgroundColor: posTheme.cardBg, color: posTheme.text }}
@@ -214,7 +214,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                     </button>
 
                     {/* Download Report Button */}
-                    <button 
+                    <button
                         onClick={() => alert('Downloading Report...')}
                         className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-sm hover:opacity-90 transition-all border"
                         style={{ backgroundColor: posTheme.primary, color: '#ffffff', borderColor: posTheme.primary }}
@@ -227,11 +227,11 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
 
             {/* Top 3 Column Section */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-                
+
                 {/* Left Column: 2 Vertically Stacked KPI Cards */}
                 <div className="lg:col-span-3 flex flex-col gap-3.5">
                     {/* Card 1: Total Products Sales */}
-                    <div 
+                    <div
                         className="pos-card-animated p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col justify-between flex-1 transition-all duration-300"
                         style={{ backgroundColor: posTheme.cardBg, color: posTheme.text }}
                     >
@@ -254,8 +254,8 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                         </div>
 
                         <div className="pt-3 border-t border-slate-200/50 mt-4">
-                            <button 
-                                onClick={() => setActiveItem && setActiveItem('Sales')} 
+                            <button
+                                onClick={() => setActiveItem && setActiveItem('Sales')}
                                 className="w-full flex items-center justify-between text-xs font-bold hover:opacity-80 transition-colors"
                                 style={{ color: posTheme.text }}
                             >
@@ -266,7 +266,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                     </div>
 
                     {/* Card 2: Total Volume Of Products */}
-                    <div 
+                    <div
                         className="pos-card-animated p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col justify-between flex-1 transition-all duration-300"
                         style={{ backgroundColor: posTheme.cardBg, color: posTheme.text }}
                     >
@@ -289,7 +289,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                         </div>
 
                         <div className="pt-3 border-t border-slate-200/50 mt-4">
-                            <button 
+                            <button
                                 onClick={() => setActiveItem && setActiveItem('Products')}
                                 className="w-full flex items-center justify-between text-xs font-bold hover:opacity-80 transition-colors"
                                 style={{ color: posTheme.text }}
@@ -302,9 +302,9 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                 </div>
 
                 {/* Middle Column: Total Products Sales Main Bar Chart */}
-                <div 
+                <div
                     className="lg:col-span-5 p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col justify-between transition-all duration-300"
-                    style={{ backgroundColor: posTheme.cardAlt, color: posTheme.text }}
+                    style={{ backgroundColor: posTheme.cardBg, color: posTheme.text }}
                 >
                     <div>
                         <div className="flex justify-between items-start">
@@ -320,7 +320,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                                     </span>
                                 </div>
                             </div>
-                            
+
                             <button className="opacity-60 hover:opacity-100 p-1 rounded-full">
                                 <MoreHorizontal className="h-4 w-4" />
                             </button>
@@ -357,11 +357,11 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                             {barChartData.map((bar) => (
                                 <div key={bar.month} className="flex flex-col items-center h-full justify-end group">
                                     <div className="w-full max-w-[40px] flex flex-col items-center justify-end h-full relative">
-                                        
+
                                         {/* Top Striped Pattern (Profit) */}
-                                        <div 
+                                        <div
                                             className="w-full rounded-t-lg relative overflow-hidden transition-all border-t border-x border-slate-300/40"
-                                            style={{ 
+                                            style={{
                                                 height: bar.profitHeight,
                                                 backgroundColor: posTheme.barProfit,
                                                 backgroundImage: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.08) 0, rgba(0,0,0,0.08) 4px, transparent 0, transparent 8px)'
@@ -373,7 +373,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                                         </div>
 
                                         {/* Bottom Solid Bar (Revenue) */}
-                                        <div 
+                                        <div
                                             className="w-full rounded-b-lg flex items-center justify-center transition-all"
                                             style={{ height: `${(bar.revenue / 7000) * 100}%`, backgroundColor: posTheme.barRevenue }}
                                         >
@@ -384,7 +384,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                                     </div>
 
                                     {/* Month Pill Badge */}
-                                    <span 
+                                    <span
                                         className="mt-2 px-2.5 py-0.5 rounded-full text-[10px] font-semibold shadow-xs"
                                         style={{ backgroundColor: posTheme.barLabelBg, color: posTheme.barLabelFg }}
                                     >
@@ -397,7 +397,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                 </div>
 
                 {/* Right Column: Total Sales Statistics Donut Chart Card */}
-                <div 
+                <div
                     className="lg:col-span-4 p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col justify-between transition-all duration-300"
                     style={{ backgroundColor: posTheme.cardBg, color: posTheme.text }}
                 >
@@ -412,9 +412,9 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
 
                         {/* Donut Chart with Category Overlay */}
                         <div className="relative my-3 flex items-center justify-center">
-                            
+
                             {/* Donut Visual */}
-                            <div 
+                            <div
                                 className="relative w-40 h-40 sm:w-44 sm:h-44 rounded-full flex items-center justify-center border-[14px] shadow-inner transition-all duration-300"
                                 style={{
                                     borderColor: posTheme.donutSeg1,
@@ -475,9 +475,9 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
 
             {/* Bottom 2 Column Section */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-                
+
                 {/* Left Column: Recent Orders Table */}
-                <div 
+                <div
                     className="lg:col-span-8 p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col justify-between transition-all duration-300"
                     style={{ backgroundColor: posTheme.cardBg, color: posTheme.text }}
                 >
@@ -488,7 +488,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                                 <p className="text-[11px] font-medium opacity-70 mt-0.5">Keep track of recent order data and other information.</p>
                             </div>
 
-                            <button 
+                            <button
                                 onClick={() => setActiveItem && setActiveItem('Sales')}
                                 className="flex items-center gap-1 px-3 py-1 border border-slate-200 rounded-full text-[11px] font-semibold hover:opacity-80 transition-colors shadow-sm"
                                 style={{ backgroundColor: posTheme.pageBg, color: posTheme.text }}
@@ -528,7 +528,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                                             <td className="py-2.5 font-medium opacity-80">{order.payment}</td>
                                             <td className="py-2.5 font-bold" style={{ color: posTheme.text }}>{formatCurrency(order.amount)}</td>
                                             <td className="py-2.5">
-                                                <span 
+                                                <span
                                                     className="px-2.5 py-1 rounded-full text-[11px] font-semibold inline-block"
                                                     style={getStatusStyle(order.status)}
                                                 >
@@ -549,7 +549,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                 </div>
 
                 {/* Right Column: Top Selling Products Card */}
-                <div 
+                <div
                     className="lg:col-span-4 p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col justify-between transition-all duration-300"
                     style={{ backgroundColor: posTheme.cardBg, color: posTheme.text }}
                 >
@@ -576,7 +576,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                                         Brand: {topProduct ? topProduct.brand || 'Apple' : 'Apple'} <span className="mx-1">•</span> 10.2k Stock Available
                                     </p>
                                     <p className="text-xs font-extrabold mt-0.5" style={{ color: posTheme.text }}>
-                                        {topProduct ? formatCurrency(topProduct.priceCents ? topProduct.priceCents/100 : 799) : '$799.00'}
+                                        {topProduct ? formatCurrency(topProduct.priceCents ? topProduct.priceCents / 100 : 799) : '$799.00'}
                                     </p>
                                 </div>
                             </div>
@@ -601,7 +601,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                             ].map((item) => (
                                 <div key={item.day} className="flex flex-col items-center h-full justify-end">
                                     <span className="text-[10px] font-bold opacity-70 mb-1">{item.val}</span>
-                                    <div 
+                                    <div
                                         className="w-full max-w-[36px] rounded-full transition-all"
                                         style={{ height: item.height, backgroundColor: posTheme.dayBar }}
                                     ></div>
