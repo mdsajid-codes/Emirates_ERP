@@ -6,6 +6,10 @@ import { Outlet } from "react-router-dom";
 
 export default function FleetLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const isExpanded = !isDesktopCollapsed || isHovered;
 
   return (
     <div className="flex flex-col h-screen bg-background font-sans">
@@ -13,8 +17,16 @@ export default function FleetLayout() {
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:flex w-64 flex-col bg-sidebar-bg text-sidebar-text border-r border-border overflow-y-auto no-scrollbar">
-          <FleetSidebar />
+        <aside
+          className={`hidden lg:flex flex-col bg-sidebar-bg text-sidebar-text border-r border-border overflow-y-auto no-scrollbar transition-all duration-300 ${isExpanded ? 'w-[220px]' : 'w-[68px]'}`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <FleetSidebar
+            isCollapsedMode={!isExpanded}
+            isDesktopCollapsed={isDesktopCollapsed}
+            setIsDesktopCollapsed={setIsDesktopCollapsed}
+          />
         </aside>
 
         {/* Mobile Sidebar */}

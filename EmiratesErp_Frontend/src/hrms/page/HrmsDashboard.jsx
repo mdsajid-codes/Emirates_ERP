@@ -16,7 +16,9 @@ import {
     Shield,
     BarChart,
     LogOut as LogOutIcon,
-    Menu as MenuIcon
+    Menu as MenuIcon,
+    PanelLeftClose,
+    PanelLeftOpen
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useHrmsTheme } from './useHrmsTheme';
@@ -32,18 +34,20 @@ const ReportsView = () => <div className="p-6">Reports View</div>;
 const CompanyHubView = () => <div className="p-6">Company Hub View</div>;
 
 const navLinks = [
-    { name: 'Dashboard', icon: LayoutDashboard, Component: HrmsDashboardView, color: 'text-gray-400' },
-    { name: 'Employees', icon: Users, Component: EmployeesView, color: 'text-blue-400' },
-    { name: 'Attendance', icon: CalendarCheck, Component: AttendanceView, color: 'text-orange-400' },
-    { name: 'Leave', icon: CalendarOff, Component: LeavesView, color: 'text-yellow-400' },
-    { name: 'Payroll Management', icon: Banknote, Component: PayrollView, color: 'text-green-400' },
-    { name: 'Users', icon: Shield, Component: UsersView, color: 'text-purple-400' },
-    { name: 'Reports', icon: BarChart, Component: ReportsView, color: 'text-red-400' },
+    { name: 'Dashboard', icon: LayoutDashboard, Component: HrmsDashboardView, iconBg: 'bg-sky-500/35 text-sky-300' },
+    { name: 'Employees', icon: Users, Component: EmployeesView, iconBg: 'bg-blue-500/35 text-blue-300' },
+    { name: 'Attendance', icon: CalendarCheck, Component: AttendanceView, iconBg: 'bg-orange-500/35 text-orange-300' },
+    { name: 'Leave', icon: CalendarOff, Component: LeavesView, iconBg: 'bg-amber-500/35 text-amber-300' },
+    { name: 'Payroll Management', icon: Banknote, Component: PayrollView, iconBg: 'bg-emerald-500/35 text-emerald-300' },
+    { name: 'Users', icon: Shield, Component: UsersView, iconBg: 'bg-purple-500/35 text-purple-300' },
+    { name: 'Reports', icon: BarChart, Component: ReportsView, iconBg: 'bg-rose-500/35 text-rose-300' },
 ];
 
 const HrmsDashboard = () => {
     const { hrmsTheme } = useHrmsTheme();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
+    const [isHovered, setIsHovered] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
     const activeItem = searchParams.get('view') || 'Dashboard';
     const navigate = useNavigate();
@@ -56,6 +60,8 @@ const HrmsDashboard = () => {
         } catch { return []; }
     }, []);
     const isSuperAdmin = roles.includes('SUPER_ADMIN');
+
+    const isExpanded = !isDesktopCollapsed || isHovered;
 
     const setActiveItem = (itemName) => {
         setSearchParams({ view: itemName });
@@ -80,9 +86,32 @@ const HrmsDashboard = () => {
         return <Component key={activeItem} setActiveItem={setActiveItem} />;
     };
 
-    const SidebarNav = () => (
-        <div className="flex flex-col h-full bg-[#1E293B] border-r border-[#0F172A] text-gray-300 font-sans select-none overflow-y-auto">
-            <nav className="p-4 space-y-1.5 flex-1">
+    const SidebarNav = ({ isCollapsedMode = false }) => (
+        <div className="flex flex-col h-full bg-[#1E293B] border-r border-[#0F172A] text-gray-300 font-sans select-none overflow-y-auto no-scrollbar">
+            {/* Header section with pin toggle button matching POS position */}
+            <div className={`flex items-center py-3 px-3.5 border-b border-slate-700/50 ${isCollapsedMode ? 'justify-center flex-col gap-2' : 'justify-between'}`}>
+                <div className="flex items-center gap-2.5 overflow-hidden">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+                        <Sparkles className="h-4 w-4 text-white fill-current" />
+                    </div>
+                    {!isCollapsedMode && (
+                        <span className="text-sm font-extrabold text-white tracking-tight truncate">Enterprise HRMS</span>
+                    )}
+                </div>
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setIsDesktopCollapsed(prev => !prev);
+                    }}
+                    className="hidden lg:flex items-center justify-center p-1.5 rounded-xl opacity-80 hover:opacity-100 hover:bg-white/10 transition-all cursor-pointer flex-shrink-0"
+                    title={isDesktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                >
+                    {isDesktopCollapsed ? <PanelLeftOpen className="h-5 w-5 text-gray-300" /> : <PanelLeftClose className="h-5 w-5 text-gray-300" />}
+                </button>
+            </div>
+
+            <nav className="p-3 space-y-1.5 flex-1 overflow-y-auto no-scrollbar">
                 {navLinks.map((item) => {
                     const isActive = activeItem === item.name;
                     const Icon = item.icon;
@@ -90,29 +119,39 @@ const HrmsDashboard = () => {
                         <button
                             key={item.name}
                             onClick={() => setActiveItem(item.name)}
-                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all ${
+                            title={isCollapsedMode ? item.name : undefined}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all group ${
+                                isCollapsedMode ? 'justify-center px-0' : ''
+                            } ${
                                 isActive 
-                                    ? 'bg-[#334155] text-white font-medium shadow-sm' 
+                                    ? 'bg-[#334155] text-white font-bold shadow-2xs' 
                                     : 'text-gray-300 hover:bg-[#334155]/50 hover:text-white'
                             }`}
                         >
-                            <Icon className={`h-5 w-5 ${isActive ? 'text-white' : item.color || 'text-gray-400'}`} />
-                            <span>{item.name}</span>
+                            <div className={`p-1.5 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${item.iconBg || 'bg-slate-500/35 text-slate-300'}`}>
+                                <Icon className="h-4.5 w-4.5 stroke-[2.5]" />
+                            </div>
+                            {!isCollapsedMode && <span className="font-bold truncate">{item.name}</span>}
                         </button>
                     );
                 })}
-                
-                <div className="pt-6 mt-6 border-t border-slate-700/50">
+
+                <div className="pt-4 mt-4 border-t border-slate-700/50">
                     <button
                         onClick={() => setActiveItem('Company Hub')}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all ${
+                        title={isCollapsedMode ? 'Company Hub' : undefined}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all group ${
+                            isCollapsedMode ? 'justify-center px-0' : ''
+                        } ${
                             activeItem === 'Company Hub'
-                                ? 'bg-[#334155] text-white font-medium shadow-sm' 
+                                ? 'bg-[#334155] text-white font-bold shadow-2xs' 
                                 : 'text-gray-300 hover:bg-[#334155]/50 hover:text-white'
                         }`}
                     >
-                        <Home className="h-5 w-5 text-gray-400" />
-                        <span>Company Hub</span>
+                        <div className="p-1.5 rounded-full flex items-center justify-center bg-indigo-500/35 text-indigo-300 flex-shrink-0">
+                            <Home className="h-4.5 w-4.5 stroke-[2.5]" />
+                        </div>
+                        {!isCollapsedMode && <span className="font-bold truncate">Company Hub</span>}
                     </button>
                 </div>
             </nav>
@@ -130,7 +169,7 @@ const HrmsDashboard = () => {
                     >
                         <MenuIcon className="h-5 w-5" />
                     </button>
-                    
+
                     <div className="flex items-center gap-2">
                         <Sparkles className="h-6 w-6 text-[#1E1B4B]" />
                         <span className="text-lg font-bold text-gray-900 tracking-tight">Enterprise HRMS</span>
@@ -148,8 +187,8 @@ const HrmsDashboard = () => {
                     <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-900 font-bold text-sm shadow-sm">
                         {username.charAt(0).toUpperCase()}
                     </div>
-                    <button 
-                        onClick={handleLogout} 
+                    <button
+                        onClick={handleLogout}
                         className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
                         title="Sign Out"
                     >
@@ -159,9 +198,15 @@ const HrmsDashboard = () => {
             </header>
 
             <div className="flex flex-1 overflow-hidden">
-                {/* Desktop Edge-to-Edge Sidebar */}
-                <aside className="w-64 flex-shrink-0 hidden lg:block z-10 bg-[#1E293B]">
-                    <SidebarNav />
+                {/* Desktop Collapsible Sidebar with Hover Expand */}
+                <aside
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                    className={`hidden lg:block flex-shrink-0 z-10 bg-[#1E293B] transition-all duration-300 ease-in-out ${
+                        isExpanded ? 'w-64' : 'w-[68px]'
+                    }`}
+                >
+                    <SidebarNav isCollapsedMode={!isExpanded} />
                 </aside>
 
                 {/* Mobile Drawer */}
@@ -186,7 +231,7 @@ const HrmsDashboard = () => {
                                     <span className="text-lg font-bold text-white tracking-tight">Menu</span>
                                 </div>
                                 <div className="h-[calc(100%-64px)]">
-                                    <SidebarNav />
+                                    <SidebarNav isCollapsedMode={false} />
                                 </div>
                             </motion.div>
                         </>
@@ -203,3 +248,4 @@ const HrmsDashboard = () => {
 };
 
 export default HrmsDashboard;
+

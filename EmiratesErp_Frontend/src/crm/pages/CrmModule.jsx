@@ -19,7 +19,10 @@ import {
     Package,
     Table,
     Sparkles,
-    CalendarDays
+    CalendarDays,
+    PanelLeftOpen,
+    PanelLeftClose,
+    Headset
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import CrmReminderPoller from '../components/CrmReminderPoller';
@@ -27,20 +30,20 @@ import CrmReminderPoller from '../components/CrmReminderPoller';
 import { useCrmPermissions } from '../context/CrmPermissionsContext';
 
 const crmNavLinks = [
-    { name: 'Dashboard', icon: LayoutDashboard, href: '/crm-dashboard/dashboard', color: 'text-blue-500', module: 'DASHBOARD' },
-    { name: 'Home', icon: Home, href: '/crm-dashboard/home', color: 'text-green-500' },
-    { name: 'Calling Data', icon: Phone, href: '/crm-dashboard/calling-data', color: 'text-yellow-500', module: 'CALL_LOG' },
-    { name: 'Leads', icon: Users, href: '/crm-dashboard/leads', color: 'text-purple-500', module: 'LEAD' },
-    { name: 'Companies', icon: Building, href: '/crm-dashboard/companies', color: 'text-indigo-500', module: 'COMPANY' },
-    { name: 'Contacts', icon: Contact, href: '/crm-dashboard/contacts', color: 'text-rose-500', module: 'CONTACT' },
-    { name: 'Products', icon: Package, href: '/crm-dashboard/products', color: 'text-teal-500', module: 'PRODUCT' },
-    { name: 'Deals', icon: Handshake, href: '/crm-dashboard/deals', color: 'text-orange-500', module: 'DEAL' },
-    { name: 'Tasks', icon: ListTodo, href: '/crm-dashboard/tasks', color: 'text-cyan-500', module: 'TASK' },
-    { name: 'Calendar', icon: CalendarDays, href: '/crm-dashboard/calendar', color: 'text-rose-400', module: 'EVENT' },
-    { name: 'Operations', icon: Activity, href: '/crm-dashboard/operations', color: 'text-lime-500', module: 'TODO' },
+    { name: 'Dashboard', icon: LayoutDashboard, href: '/crm-dashboard/dashboard', iconBg: 'bg-indigo-500/35 text-indigo-300', module: 'DASHBOARD' },
+    { name: 'Home', icon: Home, href: '/crm-dashboard/home', iconBg: 'bg-emerald-500/35 text-emerald-300' },
+    { name: 'Calling Data', icon: Phone, href: '/crm-dashboard/calling-data', iconBg: 'bg-amber-500/35 text-amber-300', module: 'CALL_LOG' },
+    { name: 'Leads', icon: Users, href: '/crm-dashboard/leads', iconBg: 'bg-purple-500/35 text-purple-300', module: 'LEAD' },
+    { name: 'Companies', icon: Building, href: '/crm-dashboard/companies', iconBg: 'bg-blue-500/35 text-blue-300', module: 'COMPANY' },
+    { name: 'Contacts', icon: Contact, href: '/crm-dashboard/contacts', iconBg: 'bg-rose-500/35 text-rose-300', module: 'CONTACT' },
+    { name: 'Products', icon: Package, href: '/crm-dashboard/products', iconBg: 'bg-teal-500/35 text-teal-300', module: 'PRODUCT' },
+    { name: 'Deals', icon: Handshake, href: '/crm-dashboard/deals', iconBg: 'bg-orange-500/35 text-orange-300', module: 'DEAL' },
+    { name: 'Tasks', icon: ListTodo, href: '/crm-dashboard/tasks', iconBg: 'bg-cyan-500/35 text-cyan-300', module: 'TASK' },
+    { name: 'Calendar', icon: CalendarDays, href: '/crm-dashboard/calendar', iconBg: 'bg-pink-500/35 text-pink-300', module: 'EVENT' },
+    { name: 'Operations', icon: Activity, href: '/crm-dashboard/operations', iconBg: 'bg-lime-500/35 text-lime-300', module: 'TODO' },
 ];
 
-const SidebarContent = ({ onLinkClick }) => {
+const SidebarContent = ({ onLinkClick, isCollapsedMode = false, isDesktopCollapsed = true, setIsDesktopCollapsed }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const { permissions, hasPermission } = useCrmPermissions();
@@ -48,31 +51,91 @@ const SidebarContent = ({ onLinkClick }) => {
     const handleLogout = () => logout(navigate);
 
     const NavItem = ({ item }) => {
-        const isActive = location.pathname === item.href;
-        
-        // If module is specified, check View permission. If no module, it's public (like Home).
         if (item.module && !hasPermission(item.module, 'view')) {
             return null;
         }
 
         return (
-            <NavLink to={item.href} onClick={onLinkClick} end className={({ isActive }) => `flex items-center w-full px-8 py-3 text-sm font-medium rounded-theme transition-colors group ${isActive ? 'bg-sidebar-active text-sidebar-active-foreground font-bold shadow-md' : 'text-sidebar-text hover:bg-sidebar-hover opacity-80 hover:opacity-100'}`}>
-                <item.icon className={`h-5 w-5 mr-3 flex-shrink-0 ${isActive ? '' : item.color}`} />
-                <span>{item.name}</span>
+            <NavLink
+                to={item.href}
+                onClick={onLinkClick}
+                end={item.href === '/crm-dashboard/dashboard' || item.href === '/crm-dashboard/home'}
+                title={isCollapsedMode ? item.name : undefined}
+                className={({ isActive }) =>
+                    `flex items-center ${isCollapsedMode ? 'justify-center px-0' : 'px-2.5'} py-2 text-sm font-bold rounded-xl transition-all duration-200 mb-1 group ${
+                        isActive ? 'bg-sidebar-active/20 text-sidebar-text shadow-sm' : 'text-sidebar-text/80 hover:text-sidebar-text hover:bg-sidebar-hover'
+                    }`
+                }
+            >
+                {({ isActive }) => (
+                    <>
+                        <div className={`p-1.5 rounded-full flex items-center justify-center flex-shrink-0 ${item.iconBg || 'bg-slate-500/35 text-slate-300'}`}>
+                            <item.icon className="h-4 w-4 stroke-[2.5] transition-transform group-hover:scale-110" />
+                        </div>
+                        {!isCollapsedMode && <span className={`ml-2.5 truncate ${isActive ? 'font-bold text-sidebar-text' : ''}`}>{item.name}</span>}
+                    </>
+                )}
             </NavLink>
         );
     };
 
     return (
-        <div className="flex flex-col h-full bg-sidebar-bg text-sidebar-text">
-            <nav className="flex-1 px-1 py-4 space-y-2 overflow-y-auto">
+        <div className="flex flex-col h-full bg-sidebar-bg text-sidebar-text select-none">
+            {/* Header section with pin toggle button matching POS position */}
+            <div className={`flex items-center py-3 px-3.5 border-b border-white/10 ${isCollapsedMode ? 'justify-center flex-col gap-2' : 'justify-between'}`}>
+                <div className="flex items-center gap-2.5 overflow-hidden">
+                    <div className="w-8 h-8 rounded-xl bg-rose-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <Headset className="h-4 w-4 text-white fill-current" />
+                    </div>
+                    {!isCollapsedMode && (
+                        <span className="text-sm font-extrabold text-white tracking-tight truncate">CRM Hub</span>
+                    )}
+                </div>
+                {setIsDesktopCollapsed && (
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsDesktopCollapsed(prev => !prev);
+                        }}
+                        className="hidden lg:flex items-center justify-center p-1.5 rounded-xl opacity-80 hover:opacity-100 hover:bg-white/10 transition-all cursor-pointer flex-shrink-0"
+                        title={isDesktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    >
+                        {isDesktopCollapsed ? <PanelLeftOpen className="h-5 w-5 text-gray-300" /> : <PanelLeftClose className="h-5 w-5 text-gray-300" />}
+                    </button>
+                )}
+            </div>
+
+            <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto no-scrollbar">
+                {/* Back to Hub */}
+                <button
+                    onClick={() => navigate('/company-dashboard')}
+                    title={isCollapsedMode ? "Back to Company Hub" : undefined}
+                    className={`w-full flex items-center ${isCollapsedMode ? 'justify-center px-0' : 'px-2.5'} py-2 text-sm font-bold rounded-xl transition-all duration-200 mb-2 group text-sidebar-text/80 hover:text-sidebar-text hover:bg-white/10 text-left`}
+                >
+                    <div className="p-1.5 rounded-full bg-slate-500/35 text-slate-300 flex items-center justify-center flex-shrink-0">
+                        <ArrowLeft className="h-4 w-4 stroke-[2.5]" />
+                    </div>
+                    {!isCollapsedMode && <span className="ml-2.5 truncate">Back to Hub</span>}
+                </button>
+
                 {crmNavLinks.map((item) => <NavItem key={item.name} item={item} />)}
             </nav>
+
             {hasPermission('SETTINGS', 'view') && (
-                <NavLink to="/crm-settings" onClick={onLinkClick} className={({ isActive }) => `flex items-center w-full px-8 py-3 text-sm font-medium rounded-theme transition-colors group ${isActive ? 'bg-sidebar-active text-sidebar-active-foreground font-bold shadow-md' : 'text-sidebar-text hover:bg-sidebar-hover opacity-80 hover:opacity-100'}`}>
-                    <Settings className="h-5 w-5 mr-3" />
-                    <span>Settings</span>
-                </NavLink>
+                <div className="p-3 border-t border-sidebar-text/10 space-y-1">
+                    <NavLink
+                        to="/crm-settings"
+                        onClick={onLinkClick}
+                        title={isCollapsedMode ? "Settings" : undefined}
+                        className={`flex items-center ${isCollapsedMode ? 'justify-center px-0' : 'px-2.5'} py-2 text-sidebar-text/80 hover:text-sidebar-text text-sm font-bold rounded-xl hover:bg-sidebar-hover transition group`}
+                    >
+                        <div className="p-1.5 rounded-full bg-slate-500/35 text-slate-300 flex items-center justify-center flex-shrink-0">
+                            <Settings className="h-4 w-4 stroke-[2.5]" />
+                        </div>
+                        {!isCollapsedMode && <span className="ml-2.5 truncate">Settings</span>}
+                    </NavLink>
+                </div>
             )}
         </div>
     );
@@ -91,6 +154,10 @@ const constructImageUrl = (relativeUrl) => {
 
 const CrmLayout = ({ children }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
+    const [isHovered, setIsHovered] = useState(false);
+    const isExpanded = !isDesktopCollapsed || isHovered;
+
     const navigate = useNavigate();
     const handleLogout = () => logout(navigate);
     const username = localStorage.getItem('username') || 'Admin';
@@ -203,8 +270,16 @@ const CrmLayout = ({ children }) => {
 
             <div className="flex flex-1 overflow-hidden relative">
                 {/* Static sidebar for desktop */}
-                <aside className="hidden lg:flex lg:flex-col lg:flex-shrink-0 w-64 border-r border-border bg-sidebar-bg text-sidebar-text">
-                    <SidebarContent />
+                <aside
+                    className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 border-r border-border bg-sidebar-bg text-sidebar-text transition-all duration-300 ${isExpanded ? 'w-[220px]' : 'w-[68px]'}`}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                >
+                    <SidebarContent
+                        isCollapsedMode={!isExpanded}
+                        isDesktopCollapsed={isDesktopCollapsed}
+                        setIsDesktopCollapsed={setIsDesktopCollapsed}
+                    />
                 </aside>
 
                 {/* Main content */}

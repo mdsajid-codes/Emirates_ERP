@@ -1,132 +1,134 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, Users, FileText, Settings, Menu, X, ArrowLeft, ClipboardList, Package, TrendingUp, ChevronDown, ChevronRight, Sparkles, LogOut } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, FileText, Settings, Menu, X, ArrowLeft, ClipboardList, Package, TrendingUp, ChevronDown, ChevronRight, Sparkles, LogOut, PanelLeftOpen, PanelLeftClose } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import axios from 'axios';
 import { logout } from '../utils/logout';
 import { useNavigate } from 'react-router-dom';
 
 const salesNavLinks = [
-    { name: 'Dashboard', icon: LayoutDashboard, href: '/sales-dashboard', color: 'text-sky-500' },
-    { name: 'Quotations', icon: ClipboardList, href: '/sales-dashboard/quotations', color: 'text-yellow-500' },
-    { name: 'Rental Quotations', icon: Package, href: '/sales-dashboard/rental-quotations', color: 'text-orange-500' },
-    { name: 'Rental Recieved Item', icon: ClipboardList, href: '/sales-dashboard/rental-item-received', color: 'text-green-500' },
-    { name: 'Rental Sales Order', icon: ClipboardList, href: '/sales-dashboard/rental-sales-orders', color: 'text-teal-500' },
-    { name: 'Orders', icon: ShoppingCart, href: '/sales-dashboard/orders', color: 'text-blue-500' },
-    { name: 'Delivery Orders', icon: Package, href: '/sales-dashboard/delivery-orders', color: 'text-pink-500' },
-    { name: 'Proforma Invoice', icon: FileText, href: '/sales-dashboard/proforma-invoices', color: 'text-cyan-500' },
-    { name: 'Rental Invoices', icon: FileText, href: '/sales-dashboard/rental-invoices', color: 'text-indigo-500' },
-    { name: 'Invoices', icon: FileText, href: '/sales-dashboard/invoices', color: 'text-purple-500' },
-    { name: 'Received Amount', icon: FileText, href: '/sales-dashboard/recieved-amounts', color: 'text-emerald-600' },
-    { name: 'Credit Notes', icon: FileText, href: '/sales-dashboard/credit-notes', color: 'text-rose-500' },
-    { name: 'Additional Expenses', icon: TrendingUp, href: '/sales-dashboard/additional-expenses', color: 'text-emerald-500' },
-    { name: 'Settings', icon: Settings, href: '/sales-dashboard/settings', color: 'text-gray-500' },
+    { name: 'Dashboard', icon: LayoutDashboard, href: '/sales-dashboard', iconBg: 'bg-emerald-500/35 text-emerald-300' },
+    { name: 'Quotations', icon: ClipboardList, href: '/sales-dashboard/quotations', iconBg: 'bg-yellow-500/35 text-yellow-300' },
+    { name: 'Rental Quotations', icon: Package, href: '/sales-dashboard/rental-quotations', iconBg: 'bg-orange-500/35 text-orange-300' },
+    { name: 'Rental Recieved Item', icon: ClipboardList, href: '/sales-dashboard/rental-item-received', iconBg: 'bg-green-500/35 text-green-300' },
+    { name: 'Rental Sales Order', icon: ClipboardList, href: '/sales-dashboard/rental-sales-orders', iconBg: 'bg-teal-500/35 text-teal-300' },
+    { name: 'Orders', icon: ShoppingCart, href: '/sales-dashboard/orders', iconBg: 'bg-blue-500/35 text-blue-300' },
+    { name: 'Delivery Orders', icon: Package, href: '/sales-dashboard/delivery-orders', iconBg: 'bg-pink-500/35 text-pink-300' },
+    { name: 'Proforma Invoice', icon: FileText, href: '/sales-dashboard/proforma-invoices', iconBg: 'bg-cyan-500/35 text-cyan-300' },
+    { name: 'Rental Invoices', icon: FileText, href: '/sales-dashboard/rental-invoices', iconBg: 'bg-indigo-500/35 text-indigo-300' },
+    { name: 'Invoices', icon: FileText, href: '/sales-dashboard/invoices', iconBg: 'bg-purple-500/35 text-purple-300' },
+    { name: 'Received Amount', icon: FileText, href: '/sales-dashboard/recieved-amounts', iconBg: 'bg-emerald-600/35 text-emerald-300' },
+    { name: 'Credit Notes', icon: FileText, href: '/sales-dashboard/credit-notes', iconBg: 'bg-rose-500/35 text-rose-300' },
+    { name: 'Additional Expenses', icon: TrendingUp, href: '/sales-dashboard/additional-expenses', iconBg: 'bg-emerald-500/35 text-emerald-300' },
+    { name: 'Settings', icon: Settings, href: '/sales-dashboard/settings', iconBg: 'bg-slate-500/35 text-slate-300' },
 ];
 
-const SidebarContent = ({ onLinkClick }) => {
+const SidebarContent = ({ onLinkClick, isCollapsedMode = false, isDesktopCollapsed = true, setIsDesktopCollapsed }) => {
     const location = useLocation();
     const [reportsOpen, setReportsOpen] = useState(false);
 
-    // Filter out 'Reports' related links from the main loop if we want to handle them separately, 
-    // or just render the main links and then the reports section manually like PurchaseModule.
-    // Based on PurchaseModule, it renders navLinks and THEN the reports section manually.
-    // So we should remove 'Sales Order By Item' from salesNavLinks and render it inside the Reports dropdown.
-
     return (
-        <div className="flex flex-col h-full bg-sidebar-bg text-sidebar-text">
-            <div className="p-4 border-b border-border flex-shrink-0">
-                <NavLink to="/company-dashboard" className="flex items-center gap-2 text-sm opacity-80 hover:opacity-100 transition-opacity">
-                    <ArrowLeft size={16} /> Back to Company Hub
-                </NavLink>
+        <div className="flex flex-col h-full bg-sidebar-bg text-sidebar-text select-none">
+            {/* Header section with pin toggle button matching POS position */}
+            <div className={`flex items-center py-3 px-3.5 border-b border-white/10 ${isCollapsedMode ? 'justify-center flex-col gap-2' : 'justify-between'}`}>
+                <div className="flex items-center gap-2.5 overflow-hidden">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <TrendingUp className="h-4 w-4 text-white fill-current" />
+                    </div>
+                    {!isCollapsedMode && (
+                        <span className="text-sm font-extrabold text-white tracking-tight truncate">Sales Hub</span>
+                    )}
+                </div>
+                {setIsDesktopCollapsed && (
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsDesktopCollapsed(prev => !prev);
+                        }}
+                        className="hidden lg:flex items-center justify-center p-1.5 rounded-xl opacity-80 hover:opacity-100 hover:bg-white/10 transition-all cursor-pointer flex-shrink-0"
+                        title={isDesktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    >
+                        {isDesktopCollapsed ? <PanelLeftOpen className="h-5 w-5 text-gray-300" /> : <PanelLeftClose className="h-5 w-5 text-gray-300" />}
+                    </button>
+                )}
             </div>
-            <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
+
+            <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto no-scrollbar">
+                {/* Back to Hub */}
+                <NavLink
+                    to="/company-dashboard"
+                    onClick={onLinkClick}
+                    title={isCollapsedMode ? "Back to Company Hub" : undefined}
+                    className={`flex items-center ${isCollapsedMode ? 'justify-center px-0' : 'px-2.5'} py-2 text-sm font-bold rounded-xl transition-all duration-200 mb-2 group text-sidebar-text/80 hover:text-sidebar-text hover:bg-white/10`}
+                >
+                    <div className="p-1.5 rounded-full bg-slate-500/35 text-slate-300 flex items-center justify-center flex-shrink-0">
+                        <ArrowLeft className="h-4 w-4 stroke-[2.5]" />
+                    </div>
+                    {!isCollapsedMode && <span className="ml-2.5 truncate">Back to Hub</span>}
+                </NavLink>
+
                 {salesNavLinks.map((item) => (
                     <NavLink
                         key={item.name}
                         to={item.href}
                         onClick={onLinkClick}
                         end={item.href === '/sales-dashboard'}
+                        title={isCollapsedMode ? item.name : undefined}
                         className={({ isActive }) =>
-                            `flex items-center px-4 py-2.5 text-sm font-medium rounded-theme transition-colors group ${isActive ? 'bg-sidebar-active text-sidebar-active-foreground font-bold' : 'text-sidebar-text hover:bg-sidebar-hover opacity-80 hover:opacity-100'
+                            `flex items-center ${isCollapsedMode ? 'justify-center px-0' : 'px-2.5'} py-2 text-sm font-bold rounded-xl transition-all duration-200 mb-1 group ${
+                                isActive ? 'bg-sidebar-active/20 text-sidebar-text shadow-sm' : 'text-sidebar-text/80 hover:text-sidebar-text hover:bg-sidebar-hover'
                             }`
                         }
                     >
                         {({ isActive }) => (
                             <>
-                                <item.icon className={`h-5 w-5 mr-3 flex-shrink-0 ${isActive ? '' : item.color}`} />
-                                <span>{item.name}</span>
+                                <div className={`p-1.5 rounded-full flex items-center justify-center flex-shrink-0 ${item.iconBg || 'bg-slate-500/35 text-slate-300'}`}>
+                                    <item.icon className="h-4 w-4 stroke-[2.5] transition-transform group-hover:scale-110" />
+                                </div>
+                                {!isCollapsedMode && <span className={`ml-2.5 truncate ${isActive ? 'font-bold text-sidebar-text' : ''}`}>{item.name}</span>}
                             </>
                         )}
                     </NavLink>
                 ))}
 
-                <div className="pt-2">
-                    <button 
+                <div className="pt-1">
+                    <button
                         onClick={() => setReportsOpen(!reportsOpen)}
-                        className="flex items-center w-full px-4 py-2.5 text-sm font-medium rounded-theme text-sidebar-text opacity-80 hover:opacity-100 hover:bg-sidebar-hover group transition-all"
+                        title={isCollapsedMode ? "Reports" : undefined}
+                        className={`flex items-center w-full ${isCollapsedMode ? 'justify-center px-0' : 'px-2.5'} py-2 text-sm font-bold rounded-xl text-sidebar-text/80 hover:text-sidebar-text hover:bg-sidebar-hover transition-all group`}
                     >
-                        <FileText className="h-5 w-5 mr-3 flex-shrink-0 text-fuchsia-600" />
-                        <span className="flex-1 text-left">Reports</span>
-                        {reportsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        <div className="p-1.5 rounded-full bg-fuchsia-500/35 text-fuchsia-300 flex items-center justify-center flex-shrink-0">
+                            <FileText className="h-4 w-4 stroke-[2.5]" />
+                        </div>
+                        {!isCollapsedMode && (
+                            <>
+                                <span className="flex-1 text-left ml-2.5 truncate">Reports</span>
+                                {reportsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                            </>
+                        )}
                     </button>
-                    {reportsOpen && (
+                    {reportsOpen && !isCollapsedMode && (
                         <div className="pl-4 mt-1 space-y-1">
-                            <NavLink 
-                                to="/sales-dashboard/reports/sales-order-by-item" 
-                                onClick={onLinkClick}
-                                className={({ isActive }) => `flex items-center px-4 py-2 text-sm font-medium rounded-theme transition-colors ${ isActive ? 'bg-sidebar-active text-sidebar-text' : 'text-sidebar-text opacity-70 hover:opacity-100 hover:bg-sidebar-hover' }`}
-                            >
-                                <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-600 mr-3" />
-                                Sales Order By Item
-                            </NavLink>
-                            <NavLink 
-                                to="/sales-dashboard/reports/sales-order-by-customer" 
-                                onClick={onLinkClick}
-                                className={({ isActive }) => `flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${ isActive ? 'bg-primary/10 text-primary' : 'text-foreground-muted hover:bg-background-muted' }`}
-                            >
-                                <span className="w-1.5 h-1.5 rounded-full bg-cyan-600 mr-3" />
-                                Sales Order By Customer
-                            </NavLink>
-                            <NavLink 
-                                to="/sales-dashboard/reports/due-bills" 
-                                onClick={onLinkClick}
-                                className={({ isActive }) => `flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${ isActive ? 'bg-primary/10 text-primary' : 'text-foreground-muted hover:bg-background-muted' }`}
-                            >
-                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 mr-3" />
-                                List of Due Bills
-                            </NavLink>
-                            <NavLink 
-                                to="/sales-dashboard/reports/due-invoices" 
-                                onClick={onLinkClick}
-                                className={({ isActive }) => `flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${ isActive ? 'bg-primary/10 text-primary' : 'text-foreground-muted hover:bg-background-muted' }`}
-                            >
-                                <span className="w-1.5 h-1.5 rounded-full bg-teal-600 mr-3" />
-                                List of Due Invoices
-                            </NavLink>
-                            <NavLink 
-                                to="/sales-dashboard/reports/sales-by-salesperson" 
-                                onClick={onLinkClick}
-                                className={({ isActive }) => `flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${ isActive ? 'bg-primary/10 text-primary' : 'text-foreground-muted hover:bg-background-muted' }`}
-                            >
-                                <span className="w-1.5 h-1.5 rounded-full bg-orange-600 mr-3" />
-                                Sales by Salesperson
-                            </NavLink>
-                            <NavLink 
-                                to="/sales-dashboard/reports/sales-by-item" 
-                                onClick={onLinkClick}
-                                className={({ isActive }) => `flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${ isActive ? 'bg-primary/10 text-primary' : 'text-foreground-muted hover:bg-background-muted' }`}
-                            >
-                                <span className="w-1.5 h-1.5 rounded-full bg-pink-600 mr-3" />
-                                Sales by Item
-                            </NavLink>
-                            <NavLink 
-                                to="/sales-dashboard/reports/sales-by-customer" 
-                                onClick={onLinkClick}
-                                className={({ isActive }) => `flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${ isActive ? 'bg-primary/10 text-primary' : 'text-foreground-muted hover:bg-background-muted' }`}
-                            >
-                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 mr-3" />
-                                Sales by Customer
-                            </NavLink>
+                            {[
+                                { name: 'Sales Order By Item', to: '/sales-dashboard/reports/sales-order-by-item' },
+                                { name: 'Sales Order By Customer', to: '/sales-dashboard/reports/sales-order-by-customer' },
+                                { name: 'List of Due Bills', to: '/sales-dashboard/reports/due-bills' },
+                                { name: 'List of Due Invoices', to: '/sales-dashboard/reports/due-invoices' },
+                                { name: 'Sales by Salesperson', to: '/sales-dashboard/reports/sales-by-salesperson' },
+                                { name: 'Sales by Item', to: '/sales-dashboard/reports/sales-by-item' },
+                                { name: 'Sales by Customer', to: '/sales-dashboard/reports/sales-by-customer' },
+                            ].map((rep) => (
+                                <NavLink
+                                    key={rep.name}
+                                    to={rep.to}
+                                    onClick={onLinkClick}
+                                    className={({ isActive }) => `flex items-center px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${isActive ? 'bg-sidebar-active/30 text-sidebar-text' : 'text-sidebar-text/70 hover:text-sidebar-text hover:bg-sidebar-hover'}`}
+                                >
+                                    <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-400 mr-2.5 flex-shrink-0" />
+                                    <span className="truncate">{rep.name}</span>
+                                </NavLink>
+                            ))}
                         </div>
                     )}
                 </div>
@@ -137,6 +139,10 @@ const SidebarContent = ({ onLinkClick }) => {
 
 const SalesLayout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
+    const [isHovered, setIsHovered] = useState(false);
+    const isExpanded = !isDesktopCollapsed || isHovered;
+
     const navigate = useNavigate();
     const [companyInfo, setCompanyInfo] = useState({ name: 'Enterprise Sales', logoPath: null, logoBlob: null });
     const API_URL = import.meta.env.VITE_API_BASE_URL;
@@ -260,8 +266,16 @@ const SalesLayout = () => {
 
             <div className="flex flex-1 overflow-hidden relative print:h-auto print:overflow-visible">
                 {/* Static sidebar for desktop */}
-                <aside className="hidden lg:flex lg:flex-shrink-0 w-64 border-r border-border bg-sidebar-bg text-sidebar-text print:hidden">
-                    <SidebarContent />
+                <aside
+                    className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 border-r border-border bg-sidebar-bg text-sidebar-text print:hidden transition-all duration-300 ${isExpanded ? 'w-[220px]' : 'w-[68px]'}`}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                >
+                    <SidebarContent
+                        isCollapsedMode={!isExpanded}
+                        isDesktopCollapsed={isDesktopCollapsed}
+                        setIsDesktopCollapsed={setIsDesktopCollapsed}
+                    />
                 </aside>
 
                 <main className="flex-1 flex flex-col overflow-hidden print:overflow-visible print:h-auto">
