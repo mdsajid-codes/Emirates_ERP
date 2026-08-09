@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="115-create-hrms-notifications" author="system">
+        <validCheckSum>ANY</validCheckSum>
+
+        <createTable tableName="notifications">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="recipient_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(80)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="action_url" type="VARCHAR(500)"/>
+            <column name="reference_id" type="BIGINT"/>
+            <column name="reference_type" type="VARCHAR(80)"/>
+            <column name="is_read" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="read_at" type="DATETIME"/>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="VARCHAR(20)" defaultValue="MEDIUM">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="notifications" indexName="idx_notif_recipient">
+            <column name="recipient_user_id"/>
+        </createIndex>
+
+        <createIndex tableName="notifications" indexName="idx_notif_recipient_unread">
+            <column name="recipient_user_id"/>
+            <column name="is_read"/>
+        </createIndex>
+
+        <createIndex tableName="notifications" indexName="idx_notif_created">
+            <column name="created_at"/>
+        </createIndex>
+
+    </changeSet>
+</databaseChangeLog>

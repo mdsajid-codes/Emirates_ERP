@@ -8,6 +8,12 @@ import com.example.multi_tanent.tenant.payroll.entity.LoanProduct;
 import com.example.multi_tanent.tenant.payroll.enums.LoanStatus;
 import com.example.multi_tanent.tenant.payroll.repository.EmployeeLoanRepository;
 import com.example.multi_tanent.tenant.payroll.repository.LoanProductRepository;
+import com.example.multi_tanent.master.enums.Role;
+import com.example.multi_tanent.spersusers.enitity.User;
+import com.example.multi_tanent.spersusers.repository.UserRepository;
+import com.example.multi_tanent.tenant.notification.enums.NotificationPriority;
+import com.example.multi_tanent.tenant.notification.enums.NotificationType;
+import com.example.multi_tanent.tenant.notification.service.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,11 +31,19 @@ public class EmployeeLoanService {
     private final EmployeeLoanRepository employeeLoanRepository;
     private final EmployeeRepository employeeRepository;
     private final LoanProductRepository loanProductRepository;
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
-    public EmployeeLoanService(EmployeeLoanRepository employeeLoanRepository, EmployeeRepository employeeRepository, LoanProductRepository loanProductRepository) {
+    public EmployeeLoanService(EmployeeLoanRepository employeeLoanRepository, 
+                               EmployeeRepository employeeRepository, 
+                               LoanProductRepository loanProductRepository,
+                               NotificationService notificationService,
+                               UserRepository userRepository) {
         this.employeeLoanRepository = employeeLoanRepository;
         this.employeeRepository = employeeRepository;
         this.loanProductRepository = loanProductRepository;
+        this.notificationService = notificationService;
+        this.userRepository = userRepository;
     }
 
     public List<EmployeeLoan> getAllLoans() {
@@ -87,7 +101,27 @@ public class EmployeeLoanService {
         loan.setStatus(LoanStatus.SUBMITTED);
         loan.setRequestedAt(LocalDateTime.now());
 
-        return employeeLoanRepository.save(loan);
+        EmployeeLoan savedLoan = employeeLoanRepository.save(loan);
+
+        String empName = employee.getFirstName() + " " + (employee.getLastName() != null ? employee.getLastName() : "");
+        String msg = empName.trim() + " has requested a loan of AED " + savedLoan.getLoanAmount() + 
+                     " (" + savedLoan.getTotalInstallments() + " installments). Please review.";
+
+        List<User> hrUsers = userRepository.findActiveUsersByRole(Role.HR);
+        for (User hr : hrUsers) {
+            notificationService.send(
+                hr.getId(),
+                NotificationType.LOAN_REQUEST_SUBMITTED,
+                "New Loan Request",
+                msg,
+                "/payroll-management",
+                savedLoan.getId(),
+                "EMPLOYEE_LOAN",
+                NotificationPriority.MEDIUM
+            );
+        }
+
+        return savedLoan;
     }
 
     public EmployeeLoan approveLoan(Long loanId) {
@@ -98,7 +132,24 @@ public class EmployeeLoanService {
         loan.setStatus(LoanStatus.APPROVED);
         loan.setProcessedAt(LocalDateTime.now());
         loan.setStartDate(LocalDate.now().withDayOfMonth(1).plusMonths(1)); // Loan starts from the 1st of next month
-        return employeeLoanRepository.save(loan);
+
+        EmployeeLoan savedLoan = employeeLoanRepository.save(loan);
+
+        if (savedLoan.getEmployee() != null && savedLoan.getEmployee().getUser() != null) {
+            notificationService.send(
+                savedLoan.getEmployee().getUser().getId(),
+                NotificationType.LOAN_APPROVED,
+                "Loan Application Approved",
+                "Your loan request of AED " + savedLoan.getLoanAmount() + 
+                    " has been approved. Monthly EMI: AED " + savedLoan.getEmiAmount() + ".",
+                "/payroll-management",
+                savedLoan.getId(),
+                "EMPLOYEE_LOAN",
+                NotificationPriority.HIGH
+            );
+        }
+
+        return savedLoan;
     }
 
     public EmployeeLoan rejectLoan(Long loanId) {
@@ -108,7 +159,23 @@ public class EmployeeLoanService {
         initializeLoanDetails(loan);
         loan.setStatus(LoanStatus.REJECTED);
         loan.setProcessedAt(LocalDateTime.now());
-        return employeeLoanRepository.save(loan);
+
+        EmployeeLoan savedLoan = employeeLoanRepository.save(loan);
+
+        if (savedLoan.getEmployee() != null && savedLoan.getEmployee().getUser() != null) {
+            notificationService.send(
+                savedLoan.getEmployee().getUser().getId(),
+                NotificationType.LOAN_REJECTED,
+                "Loan Application Rejected",
+                "Your loan request of AED " + savedLoan.getLoanAmount() + " has been rejected.",
+                "/payroll-management",
+                savedLoan.getId(),
+                "EMPLOYEE_LOAN",
+                NotificationPriority.HIGH
+            );
+        }
+
+        return savedLoan;
     }
 
     public void deleteLoan(Long id) {

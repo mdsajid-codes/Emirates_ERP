@@ -61,6 +61,8 @@ public class SecurityConfig {
             .requestMatchers("/api/master/tenant-requests/register").permitAll()
             .requestMatchers("/api/biometric-punch/**").permitAll()
             .requestMatchers("/api/biometric/agent/heartbeat").permitAll()
+            .requestMatchers("/api/notifications/stream").permitAll()
+            .requestMatchers("/api/notifications/**").authenticated()
             .requestMatchers("/public/products/**").permitAll()
             .requestMatchers("/api/pos/uploads/view/**").permitAll()
             .requestMatchers("/api/public/leads/**").permitAll()

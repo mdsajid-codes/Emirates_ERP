@@ -13,6 +13,9 @@ import com.example.multi_tanent.tenant.leave.enums.LeaveStatus;
 import com.example.multi_tanent.tenant.leave.repository.LeaveBalanceRepository;
 import com.example.multi_tanent.tenant.leave.repository.LeaveRequestRepository;
 import com.example.multi_tanent.tenant.leave.repository.LeaveTypeRepository;
+import com.example.multi_tanent.tenant.notification.enums.NotificationPriority;
+import com.example.multi_tanent.tenant.notification.enums.NotificationType;
+import com.example.multi_tanent.tenant.notification.service.NotificationService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,17 +34,20 @@ public class LeaveRequestService {
     private final LeaveTypeRepository leaveTypeRepository;
     private final LeaveBalanceRepository leaveBalanceRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public LeaveRequestService(LeaveRequestRepository leaveRequestRepository,
                                EmployeeRepository employeeRepository,
                                LeaveTypeRepository leaveTypeRepository,
                                LeaveBalanceRepository leaveBalanceRepository,
-                               UserRepository userRepository) {
+                               UserRepository userRepository,
+                               NotificationService notificationService) {
         this.leaveRequestRepository = leaveRequestRepository;
         this.employeeRepository = employeeRepository;
         this.leaveTypeRepository = leaveTypeRepository;
         this.leaveBalanceRepository = leaveBalanceRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     public LeaveRequestResponseDto createLeaveRequest(LeaveRequestDto requestDto) {
@@ -83,6 +89,23 @@ public class LeaveRequestService {
         leaveRequest.setCreatedByUserId(currentUser.getId());
 
         LeaveRequest savedRequest = leaveRequestRepository.save(leaveRequest);
+
+        if (savedRequest.getCurrentApproverUserId() != null) {
+            notificationService.send(
+                savedRequest.getCurrentApproverUserId(),
+                NotificationType.LEAVE_REQUEST_SUBMITTED,
+                "New Leave Request Pending Approval",
+                employee.getFirstName() + " " + (employee.getLastName() != null ? employee.getLastName() : "") + " has submitted a " + leaveType.getLeaveType() +
+                    " leave request from " + requestDto.getFromDate() +
+                    " to " + requestDto.getToDate() +
+                    " (" + requestDto.getDaysRequested() + " days). Please review.",
+                "/leave",
+                savedRequest.getId(),
+                "LEAVE_REQUEST",
+                NotificationPriority.MEDIUM
+            );
+        }
+
         return LeaveRequestResponseDto.fromEntity(savedRequest);
     }
 
@@ -133,6 +156,24 @@ public class LeaveRequestService {
         leaveBalanceRepository.save(balance);
 
         LeaveRequest savedRequest = leaveRequestRepository.save(leaveRequest);
+
+        if (savedRequest.getCurrentApproverUserId() != null) {
+            Employee emp = savedRequest.getEmployee();
+            String empName = emp.getFirstName() + " " + (emp.getLastName() != null ? emp.getLastName() : "");
+            notificationService.send(
+                savedRequest.getCurrentApproverUserId(),
+                NotificationType.LEAVE_REQUEST_CANCELLED,
+                "Leave Request Cancelled",
+                empName.trim() + " has cancelled their " +
+                    savedRequest.getLeaveType().getLeaveType() + " leave request for " +
+                    savedRequest.getFromDate() + " to " + savedRequest.getToDate() + ".",
+                "/leave",
+                savedRequest.getId(),
+                "LEAVE_REQUEST",
+                NotificationPriority.LOW
+            );
+        }
+
         return LeaveRequestResponseDto.fromEntity(savedRequest);
     }
 

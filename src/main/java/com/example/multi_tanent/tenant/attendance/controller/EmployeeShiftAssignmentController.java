@@ -16,6 +16,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.example.multi_tanent.tenant.notification.enums.NotificationPriority;
+import com.example.multi_tanent.tenant.notification.enums.NotificationType;
+import com.example.multi_tanent.tenant.notification.service.NotificationService;
+
 @RestController
 @RequestMapping("/api/employee-shifts")
 @CrossOrigin(origins = "*")
@@ -25,13 +29,16 @@ public class EmployeeShiftAssignmentController {
     private final EmployeeShiftAssignmentRepository repository;
     private final EmployeeRepository employeeRepository;
     private final ShiftTypeRepository shiftTypeRepository;
+    private final NotificationService notificationService;
 
     public EmployeeShiftAssignmentController(EmployeeShiftAssignmentRepository repository,
                                              EmployeeRepository employeeRepository,
-                                             ShiftTypeRepository shiftTypeRepository) {
+                                             ShiftTypeRepository shiftTypeRepository,
+                                             NotificationService notificationService) {
         this.repository = repository;
         this.employeeRepository = employeeRepository;
         this.shiftTypeRepository = shiftTypeRepository;
+        this.notificationService = notificationService;
     }
 
     @PostMapping
@@ -52,6 +59,21 @@ public class EmployeeShiftAssignmentController {
         assignment.setNotes(request.getNotes());
 
         EmployeeShiftAssignment saved = repository.save(assignment);
+
+        if (saved.getEmployee() != null && saved.getEmployee().getUser() != null) {
+            String shiftName = saved.getShiftType() != null ? saved.getShiftType().getName() : "Shift";
+            notificationService.send(
+                saved.getEmployee().getUser().getId(),
+                NotificationType.SHIFT_ASSIGNED,
+                "New Shift Assigned",
+                "You have been assigned to shift '" + shiftName + "' for date " + saved.getAssignedDate() + ".",
+                "/attendance",
+                saved.getId(),
+                "SHIFT_ASSIGNMENT",
+                NotificationPriority.MEDIUM
+            );
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(saved));
     }
 

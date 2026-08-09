@@ -10,4 +10,7 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
+
+    @org.springframework.data.jpa.repository.Query("SELECT u FROM User u JOIN u.roles r WHERE r = :role AND u.isActive = true")
+    java.util.List<User> findActiveUsersByRole(@org.springframework.data.repository.query.Param("role") com.example.multi_tanent.master.enums.Role role);
 }

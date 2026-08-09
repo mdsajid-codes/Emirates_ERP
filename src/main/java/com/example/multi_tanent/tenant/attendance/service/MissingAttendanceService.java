@@ -24,6 +24,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.multi_tanent.master.enums.Role;
+import com.example.multi_tanent.tenant.notification.enums.NotificationPriority;
+import com.example.multi_tanent.tenant.notification.enums.NotificationType;
+import com.example.multi_tanent.tenant.notification.service.NotificationService;
+
 @Service
 @Transactional(transactionManager = "tenantTx")
 public class MissingAttendanceService {
@@ -34,19 +39,22 @@ public class MissingAttendanceService {
     private final AttendanceRecordRepository attendanceRecordRepository;
     private final AttendanceRecordService attendanceRecordService;
     private final FileStorageService fileStorageService;
+    private final NotificationService notificationService;
 
     public MissingAttendanceService(MissingAttendanceRequestRepository requestRepository,
                                     EmployeeRepository employeeRepository,
                                     UserRepository userRepository,
                                     AttendanceRecordRepository attendanceRecordRepository,
                                     AttendanceRecordService attendanceRecordService,
-                                    FileStorageService fileStorageService) {
+                                    FileStorageService fileStorageService,
+                                    NotificationService notificationService) {
         this.requestRepository = requestRepository;
         this.employeeRepository = employeeRepository;
         this.userRepository = userRepository;
         this.attendanceRecordRepository = attendanceRecordRepository;
         this.attendanceRecordService = attendanceRecordService;
         this.fileStorageService = fileStorageService;
+        this.notificationService = notificationService;
     }
 
     public MissingAttendanceRequest createRequest(String employeeCode, MissingAttendanceRequestDto requestDto, MultipartFile file) {
@@ -68,8 +76,24 @@ public class MissingAttendanceService {
 
         MissingAttendanceRequest savedRequest = requestRepository.save(request);
 
-        // Re-fetch the entity with all details to ensure it's fully initialized before returning
-        // This prevents LazyInitializationException during JSON serialization in the controller.
+        String empName = employee.getFirstName() + " " + (employee.getLastName() != null ? employee.getLastName() : "");
+        String msg = empName.trim() + " submitted a missing attendance request for " + savedRequest.getAttendanceDate() +
+                     " (Check-In: " + savedRequest.getRequestedCheckIn() + ", Check-Out: " + savedRequest.getRequestedCheckOut() + ").";
+
+        List<User> hrUsers = userRepository.findActiveUsersByRole(Role.HR);
+        for (User hr : hrUsers) {
+            notificationService.send(
+                hr.getId(),
+                NotificationType.MISSING_ATTENDANCE_SUBMITTED,
+                "Missing Attendance Request",
+                msg,
+                "/attendance",
+                savedRequest.getId(),
+                "MISSING_ATTENDANCE",
+                NotificationPriority.MEDIUM
+            );
+        }
+
         return requestRepository.findByIdWithDetails(savedRequest.getId()).orElse(savedRequest);
     }
 
@@ -109,7 +133,35 @@ public class MissingAttendanceService {
 
         MissingAttendanceRequest savedRequest = requestRepository.save(request);
 
-        // Re-fetch with details to ensure the approver is fully loaded before returning
+        if (savedRequest.getEmployee() != null && savedRequest.getEmployee().getUser() != null) {
+            Long userId = savedRequest.getEmployee().getUser().getId();
+            
+            if (approvalDto.getStatus() == MissingAttendanceRequestStatus.APPROVED) {
+                notificationService.send(
+                    userId,
+                    NotificationType.MISSING_ATTENDANCE_APPROVED,
+                    "Attendance Regularization Approved",
+                    "Your missing attendance request for " + savedRequest.getAttendanceDate() + " has been approved.",
+                    "/attendance",
+                    savedRequest.getId(),
+                    "MISSING_ATTENDANCE",
+                    NotificationPriority.HIGH
+                );
+            } else if (approvalDto.getStatus() == MissingAttendanceRequestStatus.REJECTED) {
+                notificationService.send(
+                    userId,
+                    NotificationType.MISSING_ATTENDANCE_REJECTED,
+                    "Attendance Regularization Rejected",
+                    "Your missing attendance request for " + savedRequest.getAttendanceDate() + " was rejected." +
+                        (approvalDto.getApproverRemarks() != null ? " Reason: " + approvalDto.getApproverRemarks() : ""),
+                    "/attendance",
+                    savedRequest.getId(),
+                    "MISSING_ATTENDANCE",
+                    NotificationPriority.HIGH
+                );
+            }
+        }
+
         return requestRepository.findByIdWithDetails(savedRequest.getId()).orElse(savedRequest);
     }
 
