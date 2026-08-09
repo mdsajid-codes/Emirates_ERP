@@ -47,7 +47,21 @@ const NotificationItem = ({ notification, onMarkRead, onDelete, onClose }) => {
       onMarkRead(notification.id);
     }
     if (notification.actionUrl) {
-      navigate(notification.actionUrl);
+      const roles = JSON.parse(localStorage.getItem('roles') || '[]');
+      const isEmployeeOnly = roles.length === 1 && roles.includes('EMPLOYEE');
+
+      let targetUrl = notification.actionUrl;
+      if (isEmployeeOnly) {
+        if (targetUrl === '/leave' || targetUrl.startsWith('/leave/')) {
+          targetUrl = '/employee-dashboard?tab=leaves';
+        } else if (targetUrl === '/attendance' || targetUrl.startsWith('/attendance/')) {
+          targetUrl = '/employee-dashboard?tab=attendance';
+        } else if (targetUrl === '/payroll' || targetUrl.startsWith('/payroll/')) {
+          targetUrl = '/employee-dashboard?tab=payroll';
+        }
+      }
+
+      navigate(targetUrl);
       onClose();
     }
   };

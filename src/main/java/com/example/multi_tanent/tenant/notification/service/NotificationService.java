@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.multi_tanent.config.TenantContext;
 import java.time.LocalDateTime;
 
 @Service
@@ -24,7 +25,6 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final SseService sseService;
 
-    @Async
     @Transactional(transactionManager = "tenantTx")
     public void send(Long recipientUserId,
                      NotificationType type,
@@ -34,25 +34,42 @@ public class NotificationService {
                      Long referenceId,
                      String referenceType,
                      NotificationPriority priority) {
-
-        Notification notification = new Notification();
-        notification.setRecipientUserId(recipientUserId);
-        notification.setType(type);
-        notification.setTitle(title);
-        notification.setMessage(message);
-        notification.setActionUrl(actionUrl);
-        notification.setReferenceId(referenceId);
-        notification.setReferenceType(referenceType);
-        notification.setPriority(priority);
-        notification.setIsRead(false);
-
-        Notification saved = notificationRepository.save(notification);
-        log.debug("Notification saved id={} type={} for userId={}", saved.getId(), type, recipientUserId);
-
-        sseService.pushToUser(recipientUserId, NotificationResponse.from(saved));
+        sendWithTenant(TenantContext.getTenantId(), recipientUserId, type, title, message, actionUrl, referenceId, referenceType, priority);
     }
 
-    @Async
+    public void sendWithTenant(String tenantId,
+                              Long recipientUserId,
+                              NotificationType type,
+                              String title,
+                              String message,
+                              String actionUrl,
+                              Long referenceId,
+                              String referenceType,
+                              NotificationPriority priority) {
+        if (tenantId != null) {
+            TenantContext.setTenantId(tenantId);
+        }
+        try {
+            Notification notification = new Notification();
+            notification.setRecipientUserId(recipientUserId);
+            notification.setType(type);
+            notification.setTitle(title);
+            notification.setMessage(message);
+            notification.setActionUrl(actionUrl);
+            notification.setReferenceId(referenceId);
+            notification.setReferenceType(referenceType);
+            notification.setPriority(priority);
+            notification.setIsRead(false);
+
+            Notification saved = notificationRepository.save(notification);
+            log.info("Notification saved id={} type={} for userId={} tenant={}", saved.getId(), type, recipientUserId, tenantId);
+
+            sseService.pushToUser(recipientUserId, NotificationResponse.from(saved));
+        } finally {
+            // Keep context intact
+        }
+    }
+
     @Transactional(transactionManager = "tenantTx")
     public void send(Long recipientUserId,
                      NotificationType type,

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { Loader, X } from 'lucide-react';
 
 const InputField = ({ label, id, type = 'text', ...props }) => (
@@ -8,7 +9,7 @@ const InputField = ({ label, id, type = 'text', ...props }) => (
     </div>
 );
 
-const MissingAttendanceRequestModal = ({ isOpen, onClose, onSubmit, loading }) => {
+const MissingAttendanceRequestModal = ({ isOpen, onClose, employeeCode, onRequestSubmitted }) => {
     const [formData, setFormData] = useState({
         attendanceDate: new Date().toISOString().split('T')[0],
         requestedCheckIn: '',
@@ -17,6 +18,8 @@ const MissingAttendanceRequestModal = ({ isOpen, onClose, onSubmit, loading }) =
     });
     const [file, setFile] = useState(null);
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const API_URL = import.meta.env.VITE_API_BASE_URL;
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -27,19 +30,46 @@ const MissingAttendanceRequestModal = ({ isOpen, onClose, onSubmit, loading }) =
         setFile(e.target.files[0]);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.requestedCheckIn && !formData.requestedCheckOut) {
             setError('You must provide at least a Check In or Check Out time.');
             return;
         }
         setError('');
-        const submissionData = new FormData();
-        submissionData.append('request', new Blob([JSON.stringify(formData)], { type: 'application/json' }));
-        if (file) {
-            submissionData.append('file', file);
+        setLoading(true);
+
+        try {
+            const token = localStorage.getItem('token');
+            const empCode = employeeCode || localStorage.getItem('employeeCode');
+
+            const formDataObj = new FormData();
+            const requestDto = {
+                attendanceDate: formData.attendanceDate,
+                requestedCheckIn: formData.requestedCheckIn ? (formData.requestedCheckIn.length === 5 ? `${formData.requestedCheckIn}:00` : formData.requestedCheckIn) : null,
+                requestedCheckOut: formData.requestedCheckOut ? (formData.requestedCheckOut.length === 5 ? `${formData.requestedCheckOut}:00` : formData.requestedCheckOut) : null,
+                reason: formData.reason,
+            };
+
+            formDataObj.append('request', new Blob([JSON.stringify(requestDto)], { type: 'application/json' }));
+            if (file) {
+                formDataObj.append('file', file);
+            }
+
+            await axios.post(`${API_URL}/missing-attendance/request/${empCode}`, formDataObj, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (onRequestSubmitted) onRequestSubmitted();
+            onClose();
+        } catch (err) {
+            console.error('Error submitting missing attendance request:', err);
+            setError(err.response?.data?.message || err.response?.data || 'Failed to submit regularization request. Please try again.');
+        } finally {
+            setLoading(false);
         }
-        onSubmit(submissionData);
     };
 
     if (!isOpen) return null;

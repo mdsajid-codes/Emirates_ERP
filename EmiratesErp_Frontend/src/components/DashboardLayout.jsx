@@ -23,6 +23,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { useTenant } from "../context/TenantContext.jsx";
 import NotificationBell from './notifications/NotificationBell';
+import { logout } from '../utils/logout';
 
 const navLinks = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/hrdashboard', module: 'HRMS_CORE', iconBg: 'bg-sky-500/35 text-sky-300' },

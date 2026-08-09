@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
+@Service("channelNotificationService")
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationService {

@@ -65,6 +65,7 @@ public class MultiTenantDataSourceConfig {
         "com.example.multi_tanent.tenant.attendance.entity",
         "com.example.multi_tanent.tenant.leave.entity",
         "com.example.multi_tanent.tenant.payroll.entity",
+        "com.example.multi_tanent.tenant.notification.entity",
         "com.example.multi_tanent.tenant.recruitment.entity",
         "com.example.multi_tanent.pos.entity",
         "com.example.multi_tanent.crm.entity",

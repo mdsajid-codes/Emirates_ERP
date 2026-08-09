@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import * as leaveApi from '../../pages/leaveApi';
 import { Check, X, FileClock, Loader, AlertCircle, Search, BookOpen, Plus, Trash2, RefreshCw } from 'lucide-react';
+import RejectionReasonModal from '../common/RejectionReasonModal';
 
 // --- Leave Requests Section ---
 
@@ -15,7 +16,7 @@ const leaveStatusStyles = {
 const LeaveRequestRow = ({ request, onUpdate }) => {
     // Use optional chaining for safety
     const { id, employeeName, employeeCode, leaveType, fromDate, toDate, reason, status } = request || {};
-    const displayStatus = status || 'SUBMITTED'; 
+    const displayStatus = (status || 'SUBMITTED').toUpperCase(); 
     const StatusIcon = leaveStatusStyles[displayStatus]?.icon || FileClock;
 
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
@@ -30,16 +31,38 @@ const LeaveRequestRow = ({ request, onUpdate }) => {
             <td className="td-cell text-sm">{formatDate(fromDate)} to {formatDate(toDate)}</td>
             <td className="td-cell text-sm max-w-xs truncate" title={reason}>{reason}</td>
             <td className="td-cell">
-                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-semibold rounded-full ${leaveStatusStyles[displayStatus]?.bg} ${leaveStatusStyles[displayStatus]?.text}`}>
+                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-semibold rounded-full ${leaveStatusStyles[displayStatus]?.bg || 'bg-gray-100'} ${leaveStatusStyles[displayStatus]?.text || 'text-gray-800'}`}>
                     <StatusIcon className="h-3 w-3" />
                     {displayStatus.toLowerCase()}
                 </span>
             </td>
             <td className="td-cell">
-                {displayStatus === 'SUBMITTED' ? (
+                {(displayStatus === 'SUBMITTED' || displayStatus === 'PENDING') ? (
                     <div className="flex items-center gap-2">
-                        <button onClick={() => onUpdate(id, 'REJECTED')} className="p-1.5 text-red-600 hover:bg-red-100 rounded-full transition-colors" title="Reject"><X className="h-4 w-4" /></button>
-                        <button onClick={() => onUpdate(id, 'APPROVED')} className="p-1.5 text-green-600 hover:bg-green-100 rounded-full transition-colors" title="Approve"><Check className="h-4 w-4" /></button>
+                        <button 
+                            type="button"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onUpdate(id, 'REJECTED');
+                            }} 
+                            className="p-1.5 text-red-600 hover:bg-red-100 rounded-full transition-colors cursor-pointer" 
+                            title="Reject"
+                        >
+                            <X className="h-4 w-4 pointer-events-none" />
+                        </button>
+                        <button 
+                            type="button"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onUpdate(id, 'APPROVED');
+                            }} 
+                            className="p-1.5 text-green-600 hover:bg-green-100 rounded-full transition-colors cursor-pointer" 
+                            title="Approve"
+                        >
+                            <Check className="h-4 w-4 pointer-events-none" />
+                        </button>
                     </div>
                 ) : null}
             </td>
@@ -72,15 +95,18 @@ const AllLeaveRequests = () => {
         fetchRequests();
     }, []);
 
+    const [rejectionModal, setRejectionModal] = useState({ isOpen: false, requestId: null });
+
     const handleUpdateStatus = async (leaveRequestId, action) => {
-        let comment = '';
         if (action === 'REJECTED') {
-            comment = prompt("Please provide a reason for rejection (optional):");
-            if (comment === null) { // User clicked cancel on the prompt
-                return;
-            }
+            setRejectionModal({ isOpen: true, requestId: leaveRequestId });
+            return;
         }
 
+        await submitApprovalOrRejection(leaveRequestId, action, '');
+    };
+
+    const submitApprovalOrRejection = async (leaveRequestId, action, comment) => {
         try {
             const payload = {
                 leaveRequestId,
@@ -98,7 +124,13 @@ const AllLeaveRequests = () => {
     };
 
     const filteredRequests = useMemo(() => {
-        let filtered = requests.filter(req => (req.status || 'SUBMITTED') === activeTab);
+        let filtered = requests.filter(req => {
+            const reqStatus = (req.status || 'SUBMITTED').toUpperCase();
+            if (activeTab === 'SUBMITTED') {
+                return reqStatus === 'SUBMITTED' || reqStatus === 'PENDING';
+            }
+            return reqStatus === activeTab;
+        });
         if (searchTerm) {
             const lowercasedFilter = searchTerm.toLowerCase();
             filtered = filtered.filter(req =>
@@ -155,6 +187,16 @@ const AllLeaveRequests = () => {
                     </tbody>
                 </table>
             </div>
+            <RejectionReasonModal
+                isOpen={rejectionModal.isOpen}
+                onClose={() => setRejectionModal({ isOpen: false, requestId: null })}
+                onSubmit={(reason) => {
+                    submitApprovalOrRejection(rejectionModal.requestId, 'REJECTED', reason);
+                    setRejectionModal({ isOpen: false, requestId: null });
+                }}
+                title="Reject Leave Request"
+                subtitle="Provide optional rejection comments or notes for the employee"
+            />
         </div>
     );
 };

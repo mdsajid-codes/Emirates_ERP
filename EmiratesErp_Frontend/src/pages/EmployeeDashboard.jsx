@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
     Clock,
@@ -146,7 +146,26 @@ const EmployeeDashboard = () => {
         return navLinks.filter(link => !link.module || hasModule(link.module));
     }, [hasModule]);
 
-    const [activeItem, setActiveItem] = useState('Dashboard');
+    const location = useLocation();
+
+    // Map common notification actionUrl paths or query tabs to nav link names
+    const getInitialActiveItem = () => {
+        const queryParams = new URLSearchParams(location.search);
+        const tabParam = queryParams.get('tab')?.toLowerCase();
+        if (tabParam === 'leaves' || tabParam === 'leave' || location.pathname.includes('/leave')) return 'Leaves';
+        if (tabParam === 'attendance' || location.pathname.includes('/attendance')) return 'Attendance';
+        if (tabParam === 'payroll' || location.pathname.includes('/payroll')) return 'Payroll';
+        if (tabParam === 'recruitment') return 'Recruitment';
+        if (location.state?.tab) return location.state.tab;
+        return 'Dashboard';
+    };
+
+    const [activeItem, setActiveItem] = useState(getInitialActiveItem);
+
+    useEffect(() => {
+        const initial = getInitialActiveItem();
+        setActiveItem(initial);
+    }, [location.search, location.pathname, location.state]);
 
     useEffect(() => {
         const isCurrentActiveItemAccessible = accessibleNavLinks.some(link => link.name === activeItem);
