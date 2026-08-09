@@ -1,5 +1,8 @@
 package com.example.multi_tanent.tenant.payroll.service;
 
+import com.example.multi_tanent.tenant.notification.enums.NotificationPriority;
+import com.example.multi_tanent.tenant.notification.enums.NotificationType;
+import com.example.multi_tanent.tenant.notification.service.NotificationService;
 import com.example.multi_tanent.tenant.payroll.dto.PayrollRunRequest;
 import com.example.multi_tanent.tenant.payroll.entity.PayrollRun;
 import com.example.multi_tanent.tenant.payroll.entity.Payslip;
@@ -21,12 +24,16 @@ public class PayrollRunService {
     private final PayrollRunRepository payrollRunRepository;
     private final PayslipGenerationService payslipGenerationService;
     private final PayslipService payslipService;
+    private final NotificationService notificationService;
 
     public PayrollRunService(PayrollRunRepository payrollRunRepository,
-            PayslipGenerationService payslipGenerationService, PayslipService payslipService) {
+            PayslipGenerationService payslipGenerationService,
+            PayslipService payslipService,
+            NotificationService notificationService) {
         this.payrollRunRepository = payrollRunRepository;
         this.payslipGenerationService = payslipGenerationService;
         this.payslipService = payslipService;
+        this.notificationService = notificationService;
     }
 
     public PayrollRun createPayrollRun(PayrollRunRequest request) {
@@ -125,6 +132,32 @@ public class PayrollRunService {
             // Best practice: Update status in `PayslipService`.
 
             payslipService.updatePayslipsStatus(payslips, status);
+
+            if (status == PayrollStatus.PAID) {
+                String[] monthNames = {"", "January", "February", "March", "April", "May",
+                    "June", "July", "August", "September", "October", "November", "December"};
+
+                for (Payslip payslip : payslips) {
+                    if (payslip.getEmployee() != null && payslip.getEmployee().getUser() != null) {
+                        Long employeeUserId = payslip.getEmployee().getUser().getId();
+                        String monthName = (savedRun.getMonth() >= 1 && savedRun.getMonth() <= 12) 
+                                ? monthNames[savedRun.getMonth()] : String.valueOf(savedRun.getMonth());
+
+                        notificationService.send(
+                            employeeUserId,
+                            NotificationType.PAYSLIP_GENERATED,
+                            "Your Salary Slip Is Ready",
+                            "Your payslip for " + monthName + " " + savedRun.getYear() +
+                                " is ready. Net salary: AED " + payslip.getNetSalary() +
+                                ". Tap to view details.",
+                            "/payroll-management",
+                            payslip.getId(),
+                            "PAYSLIP",
+                            NotificationPriority.HIGH
+                        );
+                    }
+                }
+            }
         }
 
         return savedRun;

@@ -12,6 +12,9 @@ import com.example.multi_tanent.tenant.leave.enums.LeaveStatus;
 import com.example.multi_tanent.tenant.leave.repository.LeaveApprovalRepository;
 import com.example.multi_tanent.tenant.leave.repository.LeaveBalanceRepository;
 import com.example.multi_tanent.tenant.leave.repository.LeaveRequestRepository;
+import com.example.multi_tanent.tenant.notification.enums.NotificationPriority;
+import com.example.multi_tanent.tenant.notification.enums.NotificationType;
+import com.example.multi_tanent.tenant.notification.service.NotificationService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,15 +32,18 @@ public class LeaveApprovalService {
     private final LeaveApprovalRepository leaveApprovalRepository;
     private final LeaveBalanceRepository leaveBalanceRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public LeaveApprovalService(LeaveRequestRepository leaveRequestRepository,
                                 LeaveApprovalRepository leaveApprovalRepository,
                                 LeaveBalanceRepository leaveBalanceRepository,
-                                UserRepository userRepository) {
+                                UserRepository userRepository,
+                                NotificationService notificationService) {
         this.leaveRequestRepository = leaveRequestRepository;
         this.leaveApprovalRepository = leaveApprovalRepository;
         this.leaveBalanceRepository = leaveBalanceRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     public LeaveRequestResponseDto processApproval(LeaveApprovalRequest request) {
@@ -64,9 +70,45 @@ public class LeaveApprovalService {
             leaveRequest.setStatus(LeaveStatus.APPROVED);
             leaveRequest.setDaysApproved(leaveRequest.getDaysRequested());
             updateLeaveBalanceOnApproval(leaveRequest);
+
+            if (leaveRequest.getEmployee() != null && leaveRequest.getEmployee().getUser() != null) {
+                Long employeeUserId = leaveRequest.getEmployee().getUser().getId();
+                notificationService.send(
+                    employeeUserId,
+                    NotificationType.LEAVE_REQUEST_APPROVED,
+                    "Leave Request Approved",
+                    "Your " + leaveRequest.getLeaveType().getLeaveType() +
+                        " leave request from " + leaveRequest.getFromDate() +
+                        " to " + leaveRequest.getToDate() + " has been approved." +
+                        (request.getComment() != null && !request.getComment().isBlank()
+                            ? " Note: " + request.getComment() : ""),
+                    "/leave",
+                    leaveRequest.getId(),
+                    "LEAVE_REQUEST",
+                    NotificationPriority.HIGH
+                );
+            }
         } else if (request.getAction() == ApprovalAction.REJECTED) {
             leaveRequest.setStatus(LeaveStatus.REJECTED);
             updateLeaveBalanceOnRejection(leaveRequest);
+
+            if (leaveRequest.getEmployee() != null && leaveRequest.getEmployee().getUser() != null) {
+                Long employeeUserId = leaveRequest.getEmployee().getUser().getId();
+                notificationService.send(
+                    employeeUserId,
+                    NotificationType.LEAVE_REQUEST_REJECTED,
+                    "Leave Request Rejected",
+                    "Your " + leaveRequest.getLeaveType().getLeaveType() +
+                        " leave request from " + leaveRequest.getFromDate() +
+                        " to " + leaveRequest.getToDate() + " has been rejected." +
+                        (request.getComment() != null && !request.getComment().isBlank()
+                            ? " Reason: " + request.getComment() : " Please contact HR for more details."),
+                    "/leave",
+                    leaveRequest.getId(),
+                    "LEAVE_REQUEST",
+                    NotificationPriority.HIGH
+                );
+            }
         }
 
         leaveRequest.setUpdatedAt(LocalDateTime.now());

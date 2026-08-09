@@ -12,4 +12,9 @@ public interface EmployeeDocumentRepository extends JpaRepository<EmployeeDocume
     @org.springframework.data.jpa.repository.Query("SELECT d FROM EmployeeDocument d JOIN FETCH d.employee e JOIN FETCH d.documentType dt WHERE e.user.tenant.tenantId = :tenantId")
     List<EmployeeDocument> findAllByTenantIdWithDetails(
             @org.springframework.data.repository.query.Param("tenantId") String tenantId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT d FROM EmployeeDocument d JOIN FETCH d.employee e JOIN FETCH d.documentType dt WHERE d.endDate BETWEEN :from AND :to")
+    List<EmployeeDocument> findByEndDateBetween(
+            @org.springframework.data.repository.query.Param("from") java.time.LocalDate from,
+            @org.springframework.data.repository.query.Param("to") java.time.LocalDate to);
 }

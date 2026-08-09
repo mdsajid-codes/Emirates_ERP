@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from "framer-motion";
 import { useTenant } from "../context/TenantContext.jsx";
-import { logout } from '../utils/logout';
+import NotificationBell from './notifications/NotificationBell';
 
 const navLinks = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/hrdashboard', module: 'HRMS_CORE', iconBg: 'bg-sky-500/35 text-sky-300' },
@@ -257,10 +257,7 @@ const DashboardLayout = ({ children, hideSidebar = false, headerSearch = null, h
                         {headerExtra}
 
                         {/* Notification Bell */}
-                        <button className="relative p-2 text-foreground-muted hover:text-foreground hover:bg-black/5 rounded-full transition-colors">
-                            <Bell className="h-5 w-5" />
-                            <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
-                        </button>
+                        <NotificationBell />
 
                         <div className="w-px h-6 bg-border hidden sm:block"></div>
 
