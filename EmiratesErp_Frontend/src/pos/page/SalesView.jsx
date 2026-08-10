@@ -401,9 +401,10 @@ const SalesView = ({ posTheme: propPosTheme }) => {
     };
 
     return (
-        <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] bg-[#f3f4f6] p-3 sm:p-4 gap-3.5 font-sans overflow-hidden">
-            {/* Main Content Area: Header & Product Grid */}
-            <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] bg-[#F7FAFF] font-sans overflow-hidden">
+            {/* Left: Main Section (Header + Product Card) */}
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden p-3 gap-3">
+                {/* Sales Header (Title, Breadcrumb, Date, Search, Filters, Customer) */}
                 <SalesHeader
                     searchTerm={searchTerm} onSearchTermChange={setSearchTerm}
                     barcode={barcode} onBarcodeChange={setBarcode} onBarcodeScan={handleBarcodeScan}
@@ -416,20 +417,32 @@ const SalesView = ({ posTheme: propPosTheme }) => {
                     onToggleInactive={() => setShowInactive(!showInactive)}
                     posTheme={posTheme}
                 />
-                {loading.products || loading.stores ? (
-                    <div className="flex-grow flex justify-center items-center"><Loader className="animate-spin h-8 w-8 text-slate-900" /></div>
-                ) : (
-                    <ProductGrid
-                        products={filteredProducts}
-                        onAddToCart={handleAddToCart}
-                        onDownloadBarcode={handleDownloadBarcode}
-                        posTheme={posTheme}
-                    />
-                )}
+
+                {/* White Product Card */}
+                <div
+                    className="flex-1 min-h-0 overflow-hidden flex flex-col"
+                    style={{ background: '#FFFFFF', border: '1px solid #E3EAF0', borderRadius: 12, padding: 12 }}
+                >
+                    {loading.products || loading.stores ? (
+                        <div className="flex-grow flex justify-center items-center">
+                            <Loader className="animate-spin h-8 w-8 text-[#00A9A8]" />
+                        </div>
+                    ) : (
+                        <ProductGrid
+                            products={filteredProducts}
+                            categories={categories}
+                            selectedCategory={selectedCategory}
+                            onSelectCategory={setSelectedCategory}
+                            onAddToCart={handleAddToCart}
+                            onDownloadBarcode={handleDownloadBarcode}
+                            posTheme={posTheme}
+                        />
+                    )}
+                </div>
             </div>
 
             {/* Right Cart Sidebar */}
-            <div className="w-full md:w-80 lg:w-96 flex-shrink-0 flex flex-col h-full">
+            <div className="w-full md:w-80 lg:w-[315px] flex-shrink-0 flex flex-col h-full border-l border-[#E3EAF0] bg-white">
                 <Cart
                     cart={cart}
                     onUpdateQuantity={handleUpdateQuantity}
@@ -441,6 +454,7 @@ const SalesView = ({ posTheme: propPosTheme }) => {
                     posTheme={posTheme}
                 />
             </div>
+
 
             {isPaymentModalOpen && (
                 <PaymentModal

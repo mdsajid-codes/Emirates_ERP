@@ -12,6 +12,7 @@
     <include file="db/changelog/tenant/067-create-infra-tables.xml"/>
     <include file="db/changelog/tenant/068-update-themes-colors.xml"/>
     <include file="db/changelog/tenant/069-seed-default-navy-blue-theme.xml"/>
+    <include file="db/changelog/tenant/114-update-default-theme-palette.xml"/>
 
     <!-- Universal Notification System -->
     <include file="db/changelog/tenant/110-create-notification-schema.xml"/>

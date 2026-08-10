@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="update-default-theme-to-emirates-erp-palette" author="system">
+        <sql>
+            UPDATE themes 
+            SET 
+                primary_color = '#00A9A8',
+                secondary_color = '#ffffff',
+                accent_color = '#02888D',
+                background_color = '#F7FAFF',
+                text_color = '#18233B',
+                sidebar_bg_color = '#003E5B',
+                sidebar_text_color = '#F2F5FA',
+                sidebar_active_color = '#00A9A8',
+                sidebar_hover_color = '#002D42',
+                header_bg_color = '#ffffff',
+                header_text_color = '#18233B',
+                footer_bg_color = '#ffffff',
+                footer_text_color = '#607089',
+                surface_color = '#ffffff',
+                border_color = '#DBE5F3',
+                hover_color = '#F7FAFF',
+                link_color = '#008180',
+                error_color = '#FF3B3B',
+                success_color = '#00A9A8',
+                warning_color = '#FFA713',
+                info_color = '#3b82f6',
+                border_radius = '11px',
+                updated_at = CURRENT_TIMESTAMP;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
