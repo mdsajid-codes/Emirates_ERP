@@ -34,6 +34,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -111,6 +112,7 @@ public class LeaveNotificationEventTest {
         savedRequest.setStatus(LeaveStatus.SUBMITTED);
 
         when(leaveRequestRepository.save(any(LeaveRequest.class))).thenReturn(savedRequest);
+        when(userRepository.findAll()).thenReturn(List.of(approverUser));
 
         LeaveRequestDto requestDto = new LeaveRequestDto();
         requestDto.setEmployeeCode("EMP001");
@@ -121,7 +123,8 @@ public class LeaveNotificationEventTest {
 
         leaveRequestService.createLeaveRequest(requestDto);
 
-        verify(notificationService, times(1)).send(
+        verify(notificationService, times(1)).sendWithTenant(
+            any(),
             eq(202L),
             eq(NotificationType.LEAVE_REQUEST_SUBMITTED),
             contains("New Leave Request"),
@@ -159,7 +162,8 @@ public class LeaveNotificationEventTest {
 
         leaveApprovalService.processApproval(approvalRequest);
 
-        verify(notificationService, times(1)).send(
+        verify(notificationService, times(1)).sendWithTenant(
+            any(),
             eq(101L),
             eq(NotificationType.LEAVE_REQUEST_APPROVED),
             contains("Approved"),
@@ -197,7 +201,8 @@ public class LeaveNotificationEventTest {
 
         leaveApprovalService.processApproval(approvalRequest);
 
-        verify(notificationService, times(1)).send(
+        verify(notificationService, times(1)).sendWithTenant(
+            any(),
             eq(101L),
             eq(NotificationType.LEAVE_REQUEST_REJECTED),
             contains("Rejected"),

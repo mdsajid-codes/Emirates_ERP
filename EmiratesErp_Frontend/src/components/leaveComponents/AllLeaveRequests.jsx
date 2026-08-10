@@ -3,6 +3,8 @@ import * as leaveApi from '../../pages/leaveApi';
 import { Check, X, FileClock, Loader, AlertCircle, Search, BookOpen, Plus, Trash2, RefreshCw, AlertTriangle, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 
+import RejectionReasonModal from '../common/RejectionReasonModal';
+
 // --- Leave Requests Section ---
 
 // A map for styling statuses with dynamic theme compatibility
@@ -16,7 +18,7 @@ const leaveStatusStyles = {
 const LeaveRequestRow = ({ request, onUpdate }) => {
     // Use optional chaining for safety
     const { id, employeeName, employeeCode, leaveType, fromDate, toDate, reason, status, employee, leaveTypeMaster } = request || {};
-    const displayStatus = status || 'SUBMITTED';
+    const displayStatus = (status || 'SUBMITTED').toUpperCase();
     const StatusIcon = leaveStatusStyles[displayStatus]?.icon || FileClock;
 
     const displayName = employeeName || (employee ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() : null) || employee?.name || 'N/A';
@@ -41,10 +43,24 @@ const LeaveRequestRow = ({ request, onUpdate }) => {
                 </span>
             </td>
             <td className="px-3 py-2 text-xs text-right">
-                {displayStatus === 'SUBMITTED' ? (
+                {(displayStatus === 'SUBMITTED' || displayStatus === 'PENDING') ? (
                     <div className="flex items-center justify-end gap-1.5">
-                        <button onClick={() => onUpdate(id, 'REJECTED')} className="p-1 text-rose-600 hover:bg-rose-500/10 rounded-md transition-colors" title="Reject"><X className="h-3.5 w-3.5" /></button>
-                        <button onClick={() => onUpdate(id, 'APPROVED')} className="p-1 text-emerald-600 hover:bg-emerald-500/10 rounded-md transition-colors" title="Approve"><Check className="h-3.5 w-3.5" /></button>
+                        <button 
+                            type="button"
+                            onClick={() => onUpdate(id, 'REJECTED')} 
+                            className="p-1 text-rose-600 hover:bg-rose-500/10 rounded-md transition-colors cursor-pointer" 
+                            title="Reject"
+                        >
+                            <X className="h-3.5 w-3.5" />
+                        </button>
+                        <button 
+                            type="button"
+                            onClick={() => onUpdate(id, 'APPROVED')} 
+                            className="p-1 text-emerald-600 hover:bg-emerald-500/10 rounded-md transition-colors cursor-pointer" 
+                            title="Approve"
+                        >
+                            <Check className="h-3.5 w-3.5" />
+                        </button>
                     </div>
                 ) : null}
             </td>
@@ -79,15 +95,19 @@ export const AllLeaveRequests = ({ searchTerm: externalSearchTerm }) => {
         fetchRequests();
     }, []);
 
-    const handleUpdateStatus = async (leaveRequestId, action) => {
-        let comment = '';
+    const [rejectionModal, setRejectionModal] = useState({ isOpen: false, requestId: null });
+
+    const handleUpdateStatus = (leaveRequestId, action) => {
+        console.log("handleUpdateStatus triggered:", { leaveRequestId, action });
         if (action === 'REJECTED') {
-            comment = prompt("Please provide a reason for rejection (optional):");
-            if (comment === null) { // User clicked cancel on the prompt
-                return;
-            }
+            setRejectionModal({ isOpen: true, requestId: leaveRequestId });
+            return;
         }
 
+        submitApprovalOrRejection(leaveRequestId, action, '');
+    };
+
+    const submitApprovalOrRejection = async (leaveRequestId, action, comment) => {
         try {
             const payload = {
                 leaveRequestId,
@@ -105,7 +125,13 @@ export const AllLeaveRequests = ({ searchTerm: externalSearchTerm }) => {
     };
 
     const filteredRequests = useMemo(() => {
-        let filtered = requests.filter(req => (req.status || 'SUBMITTED') === activeTab);
+        let filtered = requests.filter(req => {
+            const reqStatus = req.status || 'SUBMITTED';
+            if (activeTab === 'SUBMITTED') {
+                return reqStatus === 'SUBMITTED' || reqStatus === 'PENDING';
+            }
+            return reqStatus === activeTab;
+        });
         if (searchTerm && searchTerm.trim()) {
             const lowercasedFilter = searchTerm.toLowerCase().trim();
             filtered = filtered.filter(req => {
@@ -184,6 +210,17 @@ export const AllLeaveRequests = ({ searchTerm: externalSearchTerm }) => {
                     </tbody>
                 </table>
             </div>
+
+            <RejectionReasonModal
+                isOpen={rejectionModal.isOpen}
+                onClose={() => setRejectionModal({ isOpen: false, requestId: null })}
+                onSubmit={(reason) => {
+                    submitApprovalOrRejection(rejectionModal.requestId, 'REJECTED', reason);
+                    setRejectionModal({ isOpen: false, requestId: null });
+                }}
+                title="Reject Leave Request"
+                subtitle="Provide optional rejection comments or notes for the employee"
+            />
         </div>
     );
 };

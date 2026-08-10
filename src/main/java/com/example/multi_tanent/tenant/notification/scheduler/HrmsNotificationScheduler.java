@@ -350,4 +350,62 @@ public class HrmsNotificationScheduler {
             TenantContext.clear();
         }
     }
+
+    // ── 8. Daily Leave Carry-Forward Expiry Check (Daily at 08:30) ──
+    @Scheduled(cron = "0 30 8 * * *", zone = "Asia/Dubai")
+    public void checkLeaveCarryForwardExpiry() {
+        TenantContext.setTenantId(defaultTenantId);
+        try {
+            log.info("Running leave carry-forward expiry check");
+            List<User> activeUsers = userRepository.findAll();
+            if (activeUsers != null) {
+                for (User u : activeUsers) {
+                    if (u.getIsActive() == null || Boolean.TRUE.equals(u.getIsActive())) {
+                        notificationService.sendWithTenant(
+                            defaultTenantId,
+                            u.getId(),
+                            NotificationType.LEAVE_CARRY_FORWARD_EXPIRY,
+                            "Carried Forward Leaves Expiring Soon",
+                            "Carried-forward leave days will expire on March 31st. Please plan your leaves.",
+                            "/leave",
+                            null,
+                            "LEAVE_CARRY_FORWARD",
+                            NotificationPriority.MEDIUM
+                        );
+                    }
+                }
+            }
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    // ── 9. Annual Leave Allocation Year-End Processed Notification ──
+    @Scheduled(cron = "0 0 8 1 1 *", zone = "Asia/Dubai")
+    public void checkLeaveYearEndProcessed() {
+        TenantContext.setTenantId(defaultTenantId);
+        try {
+            log.info("Triggering annual leave allocation notification");
+            List<User> activeUsers = userRepository.findAll();
+            if (activeUsers != null) {
+                for (User u : activeUsers) {
+                    if (u.getIsActive() == null || Boolean.TRUE.equals(u.getIsActive())) {
+                        notificationService.sendWithTenant(
+                            defaultTenantId,
+                            u.getId(),
+                            NotificationType.LEAVE_YEAR_END_PROCESSED,
+                            "Annual Leave Quota Updated",
+                            "Your leave balance quota for the new year has been allocated.",
+                            "/leave",
+                            null,
+                            "LEAVE_ALLOCATION",
+                            NotificationPriority.MEDIUM
+                        );
+                    }
+                }
+            }
+        } finally {
+            TenantContext.clear();
+        }
+    }
 }

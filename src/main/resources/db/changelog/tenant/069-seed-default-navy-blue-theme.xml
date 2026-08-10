@@ -6,6 +6,8 @@
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet id="seed-default-navy-blue-theme" author="system">
+        <validCheckSum>9:d9ac145a8d24d18b559323a9649f4eb1</validCheckSum>
+        <validCheckSum>9:be408d61c791c88895c7ab5cb6182298</validCheckSum>
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*) FROM themes;
@@ -23,13 +25,13 @@
                 created_at, updated_at
             )
             SELECT 
-                id, 'Navy Blue', true, 
-                '#1a237e', '#ffffff', '#1e3a8a', '#f1f5f9', '#0f172a', 
-                '#1e293b', '#f8fafc', '#334155', '#475569', 
-                '#ffffff', '#0f172a', '#ffffff', '#64748b', 
-                '#ffffff', '#e2e8f0', '#f8fafc', '#2563eb', 
-                '#ef4444', '#22c55e', '#f59e0b', '#3b82f6', 
-                'Inter', 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap', '0.5rem', false, 
+                id, 'Emirates ERP Teal', true, 
+                '#00A9A8', '#ffffff', '#02888D', '#F7FAFF', '#18233B', 
+                '#003E5B', '#F2F5FA', '#00A9A8', '#002D42', 
+                '#ffffff', '#18233B', '#ffffff', '#607089', 
+                '#ffffff', '#DBE5F3', '#F7FAFF', '#008180', 
+                '#FF3B3B', '#00A9A8', '#FFA713', '#3b82f6', 
+                'Inter', 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap', '11px', false, 
                 CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
             FROM tenants
             WHERE NOT EXISTS (

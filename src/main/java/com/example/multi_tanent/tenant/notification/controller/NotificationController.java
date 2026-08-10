@@ -49,8 +49,7 @@ public class NotificationController {
                 String username = claims.getBody().getSubject();
                 String tenantId = claims.getBody().get("tenantId", String.class);
                 TenantContext.setTenantId(tenantId);
-                userId = userRepository.findByEmail(username)
-                    .orElseThrow().getId();
+                userId = findUserIdByEmail(username);
             } catch (Exception e) {
                 SseEmitter errorEmitter = new SseEmitter();
                 errorEmitter.completeWithError(new RuntimeException("Invalid token"));
@@ -129,10 +128,15 @@ public class NotificationController {
         return ResponseEntity.ok().build();
     }
 
-    private Long resolveUserId(Authentication auth) {
-        String username = auth.getName();
-        return userRepository.findByEmail(username)
-            .orElseThrow(() -> new RuntimeException("User not found: " + username))
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public Long findUserIdByEmail(String email) {
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found: " + email))
             .getId();
+    }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public Long resolveUserId(Authentication auth) {
+        return findUserIdByEmail(auth.getName());
     }
 }

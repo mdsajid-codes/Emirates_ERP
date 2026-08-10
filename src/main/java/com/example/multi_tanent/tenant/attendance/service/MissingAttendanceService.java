@@ -23,6 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.HashSet;
 
 import com.example.multi_tanent.master.enums.Role;
 import com.example.multi_tanent.tenant.notification.enums.NotificationPriority;
@@ -80,10 +82,21 @@ public class MissingAttendanceService {
         String msg = empName.trim() + " submitted a missing attendance request for " + savedRequest.getAttendanceDate() +
                      " (Check-In: " + savedRequest.getRequestedCheckIn() + ", Check-Out: " + savedRequest.getRequestedCheckOut() + ").";
 
-        List<User> hrUsers = userRepository.findActiveUsersByRole(Role.HR);
-        for (User hr : hrUsers) {
+        Set<User> recipients = new HashSet<>();
+        userRepository.findActiveUsersByRole(Role.HR).forEach(recipients::add);
+        userRepository.findActiveUsersByRole(Role.HRMS_ADMIN).forEach(recipients::add);
+        userRepository.findActiveUsersByRole(Role.SUPER_ADMIN).forEach(recipients::add);
+
+        // Fallback: Notify active users if recipients list is empty
+        if (recipients.isEmpty()) {
+            userRepository.findAll().stream()
+                .filter(u -> u.getIsActive() == null || Boolean.TRUE.equals(u.getIsActive()))
+                .forEach(recipients::add);
+        }
+
+        for (User recipient : recipients) {
             notificationService.send(
-                hr.getId(),
+                recipient.getId(),
                 NotificationType.MISSING_ATTENDANCE_SUBMITTED,
                 "Missing Attendance Request",
                 msg,

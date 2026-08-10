@@ -66,50 +66,59 @@ const ReportsLayout = () => {
                     </button>
                 </div>
 
-                {/* Module Sidebar */}
+                {/* Sub-Sidebar (Matching #003E5B Navy Theme) */}
                 <aside
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
                     className={`
-                        shrink-0 border-r border-border bg-sidebar-bg text-sidebar-text z-20 transition-all duration-300
+                        shrink-0 border-r border-[#002D42] bg-[#003E5B] text-[#F2F5FA] z-20 transition-all duration-300
                         sticky top-0 lg:h-[calc(100vh-3.5rem)] self-start
                         ${isSidebarOpen ? 'fixed inset-0 lg:relative' : 'hidden lg:flex lg:flex-col'}
-                        ${isExpanded ? 'lg:w-56' : 'lg:w-[64px]'}
+                        ${isExpanded ? 'lg:w-56' : 'lg:w-[80px]'}
                     `}
                 >
                     <div className="h-full flex flex-col p-2">
-                        {/* Sidebar Header with Pin Toggle Button */}
-                        <div className={`flex items-center py-2 px-2.5 border-b border-border mb-2.5 ${isExpanded ? 'justify-between' : 'justify-center'}`}>
-                            {isExpanded && (
+                        {/* Sidebar Header */}
+                        <div className={`flex items-center py-2 px-2.5 border-b border-white/10 mb-2.5 ${isExpanded ? 'justify-between' : 'justify-center'}`}>
+                            {isExpanded ? (
                                 <div className="flex items-center gap-2 overflow-hidden">
-                                    <div className="p-1.5 bg-rose-500/35 text-rose-300 rounded-full flex-shrink-0">
+                                    <div className="p-1.5 bg-[#00A9A8] text-white rounded-full flex-shrink-0">
                                         <BarChart3 className="h-4 w-4 stroke-[2.5]" />
                                     </div>
-                                    <span className="font-extrabold text-sm truncate">Reports Hub</span>
+                                    <span className="font-extrabold text-sm text-white truncate">Reports Hub</span>
                                 </div>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={toggleCollapsed}
+                                    className="p-1.5 rounded-xl text-[#F2F5FA]/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                                    title="Expand sidebar"
+                                >
+                                    <PanelLeftOpen className="h-5 w-5 text-white" />
+                                </button>
                             )}
-                            <button
-                                type="button"
-                                onClick={toggleCollapsed}
-                                className="hidden lg:flex items-center justify-center p-1.5 rounded-xl text-foreground-muted hover:text-foreground hover:bg-background-muted/60 transition-colors flex-shrink-0 cursor-pointer"
-                                title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                            >
-                                {isCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-                            </button>
+                            {isExpanded && (
+                                <button
+                                    type="button"
+                                    onClick={toggleCollapsed}
+                                    className="p-1.5 rounded-xl text-[#F2F5FA]/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                                    title="Collapse sidebar"
+                                >
+                                    <PanelLeftClose className="h-5 w-5 text-white" />
+                                </button>
+                            )}
                         </div>
 
                         {isExpanded && (
                             <button
                                 type="button"
                                 onClick={() => navigate('/hrdashboard')}
-                                className="flex items-center gap-2 text-xs font-bold text-sidebar-text/80 hover:text-sidebar-text hover:bg-white/10 px-2.5 py-1.5 rounded-xl transition-all mb-2 cursor-pointer"
+                                className="flex items-center gap-2 text-xs font-bold text-[#F2F5FA]/80 hover:text-white hover:bg-white/10 px-2.5 py-1.5 rounded-xl transition-all mb-2 cursor-pointer"
                             >
                                 <ArrowLeft className="h-3.5 w-3.5" /> Back to Dashboard
                             </button>
                         )}
 
                         {/* Category Navigation Links */}
-                        <nav className="flex-1 space-y-1.5 overflow-y-auto no-scrollbar px-1">
+                        <nav className={`space-y-2 flex-1 overflow-y-auto no-scrollbar ${!isExpanded ? 'flex flex-col items-center' : 'px-1'}`}>
                             {reportCategories.map((category) => {
                                 const isActive = location.pathname.startsWith(category.href);
                                 const Icon = category.icon;
@@ -120,17 +129,21 @@ const ReportsLayout = () => {
                                         onClick={() => setIsSidebarOpen(false)}
                                         title={!isExpanded ? category.name : undefined}
                                         className={`
-                                            flex items-center gap-3 py-2 rounded-xl text-xs font-bold transition-all group
-                                            ${isActive
-                                                ? 'bg-primary text-primary-foreground shadow-2xs font-extrabold'
-                                                : 'text-foreground-muted hover:text-foreground hover:bg-background-muted/60'}
-                                            ${!isExpanded ? 'justify-center px-0' : 'px-2.5'}
+                                            transition-all duration-200 group cursor-pointer
+                                            ${!isExpanded
+                                                ? `flex flex-col items-center justify-center py-2 px-1 rounded-[8px] w-[64px] h-[51.75px] ${isActive ? 'bg-[#00A9A8] text-white shadow-[0px_1px_3px_rgba(0,0,0,0.1)] font-semibold' : 'text-[#F2F5FA] hover:bg-white/10 opacity-90'}`
+                                                : `w-full flex items-center gap-3 py-2.5 px-3 rounded-[8px] text-xs font-semibold ${isActive ? 'bg-[#00A9A8] text-white shadow-xs' : 'text-[#F2F5FA] hover:bg-white/10'}`
+                                            }
                                         `}
                                     >
-                                        <div className={`p-1.5 rounded-full flex items-center justify-center flex-shrink-0 ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : (category.iconBg || 'bg-slate-500/35 text-slate-300')}`}>
-                                            <Icon className="h-4 w-4 stroke-[2.5]" />
-                                        </div>
-                                        {isExpanded && <span className="truncate font-bold">{category.name}</span>}
+                                        <Icon className={`h-[18px] w-[18px] shrink-0 transition-transform group-hover:scale-110 ${isActive ? 'text-white' : 'text-[#F2F5FA]'}`} />
+                                        {isExpanded ? (
+                                            <span className="truncate flex-1 text-left font-medium">{category.name}</span>
+                                        ) : (
+                                            <span className={`text-[9px] leading-[14px] font-normal tracking-tight text-center mt-1 truncate max-w-full ${isActive ? 'text-white font-medium' : 'text-[#F2F5FA]'}`}>
+                                                {category.name.split(' ')[0]}
+                                            </span>
+                                        )}
                                     </NavLink>
                                 );
                             })}

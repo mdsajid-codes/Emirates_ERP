@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { Check, X, FileClock, Loader, AlertCircle, Search, Eye } from 'lucide-react';
+import RejectionReasonModal from '../../../components/common/RejectionReasonModal';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -40,15 +41,18 @@ const MissingAttendanceRequests = () => {
         fetchRequests();
     }, [fetchRequests]);
 
+    const [rejectionModal, setRejectionModal] = useState({ isOpen: false, requestId: null });
+
     const handleAction = async (requestId, status) => {
-        let approverRemarks = '';
         if (status === 'REJECTED') {
-            approverRemarks = prompt("Please provide a reason for rejection (optional):");
-            if (approverRemarks === null) return;
+            setRejectionModal({ isOpen: true, requestId });
+            return;
         }
 
-        if (!window.confirm(`Are you sure you want to ${status.toLowerCase()} this request?`)) return;
+        await submitApprovalOrRejection(requestId, status, '');
+    };
 
+    const submitApprovalOrRejection = async (requestId, status, approverRemarks) => {
         try {
             const token = localStorage.getItem('token');
             await axios.post(`${API_URL}/missing-attendance/requests/${requestId}/approval`, { status, approverRemarks }, { headers: { "Authorization": `Bearer ${token}` } });
@@ -196,18 +200,28 @@ const MissingAttendanceRequests = () => {
                                                 {req.status === 'PENDING' && (
                                                     <div className="flex items-center justify-end gap-1">
                                                         <button 
-                                                            onClick={() => handleAction(req.id, 'REJECTED')} 
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                handleAction(req.id, 'REJECTED');
+                                                            }} 
                                                             className="p-1 text-foreground-muted hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer" 
                                                             title="Reject Request"
                                                         >
-                                                            <X className="h-4 w-4" />
+                                                            <X className="h-4 w-4 pointer-events-none" />
                                                         </button>
                                                         <button 
-                                                            onClick={() => handleAction(req.id, 'APPROVED')} 
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                handleAction(req.id, 'APPROVED');
+                                                            }} 
                                                             className="p-1 text-foreground-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer" 
                                                             title="Approve Request"
                                                         >
-                                                            <Check className="h-4 w-4" />
+                                                            <Check className="h-4 w-4 pointer-events-none" />
                                                         </button>
                                                     </div>
                                                 )}
@@ -246,6 +260,14 @@ const MissingAttendanceRequests = () => {
                     </div>
                 </div>
             )}
+
+            <RejectionReasonModal
+                isOpen={rejectionModal.isOpen}
+                onClose={() => setRejectionModal({ isOpen: false, requestId: null })}
+                onSubmit={(reason) => submitApprovalOrRejection(rejectionModal.requestId, 'REJECTED', reason)}
+                title="Reject Missing Attendance Request"
+                subtitle="Provide optional rejection comments or notes for the employee"
+            />
         </div>
     );
 };

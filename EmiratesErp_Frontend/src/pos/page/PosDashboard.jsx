@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { Link, useNavigate, useSearchParams, NavLink } from 'react-router-dom';
+import { useNavigate, useSearchParams, NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard,
@@ -8,22 +8,14 @@ import {
     Package,
     ClipboardList,
     Users,
-    BarChart,
+    BarChart3,
     Settings,
     LogOut,
     Menu,
     ChevronDown,
-    Home,
-    Sparkles,
     Search,
     Bell,
-    Rocket,
-    CreditCard,
-    ArrowRightLeft,
-    Shield,
-    Sliders,
-    PanelLeftClose,
-    PanelLeftOpen
+    Home,
 } from 'lucide-react';
 import PosDashboardView from './PosDashboardView';
 import ProductsView from './ProductsView';
@@ -33,66 +25,95 @@ import CustomersView from './CustomersView';
 import ReportsView from './ReportsView';
 import PosSettingsView from './PosSettingsView';
 import { usePosTheme } from './usePosTheme';
+import NotificationBell from '../../components/notifications/NotificationBell';
 
-const navLinksOverview = [
-    { name: 'Dashboard', icon: LayoutDashboard, Component: PosDashboardView, iconBg: 'bg-indigo-500/35 text-indigo-300' },
-    { name: 'Products', icon: Package, Component: ProductsView, iconBg: 'bg-cyan-500/35 text-cyan-300' },
-    { name: 'Sales', icon: ShoppingCart, Component: SalesView, iconBg: 'bg-emerald-500/35 text-emerald-300' },
-    { name: 'Inventory', icon: ClipboardList, Component: InventoryView, iconBg: 'bg-orange-500/35 text-orange-300' },
-    { name: 'Customers', icon: Users, Component: CustomersView, iconBg: 'bg-sky-500/35 text-sky-300' },
+/* ─── Navigation items ─────────────────────────────────────────────────────── */
+const NAV_ITEMS = [
+    { name: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard, Component: PosDashboardView },
+    { name: 'Sales',     label: 'Sales',     icon: ShoppingCart,    Component: SalesView },
+    { name: 'Customers', label: 'Customers', icon: Users,           Component: CustomersView },
+    { name: 'Quotations',label: 'Quotations',icon: ClipboardList,   Component: null },
+    { name: 'Orders',    label: 'Orders',    icon: Package,         Component: null },
+    { name: 'Invoices',  label: 'Invoices',  icon: ClipboardList,   Component: null },
+    { name: 'Products',  label: 'Products',  icon: Package,         Component: ProductsView },
+    { name: 'Reports',   label: 'Reports',   icon: BarChart3,       Component: ReportsView },
+    { name: 'Settings',  label: 'Settings',  icon: Settings,        Component: PosSettingsView },
 ];
 
-const navLinksOther = [
-    { name: 'Reports', icon: BarChart, Component: ReportsView, iconBg: 'bg-purple-500/35 text-purple-300' },
-    { name: 'Settings', icon: Settings, Component: PosSettingsView, iconBg: 'bg-slate-500/35 text-slate-300' },
-];
+/* ─── Sidebar link item ─────────────────────────────────────────────────────── */
+const SidebarLink = ({ item, isActive, onClick }) => {
+    const Icon = item.icon;
+    return (
+        <button
+            onClick={() => onClick(item.name)}
+            title={item.label}
+            className={`flex flex-col items-center justify-center py-2 px-1 rounded-[8px] transition-all duration-200 w-[64px] h-[51.75px] shrink-0 cursor-pointer ${
+                isActive
+                    ? 'bg-[#00A9A8] text-white shadow-[0px_1px_3px_rgba(0,0,0,0.1)] font-semibold'
+                    : 'text-[#F2F5FA] hover:bg-white/10 opacity-90'
+            }`}
+        >
+            <Icon className={`h-[18px] w-[18px] transition-transform ${isActive ? 'text-white' : 'text-[#F2F5FA]'}`} strokeWidth={1.5} />
+            <span className={`text-[9px] leading-[14px] font-normal tracking-tight text-center mt-1 truncate max-w-full ${isActive ? 'text-white font-medium' : 'text-[#F2F5FA]'}`}>
+                {item.label}
+            </span>
+        </button>
+    );
+};
 
+/* ─── Main POS Dashboard shell ──────────────────────────────────────────────── */
 const PosDashboard = () => {
     const { posTheme } = usePosTheme();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
-    const [isHovered, setIsHovered] = useState(false);
+    const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+    const [storeDropdownOpen, setStoreDropdownOpen] = useState(false);
+    const [language, setLanguage] = useState('en');
     const [searchParams, setSearchParams] = useSearchParams();
-    const activeItem = searchParams.get('view') || 'Dashboard';
+    const activeItem = searchParams.get('view') || 'Sales';
     const navigate = useNavigate();
 
-    const username = localStorage.getItem('username') || 'Josie';
-    const [tenantName, setTenantName] = useState('POS');
+    const username = localStorage.getItem('username') || 'Admin User';
+    const [tenantName, setTenantName] = useState('Emirates ERP Solutions LLC');
+    const [companyLogoBlob, setCompanyLogoBlob] = useState(null);
+    const [selectedStore, setSelectedStore] = useState('Main Store');
     const API_URL = import.meta.env.VITE_API_BASE_URL;
 
     const roles = useMemo(() => {
-        try {
-            return JSON.parse(localStorage.getItem('roles') || '[]');
-        } catch { return []; }
+        try { return JSON.parse(localStorage.getItem('roles') || '[]'); }
+        catch { return []; }
     }, []);
     const isSuperAdmin = roles.includes('SUPER_ADMIN');
 
-    const setActiveItem = (itemName) => {
-        setSearchParams({ view: itemName });
-    };
+    const setActiveItem = (itemName) => setSearchParams({ view: itemName });
 
     useEffect(() => {
         if (!searchParams.get('view')) {
-            setSearchParams({ view: 'Dashboard' }, { replace: true });
+            setSearchParams({ view: 'Sales' }, { replace: true });
         }
     }, [searchParams, setSearchParams]);
 
+    /* Fetch company info & logo */
     useEffect(() => {
-        const fetchCompany = async () => {
+        const fetchCompanyInfo = async () => {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) return;
-                const res = await axios.get(`${API_URL}/company-info`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                if (res.data && res.data.companyName) {
-                    setTenantName(res.data.companyName);
+                const headers = { Authorization: `Bearer ${token}` };
+                const res = await axios.get(`${API_URL}/company-info`, { headers });
+                const companyName = res.data?.companyName || 'Emirates ERP Solutions LLC';
+                setTenantName(companyName);
+                const rawLogoUrl = res.data?.logoPath;
+                if (rawLogoUrl) {
+                    try {
+                        const logoRes = await axios.get(`${API_URL}/company-info/logo`, { headers, responseType: 'blob' });
+                        const reader = new FileReader();
+                        reader.onloadend = () => setCompanyLogoBlob(reader.result);
+                        reader.readAsDataURL(logoRes.data);
+                    } catch { /* silent */ }
                 }
-            } catch (e) {
-                // Keep default
-            }
+            } catch { /* silent */ }
         };
-        fetchCompany();
+        fetchCompanyInfo();
     }, [API_URL]);
 
     const handleLogout = () => {
@@ -100,238 +121,200 @@ const PosDashboard = () => {
         navigate('/login');
     };
 
-    const isExpanded = !isDesktopCollapsed || isHovered;
-
+    /* Render active view content */
     const renderContent = () => {
-        const allLinks = [...navLinksOverview, ...navLinksOther];
-        const activeLink = allLinks.find(link => link.name === activeItem) || navLinksOverview[0];
-        const Component = activeLink.Component;
-        return <Component key={activeItem} setActiveItem={setActiveItem} posTheme={posTheme} isExpanded={isExpanded} />;
+        const activeNav = NAV_ITEMS.find(n => n.name === activeItem) || NAV_ITEMS[1];
+        if (!activeNav.Component) {
+            return (
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-[#607089]">
+                    <activeNav.icon className="w-12 h-12 opacity-30" />
+                    <p className="text-sm font-semibold">{activeNav.label} — Coming Soon</p>
+                </div>
+            );
+        }
+        const Component = activeNav.Component;
+        return <Component key={activeItem} setActiveItem={setActiveItem} posTheme={posTheme} />;
     };
 
-    const SidebarNav = ({ isCollapsedMode = false }) => (
-        <div
-            className={`flex flex-col h-full text-white p-3.5 sm:p-4 justify-between select-none transition-all duration-300 ${isCollapsedMode ? 'items-center px-2' : ''}`}
-            style={{ backgroundColor: posTheme.sidebarBg, color: posTheme.sidebarText }}
-        >
-            <div>
-                {/* Logo & Toggle Section */}
-                <div className={`flex items-center mb-6 py-2 px-1 ${isCollapsedMode ? 'justify-center flex-col gap-2' : 'justify-between gap-2'}`}>
-                    <div className="flex items-center gap-3 overflow-hidden">
-                        <div
-                            className="w-9 h-9 rounded-2xl flex items-center justify-center shadow-xs flex-shrink-0 cursor-pointer"
-                            onClick={() => setIsDesktopCollapsed(prev => !prev)}
-                            style={{ backgroundColor: posTheme.sidebarActive, color: posTheme.sidebarActiveFg }}
-                            title={isDesktopCollapsed ? "Click to toggle sidebar" : undefined}
-                        >
-                            <Sparkles className="h-5 w-5 fill-current" />
-                        </div>
-                        {!isCollapsedMode && (
-                            <div className="min-w-0 flex-1">
-                                <span className="text-xl font-extrabold tracking-tight truncate block" style={{ color: posTheme.sidebarText }}>{tenantName}</span>
-                                <p className="text-[9px] uppercase font-bold tracking-widest -mt-0.5 opacity-90 truncate" style={{ color: posTheme.sidebarActive }}>PROFILES ELASTOMERES</p>
-                            </div>
-                        )}
-                    </div>
-                    {/* Toggle button for desktop */}
+    /* ─── Sidebar content (shared desktop + mobile) ─────────────────────────── */
+    const SidebarContent = () => (
+        <div className="flex flex-col h-full bg-[#003E5B] text-[#F2F5FA] w-[80px] select-none">
+            {/* Top Logo Box (Exact Figma Spec: 80px x 64px, bg white, border right #F2F5FA) */}
+            <div className="w-[80px] h-[64px] bg-white border-r border-b border-[#F2F5FA] flex items-center justify-center shrink-0">
+                <img
+                    src={companyLogoBlob || "/icon.svg"}
+                    alt="Logo"
+                    className="w-[31px] h-[38px] object-contain"
+                    onError={(e) => { e.target.onerror = null; e.target.src = "/icon.svg"; }}
+                />
+            </div>
+
+            {/* Nav links (Vertical Stack) */}
+            <nav className="flex-1 py-3 flex flex-col items-center gap-1.5 overflow-y-auto no-scrollbar">
+                {NAV_ITEMS.map(item => (
+                    <SidebarLink
+                        key={item.name}
+                        item={item}
+                        isActive={activeItem === item.name}
+                        onClick={(name) => { setActiveItem(name); setSidebarOpen(false); }}
+                    />
+                ))}
+            </nav>
+
+            {/* Bottom Support / Actions Section */}
+            <div className="py-3 border-t border-white/20 flex flex-col items-center gap-2 shrink-0">
+                {isSuperAdmin && (
                     <button
-                        type="button"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIsDesktopCollapsed(prev => !prev);
-                        }}
-                        className="hidden lg:flex items-center justify-center p-1.5 rounded-xl opacity-80 hover:opacity-100 hover:bg-white/10 transition-all cursor-pointer"
-                        title={isDesktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                        onClick={() => navigate('/company-dashboard')}
+                        title="Company Hub"
+                        className="flex flex-col items-center justify-center py-1 text-[#F2F5FA] hover:text-white transition-colors cursor-pointer w-[64px]"
                     >
-                        {isDesktopCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+                        <Home className="h-[18px] w-[18px] text-[#F2F5FA]" strokeWidth={1.5} />
+                        <span className="text-[9px] leading-[14px] font-normal text-[#F2F5FA] mt-0.5">Hub</span>
                     </button>
-                </div>
-
-                {/* Overview Section */}
-                <div className="mb-6">
-                    {!isCollapsedMode ? (
-                        <p className="text-xs font-semibold uppercase tracking-wider px-3 mb-2.5 opacity-70" style={{ color: posTheme.sidebarText }}>Overview</p>
-                    ) : (
-                        <div className="h-px bg-white/10 mb-3 mx-2" />
-                    )}
-                    <nav className="space-y-1.5">
-                        {navLinksOverview.map((item) => {
-                            const isActive = activeItem === item.name;
-                            const Icon = item.icon;
-                            return (
-                                <button
-                                    key={item.name}
-                                    onClick={() => {
-                                        setActiveItem(item.name);
-                                        setSidebarOpen(false);
-                                    }}
-                                    title={isCollapsedMode ? item.name : undefined}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
-                                        isCollapsedMode ? 'justify-center px-0' : ''
-                                    } ${isActive ? 'shadow-md font-bold' : 'opacity-80 hover:opacity-100'}`}
-                                    style={{
-                                        backgroundColor: isActive ? posTheme.sidebarActive : 'transparent',
-                                        color: isActive ? posTheme.sidebarActiveFg : posTheme.sidebarText,
-                                    }}
-                                >
-                                    <div className={`p-1.5 rounded-full flex items-center justify-center flex-shrink-0 ${item.iconBg || 'bg-slate-500/35 text-slate-300'}`}>
-                                        <Icon className="h-4 w-4 stroke-[2.5]" />
-                                    </div>
-                                    {!isCollapsedMode && <span className="truncate">{item.name}</span>}
-                                </button>
-                            );
-                        })}
-                    </nav>
-                </div>
-
-                {/* Other Section */}
-                <div>
-                    {!isCollapsedMode ? (
-                        <p className="text-xs font-semibold uppercase tracking-wider px-3 mb-2.5 opacity-70" style={{ color: posTheme.sidebarText }}>Other</p>
-                    ) : (
-                        <div className="h-px bg-white/10 mb-3 mx-2" />
-                    )}
-                    <nav className="space-y-1.5">
-                        {navLinksOther.map((item) => {
-                            const isActive = activeItem === item.name;
-                            const Icon = item.icon;
-                            return (
-                                <button
-                                    key={item.name}
-                                    onClick={() => {
-                                        setActiveItem(item.name);
-                                        setSidebarOpen(false);
-                                    }}
-                                    title={isCollapsedMode ? item.name : undefined}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
-                                        isCollapsedMode ? 'justify-center px-0' : ''
-                                    } ${isActive ? 'shadow-md font-bold' : 'opacity-80 hover:opacity-100'}`}
-                                    style={{
-                                        backgroundColor: isActive ? posTheme.sidebarActive : 'transparent',
-                                        color: isActive ? posTheme.sidebarActiveFg : posTheme.sidebarText,
-                                    }}
-                                >
-                                    <div className={`p-1.5 rounded-full flex items-center justify-center flex-shrink-0 ${item.iconBg || 'bg-slate-500/35 text-slate-300'}`}>
-                                        <Icon className="h-4 w-4 stroke-[2.5]" />
-                                    </div>
-                                    {!isCollapsedMode && <span className="truncate">{item.name}</span>}
-                                </button>
-                            );
-                        })}
-
-                        {isSuperAdmin && (
-                            <NavLink
-                                to="/company-dashboard"
-                                title={isCollapsedMode ? "Company Hub" : undefined}
-                                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-2xl text-sm font-semibold opacity-80 hover:opacity-100 transition-all ${
-                                    isCollapsedMode ? 'justify-center px-0' : ''
-                                }`}
-                                style={{ color: posTheme.sidebarText }}
-                            >
-                                <Home className="h-5 w-5 flex-shrink-0" style={{ color: posTheme.sidebarText }} />
-                                {!isCollapsedMode && <span className="truncate">Company Hub</span>}
-                            </NavLink>
-                        )}
-                    </nav>
-                </div>
+                )}
+                <button
+                    onClick={handleLogout}
+                    title="Logout"
+                    className="flex flex-col items-center justify-center py-1 text-[#F2F5FA] hover:text-white transition-colors cursor-pointer w-[64px]"
+                >
+                    <LogOut className="h-[18px] w-[18px] text-[#F2F5FA]" strokeWidth={1.5} />
+                    <span className="text-[9px] leading-[14px] font-normal text-[#F2F5FA] mt-0.5">Logout</span>
+                </button>
             </div>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-[#f3f4f6] flex font-sans">
-            {/* Desktop Fixed Dark Sidebar with Collapsible / Hover Expand behavior */}
-            <aside
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                className={`hidden lg:block flex-shrink-0 p-3 transition-all duration-300 ease-in-out ${
-                    isExpanded ? 'w-64 xl:w-72' : 'w-20'
-                }`}
-            >
-                <div className="h-[calc(100vh-24px)] sticky top-3 rounded-[32px] overflow-hidden shadow-xl">
-                    <SidebarNav isCollapsedMode={!isExpanded} />
-                </div>
+        <div className="min-h-screen font-sans" style={{ background: '#F7FAFF' }}>
+
+            {/* ── Fixed 80px Sidebar (desktop) ──────────────────────────────────── */}
+            <aside className="hidden lg:block fixed left-0 top-0 bottom-0 w-[80px] z-40">
+                <SidebarContent />
             </aside>
 
-            {/* Main Content & Top Bar */}
-            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-                {/* Main Top Header */}
-                <header className="px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3 border-b border-slate-200/40 flex-shrink-0">
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => setSidebarOpen(true)}
-                            className="lg:hidden p-2 text-slate-700 bg-white rounded-xl shadow-xs"
+            {/* ── Mobile Drawer ─────────────────────────────────────────────────── */}
+            <AnimatePresence>
+                {sidebarOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            onClick={() => setSidebarOpen(false)}
+                            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                        />
+                        <motion.aside
+                            initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="fixed top-0 left-0 bottom-0 w-[80px] z-50 lg:hidden"
                         >
-                            <Menu className="h-6 w-6" />
+                            <SidebarContent />
+                        </motion.aside>
+                    </>
+                )}
+            </AnimatePresence>
+
+            {/* ── Fixed Header ──────────────────────────────────────────────────── */}
+            <header className="fixed top-0 left-0 lg:left-[80px] right-0 h-16 bg-white text-[#0F172A] border-b border-[#DBE5F3] flex items-center justify-between px-4 lg:px-6 z-30">
+                {/* Left: Mobile menu + Company/Store Selector */}
+                <div className="flex items-center gap-4">
+                    <button
+                        type="button"
+                        onClick={() => setSidebarOpen(true)}
+                        className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 p-2 rounded-lg lg:hidden"
+                    >
+                        <Menu className="h-6 w-6" />
+                    </button>
+
+                    {/* Store / Company Selector Pill */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setStoreDropdownOpen(!storeDropdownOpen)}
+                            className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-xs font-semibold text-[#0F172A] hover:bg-slate-50 transition-colors cursor-pointer"
+                        >
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                <path d="M2.25 6.75h13.5M2.25 6.75L4.5 2.25h9l2.25 4.5M2.25 6.75v9h13.5v-9" stroke="#00A9A8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <span className="truncate max-w-[200px]">{tenantName}</span>
+                            <ChevronDown className="w-3.5 h-3.5 text-[#0F172A] flex-shrink-0" />
                         </button>
-                        {/* <div>
-                            <AnimatedWelcomeText key={username} text={`Welcome back, ${username}!`} />
-                        </div> */}
-                    </div>
-
-                    {/* Right side search & user avatar */}
-                    <div className="flex items-center gap-3">
-                        <div className="relative hidden sm:block w-64 lg:w-80">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                            <input
-                                type="text"
-                                placeholder="Search...."
-                                className="w-full pl-10 pr-4 py-2.5 bg-white rounded-full text-sm border-0 shadow-xs outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 transition-all"
-                            />
-                        </div>
-
-                        <button className="p-2.5 bg-white hover:bg-slate-50 text-slate-600 rounded-full shadow-xs transition-colors relative">
-                            <Bell className="h-5 w-5" />
-                            <span className="absolute top-1 right-1 h-2 w-2 bg-rose-500 rounded-full" />
-                        </button>
-
-                        <div className="flex items-center gap-2 pl-2 group relative cursor-pointer">
-                            <div className="w-10 h-10 rounded-full bg-amber-200 border-2 border-white overflow-hidden shadow-xs flex items-center justify-center text-amber-900 font-bold text-base">
-                                {username.charAt(0).toUpperCase()}
-                            </div>
-
-                            {/* Dropdown Menu on hover */}
-                            <div className="absolute right-0 top-full pt-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all z-30">
-                                <div className="bg-white rounded-xl shadow-lg border border-slate-100 p-2 w-48">
+                        {storeDropdownOpen && (
+                            <div className="absolute left-0 top-full mt-1 w-56 bg-white border border-[#E2E8F0] rounded-lg shadow-lg py-1 z-50">
+                                {['Main Store', 'Dubai Mall Branch', 'JBR Outlet'].map(store => (
                                     <button
-                                        onClick={handleLogout}
-                                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                        key={store}
+                                        onClick={() => { setSelectedStore(store); setStoreDropdownOpen(false); }}
+                                        className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-slate-50 ${selectedStore === store ? 'font-bold text-[#00A9A8]' : 'text-[#0F172A]'}`}
                                     >
-                                        <LogOut className="h-4 w-4" />
-                                        <span>Sign Out</span>
+                                        <span>{store}</span>
+                                        {selectedStore === store && <span>✓</span>}
                                     </button>
-                                </div>
+                                ))}
                             </div>
-                        </div>
+                        )}
                     </div>
-                </header>
+                </div>
 
-                {/* Mobile Drawer */}
-                <AnimatePresence>
-                    {sidebarOpen && (
-                        <>
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-                                onClick={() => setSidebarOpen(false)}
-                            />
-                            <motion.div
-                                initial={{ x: '-100%' }}
-                                animate={{ x: 0 }}
-                                exit={{ x: '-100%' }}
-                                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                                className="fixed top-0 left-0 h-full w-72 z-50 overflow-y-auto"
-                            >
-                                <SidebarNav />
-                            </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
+                {/* Right: Language, Search, Notification, Settings, Profile */}
+                <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+                    {/* Language Switcher */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+                            className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg shadow-2xs text-xs font-semibold text-[#0F172A] hover:bg-slate-50 transition-colors cursor-pointer"
+                        >
+                            <span className="w-4 h-4 text-[#00A9A8] flex items-center justify-center font-bold text-[10px]">🌐</span>
+                            <span>{language === 'ar' ? 'العربية' : 'English'}</span>
+                            <ChevronDown className="w-3.5 h-3.5 text-[#0F172A]" />
+                        </button>
+                        {langDropdownOpen && (
+                            <div className="absolute right-0 mt-1 w-36 bg-white border border-[#E2E8F0] rounded-lg shadow-lg py-1 z-50">
+                                {[{ code: 'en', label: 'English' }, { code: 'ar', label: 'العربية' }].map(l => (
+                                    <button
+                                        key={l.code}
+                                        onClick={() => { setLanguage(l.code); setLangDropdownOpen(false); }}
+                                        className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-slate-50 ${language === l.code ? 'font-bold text-[#00A9A8]' : 'text-[#0F172A]'}`}
+                                    >
+                                        <span>{l.label}</span>
+                                        {language === l.code && <span>✓</span>}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
-                {/* Content View */}
-                <main className="flex-1 overflow-y-auto pb-8">
+                    {/* Search */}
+                    <button className="p-2 text-[#0F172A] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer">
+                        <Search className="h-5 w-5" />
+                    </button>
+
+                    {/* Notification Bell */}
+                    <NotificationBell />
+
+                    {/* Settings */}
+                    <button className="p-2 text-[#0F172A] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer" title="Settings">
+                        <span className="w-5 h-5 text-[#0F172A] flex items-center justify-center text-base">⚙️</span>
+                    </button>
+
+                    {/* Divider */}
+                    <div className="w-px h-6 bg-[#E2E8F0] hidden sm:block" />
+
+                    {/* User Profile */}
+                    <div className="flex items-center gap-2.5 cursor-pointer hover:bg-slate-50 p-1.5 rounded-lg transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-[#01B8BD] text-white flex items-center justify-center font-bold text-sm shrink-0">
+                            {username.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="hidden sm:flex flex-col text-left">
+                            <span className="text-xs font-semibold text-[#0F172A] leading-tight truncate max-w-[140px]">{username}</span>
+                            <span className="text-[11px] text-[#526580]">Administrator</span>
+                        </div>
+                        <ChevronDown className="h-3.5 w-3.5 text-[#0F172A] hidden sm:block ml-0.5" />
+                    </div>
+                </div>
+            </header>
+
+            {/* ── Main Content ──────────────────────────────────────────────────── */}
+            <div className="flex flex-col lg:ml-[80px] pt-[64px] min-h-screen">
+                <main className="flex-1 overflow-y-auto">
                     {renderContent()}
                 </main>
             </div>
@@ -340,5 +323,3 @@ const PosDashboard = () => {
 };
 
 export default PosDashboard;
-
-

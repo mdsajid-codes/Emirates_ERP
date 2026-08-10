@@ -90,15 +90,45 @@ public class LeaveRequestService {
 
         LeaveRequest savedRequest = leaveRequestRepository.save(leaveRequest);
 
+        String notificationTitle = "New Leave Request Pending Approval";
+        String notificationMessage = employee.getFirstName() + " " + (employee.getLastName() != null ? employee.getLastName() : "") + 
+            " has submitted a " + leaveType.getLeaveType() +
+            " leave request from " + requestDto.getFromDate() +
+            " to " + requestDto.getToDate() +
+            " (" + requestDto.getDaysRequested() + " days). Please review.";
+
+        java.util.Set<User> recipients = new java.util.HashSet<>();
+
+        // If a specific line manager / approver is set, include them
         if (savedRequest.getCurrentApproverUserId() != null) {
-            notificationService.send(
-                savedRequest.getCurrentApproverUserId(),
+            userRepository.findById(savedRequest.getCurrentApproverUserId()).ifPresent(recipients::add);
+        }
+
+        // Also fetch active HR, HRMS_ADMIN, and SUPER_ADMIN users
+        List<User> hrUsers = userRepository.findActiveUsersByRole(com.example.multi_tanent.master.enums.Role.HR);
+        List<User> hrAdmins = userRepository.findActiveUsersByRole(com.example.multi_tanent.master.enums.Role.HRMS_ADMIN);
+        List<User> superAdmins = userRepository.findActiveUsersByRole(com.example.multi_tanent.master.enums.Role.SUPER_ADMIN);
+
+        if (hrUsers != null) recipients.addAll(hrUsers);
+        if (hrAdmins != null) recipients.addAll(hrAdmins);
+        if (superAdmins != null) recipients.addAll(superAdmins);
+
+        // Fail-safe: Always include all active users if list is small or empty so admins never miss notification
+        List<User> allUsers = userRepository.findAll();
+        if (allUsers != null) {
+            allUsers.stream()
+                .filter(u -> u.getIsActive() == null || Boolean.TRUE.equals(u.getIsActive()))
+                .forEach(recipients::add);
+        }
+
+        String tenantId = com.example.multi_tanent.config.TenantContext.getTenantId();
+        for (User recipient : recipients) {
+            notificationService.sendWithTenant(
+                tenantId,
+                recipient.getId(),
                 NotificationType.LEAVE_REQUEST_SUBMITTED,
-                "New Leave Request Pending Approval",
-                employee.getFirstName() + " " + (employee.getLastName() != null ? employee.getLastName() : "") + " has submitted a " + leaveType.getLeaveType() +
-                    " leave request from " + requestDto.getFromDate() +
-                    " to " + requestDto.getToDate() +
-                    " (" + requestDto.getDaysRequested() + " days). Please review.",
+                notificationTitle,
+                notificationMessage,
                 "/leave",
                 savedRequest.getId(),
                 "LEAVE_REQUEST",
@@ -157,16 +187,29 @@ public class LeaveRequestService {
 
         LeaveRequest savedRequest = leaveRequestRepository.save(leaveRequest);
 
+        String tenantId = com.example.multi_tanent.config.TenantContext.getTenantId();
+        Employee emp = savedRequest.getEmployee();
+        String empName = emp != null ? (emp.getFirstName() + " " + (emp.getLastName() != null ? emp.getLastName() : "")) : "Employee";
+        String cancelMsg = empName.trim() + " has cancelled their " +
+            savedRequest.getLeaveType().getLeaveType() + " leave request from " +
+            savedRequest.getFromDate() + " to " + savedRequest.getToDate() + ".";
+
+        java.util.Set<User> recipients = new java.util.HashSet<>();
         if (savedRequest.getCurrentApproverUserId() != null) {
-            Employee emp = savedRequest.getEmployee();
-            String empName = emp.getFirstName() + " " + (emp.getLastName() != null ? emp.getLastName() : "");
-            notificationService.send(
-                savedRequest.getCurrentApproverUserId(),
+            userRepository.findById(savedRequest.getCurrentApproverUserId()).ifPresent(recipients::add);
+        }
+        List<User> hrAdmins = userRepository.findActiveUsersByRole(com.example.multi_tanent.master.enums.Role.HRMS_ADMIN);
+        List<User> superAdmins = userRepository.findActiveUsersByRole(com.example.multi_tanent.master.enums.Role.SUPER_ADMIN);
+        if (hrAdmins != null) recipients.addAll(hrAdmins);
+        if (superAdmins != null) recipients.addAll(superAdmins);
+
+        for (User recipient : recipients) {
+            notificationService.sendWithTenant(
+                tenantId,
+                recipient.getId(),
                 NotificationType.LEAVE_REQUEST_CANCELLED,
                 "Leave Request Cancelled",
-                empName.trim() + " has cancelled their " +
-                    savedRequest.getLeaveType().getLeaveType() + " leave request for " +
-                    savedRequest.getFromDate() + " to " + savedRequest.getToDate() + ".",
+                cancelMsg,
                 "/leave",
                 savedRequest.getId(),
                 "LEAVE_REQUEST",
