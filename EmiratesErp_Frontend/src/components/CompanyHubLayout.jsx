@@ -1,9 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { LayoutDashboard, LogOut, Bell, Settings, Menu, Sparkles, Search, ChevronDown, PanelLeftClose, PanelLeftOpen, Briefcase, UserPlus, Store, TrendingUp, ShoppingBag, Headset, Landmark, Monitor, Factory, Boxes, Warehouse, Truck } from 'lucide-react';
+import {
+    LayoutDashboard, Briefcase, UserPlus, Store, TrendingUp, ShoppingBag, Headset, Landmark,
+    Monitor, Factory, Boxes, Warehouse, Bell, Truck, Settings, Search, ChevronDown, LogOut, HelpCircle, Menu
+} from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTenant } from '../context/TenantContext';
+import { useLanguage } from '../context/LanguageContext';
+import NotificationBell from './notifications/NotificationBell';
 import { logout } from '../utils/logout';
 
 const constructImageUrl = (relativeUrl) => {
@@ -17,84 +22,104 @@ const constructImageUrl = (relativeUrl) => {
     return `${API_URL}/pos/uploads/view/${cleanPath}`;
 };
 
-const NavItem = ({ item, onLinkClick, isCollapsed }) => (
-    <NavLink
-        to={item.href}
-        onClick={onLinkClick}
-        title={isCollapsed ? item.name : ''}
-        className={({ isActive }) =>
-            `flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-3'} py-2 text-sm font-medium rounded-xl transition-all duration-200 mb-1.5 group ${
-                isActive ? 'bg-sidebar-active/20 shadow-2xs font-bold' : 'hover:bg-sidebar-hover'
-            }`
-        }
-    >
-        {({ isActive }) => (
-            <>
-                <div className={`p-1.5 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${item.iconBg || 'bg-slate-500/35 text-slate-300'} ${isCollapsed ? '' : 'mr-3'}`}>
-                    <item.icon className="h-4.5 w-4.5 stroke-[2.5] transition-transform group-hover:scale-110" />
-                </div>
-                {!isCollapsed && <span className={`${isActive ? 'text-sidebar-text font-bold' : 'text-sidebar-text/80 group-hover:text-sidebar-text'}`}>{item.name}</span>}
-            </>
-        )}
-    </NavLink>
-);
-
 const ALL_NAV_LINKS = [
-    { name: 'Dashboard', icon: LayoutDashboard, href: '/company-dashboard', iconBg: 'bg-indigo-500/35 text-indigo-300' },
-    { name: 'HRMS', icon: Briefcase, href: '/hrdashboard', module: 'HRMS_CORE', iconBg: 'bg-blue-500/35 text-blue-300' },
-    { name: 'ATS', icon: UserPlus, href: '/ats-dashboard', module: 'ATS', iconBg: 'bg-sky-500/35 text-sky-300' },
-    { name: 'POS', icon: Store, href: '/pos-dashboard', module: 'POS', iconBg: 'bg-green-500/35 text-green-300' },
-    { name: 'Sales', icon: TrendingUp, href: '/sales-dashboard', module: 'SALES', iconBg: 'bg-emerald-500/35 text-emerald-300' },
-    { name: 'Purchases', icon: ShoppingBag, href: '/purchase-dashboard', module: 'PURCHASE', iconBg: 'bg-orange-500/35 text-orange-300' },
-    { name: 'CRM', icon: Headset, href: '/crm-dashboard', module: 'CRM', iconBg: 'bg-rose-500/35 text-rose-300' },
-    { name: 'Account', icon: Landmark, href: '/account-dashboard', module: 'ACCOUNTS', iconBg: 'bg-amber-500/35 text-amber-300' },
-    { name: 'Fixed Assets', icon: Monitor, href: '/fixed-asset-dashboard', module: 'FIXED_ASSETS', iconBg: 'bg-indigo-500/35 text-indigo-300' },
-    { name: 'Production', icon: Factory, href: '/production-dashboard', module: 'PRODUCTION', iconBg: 'bg-cyan-500/35 text-cyan-300' },
-    { name: 'Material', icon: Boxes, href: '/material-dashboard', module: 'MATERIAL', iconBg: 'bg-purple-500/35 text-purple-300' },
-    { name: 'Warehouse', icon: Warehouse, href: '/warehouse-dashboard', module: 'WAREHOUSE', iconBg: 'bg-teal-500/35 text-teal-300' },
-    { name: 'Notification', icon: Bell, href: '/notification-dashboard', module: 'NOTIFICATION', iconBg: 'bg-indigo-600/35 text-indigo-300' },
-    { name: 'Fleet Management', icon: Truck, href: '/fleet-dashboard', module: 'TRIP_MANAGEMENT', iconBg: 'bg-sky-500/35 text-sky-300' },
-    { name: 'Settings', icon: Settings, href: '/company-settings', iconBg: 'bg-slate-500/35 text-slate-300' },
+    { nameKey: 'nav.dashboard', defaultName: 'Dashboard', icon: LayoutDashboard, href: '/company-dashboard' },
+    { nameKey: 'nav.hrms', defaultName: 'HRMS', icon: Briefcase, href: '/hrdashboard', module: 'HRMS_CORE' },
+    { nameKey: 'nav.ats', defaultName: 'ATS', icon: UserPlus, href: '/ats-dashboard', module: 'ATS' },
+    { nameKey: 'nav.pos', defaultName: 'POS', icon: Store, href: '/pos-dashboard', module: 'POS' },
+    { nameKey: 'nav.sales', defaultName: 'Sales', icon: TrendingUp, href: '/sales-dashboard', module: 'SALES' },
+    { nameKey: 'nav.purchases', defaultName: 'Purchases', icon: ShoppingBag, href: '/purchase-dashboard', module: 'PURCHASE' },
+    { nameKey: 'nav.crm', defaultName: 'CRM', icon: Headset, href: '/crm-dashboard', module: 'CRM' },
+    { nameKey: 'nav.account', defaultName: 'Account', icon: Landmark, href: '/account-dashboard', module: 'ACCOUNTS' },
+    { nameKey: 'nav.fixedAssets', defaultName: 'Fixed Assets', icon: Monitor, href: '/fixed-asset-dashboard', module: 'FIXED_ASSETS' },
+    { nameKey: 'nav.production', defaultName: 'Production', icon: Factory, href: '/production-dashboard', module: 'PRODUCTION' },
+    { nameKey: 'nav.material', defaultName: 'Material', icon: Boxes, href: '/material-dashboard', module: 'MATERIAL' },
+    { nameKey: 'nav.warehouse', defaultName: 'Warehouse', icon: Warehouse, href: '/warehouse-dashboard', module: 'WAREHOUSE' },
+    { nameKey: 'nav.notification', defaultName: 'Notification', icon: Bell, href: '/notification-dashboard', module: 'NOTIFICATION' },
+    { nameKey: 'nav.fleet', defaultName: 'Fleet Management', icon: Truck, href: '/fleet-dashboard', module: 'TRIP_MANAGEMENT' },
+    { nameKey: 'nav.settings', defaultName: 'Settings', icon: Settings, href: '/company-settings' },
 ];
 
-const SidebarContent = ({ onLinkClick, isCollapsed }) => {
+const NavItem = ({ item, onClick }) => {
+    const { t } = useLanguage();
+    const displayName = t(item.nameKey) || item.defaultName;
+
+    return (
+        <NavLink
+            to={item.href}
+            onClick={onClick}
+            title={displayName}
+            className={({ isActive }) =>
+                `flex flex-col items-center justify-center py-2 px-1 rounded-[8px] transition-all duration-200 w-[64px] h-[51.75px] group ${
+                    isActive 
+                        ? 'bg-[#00A9A8] text-white shadow-[0px_1px_3px_rgba(0,0,0,0.1)] font-semibold' 
+                        : 'text-[#F2F5FA] hover:bg-white/10 opacity-90'
+                }`
+            }
+        >
+            {({ isActive }) => (
+                <>
+                    <item.icon className={`h-[18px] w-[18px] transition-transform group-hover:scale-110 ${isActive ? 'text-white' : 'text-[#F2F5FA]'}`} />
+                    <span className={`text-[9px] leading-[14px] font-normal tracking-tight text-center mt-1 truncate max-w-full ${isActive ? 'text-white font-medium' : 'text-[#F2F5FA]'}`}>
+                        {displayName}
+                    </span>
+                </>
+            )}
+        </NavLink>
+    );
+};
+
+const SidebarContent = ({ onLinkClick, companyLogo }) => {
     const { hasModule } = useTenant();
 
-    const navLinks = useMemo(
+    const accessibleNavLinks = useMemo(
         () => ALL_NAV_LINKS.filter(link => !link.module || hasModule(link.module)),
         [hasModule]
     );
 
     return (
-        <div className="flex flex-col flex-1 min-h-0 bg-sidebar-bg text-sidebar-text">
-            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto no-scrollbar">
-                {navLinks.map((item) => (
-                    <NavItem key={item.name} item={item} onLinkClick={onLinkClick} isCollapsed={isCollapsed} />
+        <div className="flex flex-col h-full bg-[#003E5B] text-[#F2F5FA] w-[80px]">
+            {/* Top Logo Container (Exact Figma Spec: 80px x 64px, bg white, border right #F2F5FA) */}
+            <div className="w-[80px] h-[64px] bg-white border-r border-[#F2F5FA] flex items-center justify-center shrink-0">
+                <Link to="/company-dashboard" className="flex items-center justify-center">
+                    <img 
+                        src={companyLogo || "/icon.svg"} 
+                        alt="Logo" 
+                        className="w-[31px] h-[38px] object-contain"
+                        onError={(e) => { e.target.onerror = null; e.target.src = "/icon.svg"; }}
+                    />
+                </Link>
+            </div>
+
+            {/* Navigation Items (Vertical Stack) */}
+            <nav className="flex-1 py-4 flex flex-col items-center gap-2 overflow-y-auto no-scrollbar">
+                {accessibleNavLinks.map((item) => (
+                    <NavItem key={item.nameKey} item={item} onClick={onLinkClick} />
                 ))}
             </nav>
+
+            {/* Bottom Support Section */}
+            <div className="py-4 border-t border-white/20 flex flex-col items-center gap-1 shrink-0">
+                <button className="flex flex-col items-center justify-center text-[#F2F5FA] hover:text-white transition-colors group cursor-pointer">
+                    <HelpCircle className="h-[18px] w-[18px] text-[#F2F5FA] group-hover:scale-110 transition-transform" />
+                    <span className="text-[9px] leading-[14px] font-normal text-[#F2F5FA] mt-1">Support</span>
+                </button>
+            </div>
         </div>
     );
 };
 
-const CompanyHubLayout = ({ children }) => {
+const CompanyHubLayout = ({ children, hideHeaderSearch = false }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(() => {
-        return localStorage.getItem('sidebar_collapsed') === 'true';
-    });
+    const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+    const { language, setLanguage, t, isRTL } = useLanguage();
     const navigate = useNavigate();
+
     const handleLogout = () => logout(navigate);
     const username = localStorage.getItem('username') || 'Admin';
 
     const [companyInfo, setCompanyInfo] = useState({ name: 'Company Hub', logoPath: null, logoBlob: null });
     const API_URL = import.meta.env.VITE_API_BASE_URL;
-
-    const toggleDesktopSidebar = () => {
-        setIsDesktopSidebarCollapsed(prev => {
-            const next = !prev;
-            localStorage.setItem('sidebar_collapsed', String(next));
-            return next;
-        });
-    };
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -105,202 +130,163 @@ const CompanyHubLayout = ({ children }) => {
 
         if (cachedName && cachedName !== 'Company Hub') {
             setCompanyInfo({ name: cachedName, logoPath: null, logoBlob: cachedLogo || null });
-            return;
         }
 
         const fetchCompanyInfo = async () => {
             try {
                 const headers = { Authorization: `Bearer ${token}` };
                 const res = await axios.get(`${API_URL}/company-info`, { headers });
+                const realName = res.data.companyName || 'Company Hub';
+                sessionStorage.setItem('company_name', realName);
 
-                const realName = res.data.companyName;
-                const companyName = realName || 'Company Hub';
-
-                if (realName) {
-                    sessionStorage.setItem('company_name', realName);
+                if (res.data.logoPath) {
+                    setCompanyInfo({ name: realName, logoPath: res.data.logoPath, logoBlob: cachedLogo || null });
+                } else {
+                    setCompanyInfo({ name: realName, logoPath: null, logoBlob: null });
                 }
-
-                const rawLogoUrl = res.data.logoUrl;
-                if (rawLogoUrl) {
-                    if (rawLogoUrl.startsWith('http://') || rawLogoUrl.startsWith('https://')) {
-                        sessionStorage.setItem('company_logo', rawLogoUrl);
-                        setCompanyInfo({ name: companyName, logoPath: rawLogoUrl, logoBlob: rawLogoUrl });
-                        return;
-                    }
-                    try {
-                        const logoRes = await axios.get(`${API_URL}/company-info/logo`, { headers, responseType: 'blob' });
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                            const logoDataUrl = reader.result;
-                            sessionStorage.setItem('company_logo', logoDataUrl);
-                            setCompanyInfo({ name: companyName, logoPath: rawLogoUrl, logoBlob: logoDataUrl });
-                        };
-                        reader.readAsDataURL(logoRes.data);
-                        return;
-                    } catch (imgErr) {
-                        console.error('Failed to fetch company logo blob', imgErr);
-                    }
-                }
-                setCompanyInfo({ name: companyName, logoPath: rawLogoUrl, logoBlob: null });
             } catch (err) {
-                console.error('Failed to fetch company info for layout', err);
+                console.error('Failed to fetch company info', err);
             }
         };
         fetchCompanyInfo();
     }, [API_URL]);
 
-    const [isHovered, setIsHovered] = useState(false);
-    const isExpanded = !isDesktopSidebarCollapsed || isHovered;
+    const displayLogo = companyInfo.logoBlob || constructImageUrl(companyInfo.logoPath) || '/icon.svg';
 
     return (
-        <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
-
-            {/* Static Sidebar for Desktop */}
-            <aside
-                className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 ${isExpanded ? 'w-[220px]' : 'w-[68px]'} bg-sidebar-bg text-sidebar-text z-40 shadow-xl transition-all duration-300 ease-in-out`}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-            >
-                {/* Sidebar Header (Logo & Toggle) */}
-                <div className={`h-14 flex items-center px-3.5 shrink-0 border-b border-white/10 ${!isExpanded ? 'justify-center flex-col gap-2' : 'justify-between'}`}>
-                    <Link to="/company-dashboard" className="flex items-center gap-3 overflow-hidden">
-                        {companyInfo.logoPath || companyInfo.logoBlob ? (
-                            <img
-                                src={companyInfo.logoBlob || constructImageUrl(companyInfo.logoPath)}
-                                alt={companyInfo.name}
-                                className="h-8 w-8 object-contain bg-white rounded-md p-0.5 shrink-0"
-                            />
-                        ) : (
-                            <div className="h-7 w-7 bg-primary rounded-md flex items-center justify-center text-primary-foreground font-bold shadow-sm shrink-0">
-                                <Sparkles className="h-4 w-4" />
-                            </div>
-                        )}
-                        {isExpanded && (
-                            <div className="flex flex-col overflow-hidden">
-                                <span className="font-bold text-sm truncate">{companyInfo.name}</span>
-                                <span className="text-[10px] text-white/50 tracking-wider">HUB</span>
-                            </div>
-                        )}
-                    </Link>
+        <div className="min-h-screen bg-[#F7FAFF] flex flex-col font-sans" dir={isRTL ? 'rtl' : 'ltr'}>
+            
+            {/* Header */}
+            <header className={`h-[64px] bg-white border-b border-[#DBE5F3] fixed top-0 ${isRTL ? 'right-0 lg:right-[80px] left-0' : 'left-0 lg:left-[80px] right-0'} z-30 flex items-center justify-between px-4 lg:px-6`}>
+                
+                {/* Left/Right Side: Mobile Menu Button & Search Bar */}
+                <div className="flex items-center gap-3 flex-1 max-w-xl">
                     <button
-                        type="button"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            toggleDesktopSidebar();
-                        }}
-                        className="hidden lg:flex items-center justify-center p-1.5 rounded-xl opacity-80 hover:opacity-100 hover:bg-white/10 transition-all cursor-pointer shrink-0"
-                        title={isDesktopSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        className="lg:hidden p-2 rounded-lg text-[#18233B] hover:bg-slate-100 transition-colors"
+                        aria-label="Toggle menu"
                     >
-                        {isDesktopSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5 text-gray-300" /> : <PanelLeftClose className="h-5 w-5 text-gray-300" />}
+                        <Menu className="h-5 w-5" />
                     </button>
-                </div>
 
-                {/* Navigation */}
-                <SidebarContent isCollapsed={!isExpanded} />
-            </aside>
-
-            {/* Main Content Wrapper */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-
-                {/* Header (Right Side) */}
-                <header className="flex-shrink-0 h-14 bg-header-bg text-header-text shadow-sm border-b border-border flex items-center justify-between px-4 lg:px-6 z-30 relative">
-
-                    {/* Left side of header (Mobile Menu + Search) */}
-                    <div className="flex items-center gap-4 flex-1">
-                        <button
-                            type="button"
-                            className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 p-2 rounded-lg lg:hidden"
-                            onClick={() => setSidebarOpen(true)}
-                        >
-                            <Menu className="h-6 w-6" />
-                        </button>
-
-                        <div className="hidden md:flex relative w-full max-w-md items-center">
-                            <Search className="absolute left-3 h-4 w-4 text-gray-400" />
+                    {!hideHeaderSearch && (
+                        <div className="relative w-full max-w-[260px]">
+                            <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none text-[#607089]`}>
+                                <Search className="h-4.5 w-4.5" />
+                            </div>
                             <input
                                 type="text"
-                                placeholder="Search anything..."
-                                className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                                placeholder={t('search.placeholder') || "Search anything..."}
+                                className={`w-full h-[44px] ${isRTL ? 'pr-9 pl-3' : 'pl-9 pr-3'} text-xs bg-white border border-[#E2E8F0] rounded-[8px] text-[#18233B] placeholder-[#94A3B8] focus:outline-none focus:border-[#00A9A8] transition-colors`}
                             />
                         </div>
-                    </div>
+                    )}
+                </div>
 
-                    {/* Right side of header (Dropdowns, Notification, User) */}
-                    <div className="flex items-center gap-3 sm:gap-5 shrink-0">
-
-                        {/* Notification Bell */}
-                        <button className="relative p-2 text-foreground-muted hover:text-foreground hover:bg-black/5 rounded-full transition-colors">
-                            <Bell className="h-5 w-5" />
-                            <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
-                        </button>
-
-                        <div className="w-px h-6 bg-border hidden sm:block"></div>
-
-                        {/* User Profile Dropdown */}
-                        <div className="flex items-center gap-3 cursor-pointer hover:bg-black/5 p-1.5 rounded-lg transition-colors border border-transparent hover:border-border">
-                            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary flex-shrink-0 border border-primary/20">
-                                {username.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="hidden sm:flex flex-col">
-                                <span className="text-sm font-bold text-foreground leading-tight">{username}</span>
-                                <span className="text-xs text-foreground-muted">Administrator</span>
-                            </div>
-                            <ChevronDown className="h-4 w-4 text-foreground-muted hidden sm:block" />
-                        </div>
-
+                {/* Tools & User Profile */}
+                <div className="flex items-center gap-3 shrink-0">
+                    
+                    {/* Language Switcher */}
+                    <div className="relative">
                         <button
-                            onClick={handleLogout}
-                            className="text-foreground-muted hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors ml-1"
-                            title="Logout"
+                            onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] bg-white text-xs font-semibold text-[#18233B] hover:bg-slate-50 transition-colors cursor-pointer"
                         >
-                            <LogOut className="h-5 w-5" />
+                            <span>{language === 'ar' ? 'العربية' : 'English'}</span>
+                            <ChevronDown className="h-3.5 w-3.5 text-[#607089]" />
                         </button>
-                    </div>
-                </header>
 
-                {/* Main Scrollable Content */}
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-transparent p-0 no-scrollbar">
+                        <AnimatePresence>
+                            {langDropdownOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 6 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 6 }}
+                                    className={`absolute ${isRTL ? 'left-0' : 'right-0'} mt-1 w-32 bg-white rounded-lg shadow-lg border border-[#E2E8F0] py-1 z-50 overflow-hidden`}
+                                >
+                                    <button
+                                        onClick={() => { setLanguage('en'); setLangDropdownOpen(false); }}
+                                        className={`w-full text-left px-3 py-2 text-xs font-semibold hover:bg-slate-50 transition-colors flex items-center justify-between ${language === 'en' ? 'text-[#00A9A8] bg-[#00A9A8]/10' : 'text-[#18233B]'}`}
+                                    >
+                                        <span>English</span>
+                                        {language === 'en' && <span className="text-[10px] font-bold">✓</span>}
+                                    </button>
+                                    <button
+                                        onClick={() => { setLanguage('ar'); setLangDropdownOpen(false); }}
+                                        className={`w-full text-left px-3 py-2 text-xs font-semibold hover:bg-slate-50 transition-colors flex items-center justify-between ${language === 'ar' ? 'text-[#00A9A8] bg-[#00A9A8]/10' : 'text-[#18233B]'}`}
+                                    >
+                                        <span>العربية</span>
+                                        {language === 'ar' && <span className="text-[10px] font-bold">✓</span>}
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
+                    <NotificationBell />
+
+                    {/* Divider */}
+                    <div className="h-6 w-[1px] bg-[#E2E8F0] hidden sm:block"></div>
+
+                    {/* User Profile Info */}
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-full bg-[#EAF8FF] text-[#00A9A8] border border-[#00A9A8]/20 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                            {username.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="hidden sm:flex flex-col text-left">
+                            <span className="text-xs font-bold text-[#18233B] leading-tight truncate max-w-[120px]">{username}</span>
+                            <span className="text-[10px] text-[#607089] leading-tight">{t('profile.role') || "Administrator"}</span>
+                        </div>
+                    </div>
+
+                    {/* Logout Button */}
+                    <button
+                        onClick={handleLogout}
+                        title={t('header.logout') || "Logout"}
+                        className="p-2 text-[#607089] hover:text-[#FF3B3B] hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                    >
+                        <LogOut className="h-4.5 w-4.5" />
+                    </button>
+                </div>
+            </header>
+
+            {/* Layout Main Container */}
+            <div className="flex flex-1 pt-[64px]">
+                
+                {/* Desktop Permanent Vertical Sidebar (Fixed 80px) */}
+                <aside className={`hidden lg:block fixed ${isRTL ? 'right-0' : 'left-0'} top-0 bottom-0 w-[80px] z-40`}>
+                    <SidebarContent companyLogo={displayLogo} />
+                </aside>
+
+                {/* Mobile Drawer Sidebar */}
+                <AnimatePresence>
+                    {sidebarOpen && (
+                        <>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setSidebarOpen(false)}
+                                className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                            />
+                            <motion.aside
+                                initial={{ x: isRTL ? '100%' : '-100%' }}
+                                animate={{ x: 0 }}
+                                exit={{ x: isRTL ? '100%' : '-100%' }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                                className={`fixed top-0 ${isRTL ? 'right-0' : 'left-0'} bottom-0 w-[80px] z-50 lg:hidden bg-[#003E5B]`}
+                            >
+                                <SidebarContent companyLogo={displayLogo} onLinkClick={() => setSidebarOpen(false)} />
+                            </motion.aside>
+                        </>
+                    )}
+                </AnimatePresence>
+
+                {/* Page Content */}
+                <main className={`flex-1 ${isRTL ? 'lg:mr-[80px]' : 'lg:ml-[80px]'} min-w-0 bg-[#F7FAFF]`}>
                     {children}
                 </main>
             </div>
-
-            {/* Mobile menu overlay */}
-            <AnimatePresence>
-                {sidebarOpen && (
-                    <>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-40 lg:hidden"
-                            onClick={() => setSidebarOpen(false)}
-                        />
-                        <motion.div
-                            initial={{ x: '-100%' }}
-                            animate={{ x: 0 }}
-                            exit={{ x: '-100%' }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                            className="fixed top-0 left-0 h-full w-[220px] z-50 bg-sidebar-bg text-sidebar-text shadow-2xl flex flex-col"
-                        >
-                            <div className="p-4 border-b border-white/10 flex items-center justify-between shrink-0">
-                                <div className="flex items-center gap-2">
-                                    <div className="h-8 w-8 bg-primary rounded-md flex items-center justify-center font-bold text-primary-foreground">
-                                        <Sparkles className="h-5 w-5" />
-                                    </div>
-                                    <span className="font-bold text-lg">{companyInfo.name}</span>
-                                </div>
-                                <button onClick={() => setSidebarOpen(false)} className="p-2 text-sidebar-text/70 hover:text-sidebar-text hover:bg-white/10 rounded-lg">
-                                    <Menu className="h-5 w-5" />
-                                </button>
-                            </div>
-                            <div className="flex-1 overflow-y-auto no-scrollbar">
-                                <SidebarContent onLinkClick={() => setSidebarOpen(false)} isCollapsed={false} />
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
         </div>
     );
 };

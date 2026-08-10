@@ -40,6 +40,27 @@ public class ManualSchemaFixer implements CommandLineRunner {
                     jdbcTemplate.execute(sql);
                     logger.info("Successfully altered manufacturing_orders.item_id for tenant: {}",
                             tenant.getTenantId());
+                    // Ensure notifications table exists in tenant database
+                    String createNotificationsSql = """
+                        CREATE TABLE IF NOT EXISTS notifications (
+                            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                            recipient_user_id BIGINT NOT NULL,
+                            type VARCHAR(100) NOT NULL,
+                            title VARCHAR(255) NOT NULL,
+                            message TEXT NOT NULL,
+                            action_url VARCHAR(255),
+                            reference_id BIGINT,
+                            reference_type VARCHAR(100),
+                            priority VARCHAR(50) DEFAULT 'MEDIUM',
+                            is_read BOOLEAN NOT NULL DEFAULT FALSE,
+                            read_at DATETIME,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            INDEX idx_recipient_created (recipient_user_id, created_at),
+                            INDEX idx_recipient_unread (recipient_user_id, is_read)
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                    """;
+                    jdbcTemplate.execute(createNotificationsSql);
+                    logger.info("Ensured notifications table exists for tenant: {}", tenant.getTenantId());
                 } catch (Exception e) {
                     boolean tableMissing = false;
                     Throwable cause = e;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
     Clock,
@@ -10,62 +10,71 @@ import {
     Menu,
     Loader,
     AlertCircle,
+    ChevronDown,
+    PanelLeftClose,
+    PanelLeftOpen,
+    Search,
+    User
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import DashboardView from '../components/EmpPages/DashboardView';
 import PayrollView from '../components/EmpPages/PayrollView';
 import axios from 'axios';
 import RecruitmentView from '../components/EmpPages/RecruitmentView';
-import LeavesView from '../components/EmpPages/LeavesView';
-import { useTenant } from '../context/TenantContext';
-
 import AttendanceView from '../components/EmpPages/AttendanceView';
 import Leaves from '../components/EmpPages/Leaves';
+import { useTenant } from '../context/TenantContext';
+import NotificationBell from '../components/notifications/NotificationBell';
+
 const navLinks = [
-    { name: 'Dashboard', icon: LayoutDashboard, Component: DashboardView, module: 'HRMS_CORE' },
-    { name: 'Attendance', icon: Clock, Component: AttendanceView, module: 'HRMS_ATTENDANCE' },
-    { name: 'Leaves', icon: Calendar, Component: Leaves, module: 'HRMS_LEAVE' },
-    { name: 'Payroll', icon: DollarSign, Component: PayrollView, module: 'HRMS_PAYROLL' },
-    { name: 'Recruitment', icon: DollarSign, Component: RecruitmentView, module: 'HRMS_RECRUITMENT' }
+    { name: 'Dashboard', icon: LayoutDashboard, Component: DashboardView, module: 'HRMS_CORE', color: 'text-sky-400' },
+    { name: 'Attendance', icon: Clock, Component: AttendanceView, module: 'HRMS_ATTENDANCE', color: 'text-amber-400' },
+    { name: 'Leaves', icon: Calendar, Component: Leaves, module: 'HRMS_LEAVE', color: 'text-emerald-400' },
+    { name: 'Payroll', icon: DollarSign, Component: PayrollView, module: 'HRMS_PAYROLL', color: 'text-indigo-400' },
+    { name: 'Recruitment', icon: DollarSign, Component: RecruitmentView, module: 'HRMS_RECRUITMENT', color: 'text-purple-400' }
 ];
 
-const NavItem = ({ item, isActive, onClick }) => (
+const NavItem = ({ item, isActive, onClick, isCollapsed }) => (
     <button
         onClick={onClick}
-        className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-colors w-full text-left ${
+        title={isCollapsed ? item.name : ''}
+        className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-3'} py-2.5 text-sm font-medium rounded-xl transition-all duration-200 w-full text-left mb-1 group ${
             isActive
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'text-foreground-muted hover:bg-background-muted'
+                ? 'bg-sidebar-active/20 text-white shadow-sm font-semibold border-l-4 border-primary'
+                : 'text-sidebar-text/80 hover:bg-sidebar-hover hover:text-sidebar-text'
         }`}
     >
-        <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
-        <span>{item.name}</span>
+        <item.icon className={`h-5 w-5 flex-shrink-0 transition-colors ${item.color} ${isActive ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'} ${isCollapsed ? '' : 'mr-3'}`} />
+        {!isCollapsed && <span className="truncate">{item.name}</span>}
     </button>
 );
 
-const SidebarContent = ({ activeItem, setActiveItem, onLinkClick, accessibleNavLinks }) => {
-    const navigate = useNavigate();
-    const username = localStorage.getItem('username') || 'Employee';
-
-    const handleLogout = () => {
-        localStorage.clear();
-        navigate('/login');
-    };
-
+const SidebarContent = ({ activeItem, setActiveItem, onLinkClick, accessibleNavLinks, isCollapsed }) => {
     return (
-        <div className="flex flex-col h-full bg-card text-card-foreground">
-            <div className="p-4 border-b border-border flex-shrink-0">
-                <Link to="/employee-dashboard" className="flex items-center gap-3">
-                    <Sparkles className="h-7 w-7 text-primary" />
-                    <span className="font-bold text-xl text-foreground">Enterprise HRMS</span>
+        <div className="flex flex-col h-full bg-sidebar-bg text-sidebar-text shrink-0">
+            {/* Header */}
+            <div className="h-14 flex items-center px-4 shrink-0 border-b border-white/10 justify-between">
+                <Link to="/employee-dashboard" className="flex items-center gap-2 overflow-hidden">
+                    <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold shadow-md shrink-0">
+                        <Sparkles className="h-5 w-5" />
+                    </div>
+                    {!isCollapsed && (
+                        <div className="flex flex-col overflow-hidden">
+                            <span className="font-bold text-base tracking-tight truncate text-white">Employee Portal</span>
+                            <span className="text-[10px] text-white/60 -mt-1 uppercase tracking-wider">EmiratesERP</span>
+                        </div>
+                    )}
                 </Link>
             </div>
-            <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
+
+            {/* Navigation */}
+            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto no-scrollbar">
                 {accessibleNavLinks.map((item) => (
                     <NavItem 
                         key={item.name} 
                         item={item} 
                         isActive={activeItem === item.name}
+                        isCollapsed={isCollapsed}
                         onClick={() => {
                             setActiveItem(item.name);
                             if (onLinkClick) onLinkClick();
@@ -73,22 +82,6 @@ const SidebarContent = ({ activeItem, setActiveItem, onLinkClick, accessibleNavL
                     />
                 ))}
             </nav>
-            <div className="p-4 border-t border-border flex-shrink-0">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center min-w-0">
-                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary flex-shrink-0">
-                            {username.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="ml-3 min-w-0">
-                            <p className="text-sm font-semibold text-foreground truncate">{username}</p>
-                            <p className="text-xs text-foreground-muted">Employee</p>
-                        </div>
-                    </div>
-                    <button onClick={handleLogout} className="text-foreground-muted hover:text-red-600 ml-2 flex-shrink-0" title="Logout">
-                        <LogOut className="h-5 w-5" />
-                    </button>
-                </div>
-            </div>
         </div>
     );
 };
@@ -96,6 +89,18 @@ const SidebarContent = ({ activeItem, setActiveItem, onLinkClick, accessibleNavL
 const EmployeeDashboard = () => {
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(() => {
+        return localStorage.getItem('emp_sidebar_collapsed') === 'true';
+    });
+
+    const toggleDesktopSidebar = () => {
+        setIsDesktopSidebarCollapsed(prev => {
+            const next = !prev;
+            localStorage.setItem('emp_sidebar_collapsed', String(next));
+            return next;
+        });
+    };
+
     const [employee, setEmployee] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -103,7 +108,6 @@ const EmployeeDashboard = () => {
     const API_URL = import.meta.env.VITE_API_BASE_URL;
     const { hasModule } = useTenant();
     const roles = useMemo(() => JSON.parse(localStorage.getItem('roles') || '[]'), []);
-    const isSuperAdmin = useMemo(() => roles.includes('SUPER_ADMIN'), [roles]);
 
     useEffect(() => {
         const checkCrmAccess = async () => {
@@ -127,9 +131,7 @@ const EmployeeDashboard = () => {
         checkCrmAccess();
     }, [API_URL, navigate, roles]);
 
-
     const accessibleNavLinks = useMemo(() => {
-        // A user has full access if their plan includes all core HRMS modules.
         const hasAllAccessPlan =
             hasModule('HRMS_CORE') &&
             hasModule('HRMS_ATTENDANCE') &&
@@ -138,17 +140,34 @@ const EmployeeDashboard = () => {
             hasModule('POS');
 
         if (hasAllAccessPlan) {
-            return navLinks; // Return all links for the all-access plan.
+            return navLinks;
         }
 
         return navLinks.filter(link => !link.module || hasModule(link.module));
     }, [hasModule]);
 
-    const [activeItem, setActiveItem] = useState('Dashboard');
+    const location = useLocation();
+
+    // Map common notification actionUrl paths or query tabs to nav link names
+    const getInitialActiveItem = () => {
+        const queryParams = new URLSearchParams(location.search);
+        const tabParam = queryParams.get('tab')?.toLowerCase();
+        if (tabParam === 'leaves' || tabParam === 'leave' || location.pathname.includes('/leave')) return 'Leaves';
+        if (tabParam === 'attendance' || location.pathname.includes('/attendance')) return 'Attendance';
+        if (tabParam === 'payroll' || location.pathname.includes('/payroll')) return 'Payroll';
+        if (tabParam === 'recruitment') return 'Recruitment';
+        if (location.state?.tab) return location.state.tab;
+        return 'Dashboard';
+    };
+
+    const [activeItem, setActiveItem] = useState(getInitialActiveItem);
 
     useEffect(() => {
-        // If the current active tab is no longer accessible (e.g., due to a plan change),
-        // reset to the default 'Dashboard' tab.
+        const initial = getInitialActiveItem();
+        setActiveItem(initial);
+    }, [location.search, location.pathname, location.state]);
+
+    useEffect(() => {
         const isCurrentActiveItemAccessible = accessibleNavLinks.some(link => link.name === activeItem);
         if (!isCurrentActiveItemAccessible) setActiveItem('Dashboard');
     }, [accessibleNavLinks, activeItem]);
@@ -162,24 +181,19 @@ const EmployeeDashboard = () => {
                     setLoading(false);
                     return;
                 }
-                // Fetch the full employee details using the user's email.
                 const response = await axios.get(`${API_URL}/employees/by-user-email/${username}`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
                 localStorage.setItem('employeeCode', response.data.employeeCode);
 
-                // The backend provides core employee data. We'll merge it with
-                // some placeholder/mock data for UI elements not yet supported by the backend.
                 const employeeData = {
-                    // Mock data for fields not yet available from backend
                     attendance: {
                         today: { checkIn: '09:30 AM', status: 'PRESENT' },
                         workHours: '4h 30m'
                     },
                     leaveBalance: { sick: 5, casual: 10, earned: 8 },
                     ...response.data,
-                    // Ensure nested arrays from backend are handled gracefully
                     leaves: response.data.leaves || [],
                 };
                 setEmployee(employeeData);
@@ -198,6 +212,12 @@ const EmployeeDashboard = () => {
         fetchEmployeeData();
     }, [username, API_URL]);
 
+    const handleLogout = () => {
+        localStorage.clear();
+        sessionStorage.clear();
+        navigate('/login');
+    };
+
     const renderContent = () => {
         const activeLink = accessibleNavLinks.find(link => link.name === activeItem) || accessibleNavLinks[0];
         
@@ -206,38 +226,81 @@ const EmployeeDashboard = () => {
         }
 
         const Component = activeLink.Component;
-        // Pass employee data to the active component.
         return <Component setActiveItem={setActiveItem} employee={employee} key={activeItem} />;
     };
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
-            {/* Static sidebar for desktop */}
-            <div className="hidden lg:flex lg:flex-shrink-0">
-                <div className="flex flex-col w-64 border-r border-border">
-                    <SidebarContent activeItem={activeItem} setActiveItem={setActiveItem} accessibleNavLinks={accessibleNavLinks} />
-                </div>
-            </div>
-
-            <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Top bar for mobile */}
-                <header className="lg:hidden sticky top-0 z-10 flex-shrink-0 flex h-16 bg-card shadow-sm">
-                    <button
-                        type="button"
-                        className="px-4 border-r border-border text-foreground-muted focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
-                        onClick={() => setSidebarOpen(true)}
-                    >
-                        <Menu className="h-6 w-6" />
+        <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
+            {/* Desktop Sidebar */}
+            <aside className={`hidden lg:flex lg:flex-col lg:flex-shrink-0 ${isDesktopSidebarCollapsed ? 'w-[75px]' : 'w-[220px]'} bg-sidebar-bg text-sidebar-text z-40 shadow-xl transition-all duration-300 ease-in-out border-r border-white/10`}>
+                <SidebarContent 
+                    activeItem={activeItem} 
+                    setActiveItem={setActiveItem} 
+                    accessibleNavLinks={accessibleNavLinks} 
+                    isCollapsed={isDesktopSidebarCollapsed}
+                />
+                
+                {/* Desktop Footer Toggle */}
+                <div className="p-3 border-t border-white/10 flex items-center justify-center shrink-0 mt-auto">
+                    <button onClick={toggleDesktopSidebar} className="text-sidebar-text/70 hover:text-sidebar-text hover:bg-white/10 p-2 rounded-xl transition-colors w-full flex justify-center items-center">
+                        {isDesktopSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
                     </button>
-                    <div className="flex-1 px-4 flex justify-between items-center">
-                        <Link to="/employee-dashboard" className="flex items-center gap-2">
-                            <Sparkles className="h-6 w-6 text-primary" />
-                            <span className="font-bold text-lg text-foreground">HRMS</span>
-                        </Link>
+                </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                {/* Header Navigation Bar */}
+                <header className="flex-shrink-0 h-14 bg-header-bg text-header-text shadow-sm border-b border-border flex items-center justify-between px-4 lg:px-6 z-30 relative">
+                    <div className="flex items-center gap-4 flex-1">
+                        <button
+                            type="button"
+                            className="text-foreground-muted hover:text-foreground hover:bg-background-muted p-2 rounded-lg lg:hidden"
+                            onClick={() => setSidebarOpen(true)}
+                        >
+                            <Menu className="h-6 w-6" />
+                        </button>
+
+                        <div className="hidden md:flex relative w-full max-w-md items-center">
+                            <Search className="absolute left-3 h-4 w-4 text-foreground-muted" />
+                            <input
+                                type="text"
+                                placeholder="Search leaves, payslips, attendance logs..."
+                                className="w-full pl-9 pr-4 py-1.5 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Right side header tools */}
+                    <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+                        {/* Notification Bell Component */}
+                        <NotificationBell />
+
+                        <div className="w-px h-6 bg-border hidden sm:block"></div>
+
+                        {/* User Profile */}
+                        <div className="flex items-center gap-3 cursor-pointer hover:bg-black/5 p-1 rounded-lg transition-colors border border-transparent">
+                            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary flex-shrink-0 border border-primary/20">
+                                {username.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="hidden sm:flex flex-col">
+                                <span className="text-xs font-bold text-foreground leading-tight">{employee?.firstName ? `${employee.firstName} ${employee.lastName || ''}` : username}</span>
+                                <span className="text-[10px] text-foreground-muted font-medium">{employee?.jobDetails?.designation || 'Software Developer'}</span>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={handleLogout}
+                            className="text-foreground-muted hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors ml-1"
+                            title="Logout"
+                        >
+                            <LogOut className="h-5 w-5" />
+                        </button>
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background-muted">
+                {/* Scrollable View Content */}
+                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background-muted no-scrollbar">
                     {loading ? (
                         <div className="p-8 flex justify-center items-center h-full">
                             <Loader className="h-8 w-8 animate-spin text-primary" />
@@ -258,7 +321,7 @@ const EmployeeDashboard = () => {
                 </main>
             </div>
 
-            {/* Mobile menu overlay */}
+            {/* Mobile Menu Overlay */}
             <AnimatePresence>
                 {sidebarOpen && (
                     <>
@@ -267,7 +330,7 @@ const EmployeeDashboard = () => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
                             onClick={() => setSidebarOpen(false)}
                         />
                         <motion.div
@@ -275,13 +338,14 @@ const EmployeeDashboard = () => {
                             animate={{ x: 0 }}
                             exit={{ x: '-100%' }}
                             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                            className="fixed top-0 left-0 h-full w-64 z-30"
+                            className="fixed top-0 left-0 h-full w-[230px] z-50 bg-sidebar-bg text-sidebar-text shadow-2xl flex flex-col"
                         >
                             <SidebarContent 
                                 activeItem={activeItem} 
                                 setActiveItem={setActiveItem} 
                                 accessibleNavLinks={accessibleNavLinks}
-                                onLinkClick={() => setSidebarOpen(false)} 
+                                onLinkClick={() => setSidebarOpen(false)}
+                                isCollapsed={false}
                             />
                         </motion.div>
                     </>
@@ -289,6 +353,6 @@ const EmployeeDashboard = () => {
             </AnimatePresence>
         </div>
     );
-}
+};
 
 export default EmployeeDashboard;

@@ -13,6 +13,9 @@ import com.example.multi_tanent.tenant.leave.enums.LeaveStatus;
 import com.example.multi_tanent.tenant.leave.repository.LeaveBalanceRepository;
 import com.example.multi_tanent.tenant.leave.repository.LeaveRequestRepository;
 import com.example.multi_tanent.tenant.leave.repository.LeaveTypeRepository;
+import com.example.multi_tanent.tenant.notification.enums.NotificationPriority;
+import com.example.multi_tanent.tenant.notification.enums.NotificationType;
+import com.example.multi_tanent.tenant.notification.service.NotificationService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,17 +34,20 @@ public class LeaveRequestService {
     private final LeaveTypeRepository leaveTypeRepository;
     private final LeaveBalanceRepository leaveBalanceRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public LeaveRequestService(LeaveRequestRepository leaveRequestRepository,
                                EmployeeRepository employeeRepository,
                                LeaveTypeRepository leaveTypeRepository,
                                LeaveBalanceRepository leaveBalanceRepository,
-                               UserRepository userRepository) {
+                               UserRepository userRepository,
+                               NotificationService notificationService) {
         this.leaveRequestRepository = leaveRequestRepository;
         this.employeeRepository = employeeRepository;
         this.leaveTypeRepository = leaveTypeRepository;
         this.leaveBalanceRepository = leaveBalanceRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     public LeaveRequestResponseDto createLeaveRequest(LeaveRequestDto requestDto) {
@@ -83,6 +89,53 @@ public class LeaveRequestService {
         leaveRequest.setCreatedByUserId(currentUser.getId());
 
         LeaveRequest savedRequest = leaveRequestRepository.save(leaveRequest);
+
+        String notificationTitle = "New Leave Request Pending Approval";
+        String notificationMessage = employee.getFirstName() + " " + (employee.getLastName() != null ? employee.getLastName() : "") + 
+            " has submitted a " + leaveType.getLeaveType() +
+            " leave request from " + requestDto.getFromDate() +
+            " to " + requestDto.getToDate() +
+            " (" + requestDto.getDaysRequested() + " days). Please review.";
+
+        java.util.Set<User> recipients = new java.util.HashSet<>();
+
+        // If a specific line manager / approver is set, include them
+        if (savedRequest.getCurrentApproverUserId() != null) {
+            userRepository.findById(savedRequest.getCurrentApproverUserId()).ifPresent(recipients::add);
+        }
+
+        // Also fetch active HR, HRMS_ADMIN, and SUPER_ADMIN users
+        List<User> hrUsers = userRepository.findActiveUsersByRole(com.example.multi_tanent.master.enums.Role.HR);
+        List<User> hrAdmins = userRepository.findActiveUsersByRole(com.example.multi_tanent.master.enums.Role.HRMS_ADMIN);
+        List<User> superAdmins = userRepository.findActiveUsersByRole(com.example.multi_tanent.master.enums.Role.SUPER_ADMIN);
+
+        if (hrUsers != null) recipients.addAll(hrUsers);
+        if (hrAdmins != null) recipients.addAll(hrAdmins);
+        if (superAdmins != null) recipients.addAll(superAdmins);
+
+        // Fail-safe: Always include all active users if list is small or empty so admins never miss notification
+        List<User> allUsers = userRepository.findAll();
+        if (allUsers != null) {
+            allUsers.stream()
+                .filter(u -> u.getIsActive() == null || Boolean.TRUE.equals(u.getIsActive()))
+                .forEach(recipients::add);
+        }
+
+        String tenantId = com.example.multi_tanent.config.TenantContext.getTenantId();
+        for (User recipient : recipients) {
+            notificationService.sendWithTenant(
+                tenantId,
+                recipient.getId(),
+                NotificationType.LEAVE_REQUEST_SUBMITTED,
+                notificationTitle,
+                notificationMessage,
+                "/leave",
+                savedRequest.getId(),
+                "LEAVE_REQUEST",
+                NotificationPriority.MEDIUM
+            );
+        }
+
         return LeaveRequestResponseDto.fromEntity(savedRequest);
     }
 
@@ -133,6 +186,37 @@ public class LeaveRequestService {
         leaveBalanceRepository.save(balance);
 
         LeaveRequest savedRequest = leaveRequestRepository.save(leaveRequest);
+
+        String tenantId = com.example.multi_tanent.config.TenantContext.getTenantId();
+        Employee emp = savedRequest.getEmployee();
+        String empName = emp != null ? (emp.getFirstName() + " " + (emp.getLastName() != null ? emp.getLastName() : "")) : "Employee";
+        String cancelMsg = empName.trim() + " has cancelled their " +
+            savedRequest.getLeaveType().getLeaveType() + " leave request from " +
+            savedRequest.getFromDate() + " to " + savedRequest.getToDate() + ".";
+
+        java.util.Set<User> recipients = new java.util.HashSet<>();
+        if (savedRequest.getCurrentApproverUserId() != null) {
+            userRepository.findById(savedRequest.getCurrentApproverUserId()).ifPresent(recipients::add);
+        }
+        List<User> hrAdmins = userRepository.findActiveUsersByRole(com.example.multi_tanent.master.enums.Role.HRMS_ADMIN);
+        List<User> superAdmins = userRepository.findActiveUsersByRole(com.example.multi_tanent.master.enums.Role.SUPER_ADMIN);
+        if (hrAdmins != null) recipients.addAll(hrAdmins);
+        if (superAdmins != null) recipients.addAll(superAdmins);
+
+        for (User recipient : recipients) {
+            notificationService.sendWithTenant(
+                tenantId,
+                recipient.getId(),
+                NotificationType.LEAVE_REQUEST_CANCELLED,
+                "Leave Request Cancelled",
+                cancelMsg,
+                "/leave",
+                savedRequest.getId(),
+                "LEAVE_REQUEST",
+                NotificationPriority.LOW
+            );
+        }
+
         return LeaveRequestResponseDto.fromEntity(savedRequest);
     }
 

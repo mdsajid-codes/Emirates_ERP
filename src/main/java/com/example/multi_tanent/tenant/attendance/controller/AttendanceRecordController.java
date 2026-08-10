@@ -65,6 +65,21 @@ public class AttendanceRecordController {
         return ResponseEntity.ok(records);
     }
 
+    @GetMapping("/employee/{employeeCode}/monthly")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<AttendanceRecordResponse>> getMonthlyAttendanceForEmployee(
+            @PathVariable String employeeCode,
+            @RequestParam int year,
+            @RequestParam int month) {
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+        List<AttendanceRecordResponse> records = attendanceService.getAttendanceForEmployee(employeeCode, startDate, endDate)
+                .stream()
+                .map(AttendanceRecordResponse::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(records);
+    }
+
      @GetMapping(params = "date")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HRMS_ADMIN', 'HR')")
     public ResponseEntity<List<AttendanceRecordResponse>> getAttendanceForDate(

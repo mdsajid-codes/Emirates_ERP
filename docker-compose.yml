@@ -5,6 +5,7 @@ services:
     image: mysql:8.0
     container_name: emirates-mysql
     restart: unless-stopped
+    command: mysqld --max_connections=500 --connect_timeout=60
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}

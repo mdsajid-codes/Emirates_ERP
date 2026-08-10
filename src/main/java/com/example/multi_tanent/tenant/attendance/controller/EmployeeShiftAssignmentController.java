@@ -14,7 +14,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import com.example.multi_tanent.tenant.notification.enums.NotificationPriority;
+import com.example.multi_tanent.tenant.notification.enums.NotificationType;
+import com.example.multi_tanent.tenant.notification.service.NotificationService;
 
 @RestController
 @RequestMapping("/api/employee-shifts")
@@ -25,22 +30,43 @@ public class EmployeeShiftAssignmentController {
     private final EmployeeShiftAssignmentRepository repository;
     private final EmployeeRepository employeeRepository;
     private final ShiftTypeRepository shiftTypeRepository;
+    private final NotificationService notificationService;
 
     public EmployeeShiftAssignmentController(EmployeeShiftAssignmentRepository repository,
                                              EmployeeRepository employeeRepository,
-                                             ShiftTypeRepository shiftTypeRepository) {
+                                             ShiftTypeRepository shiftTypeRepository,
+                                             NotificationService notificationService) {
         this.repository = repository;
         this.employeeRepository = employeeRepository;
         this.shiftTypeRepository = shiftTypeRepository;
+        this.notificationService = notificationService;
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> createAssignment(@RequestBody EmployeeShiftAssignmentRequest request) {
-        // Validation: No double booking for same date
-        if (repository.findByEmployee_IdAndAssignedDate(request.getEmployeeId(), request.getAssignedDate()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("The employee already has a shift assigned for " + request.getAssignedDate());
+        Optional<EmployeeShiftAssignment> existingOpt = repository.findByEmployee_IdAndAssignedDate(request.getEmployeeId(), request.getAssignedDate());
+        if (existingOpt.isPresent()) {
+            EmployeeShiftAssignment existing = existingOpt.get();
+            existing.setShiftType(shiftTypeRepository.findById(request.getShiftTypeId())
+                    .orElseThrow(() -> new RuntimeException("Shift type not found")));
+            existing.setNotes(request.getNotes());
+            EmployeeShiftAssignment saved = repository.save(existing);
+
+            if (saved.getEmployee() != null && saved.getEmployee().getUser() != null) {
+                String shiftName = saved.getShiftType() != null ? saved.getShiftType().getName() : "Shift";
+                notificationService.send(
+                    saved.getEmployee().getUser().getId(),
+                    NotificationType.SHIFT_CHANGED,
+                    "Shift Schedule Updated",
+                    "Your shift for " + saved.getAssignedDate() + " has been changed to '" + shiftName + "'.",
+                    "/attendance",
+                    saved.getId(),
+                    "SHIFT_ASSIGNMENT",
+                    NotificationPriority.MEDIUM
+                );
+            }
+            return ResponseEntity.ok(mapToResponse(saved));
         }
 
         EmployeeShiftAssignment assignment = new EmployeeShiftAssignment();
@@ -52,6 +78,21 @@ public class EmployeeShiftAssignmentController {
         assignment.setNotes(request.getNotes());
 
         EmployeeShiftAssignment saved = repository.save(assignment);
+
+        if (saved.getEmployee() != null && saved.getEmployee().getUser() != null) {
+            String shiftName = saved.getShiftType() != null ? saved.getShiftType().getName() : "Shift";
+            notificationService.send(
+                saved.getEmployee().getUser().getId(),
+                NotificationType.SHIFT_ASSIGNED,
+                "New Shift Assigned",
+                "You have been assigned to shift '" + shiftName + "' for date " + saved.getAssignedDate() + ".",
+                "/attendance",
+                saved.getId(),
+                "SHIFT_ASSIGNMENT",
+                NotificationPriority.MEDIUM
+            );
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(saved));
     }
 
@@ -95,6 +136,42 @@ public class EmployeeShiftAssignmentController {
         }
 
         return resp;
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
+    public ResponseEntity<?> updateAssignment(@PathVariable Long id, @RequestBody EmployeeShiftAssignmentRequest request) {
+        EmployeeShiftAssignment assignment = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Assignment not found with id " + id));
+
+        if (request.getShiftTypeId() != null) {
+            assignment.setShiftType(shiftTypeRepository.findById(request.getShiftTypeId())
+                    .orElseThrow(() -> new RuntimeException("Shift type not found")));
+        }
+        if (request.getAssignedDate() != null) {
+            assignment.setAssignedDate(request.getAssignedDate());
+        }
+        if (request.getNotes() != null) {
+            assignment.setNotes(request.getNotes());
+        }
+
+        EmployeeShiftAssignment saved = repository.save(assignment);
+
+        if (saved.getEmployee() != null && saved.getEmployee().getUser() != null) {
+            String shiftName = saved.getShiftType() != null ? saved.getShiftType().getName() : "Shift";
+            notificationService.send(
+                saved.getEmployee().getUser().getId(),
+                NotificationType.SHIFT_CHANGED,
+                "Shift Schedule Updated",
+                "Your shift for " + saved.getAssignedDate() + " has been changed to '" + shiftName + "'.",
+                "/attendance",
+                saved.getId(),
+                "SHIFT_ASSIGNMENT",
+                NotificationPriority.MEDIUM
+            );
+        }
+
+        return ResponseEntity.ok(mapToResponse(saved));
     }
 
     @DeleteMapping("/{id}")

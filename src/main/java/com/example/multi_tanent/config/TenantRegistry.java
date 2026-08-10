@@ -201,12 +201,13 @@ public class TenantRegistry {
     ds.setUsername(t.getUsername());
     ds.setPassword(t.getPassword());
 
-    ds.setMaximumPoolSize(3);         // 50 tenants x 3 = 150 connections (under MySQL 151 limit)
-    ds.setMinimumIdle(1);             // Release idle connections quickly to save MySQL slots
-    ds.setConnectionTimeout(30_000);  // 30s max wait before failing
-    ds.setIdleTimeout(600_000);       // 10 min before closing idle connections
-    ds.setMaxLifetime(1_800_000);     // 30 min max connection lifetime
-    ds.setKeepaliveTime(60_000);      // 1 min ping to prevent MySQL from closing idle connections
+    ds.setMaximumPoolSize(25);          // Scaled pool for 20+ concurrent active users per tenant
+    ds.setMinimumIdle(5);               // Keep 5 warm ready connections per tenant database
+    ds.setConnectionTimeout(15_000);    // 15s connection acquisition timeout
+    ds.setIdleTimeout(300_000);         // 5 min idle connection timeout
+    ds.setMaxLifetime(1_800_000);       // 30 min max lifetime
+    ds.setKeepaliveTime(60_000);        // 1 min keepalive ping
+    ds.setLeakDetectionThreshold(5_000);// Warn in logs if any query/transaction holds a connection > 5s
 
     return ds;
   }

@@ -22,6 +22,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.multi_tanent.master.enums.Role;
+import com.example.multi_tanent.tenant.notification.enums.NotificationPriority;
+import com.example.multi_tanent.tenant.notification.enums.NotificationType;
+import com.example.multi_tanent.tenant.notification.service.NotificationService;
+
 @Service
 @Transactional(transactionManager = "tenantTx")
 public class ExpenseService {
@@ -31,15 +36,17 @@ public class ExpenseService {
     private final ExpenseFileRepository expenseFileRepository;
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
+    private final NotificationService notificationService;
 
     public ExpenseService(ExpenseRepository expenseRepository, EmployeeRepository employeeRepository,
             ExpenseFileRepository expenseFileRepository, UserRepository userRepository,
-            FileStorageService fileStorageService) {
+            FileStorageService fileStorageService, NotificationService notificationService) {
         this.expenseRepository = expenseRepository;
         this.employeeRepository = employeeRepository;
         this.expenseFileRepository = expenseFileRepository;
         this.userRepository = userRepository;
         this.fileStorageService = fileStorageService;
+        this.notificationService = notificationService;
     }
 
     public Expense submitExpense(ExpenseRequest request, MultipartFile[] files) {
@@ -67,7 +74,27 @@ public class ExpenseService {
             }
         }
 
-        return expenseRepository.save(expense);
+        Expense savedExpense = expenseRepository.save(expense);
+
+        String empName = employee.getFirstName() + " " + (employee.getLastName() != null ? employee.getLastName() : "");
+        String msg = empName.trim() + " submitted an expense claim of AED " + savedExpense.getAmount() + 
+                     " for category: " + savedExpense.getCategory() + ".";
+
+        List<User> hrAdmins = userRepository.findActiveUsersByRole(Role.HRMS_ADMIN);
+        for (User admin : hrAdmins) {
+            notificationService.send(
+                admin.getId(),
+                NotificationType.EXPENSE_SUBMITTED,
+                "New Expense Claim",
+                msg,
+                "/payroll-management",
+                savedExpense.getId(),
+                "EXPENSE",
+                NotificationPriority.MEDIUM
+            );
+        }
+
+        return savedExpense;
     }
 
     public List<Expense> getAllExpenses() {
@@ -93,13 +120,6 @@ public class ExpenseService {
         return expenses;
     }
 
-    // public List<Expense> getExpensesByEmployeeCode(String employeeCode) {
-    // List<Expense> expenses =
-    // expenseRepository.findByEmployeeEmployeeCode(employeeCode);
-    // expenses.forEach(this::initializeExpenseDetails);
-    // return expenses;
-    // }
-
     public Expense approveExpense(Long expenseId) {
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new EntityNotFoundException("Expense not found with id: " + expenseId));
@@ -107,7 +127,23 @@ public class ExpenseService {
         expense.setStatus(ExpenseStatus.APPROVED);
         expense.setProcessedByUserId(getCurrentUserId());
         expense.setProcessedAt(LocalDateTime.now());
-        return expenseRepository.save(expense);
+        
+        Expense savedExpense = expenseRepository.save(expense);
+
+        if (savedExpense.getEmployee() != null && savedExpense.getEmployee().getUser() != null) {
+            notificationService.send(
+                savedExpense.getEmployee().getUser().getId(),
+                NotificationType.EXPENSE_APPROVED,
+                "Expense Claim Approved",
+                "Your expense claim of AED " + savedExpense.getAmount() + " (" + savedExpense.getCategory() + ") has been approved.",
+                "/payroll-management",
+                savedExpense.getId(),
+                "EXPENSE",
+                NotificationPriority.HIGH
+            );
+        }
+
+        return savedExpense;
     }
 
     public Expense rejectExpense(Long expenseId) {
@@ -117,7 +153,23 @@ public class ExpenseService {
         expense.setStatus(ExpenseStatus.REJECTED);
         expense.setProcessedByUserId(getCurrentUserId());
         expense.setProcessedAt(LocalDateTime.now());
-        return expenseRepository.save(expense);
+        
+        Expense savedExpense = expenseRepository.save(expense);
+
+        if (savedExpense.getEmployee() != null && savedExpense.getEmployee().getUser() != null) {
+            notificationService.send(
+                savedExpense.getEmployee().getUser().getId(),
+                NotificationType.EXPENSE_REJECTED,
+                "Expense Claim Rejected",
+                "Your expense claim of AED " + savedExpense.getAmount() + " (" + savedExpense.getCategory() + ") was rejected.",
+                "/payroll-management",
+                savedExpense.getId(),
+                "EXPENSE",
+                NotificationPriority.HIGH
+            );
+        }
+
+        return savedExpense;
     }
 
     public Expense payoutExpense(Long expenseId, ExpensePayoutRequest payoutRequest) {
@@ -138,7 +190,23 @@ public class ExpenseService {
         expense.setProcessedByUserId(getCurrentUserId());
         expense.setProcessedAt(LocalDateTime.now());
 
-        return expenseRepository.save(expense);
+        Expense savedExpense = expenseRepository.save(expense);
+
+        if (savedExpense.getEmployee() != null && savedExpense.getEmployee().getUser() != null) {
+            notificationService.send(
+                savedExpense.getEmployee().getUser().getId(),
+                NotificationType.EXPENSE_REIMBURSED,
+                "Expense Claim Reimbursed",
+                "Your expense claim of AED " + savedExpense.getAmount() + " has been paid out via " + 
+                    (savedExpense.getPaymentMethod() != null ? savedExpense.getPaymentMethod() : "bank transfer") + ".",
+                "/payroll-management",
+                savedExpense.getId(),
+                "EXPENSE",
+                NotificationPriority.HIGH
+            );
+        }
+
+        return savedExpense;
     }
 
     public void deleteExpense(Long id) {

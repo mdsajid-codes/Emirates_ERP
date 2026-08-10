@@ -12,6 +12,9 @@ import com.example.multi_tanent.tenant.leave.enums.LeaveStatus;
 import com.example.multi_tanent.tenant.leave.repository.LeaveApprovalRepository;
 import com.example.multi_tanent.tenant.leave.repository.LeaveBalanceRepository;
 import com.example.multi_tanent.tenant.leave.repository.LeaveRequestRepository;
+import com.example.multi_tanent.tenant.notification.enums.NotificationPriority;
+import com.example.multi_tanent.tenant.notification.enums.NotificationType;
+import com.example.multi_tanent.tenant.notification.service.NotificationService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,15 +32,18 @@ public class LeaveApprovalService {
     private final LeaveApprovalRepository leaveApprovalRepository;
     private final LeaveBalanceRepository leaveBalanceRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public LeaveApprovalService(LeaveRequestRepository leaveRequestRepository,
                                 LeaveApprovalRepository leaveApprovalRepository,
                                 LeaveBalanceRepository leaveBalanceRepository,
-                                UserRepository userRepository) {
+                                UserRepository userRepository,
+                                NotificationService notificationService) {
         this.leaveRequestRepository = leaveRequestRepository;
         this.leaveApprovalRepository = leaveApprovalRepository;
         this.leaveBalanceRepository = leaveBalanceRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     public LeaveRequestResponseDto processApproval(LeaveApprovalRequest request) {
@@ -60,13 +66,53 @@ public class LeaveApprovalService {
         approval.setActionAt(LocalDateTime.now());
         leaveApprovalRepository.save(approval);
 
+        String tenantId = com.example.multi_tanent.config.TenantContext.getTenantId();
+
         if (request.getAction() == ApprovalAction.APPROVED) {
             leaveRequest.setStatus(LeaveStatus.APPROVED);
             leaveRequest.setDaysApproved(leaveRequest.getDaysRequested());
-            updateLeaveBalanceOnApproval(leaveRequest);
+            updateLeaveBalanceOnApproval(leaveRequest, tenantId);
+
+            if (leaveRequest.getEmployee() != null && leaveRequest.getEmployee().getUser() != null) {
+                Long employeeUserId = leaveRequest.getEmployee().getUser().getId();
+                notificationService.sendWithTenant(
+                    tenantId,
+                    employeeUserId,
+                    NotificationType.LEAVE_REQUEST_APPROVED,
+                    "Leave Request Approved",
+                    "Your " + leaveRequest.getLeaveType().getLeaveType() +
+                        " leave request from " + leaveRequest.getFromDate() +
+                        " to " + leaveRequest.getToDate() + " has been approved." +
+                        (request.getComment() != null && !request.getComment().isBlank()
+                            ? " Note: " + request.getComment() : ""),
+                    "/leave",
+                    leaveRequest.getId(),
+                    "LEAVE_REQUEST",
+                    NotificationPriority.HIGH
+                );
+            }
         } else if (request.getAction() == ApprovalAction.REJECTED) {
             leaveRequest.setStatus(LeaveStatus.REJECTED);
             updateLeaveBalanceOnRejection(leaveRequest);
+
+            if (leaveRequest.getEmployee() != null && leaveRequest.getEmployee().getUser() != null) {
+                Long employeeUserId = leaveRequest.getEmployee().getUser().getId();
+                notificationService.sendWithTenant(
+                    tenantId,
+                    employeeUserId,
+                    NotificationType.LEAVE_REQUEST_REJECTED,
+                    "Leave Request Rejected",
+                    "Your " + leaveRequest.getLeaveType().getLeaveType() +
+                        " leave request from " + leaveRequest.getFromDate() +
+                        " to " + leaveRequest.getToDate() + " has been rejected." +
+                        (request.getComment() != null && !request.getComment().isBlank()
+                            ? " Reason: " + request.getComment() : " Please contact HR for more details."),
+                    "/leave",
+                    leaveRequest.getId(),
+                    "LEAVE_REQUEST",
+                    NotificationPriority.HIGH
+                );
+            }
         }
 
         leaveRequest.setUpdatedAt(LocalDateTime.now());
@@ -76,7 +122,7 @@ public class LeaveApprovalService {
         return LeaveRequestResponseDto.fromEntity(savedRequest);
     }
 
-    private void updateLeaveBalanceOnApproval(LeaveRequest leaveRequest) {
+    private void updateLeaveBalanceOnApproval(LeaveRequest leaveRequest, String tenantId) {
         // On approval, days move from 'pending' to 'used'.
         LeaveBalance balance = getLatestLeaveBalance(leaveRequest.getEmployee().getId(), leaveRequest.getLeaveType().getId());
         BigDecimal daysApproved = leaveRequest.getDaysApproved(); // Use approved days
@@ -85,6 +131,23 @@ public class LeaveApprovalService {
         balance.setUsed(balance.getUsed().add(daysApproved)); // Increase used by the approved amount
         balance.setUpdatedAt(LocalDateTime.now());
         leaveBalanceRepository.save(balance);
+
+        // 1.9 LEAVE_BALANCE_LOW check: if remaining balance (allocated - used - pending) < 2.0 days
+        BigDecimal allocated = balance.getTotalAllocated() != null ? balance.getTotalAllocated() : BigDecimal.ZERO;
+        BigDecimal remaining = allocated.subtract(balance.getUsed()).subtract(balance.getPending());
+        if (remaining.compareTo(new BigDecimal("2.0")) < 0 && leaveRequest.getEmployee() != null && leaveRequest.getEmployee().getUser() != null) {
+            notificationService.sendWithTenant(
+                tenantId,
+                leaveRequest.getEmployee().getUser().getId(),
+                NotificationType.LEAVE_BALANCE_LOW,
+                "Low Leave Balance Warning",
+                "You have less than 2 days of " + leaveRequest.getLeaveType().getLeaveType() + " leave remaining (" + remaining + " days).",
+                "/leave",
+                balance.getId(),
+                "LEAVE_BALANCE",
+                NotificationPriority.HIGH
+            );
+        }
     }
 
     private void updateLeaveBalanceOnRejection(LeaveRequest leaveRequest) {

@@ -1,5 +1,7 @@
 import React from 'react';
-import { Search, ScanLine, Tag, Store, User, UserPlus, Eye, EyeOff } from 'lucide-react';
+import {
+    Search, ScanLine, Tag, Store, User, UserPlus, Eye, EyeOff
+} from 'lucide-react';
 
 const SalesHeader = ({
     searchTerm, onSearchTermChange,
@@ -12,92 +14,105 @@ const SalesHeader = ({
     posTheme
 }) => {
     return (
-        <div className="mb-3 flex flex-wrap gap-2.5 items-center font-sans text-xs">
-            {/* Search Input */}
-            <div className="relative flex-grow min-w-[180px]">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+        <div className="flex items-center gap-2 flex-wrap font-sans">
+            {/* Search products bar */}
+            <div
+                className="flex items-center gap-2 px-3 w-[220px] shrink-0"
+                style={{ height: 36, background: '#FFFFFF', border: '1px solid #D7E1E9', borderRadius: 8 }}
+            >
+                <Search className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#667085' }} />
                 <input
                     type="text"
                     placeholder="Search products by name or SKU..."
                     value={searchTerm}
                     onChange={e => onSearchTermChange(e.target.value)}
-                    className="w-full pl-9 pr-3.5 py-2 bg-white rounded-full text-xs border-0 shadow-xs outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 transition-all"
+                    className="w-full text-[10px] leading-[15px] outline-none placeholder:text-[#667085] text-[#18233B] bg-transparent"
                 />
             </div>
 
-            {/* Barcode Scanner Input */}
-            <div className="relative">
-                <ScanLine className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                <input
-                    type="text"
-                    placeholder="Scan barcode..."
-                    value={barcode}
-                    onChange={e => onBarcodeChange(e.target.value)}
-                    onKeyDown={onBarcodeScan}
-                    className="w-40 sm:w-44 pl-9 pr-3 py-2 bg-white rounded-full text-xs border-0 shadow-xs outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 transition-all font-mono"
-                />
-            </div>
-
-            {/* Category Dropdown */}
-            <div className="relative">
-                <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-                <select
-                    value={selectedCategory}
-                    onChange={e => onCategoryChange(e.target.value)}
-                    className="pl-9 pr-7 py-2 bg-white rounded-full text-xs font-semibold text-slate-700 border-0 shadow-xs outline-none cursor-pointer focus:ring-2 focus:ring-slate-900 appearance-none"
-                >
-                    <option value="All">All Categories</option>
-                    {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                    <option value="Uncategorized">Uncategorized</option>
-                </select>
-            </div>
-
-            {/* Store Dropdown */}
-            <div className="relative">
-                <Store className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-                <select
-                    value={selectedStore}
-                    onChange={e => onStoreChange(e.target.value)}
-                    className="pl-9 pr-7 py-2 bg-white rounded-full text-xs font-semibold text-slate-700 border-0 shadow-xs outline-none cursor-pointer focus:ring-2 focus:ring-slate-900 appearance-none"
-                    required
-                >
-                    <option value="" disabled>Select Store</option>
-                    {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-            </div>
-
-            {/* Inactive Toggle */}
+            {/* Scan Barcode chip */}
             <button
-                onClick={onToggleInactive}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full font-semibold shadow-xs border transition-all ${
-                    showInactive
-                        ? 'bg-amber-50 border-amber-200 text-amber-800'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-                title={showInactive ? "Hide Inactive Products" : "Show Inactive Products"}
+                className="flex items-center gap-1.5 px-3 font-semibold transition-colors shrink-0"
+                style={{
+                    height: 36, borderRadius: 8,
+                    background: '#FFFFFF', border: '1px solid #E3EAF0', color: '#172033',
+                    fontSize: 10
+                }}
+                title="Scan Barcode"
             >
-                {showInactive ? <Eye size={14} /> : <EyeOff size={14} />}
-                <span className="hidden xl:inline">{showInactive ? 'Inactive' : 'Active Only'}</span>
+                <ScanLine className="w-3.5 h-3.5" style={{ color: '#00719B' }} />
+                <span>Scan barcode</span>
             </button>
 
-            {/* Customer Dropdown + Highlighted Quick Add */}
-            <div className="relative flex items-center gap-1.5">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-                <select
-                    value={selectedCustomer}
-                    onChange={e => onCustomerChange(e.target.value)}
-                    className="pl-9 pr-7 py-2 bg-white rounded-full text-xs font-semibold text-slate-700 border-0 shadow-xs outline-none cursor-pointer focus:ring-2 focus:ring-slate-900 appearance-none w-44"
+            {/* All Categories chip */}
+            <button
+                className="flex items-center gap-1.5 px-3 font-semibold transition-colors shrink-0"
+                style={{
+                    height: 36, borderRadius: 8,
+                    background: '#E9F8FF', border: '1px solid #00719B', color: '#00719B',
+                    fontSize: 10
+                }}
+            >
+                <Tag className="w-3.5 h-3.5" style={{ color: '#00719B' }} />
+                <span>All Categories</span>
+            </button>
+
+            {/* Main Store chip */}
+            <button
+                className="flex items-center gap-1.5 px-3 font-semibold transition-colors shrink-0"
+                style={{
+                    height: 36, borderRadius: 8,
+                    background: '#FFFFFF', border: '1px solid #E3EAF0', color: '#172033',
+                    fontSize: 10
+                }}
+            >
+                <Store className="w-3.5 h-3.5" style={{ color: '#00719B' }} />
+                <span>Main Store</span>
+            </button>
+
+            {/* Active Only chip */}
+            <button
+                onClick={onToggleInactive}
+                className="flex items-center gap-1.5 px-3 font-semibold transition-colors shrink-0"
+                style={{
+                    height: 36, borderRadius: 8,
+                    background: showInactive ? '#FFF8E7' : '#FFFFFF',
+                    border: showInactive ? '1px solid #FFA713' : '1px solid #E3EAF0',
+                    color: showInactive ? '#B45309' : '#172033',
+                    fontSize: 10
+                }}
+            >
+                {showInactive ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" style={{ color: '#667085' }} />}
+                <span>{showInactive ? 'Inactive' : 'Active Only'}</span>
+            </button>
+
+            {/* Customer selector + Add Customer in the same line */}
+            <div className="flex items-center gap-1.5 shrink-0 ml-auto sm:ml-0">
+                <div
+                    className="flex items-center gap-2 px-3"
+                    style={{ height: 36, background: '#FFFFFF', border: '1px solid #E3EAF0', borderRadius: 8 }}
                 >
-                    <option value="">Walk-in Customer</option>
-                    {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                    <User className="w-3.5 h-3.5" style={{ color: '#00719B' }} />
+                    <select
+                        value={selectedCustomer}
+                        onChange={e => onCustomerChange(e.target.value)}
+                        className="text-[10px] font-semibold outline-none cursor-pointer bg-transparent appearance-none"
+                        style={{ color: '#172033' }}
+                    >
+                        <option value="">Walk-in Customer</option>
+                        {customers.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                    </select>
+                </div>
+
                 <button
                     onClick={onAddCustomer}
-                    className="p-2 rounded-full text-white shadow-xs hover:opacity-90 transition-all cursor-pointer flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: posTheme?.primary || '#0f172a' }}
                     title="Add New Customer"
+                    className="flex items-center justify-center rounded-full hover:opacity-80 transition-all cursor-pointer flex-shrink-0"
+                    style={{ width: 28, height: 28, background: '#00A9A8' }}
                 >
-                    <UserPlus size={14} strokeWidth={2.5} />
+                    <UserPlus className="w-3.5 h-3.5 text-white" strokeWidth={2} />
                 </button>
             </div>
         </div>
