@@ -283,7 +283,7 @@ const CompanyHubLayout = ({ children, hideHeaderSearch = false }) => {
                 </AnimatePresence>
 
                 {/* Page Content */}
-                <main className={`flex-1 ${isRTL ? 'lg:mr-[80px]' : 'lg:ml-[80px]'} min-w-0 bg-[#F7FAFF]`}>
+                <main className={`flex-1 ${isRTL ? 'lg:mr-[80px]' : 'lg:ml-[80px]'} min-w-0 bg-[#F7FAFF] h-[calc(100vh-64px)] overflow-y-auto`}>
                     {children}
                 </main>
             </div>
