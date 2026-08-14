@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Save, Loader2, RefreshCcw } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, FileText, X } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const RecievedAmountForm = () => {
     const navigate = useNavigate();
     const { id } = useParams();
+    const { isRTL, t } = useLanguage();
     const isEditMode = !!id;
 
     const [loading, setLoading] = useState(false);
@@ -23,11 +25,11 @@ const RecievedAmountForm = () => {
         isReceivedFullAmount: false,
         isTaxDeducted: false,
         depositDate: new Date().toISOString().split('T')[0],
-        depositMode: 'Bank Transfer', // Default from screenshot?
+        depositMode: 'Bank Transfer',
         reference: '',
         chequeNumber: '',
         receivingDate: new Date().toISOString().split('T')[0],
-        receivedNumber: '', // Backend might generate this? or manual?
+        receivedNumber: '',
         invoiceNumber: '',
         tds: '',
         advanceAmount: '',
@@ -40,9 +42,6 @@ const RecievedAmountForm = () => {
     });
 
     const [customers, setCustomers] = useState([]);
-    // Location is hardcoded for now as per screenshot 'HO', or fetched if API exists.
-    // Assuming a simple list or hardcoded for now since no explicit Location API in context except inside RecievedService which uses LocationRepository.
-    // I'll try to fetch locations if API exists, else hardcode for UI demo.
     const [locations, setLocations] = useState([]);
 
     useEffect(() => {
@@ -52,18 +51,14 @@ const RecievedAmountForm = () => {
                 const token = localStorage.getItem('token');
                 const headers = { Authorization: `Bearer ${token}` };
 
-                // Fetch Customers
                 const custRes = await axios.get(`${API_URL}/parties`, { headers });
                 setCustomers(custRes.data.content || custRes.data || []);
 
-                // Fetch Locations (Try-catch in case endpoint doesn't exist or is different)
                 try {
-                    const locRes = await axios.get(`${API_URL}/locations`, { headers }); // Guessing endpoint
+                    const locRes = await axios.get(`${API_URL}/locations`, { headers });
                     setLocations(locRes.data || []);
                 } catch (e) {
-                    // Fallback or ignore
-                    console.warn("Could not fetch locations, defaulting to HO");
-                    setLocations([{ id: 1, name: 'HO' }]); // Mock for display if fail
+                    setLocations([{ id: 1, name: 'HO' }]);
                 }
 
                 if (isEditMode) {
@@ -83,7 +78,7 @@ const RecievedAmountForm = () => {
                         reference: data.reference || '',
                         chequeNumber: data.chequeNumber || '',
                         receivingDate: data.receivingDate || new Date().toISOString().split('T')[0],
-                        receivedNumber: data.receivedNumber || '', // Read-only usually?
+                        receivedNumber: data.receivedNumber || '',
                         invoiceNumber: data.invoiceNumber || '',
                         tds: data.tds || '',
                         advanceAmount: data.advanceAmount || '',
@@ -95,7 +90,6 @@ const RecievedAmountForm = () => {
                         rebateAndDiscount: data.rebateAndDiscount || ''
                     });
                 }
-
             } catch (err) {
                 console.error("Failed to load data", err);
                 alert("Failed to load dependency data or record.");
@@ -122,7 +116,6 @@ const RecievedAmountForm = () => {
             const token = localStorage.getItem('token');
             const headers = { Authorization: `Bearer ${token}` };
 
-            // Convert numeric strings to numbers/null
             const payload = {
                 ...formData,
                 amount: formData.amount ? Number(formData.amount) : null,
@@ -152,289 +145,314 @@ const RecievedAmountForm = () => {
         }
     };
 
-    if (fetchingData) return <div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin text-primary lg:w-12 lg:h-12" /></div>;
+    if (fetchingData) {
+        return (
+            <div className="flex justify-center items-center h-64 bg-background">
+                <Loader2 className="animate-spin text-primary w-8 h-8" />
+            </div>
+        );
+    }
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 overflow-y-auto">
-            {/* Header */}
-            <div className="bg-white border-b p-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
+        <div className="bg-background text-foreground font-sans space-y-2 w-full" dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Action Header Card */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 bg-card p-2 rounded-lg border border-border shadow-2xs">
                 <div className="flex items-center gap-2">
-                    <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-700"><ArrowLeft size={20} /></button>
-                    <h1 className="text-xl font-bold text-gray-800">{isEditMode ? 'Edit Amount Received' : 'New Amount Received'}</h1>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="w-6 h-6 rounded border border-border flex items-center justify-center text-foreground hover:bg-hover transition-colors"
+                    >
+                        <ArrowLeft size={13} />
+                    </button>
+                    <div>
+                        <h1 className="text-xs font-bold text-foreground leading-tight">
+                            {isEditMode
+                                ? (isRTL ? 'تعديل المبلغ المستلم' : 'Edit Amount Received')
+                                : (isRTL ? 'مبلغ مستلم جديد' : 'New Amount Received')}
+                        </h1>
+                        <p className="text-[10px] text-foreground-muted leading-none mt-0.5">
+                            {isRTL ? 'الرئيسية > المبيعات > إيصالات الاستلام > نموذج' : 'Home > Sales > Amount Received > Form'}
+                        </p>
+                    </div>
                 </div>
-                <div className="flex gap-2">
-                    <button type="button" onClick={() => navigate('/sales-dashboard/recieved-amounts')} className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-medium">Cancel</button>
+
+                <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/sales-dashboard/recieved-amounts')}
+                        className="px-2.5 py-1 rounded text-[11px] font-semibold border border-border bg-card hover:bg-hover text-foreground transition-colors"
+                    >
+                        {isRTL ? 'إلغاء' : 'Cancel'}
+                    </button>
                     <button
                         type="submit"
-                        form="recieved-form"
+                        form="recieved-amount-form"
                         disabled={loading}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded text-[11px] font-semibold flex items-center gap-1 transition-colors shadow-2xs disabled:opacity-50"
                     >
-                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        {isEditMode ? 'Update' : 'Save'}
+                        {loading ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+                        {isEditMode ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'حفظ' : 'Save')}
                     </button>
                 </div>
             </div>
 
-            <div className="p-6 w-full space-y-6">
-                <form id="recieved-form" onSubmit={handleSubmit} className="w-full space-y-6">
-
-                    {/* Main Details Card */}
-                    <div className="bg-white p-6 rounded shadow-sm border border-gray-200">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                            {/* Entry Type */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Entry Type <span className="text-red-500">*</span></label>
-                                <select
-                                    name="entryType"
-                                    value={formData.entryType}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                                >
-                                    <option value="Domestic">Domestic</option>
-                                    <option value="International">International</option>
-                                </select>
-                            </div>
-
-                            {/* Location */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Location</label>
-                                <select
-                                    name="locationId"
-                                    value={formData.locationId}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                                >
-                                    <option value="">Select Location</option>
-                                    {locations.map(loc => (
-                                        <option key={loc.id} value={loc.id}>{loc.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Customer Name */}
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Customer Name <span className="text-red-500">*</span></label>
-                                <select
-                                    name="customerId"
-                                    value={formData.customerId}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                                    required
-                                >
-                                    <option value="">Select Customer</option>
-                                    {customers.map(cust => (
-                                        <option key={cust.id} value={cust.id}>{cust.companyName} ({cust.contactPersonName})</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* PI Number */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">PI Number</label>
-                                <input
-                                    type="text"
-                                    name="piNumber"
-                                    value={formData.piNumber}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Enter PI Number"
-                                />
-                            </div>
-
-                            {/* Manual PI Number */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Manual PI Number</label>
-                                <input
-                                    type="text"
-                                    name="manualPiNumber"
-                                    value={formData.manualPiNumber}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Manual PI Number"
-                                />
-                            </div>
-
+            {/* Main Form Card */}
+            <form id="recieved-amount-form" onSubmit={handleSubmit} className="space-y-2">
+                <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2">
+                    <div className="flex items-center gap-1.5 pb-1 border-b border-border">
+                        <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-primary">
+                            <FileText size={13} />
                         </div>
+                        <h2 className="text-xs font-bold text-foreground">
+                            {isRTL ? 'تفاصيل الاستلام الأساسية' : 'Receipt Details'}
+                        </h2>
                     </div>
 
-                    {/* Financial Details Card */}
-                    <div className="bg-white p-6 rounded shadow-sm border border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Payment Details</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Amount */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Amount <span className="text-red-500">*</span></label>
-                                <input
-                                    type="number"
-                                    name="amount"
-                                    value={formData.amount}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="0.00"
-                                    required
-                                />
-                                <div className="mt-2 flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        name="isReceivedFullAmount"
-                                        checked={formData.isReceivedFullAmount}
-                                        onChange={handleChange}
-                                        id="receivedFull"
-                                        className="rounded text-blue-600 focus:ring-blue-500"
-                                    />
-                                    <label htmlFor="receivedFull" className="text-sm text-gray-600">Received full amount</label>
-                                </div>
-                            </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'نوع الإدخال' : 'Entry Type'} *
+                            </label>
+                            <select
+                                name="entryType"
+                                value={formData.entryType}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                                required
+                            >
+                                <option value="Domestic">{isRTL ? 'محلي' : 'Domestic'}</option>
+                                <option value="International">{isRTL ? 'دولي' : 'International'}</option>
+                            </select>
+                        </div>
 
-                            {/* Tax Deducted */}
-                            <div>
-                                <div className="flex items-center gap-2 mt-6">
-                                    <input
-                                        type="checkbox"
-                                        name="isTaxDeducted"
-                                        checked={formData.isTaxDeducted}
-                                        onChange={handleChange}
-                                        id="taxDeducted"
-                                        className="rounded text-blue-600 focus:ring-blue-500"
-                                    />
-                                    <label htmlFor="taxDeducted" className="text-sm font-bold text-gray-700">Tax deducted?</label>
-                                </div>
-                                {formData.isTaxDeducted && (
-                                    <div className="mt-2">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">TDS Amount</label>
-                                        <input
-                                            type="number"
-                                            name="tds"
-                                            value={formData.tds}
-                                            onChange={handleChange}
-                                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                            placeholder="TDS Amount"
-                                        />
-                                    </div>
-                                )}
-                            </div>
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'الموقع' : 'Location'}
+                            </label>
+                            <select
+                                name="locationId"
+                                value={formData.locationId}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            >
+                                <option value="">{isRTL ? 'اختر الموقع' : 'Select Location'}</option>
+                                {locations.map(loc => (
+                                    <option key={loc.id} value={loc.id}>{loc.name}</option>
+                                ))}
+                            </select>
+                        </div>
 
-                            {/* Deposit Date */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Deposit Date</label>
-                                <input
-                                    type="date"
-                                    name="depositDate"
-                                    value={formData.depositDate}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                />
-                            </div>
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {t('qform.customer')} *
+                            </label>
+                            <select
+                                name="customerId"
+                                value={formData.customerId}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                                required
+                            >
+                                <option value="">{t('qform.selectCustomer')}</option>
+                                {customers.map(c => (
+                                    <option key={c.id} value={c.id}>{c.companyName || c.primaryContactPerson}</option>
+                                ))}
+                            </select>
+                        </div>
 
-                            {/* Receiving Date */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Receiving Date</label>
-                                <input
-                                    type="date"
-                                    name="receivingDate"
-                                    value={formData.receivingDate}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                />
-                            </div>
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'تاريخ الاستلام' : 'Receiving Date'} *
+                            </label>
+                            <input
+                                type="date"
+                                name="receivingDate"
+                                value={formData.receivingDate}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                                required
+                            />
+                        </div>
 
-                            {/* Deposit Mode */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Deposit Mode</label>
-                                <select
-                                    name="depositMode"
-                                    value={formData.depositMode}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                                >
-                                    <option value="Bank Transfer">Bank Transfer</option>
-                                    <option value="Cheque">Cheque</option>
-                                    <option value="Cash">Cash</option>
-                                    <option value="Online">Online</option>
-                                </select>
-                            </div>
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'تاريخ الإيداع' : 'Deposit Date'} *
+                            </label>
+                            <input
+                                type="date"
+                                name="depositDate"
+                                value={formData.depositDate}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                                required
+                            />
+                        </div>
 
-                            {/* Reference */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Reference</label>
-                                <input
-                                    type="text"
-                                    name="reference"
-                                    value={formData.reference}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Transaction Reference"
-                                />
-                            </div>
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'طريقة الإيداع' : 'Deposit Mode'}
+                            </label>
+                            <select
+                                name="depositMode"
+                                value={formData.depositMode}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            >
+                                <option value="Bank Transfer">{isRTL ? 'تحويل بنكي' : 'Bank Transfer'}</option>
+                                <option value="Cheque">{isRTL ? 'شيك' : 'Cheque'}</option>
+                                <option value="Cash">{isRTL ? 'نقداً' : 'Cash'}</option>
+                                <option value="Credit Card">{isRTL ? 'بطاقة ائتمان' : 'Credit Card'}</option>
+                            </select>
+                        </div>
 
-                            {/* Cheque Number */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Cheque Number</label>
-                                <input
-                                    type="text"
-                                    name="chequeNumber"
-                                    value={formData.chequeNumber}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Cheque No."
-                                />
-                            </div>
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {t('qform.reference')}
+                            </label>
+                            <input
+                                type="text"
+                                name="reference"
+                                value={formData.reference}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                                placeholder={t('qform.refPlaceholder')}
+                            />
+                        </div>
 
-                            {/* Invoice Number */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Invoice Number</label>
-                                <input
-                                    type="text"
-                                    name="invoiceNumber"
-                                    value={formData.invoiceNumber}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Invoice No."
-                                />
-                            </div>
-
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'رقم الشيك' : 'Cheque Number'}
+                            </label>
+                            <input
+                                type="text"
+                                name="chequeNumber"
+                                value={formData.chequeNumber}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            />
                         </div>
                     </div>
+                </div>
 
-                    {/* Additional Financials */}
-                    <div className="bg-white p-6 rounded shadow-sm border border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Other Financial Details</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Total PI Amount</label>
-                                <input type="number" name="totalPiAmount" value={formData.totalPiAmount} onChange={handleChange} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0.00" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Advance Amount</label>
-                                <input type="number" name="advanceAmount" value={formData.advanceAmount} onChange={handleChange} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0.00" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">F.B.C</label>
-                                <input type="number" name="fbc" value={formData.fbc} onChange={handleChange} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0.00" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Expected In FC</label>
-                                <input type="number" name="expectedInFc" value={formData.expectedInFc} onChange={handleChange} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0.00" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Bank Charges</label>
-                                <input type="number" name="bankCharges" value={formData.bankCharges} onChange={handleChange} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0.00" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Fine/Penalty</label>
-                                <input type="number" name="fineAndPenalty" value={formData.fineAndPenalty} onChange={handleChange} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0.00" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Rebate & Discount</label>
-                                <input type="number" name="rebateAndDiscount" value={formData.rebateAndDiscount} onChange={handleChange} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0.00" />
-                            </div>
+                {/* Amount Details Card */}
+                <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2">
+                    <div className="flex items-center gap-1.5 pb-1 border-b border-border">
+                        <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-primary">
+                            <FileText size={13} />
                         </div>
+                        <h2 className="text-xs font-bold text-foreground">
+                            {isRTL ? 'تفاصيل المبالغ والتسويات' : 'Amount & Breakdown'}
+                        </h2>
                     </div>
 
-                </form>
-            </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'المبلغ المستلم (AED)' : 'Amount (AED)'} *
+                            </label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="amount"
+                                value={formData.amount}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary font-mono font-bold text-primary"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                TDS (AED)
+                            </label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="tds"
+                                value={formData.tds}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'المبلغ المقدم (AED)' : 'Advance Amount (AED)'}
+                            </label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="advanceAmount"
+                                value={formData.advanceAmount}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'رسوم البنك (AED)' : 'Bank Charges (AED)'}
+                            </label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="bankCharges"
+                                value={formData.bankCharges}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'الغرامات والجزاءات (AED)' : 'Fine & Penalty (AED)'}
+                            </label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="fineAndPenalty"
+                                value={formData.fineAndPenalty}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'الخصوم والتسويات (AED)' : 'Rebate & Discount (AED)'}
+                            </label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="rebateAndDiscount"
+                                value={formData.rebateAndDiscount}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-4">
+                            <input
+                                type="checkbox"
+                                id="isReceivedFullAmount"
+                                name="isReceivedFullAmount"
+                                checked={formData.isReceivedFullAmount}
+                                onChange={handleChange}
+                                className="rounded border-border text-primary focus:ring-primary"
+                            />
+                            <label htmlFor="isReceivedFullAmount" className="text-[11px] font-semibold text-foreground cursor-pointer">
+                                {isRTL ? 'تم استلام المبلغ بالكامل' : 'Received Full Amount'}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
     );
 };

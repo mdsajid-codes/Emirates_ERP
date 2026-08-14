@@ -183,6 +183,13 @@ const SalesSetting = lazy(() => import('./sales/pages/SalesSetting.jsx'));
 const SalAdditionalExpensePage = lazy(() => import('./sales/pages/SalAdditionalExpensePage.jsx'));
 const SalAdditionalExpenseForm = lazy(() => import('./sales/pages/SalAdditionalExpenseForm.jsx'));
 const SalAdditionalExpenseView = lazy(() => import('./sales/pages/SalAdditionalExpenseView.jsx'));
+const SalesOrderByItemReport = lazy(() => import('./sales/pages/reports/SalesOrderByItemReport.jsx'));
+const SalesOrderByCustomerReport = lazy(() => import('./sales/pages/reports/SalesOrderByCustomerReport.jsx'));
+const ListOfDueBillsReport = lazy(() => import('./sales/pages/reports/ListOfDueBillsReport.jsx'));
+const ListOfDueInvoicesReport = lazy(() => import('./sales/pages/reports/ListOfDueInvoicesReport.jsx'));
+const SalesBySalesPersonReport = lazy(() => import('./sales/pages/reports/SalesBySalesPersonReport.jsx'));
+const SalesByItemReport = lazy(() => import('./sales/pages/reports/SalesByItemReport.jsx'));
+const SalesByCustomerReport = lazy(() => import('./sales/pages/reports/SalesByCustomerReport.jsx'));
 
 // Accounting (Phase 1 Rebuild)
 const AccountingRouter = lazy(() => import('./accounting/AccountingRouter'));
@@ -571,6 +578,15 @@ function App() {
                 <Route path="new" element={<SalAdditionalExpenseForm />} />
                 <Route path="edit/:id" element={<SalAdditionalExpenseForm />} />
                 <Route path="view/:id" element={<SalAdditionalExpenseView />} />
+              </Route>
+              <Route path="reports">
+                <Route path="sales-order-by-item" element={<SalesOrderByItemReport />} />
+                <Route path="sales-order-by-customer" element={<SalesOrderByCustomerReport />} />
+                <Route path="due-bills" element={<ListOfDueBillsReport />} />
+                <Route path="due-invoices" element={<ListOfDueInvoicesReport />} />
+                <Route path="sales-by-salesperson" element={<SalesBySalesPersonReport />} />
+                <Route path="sales-by-item" element={<SalesByItemReport />} />
+                <Route path="sales-by-customer" element={<SalesByCustomerReport />} />
               </Route>
               <Route path='settings' element={<SalesSetting />} />
             </Route>

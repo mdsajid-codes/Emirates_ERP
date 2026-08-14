@@ -1,26 +1,14 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Plus, Edit, Trash2, Loader2, Search, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, Search, FileText, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-const getStatusColor = (status) => {
-    switch (status) {
-        case 'DRAFT': return 'text-gray-600 bg-gray-100';
-        case 'SENT': return 'text-blue-600 bg-blue-100';
-        case 'ACCEPTED': return 'text-green-600 bg-green-100';
-        case 'REJECTED': return 'text-red-600 bg-red-100';
-        case 'PAID': return 'text-emerald-600 bg-emerald-100';
-        case 'PARTIAL': return 'text-amber-600 bg-amber-100';
-        case 'OVERDUE': return 'text-rose-600 bg-rose-100';
-        case 'OPEN': return 'text-purple-600 bg-purple-100';
-        default: return 'text-gray-600 bg-gray-100';
-    }
-};
-
 const RentalInvoice = () => {
     const navigate = useNavigate();
+    const { isRTL, t } = useLanguage();
     const [invoices, setInvoices] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -82,14 +70,6 @@ const RentalInvoice = () => {
         fetchInvoices();
     }, [fetchInvoices]);
 
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
-        // Since backend doesn't support filtering, we can't really "reset page" effectively for server search
-        // If we want client side filtering, we'd need to fetch all or filter current page.
-        // For now leaving as is.
-    };
-
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this rental invoice?')) {
             try {
@@ -102,203 +82,243 @@ const RentalInvoice = () => {
         }
     };
 
+    const handleView = (id) => {
+        navigate(`/sales-dashboard/rental-invoices/${id}`);
+    };
+
     return (
-        <div className="flex flex-col h-full bg-slate-50">
-            {/* Header */}
-            <div className="bg-primary p-4 flex justify-between items-center text-primary-foreground shadow-sm">
-                <div>
-                    <h1 className="text-xl font-bold">Manage Rental Invoices</h1>
-                    <div className="text-xs opacity-80 mt-1 flex items-center gap-1">
-                        Home <span>&gt;</span> Sales Dashboard <span>&gt;</span> Manage Rental Invoices
+        <div className="space-y-2 bg-background min-h-screen text-foreground font-sans w-full" dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Header Section matching Quotation.jsx */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 bg-card p-2 rounded-lg border border-border shadow-2xs">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                        <FileText size={16} />
+                    </div>
+                    <div>
+                        <h1 className="text-sm font-bold text-foreground leading-tight">
+                            {isRTL ? 'فواتير الإيجار' : 'Rental Invoices'}
+                        </h1>
+                        <div className="text-[10px] text-foreground-muted flex items-center gap-1 leading-none mt-0.5">
+                            <span>{t('dashboard.breadcrumb.home')}</span> &gt; <span>{t('nav.sales')}</span> &gt; <span className="text-foreground font-medium">{isRTL ? 'فواتير الإيجار' : 'Rental Invoices'}</span>
+                        </div>
                     </div>
                 </div>
+
                 <button
                     onClick={() => navigate('/sales-dashboard/rental-invoices/new')}
-                    className="bg-white text-primary px-4 py-2 rounded-md font-bold text-sm hover:bg-opacity-90 transition-colors flex items-center gap-2 shadow-sm"
+                    className="px-3.5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md text-[11px] font-semibold flex items-center gap-1 transition-colors shadow-2xs self-end sm:self-auto"
                 >
-                    <Plus size={16} /> New Invoices
+                    <Plus size={12} /> {isRTL ? '+ فاتورة إيجار جديدة' : '+ New Rental Invoice'}
                 </button>
             </div>
 
-            <div className="p-4 space-y-4 flex-grow overflow-auto">
-                {/* Filters */}
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                        <div className="md:col-span-2">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Search (Customer, Invoice#, Ref)</label>
-                            <input
-                                type="text"
-                                name="search"
-                                value={filters.search}
-                                onChange={handleFilterChange}
-                                placeholder="Search by Name, Invoice No, Reference..."
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1">From</label>
-                            <input
-                                type="date"
-                                name="fromDate"
-                                value={filters.fromDate}
-                                onChange={handleFilterChange}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1">To</label>
-                            <input
-                                type="date"
-                                name="toDate"
-                                value={filters.toDate}
-                                onChange={handleFilterChange}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                            />
-                        </div>
-                        <div>
-                            <button
-                                onClick={() => { setCurrentPage(0); fetchInvoices(); }}
-                                className="bbox bg-gray-800 text-white px-6 py-2 rounded text-sm font-bold hover:bg-gray-700 w-full"
-                            >
-                                Search
-                            </button>
-                        </div>
-                        <div className="md:col-span-1">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Salesperson</label>
-                            <select
-                                name="salespersonId"
-                                value={filters.salespersonId}
-                                onChange={handleFilterChange}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                            >
-                                <option value="">All</option>
-                                {employees.map(emp => (
-                                    <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
-                                ))}
-                            </select>
-                        </div>
+            {/* Filter Section Card */}
+            <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 items-end">
+                    <div>
+                        <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('rentalReceived.customerName')}</label>
+                        <input
+                            type="text"
+                            name="search"
+                            className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary"
+                            placeholder={t('quotation.searchCustomer')}
+                            value={filters.search}
+                            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                        />
                     </div>
+                    <div>
+                        <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('quotation.fromDate')}</label>
+                        <input
+                            type="date"
+                            name="fromDate"
+                            className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            value={filters.fromDate}
+                            onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('quotation.toDate')}</label>
+                        <input
+                            type="date"
+                            name="toDate"
+                            className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            value={filters.toDate}
+                            onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('qform.salesperson')}</label>
+                        <select
+                            name="salespersonId"
+                            className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            value={filters.salespersonId}
+                            onChange={(e) => setFilters(prev => ({ ...prev, salespersonId: e.target.value }))}
+                        >
+                            <option value="">{t('qform.selectSalesperson')}</option>
+                            {employees.map(e => (
+                                <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <button
+                            onClick={fetchInvoices}
+                            className="w-full h-7 bg-primary text-primary-foreground hover:bg-primary/90 rounded text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors shadow-2xs"
+                        >
+                            <Search size={12} /> {t('quotation.search')}
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-                    {/* Table */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="p-2 border-b flex items-center gap-2">
-                            <select
-                                className="border border-gray-300 rounded px-2 py-1 text-xs"
-                                value={pageSize}
-                                onChange={(e) => setPageSize(Number(e.target.value))}
-                            >
-                                <option value={10}>10</option>
-                                <option value={25}>25</option>
-                                <option value={50}>50</option>
-                            </select>
-                            <div className="flex-grow"></div>
-                            <div className="flex-grow"></div>
-                        </div>
-                        {loading ? (
-                            <div className="flex justify-center items-center p-8">
-                                <Loader2 className="animate-spin text-primary h-8 w-8" />
-                            </div>
-                        ) : (
-                            <>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-xs text-left">
-                                        <thead className="bg-gray-200 text-gray-700 font-bold border-b">
-                                            <tr>
-                                                <th className="px-4 py-3 w-16 text-center">S.No.</th>
-                                                <th className="px-4 py-3">Date</th>
-                                                <th className="px-4 py-3">Due Date</th>
-                                                <th className="px-4 py-3">Invoices#</th>
-                                                <th className="px-4 py-3">Reference#</th>
-                                                <th className="px-4 py-3">Customer Name</th>
-                                                <th className="px-4 py-3">Status</th>
-                                                <th className="px-4 py-3 text-right">Amount</th>
-                                                <th className="px-4 py-3 text-right">Amount Received</th>
-                                                <th className="px-4 py-3 text-right">Balance Due</th>
-                                                <th className="px-4 py-3 text-center w-20">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100">
-                                            {invoices.length > 0 ? (
-                                                invoices.map((invoice, index) => (
-                                                    <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
-                                                        <td className="px-4 py-3 text-center text-gray-500">{currentPage * pageSize + index + 1}</td>
-                                                        <td className="px-4 py-3 text-gray-600">{invoice.invoiceDate}</td>
-                                                        <td className="px-4 py-3 text-gray-600">{invoice.dueDate}</td>
-                                                        <td className="px-4 py-3 font-medium text-gray-700">
-                                                            <button
-                                                                onClick={() => navigate(`/sales-dashboard/rental-invoices/${invoice.id}`)}
-                                                                className="text-primary hover:underline hover:text-primary/80"
-                                                            >
-                                                                {invoice.invoiceNumber}
-                                                            </button>
-                                                        </td>
-                                                        <td className="px-4 py-3 text-gray-600">{invoice.reference || '-'}</td>
-                                                        <td className="px-4 py-3 font-medium text-gray-800">{invoice.customerName}</td>
-                                                        <td className="px-4 py-3">
-                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getStatusColor(invoice.status)}`}>
-                                                                {invoice.status}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-4 py-3 text-right">AED {invoice.netTotal?.toLocaleString('en-AE', { minimumFractionDigits: 2 })}</td>
-                                                        <td className="px-4 py-3 text-right text-gray-600">AED 0.00</td>
-                                                        <td className="px-4 py-3 text-right font-medium">AED {invoice.netTotal?.toLocaleString('en-AE', { minimumFractionDigits: 2 })}</td>
-                                                        <td className="px-4 py-3 text-center">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <button
-                                                                    onClick={() => navigate(`/sales-dashboard/rental-invoices/edit/${invoice.id}`)}
-                                                                    className="p-1 bg-gray-800 text-white rounded hover:bg-gray-700 shadow-sm"
-                                                                    title="Edit"
-                                                                >
-                                                                    <Edit size={12} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleDelete(invoice.id)}
-                                                                    className="p-1 bg-red-500 text-white rounded hover:bg-red-600 shadow-sm"
-                                                                    title="Delete"
-                                                                >
-                                                                    <Trash2 size={12} />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan="11" className="px-4 py-8 text-center text-gray-500">
-                                                        No rental invoices found.
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
+            {/* Table Section */}
+            <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2">
+                <div className="flex justify-between items-center text-[11px] text-foreground-muted pb-1 border-b border-border">
+                    <div className="flex items-center gap-1.5">
+                        <span>Show</span>
+                        <select
+                            className="h-6 text-[10px] border border-border bg-background rounded px-1 text-foreground focus:outline-none focus:border-primary"
+                            value={pageSize}
+                            onChange={(e) => setPageSize(Number(e.target.value))}
+                        >
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                        </select>
+                        <span>entries</span>
+                    </div>
+                </div>
 
-                                {/* Pagination */}
-                                <div className="p-4 border-t flex justify-between items-center text-xs text-gray-500 bg-white">
-                                    <span>
-                                        Showing {invoices.length > 0 ? (currentPage * pageSize) + 1 : 0} to {Math.min((currentPage + 1) * pageSize, totalPages * pageSize)} of {totalPages * pageSize} entries
-                                    </span>
-                                    <div className="flex gap-1">
-                                        <button
-                                            onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-                                            disabled={currentPage === 0}
-                                            className="px-2 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
-                                        >
-                                            Previous
-                                        </button>
-                                        <button className="px-2 py-1 bg-purple-900 text-white rounded">{currentPage + 1}</button>
-                                        {/* Simplified pagination for now */}
-                                        <button
-                                            onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
-                                            disabled={currentPage >= totalPages - 1}
-                                            className="px-2 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
-                                        >
-                                            Next
-                                        </button>
-                                    </div>
-                                </div>
-                            </>
-                        )}
+                <div className="rounded border border-border overflow-x-auto">
+                    <table className="w-full text-[10px] text-start border-collapse">
+                        <thead>
+                            <tr className="bg-primary/10 text-foreground font-semibold border-b border-border">
+                                <th className="px-2 py-1.5 border-r border-border w-8 text-center">{isRTL ? 'م' : 'S.No.'}</th>
+                                <th className="px-2 py-1.5 border-r border-border">{isRTL ? 'التاريخ' : 'Date'}</th>
+                                <th className="px-2 py-1.5 border-r border-border">{isRTL ? 'تاريخ الاستحقاق' : 'Due Date'}</th>
+                                <th className="px-2 py-1.5 border-r border-border">{isRTL ? 'رقم الفاتورة' : 'Invoice Number'}</th>
+                                <th className="px-2 py-1.5 border-r border-border">{isRTL ? 'المرجع' : 'Reference'}</th>
+                                <th className="px-2 py-1.5 border-r border-border">{isRTL ? 'اسم العميل' : 'Customer Name'}</th>
+                                <th className="px-2 py-1.5 border-r border-border text-center">{isRTL ? 'الحالة' : 'Status'}</th>
+                                <th className="px-2 py-1.5 border-r border-border text-end">{isRTL ? 'المبلغ' : 'Amount'}</th>
+                                <th className="px-2 py-1.5 border-r border-border text-end">{isRTL ? 'المبلغ المستلم' : 'Received'}</th>
+                                <th className="px-2 py-1.5 border-r border-border text-end">{isRTL ? 'الرصيد المستحق' : 'Balance Due'}</th>
+                                <th className="px-2 py-1.5 text-center w-16">{isRTL ? 'الإجراء' : 'Action'}</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="11" className="py-8 text-center text-foreground-muted">
+                                        <Loader2 className="animate-spin h-5 w-5 mx-auto text-primary" />
+                                    </td>
+                                </tr>
+                            ) : error ? (
+                                <tr>
+                                    <td colSpan="11" className="py-8 text-center text-rose-500 font-medium">{error}</td>
+                                </tr>
+                            ) : invoices.length === 0 ? (
+                                <tr>
+                                    <td colSpan="11" className="py-8 text-center text-foreground-muted font-medium">
+                                        {t('quotation.noRecord')}
+                                    </td>
+                                </tr>
+                            ) : (
+                                invoices.map((inv, index) => {
+                                    const amountReceived = inv.amountReceived || 0;
+                                    const balanceDue = (inv.netTotal || 0) - amountReceived;
+                                    return (
+                                        <tr key={inv.id} className="hover:bg-hover transition-colors text-foreground">
+                                            <td className="px-2 py-1 border-r border-border text-center text-foreground-muted">
+                                                {currentPage * pageSize + index + 1}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border whitespace-nowrap">
+                                                {inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString() : '-'}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border whitespace-nowrap">
+                                                {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : '-'}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border font-bold">
+                                                <button
+                                                    onClick={() => handleView(inv.id)}
+                                                    className="text-primary hover:underline"
+                                                >
+                                                    {typeof inv.invoiceNumber === 'string' ? inv.invoiceNumber : `RI-${inv.id}`}
+                                                </button>
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border">
+                                                {typeof inv.reference === 'string' ? inv.reference : '-'}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border font-medium">
+                                                {typeof inv.customerName === 'string' ? inv.customerName : 'N/A'}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border text-center">
+                                                <span className={`px-1.5 py-0.5 rounded text-[9px] uppercase font-bold text-white ${inv.status === 'PAID' ? 'bg-emerald-600' : inv.status === 'PARTIAL' ? 'bg-amber-600' : inv.status === 'OVERDUE' ? 'bg-rose-600' : 'bg-slate-400'}`}>
+                                                    {typeof inv.status === 'string' ? inv.status : 'DRAFT'}
+                                                </span>
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border text-end font-mono font-semibold">
+                                                AED {Number(inv.netTotal || 0).toLocaleString('en-AE', { minimumFractionDigits: 2 })}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border text-end font-mono">
+                                                AED {Number(amountReceived).toLocaleString('en-AE', { minimumFractionDigits: 2 })}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border text-end font-mono font-semibold">
+                                                AED {Number(balanceDue).toLocaleString('en-AE', { minimumFractionDigits: 2 })}
+                                            </td>
+                                            <td className="px-2 py-1 text-center">
+                                                <div className="flex items-center justify-center gap-1">
+                                                    <button
+                                                        onClick={() => navigate(`/sales-dashboard/rental-invoices/edit/${inv.id}`)}
+                                                        className="w-5 h-5 rounded border border-border flex items-center justify-center text-foreground-muted hover:bg-hover hover:text-primary transition-colors"
+                                                        title={isRTL ? 'تعديل' : 'Edit'}
+                                                    >
+                                                        <Edit size={11} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleView(inv.id)}
+                                                        className="w-5 h-5 rounded border border-border flex items-center justify-center text-foreground-muted hover:bg-hover hover:text-primary transition-colors"
+                                                        title={isRTL ? 'عرض' : 'View'}
+                                                    >
+                                                        <Eye size={11} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(inv.id)}
+                                                        className="w-5 h-5 rounded border border-border flex items-center justify-center text-rose-500 hover:bg-rose-50 transition-colors"
+                                                        title={isRTL ? 'حذف' : 'Delete'}
+                                                    >
+                                                        <Trash2 size={11} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination */}
+                <div className="flex justify-between items-center pt-1 text-[11px] text-foreground-muted">
+                    <div>
+                        Showing page <span className="font-semibold text-foreground">{currentPage + 1}</span> of <span className="font-semibold text-foreground">{totalPages || 1}</span>
+                    </div>
+                    <div className="flex gap-1">
+                        <button
+                            disabled={currentPage === 0}
+                            onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                            className="px-2 py-0.5 border border-border bg-card hover:bg-hover rounded disabled:opacity-40 text-foreground"
+                        >
+                            <ChevronLeft size={12} className={isRTL ? 'rotate-180' : ''} />
+                        </button>
+                        <button
+                            disabled={currentPage >= totalPages - 1}
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            className="px-2 py-0.5 border border-border bg-card hover:bg-hover rounded disabled:opacity-40 text-foreground"
+                        >
+                            <ChevronRight size={12} className={isRTL ? 'rotate-180' : ''} />
+                        </button>
                     </div>
                 </div>
             </div>

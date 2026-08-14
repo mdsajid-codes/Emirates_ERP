@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { Save, X, Plus, Trash2, Upload, FileText, ArrowLeft, Loader2 } from 'lucide-react';
+import { Save, X, Plus, Trash2, Upload, FileText, ArrowLeft, Loader2, ChevronDown } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const RentalInvoiceForm = () => {
     const navigate = useNavigate();
+    const { isRTL, t } = useLanguage();
     const { id } = useParams();
     const [searchParams] = useSearchParams();
     // Potential query params for conversion/cloning in future, but for now standard create/edit
@@ -487,58 +489,80 @@ const RentalInvoiceForm = () => {
         } catch (err) {
             console.error("Failed to save rental invoice", err);
             setError("Failed to save rental invoice. Please check fields.");
-        } finally {
+} finally {
             setLoading(false);
         }
     };
 
-    if (initialLoading) return <div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin" /></div>;
+    if (initialLoading) return <div className="flex justify-center items-center h-screen bg-background"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
 
     return (
-        <div className="flex flex-col h-full bg-slate-50">
-            {/* Header */}
-            <div className="bg-primary p-4 flex justify-between items-center text-primary-foreground shadow-sm">
-                <div className="flex items-center gap-3">
-                    <button onClick={() => navigate('/sales-dashboard/rental-invoices')} className="hover:bg-white/20 p-1 rounded">
-                        <ArrowLeft size={20} />
+        <div className="bg-background text-foreground font-sans space-y-2 w-full" dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Top Bar Card */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 bg-card p-2 rounded-lg border border-border shadow-2xs">
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/sales-dashboard/rental-invoices')}
+                        className="p-1 rounded-md hover:bg-hover text-foreground-muted hover:text-foreground transition-colors"
+                    >
+                        <ArrowLeft size={16} className={isRTL ? 'rotate-180' : ''} />
                     </button>
                     <div>
-                        <h1 className="text-xl font-bold">{id ? 'Edit Rental Invoice' : 'Add New Rental Invoice'}</h1>
+                        <h1 className="text-sm font-bold text-foreground leading-tight">
+                            {id ? (isRTL ? 'تعديل فاتورة الإيجار' : 'Edit Rental Invoice') : (isRTL ? 'إنشاء فاتورة إيجار' : 'Create Rental Invoice')}
+                        </h1>
+                        <p className="text-[10px] text-foreground-muted leading-none mt-0.5">
+                            {isRTL ? 'الرئيسية > المبيعات > فواتير الإيجار' : 'Home > Sales > Rental Invoices'}
+                        </p>
                     </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/sales-dashboard/rental-invoices')}
+                        className="px-3 py-1 border border-border bg-card hover:bg-hover text-foreground rounded-md text-[11px] font-semibold transition-colors"
+                    >
+                        {t('qform.cancel')}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={loading}
+                        className="px-3.5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md text-[11px] font-semibold flex items-center gap-1 transition-colors shadow-2xs disabled:opacity-50"
+                    >
+                        {loading ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+                        {id ? t('qform.saveChanges') : (isRTL ? 'حفظ الفاتورة' : 'Save Invoice')}
+                    </button>
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-4 space-y-4 flex-grow overflow-auto">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    {error && <div className="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm">{error}</div>}
+            {error && (
+                <div className="bg-rose-500/10 border border-rose-500/30 text-rose-600 px-2.5 py-1.5 rounded-md text-[11px] font-medium">
+                    {error}
+                </div>
+            )}
 
-                    {/* Top Fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <form onSubmit={handleSubmit} className="space-y-2">
+                {/* Header Details Card */}
+                <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                         <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Invoice Ledgers</label>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{isRTL ? 'دفتر الفواتير' : 'Invoice Ledgers'}</label>
                             <select
                                 name="invoiceLedger"
                                 value={formData.invoiceLedger}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary bg-gray-50"
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
                             >
                                 <option value="Rental Sales">Rental Sales</option>
                                 <option value="General Sales">General Sales</option>
                             </select>
                         </div>
-                        <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Invoice Date</label>
-                            <input
-                                type="date"
-                                name="invoiceDate"
-                                value={formData.invoiceDate}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                            />
-                        </div>
 
-                        <div className="md:col-span-2">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Customer Name</label>
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('qform.customer')} *</label>
                             <select
                                 name="customerId"
                                 value={formData.customerId}
@@ -550,436 +574,307 @@ const RentalInvoiceForm = () => {
                                         customerName: cust ? cust.companyName : ''
                                     }));
                                 }}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                required
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
                             >
-                                <option value="">Type Here...</option>
-                                {customers.map(c => (
-                                    <option key={c.id} value={c.id}>{c.companyName}</option>
-                                ))}
+                                <option value="">{t('qform.selectCustomer')}</option>
+                                {customers.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
                             </select>
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Invoice#</label>
-                            <input
-                                type="text"
-                                name="invoiceNumber"
-                                value={formData.invoiceNumber}
-                                onChange={handleChange}
-                                placeholder="Auto-generated"
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-gray-50"
-                                readOnly={!!id} // Usually read-only on edit or auto-gen
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1">DO Number</label>
-                            <input
-                                type="text"
-                                name="doNumber"
-                                value={formData.doNumber}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1">LPO Number</label>
-                            <input
-                                type="text"
-                                name="lpoNumber"
-                                value={formData.lpoNumber}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Required Date</label>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{isRTL ? 'تاريخ الفاتورة' : 'Invoice Date'}</label>
                             <input
                                 type="date"
-                                name="requiredDate"
-                                value={formData.requiredDate}
+                                name="invoiceDate"
+                                value={formData.invoiceDate}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
                             />
                         </div>
+
                         <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Due Date</label>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{isRTL ? 'تاريخ الاستحقاق' : 'Due Date'}</label>
                             <input
                                 type="date"
                                 name="dueDate"
                                 value={formData.dueDate}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
                             />
                         </div>
+
                         <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Salesperson</label>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{isRTL ? 'رقم أمر التسليم' : 'DO Number'}</label>
+                            <input
+                                type="text"
+                                name="doNumber"
+                                placeholder="DO Number"
+                                value={formData.doNumber}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{isRTL ? 'رقم LPO' : 'LPO Number'}</label>
+                            <input
+                                type="text"
+                                name="lpoNumber"
+                                placeholder="LPO Number"
+                                value={formData.lpoNumber}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('qform.salesperson')}</label>
                             <select
                                 name="salespersonId"
                                 value={formData.salespersonId}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
                             >
-                                <option value="">Type Here...</option>
-                                {employees.map(e => (
-                                    <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>
-                                ))}
+                                <option value="">{t('qform.selectSalesperson')}</option>
+                                {employees.map(emp => <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>)}
                             </select>
                         </div>
+
                         <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1">PO #</label>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{isRTL ? 'تاريخ التوريد المطلوب' : 'Required Date'}</label>
                             <input
-                                type="text"
-                                name="poNumber"
-                                value={formData.poNumber}
+                                type="date"
+                                name="requiredDate"
+                                value={formData.requiredDate}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Reference</label>
-                            <input
-                                type="text"
-                                name="reference"
-                                value={formData.reference}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
                             />
                         </div>
                     </div>
+                </div>
 
-                    {/* Invoice Type & Checkbox */}
-                    <div className="flex justify-between items-center mb-4 text-sm">
-                        <div className="flex gap-4 items-center">
-                            <label className="font-bold text-gray-700">Invoice Type</label>
-                            <select
-                                name="invoiceType"
-                                value={formData.invoiceType}
-                                onChange={(e) => {
-                                    const newType = e.target.value;
-                                    setFormData(prev => {
-                                        // Reset discounts when switching types
-                                        const updatedItems = prev.items.map(item => ({ ...item, discount: 0 }));
-                                        // Recalculate with new type and reset discounts
-                                        const newData = { ...prev, invoiceType: newType, items: updatedItems, totalDiscount: 0 };
-
-                                        // We need to re-run calculation for items for item-level discount removal/addition effect on amount?
-                                        // Actually amount calculation depends on type in handleItemChange. 
-                                        // For clean switch, we should probably re-calculate amounts.
-                                        // But simplified: just updating state description here. 
-                                        // Real re-calc happens on next edit or we can force it.
-                                        // Let's force re-calc of all items amounts:
-                                        const recalculatedItems = updatedItems.map(item => {
-                                            const qty = parseFloat(item.quantity) || 0;
-                                            const dur = parseFloat(item.duration) || 0;
-                                            const val = parseFloat(item.rentalValue) || 0;
-                                            // Discount is 0 reset above
-                                            let amt = qty * dur * val;
-                                            // Tax
-                                            let tax = 0;
-                                            if (!item.isTaxExempt) tax = (amt * (parseFloat(item.taxPercentage) || 0)) / 100;
-                                            return { ...item, amount: amt, taxValue: tax };
-                                        });
-
-                                        return calculateTotals({ ...newData, items: recalculatedItems });
-                                    });
-                                }}
-                                className="border border-gray-300 rounded px-2 py-1 focus:outline-none"
-                            >
-                                <option value="WITH_DISCOUNT_AT_INVOICE_LEVEL">With Discount At Invoice Level</option>
-                                <option value="WITH_DISCOUNT_AT_ITEM_LEVEL">With Discount At Item Level</option>
-                                <option value="WITHOUT_DISCOUNT">Without Discount</option>
-                            </select>
-                        </div>
-                        <div className="flex gap-2 items-center">
-                            <input
-                                type="checkbox"
-                                name="enableGrossNetWeight"
-                                checked={formData.enableGrossNetWeight}
-                                onChange={handleChange}
-                                id="enableGrossNetWeight"
-                            />
-                            <label htmlFor="enableGrossNetWeight" className="text-gray-700">Would you like to enable Gross Weight and Net Weight?</label>
-                        </div>
-                    </div>
-
-                    {/* Items Table */}
-                    <div className="overflow-x-auto mb-6">
-                        <table className="w-full text-xs text-left border-collapse">
+                {/* Items Table Card */}
+                <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2">
+                    <div className="rounded border border-border">
+                        <table className="w-full text-[11px] text-start border-collapse">
                             <thead>
-                                <tr className="bg-gray-100 border-b">
-                                    <th className="p-2 border font-bold text-gray-700 w-32">Category</th>
-                                    <th className="p-2 border font-bold text-gray-700 w-32">Subcategory</th>
-                                    <th className="p-2 border font-bold text-gray-700 w-48">Item Name</th>
-                                    <th className="p-2 border font-bold text-gray-700 w-16">Quantity</th>
-                                    <th className="p-2 border font-bold text-gray-700 w-16">Duration</th>
-                                    <th className="p-2 border font-bold text-gray-700 w-24">Rental Value</th>
-                                    {formData.invoiceType === 'WITH_DISCOUNT_AT_ITEM_LEVEL' && (
-                                        <th className="p-2 border font-bold text-gray-700 w-24">Discount</th>
-                                    )}
-                                    <th className="p-2 border font-bold text-gray-700 w-24">Amount</th>
-                                    <th className="p-2 border font-bold text-gray-700 w-24">Tax Value</th>
-                                    <th className="p-2 border font-bold text-gray-700 w-10 text-center">Del</th>
+                                <tr className="bg-primary/10 text-foreground font-semibold border-b border-border">
+                                    <th className="px-2 py-1.5 border-r border-border w-8 text-center">{isRTL ? 'م' : 'S.No.'}</th>
+                                    <th className="px-2 py-1.5 border-r border-border min-w-[130px]">{t('qform.category')}</th>
+                                    <th className="px-2 py-1.5 border-r border-border min-w-[130px]">{t('qform.subcategory')}</th>
+                                    <th className="px-2 py-1.5 border-r border-border min-w-[160px]">{t('qform.item')}</th>
+                                    <th className="px-2 py-1.5 border-r border-border w-16 text-center">{t('qform.quantity')}</th>
+                                    <th className="px-2 py-1.5 border-r border-border w-16 text-center">{isRTL ? 'المدة' : 'Duration'}</th>
+                                    <th className="px-2 py-1.5 border-r border-border w-24 text-end">{isRTL ? 'قيمة الإيجار' : 'Rental Val'} (AED)</th>
+                                    <th className="px-2 py-1.5 border-r border-border w-20 text-end">{isRTL ? 'الضريبة' : 'Tax Amt'}</th>
+                                    <th className="px-2 py-1.5 border-r border-border w-28 text-end">{t('qform.amount')} (AED)</th>
+                                    <th className="px-2 py-1.5 text-center w-10">{isRTL ? 'إجراء' : 'Action'}</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-border">
                                 {formData.items.map((item, index) => (
-                                    <tr key={index} className="border-b">
-                                        <td className="p-2 border">
+                                    <tr key={index} className="hover:bg-hover transition-colors">
+                                        <td className="px-2 py-1 border-r border-border text-center text-foreground-muted">{index + 1}</td>
+                                        <td className="px-2 py-1 border-r border-border">
                                             <select
                                                 value={item.categoryId}
                                                 onChange={(e) => handleItemChange(index, 'categoryId', e.target.value)}
-                                                className="w-full outline-none bg-transparent"
+                                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-1 text-foreground focus:outline-none focus:border-primary"
                                             >
-                                                <option value="">Select...</option>
+                                                <option value="">{t('qform.selectCategory')}</option>
                                                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                             </select>
                                         </td>
-                                        <td className="p-2 border">
+                                        <td className="px-2 py-1 border-r border-border">
                                             <select
                                                 value={item.subcategoryId}
                                                 onChange={(e) => handleItemChange(index, 'subcategoryId', e.target.value)}
-                                                className="w-full outline-none bg-transparent"
+                                                disabled={!item.categoryId}
+                                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-1 text-foreground focus:outline-none focus:border-primary disabled:opacity-50"
                                             >
-                                                <option value="">Select...</option>
-                                                {item.availableSubcategories?.map(sc => (
-                                                    <option key={sc.id} value={sc.id}>{sc.name}</option>
-                                                ))}
+                                                <option value="">{t('qform.selectSubcategory')}</option>
+                                                {item.availableSubcategories?.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
                                             </select>
                                         </td>
-                                        <td className="p-2 border">
-                                            <div className="space-y-1">
-                                                <select
-                                                    value={item.crmProductId}
-                                                    onChange={(e) => handleItemChange(index, 'crmProductId', e.target.value)}
-                                                    className="w-full outline-none bg-transparent"
-                                                >
-                                                    <option value="">Type Here...</option>
-                                                    {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.itemCode})</option>)}
-                                                </select>
+                                        <td className="px-2 py-1 border-r border-border relative">
+                                            <div className="relative group">
                                                 <input
                                                     type="text"
-                                                    value={item.description || ''}
-                                                    onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                                                    placeholder="Description"
-                                                    className="w-full text-xs text-gray-500 outline-none bg-transparent border-t border-dashed border-gray-200 pt-1"
+                                                    value={item.itemName || ''}
+                                                    onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
+                                                    placeholder={t('qform.typeToSearch')}
+                                                    className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 pr-5 text-foreground focus:outline-none focus:border-primary"
+                                                    autoComplete="off"
                                                 />
+                                                <ChevronDown size={11} className="absolute right-1 top-2 text-foreground-muted pointer-events-none" />
+
+                                                <div className="absolute left-0 right-0 top-full z-[100] bg-card border border-border rounded-md mt-0.5 shadow-xl hidden group-focus-within:block max-h-48 overflow-y-auto">
+                                                    {products
+                                                        .filter(p => {
+                                                            const searchParam = (item.itemName || '').toLowerCase();
+                                                            const matchSearch = (p.name || p.itemCode || '').toLowerCase().includes(searchParam);
+                                                            const pCatId = p.categoryId || p.category?.id;
+                                                            const pSubCatId = p.subcategoryId || p.subCategoryId || p.subCategory?.id || p.subcategory?.id;
+                                                            const matchCat = item.categoryId ? String(pCatId) === String(item.categoryId) : true;
+                                                            const matchSubCat = item.subcategoryId ? String(pSubCatId) === String(item.subcategoryId) : true;
+                                                            return matchSearch && matchCat && matchSubCat;
+                                                        })
+                                                        .map(p => (
+                                                            <div
+                                                                key={p.id}
+                                                                className="px-2 py-1.5 text-[11px] hover:bg-primary/10 cursor-pointer border-b last:border-b-0 border-border flex justify-between items-center text-foreground"
+                                                                onMouseDown={(e) => {
+                                                                    e.preventDefault();
+                                                                    handleItemChange(index, 'itemName', p.name);
+                                                                    handleItemChange(index, 'crmProductId', p.id);
+                                                                    if (p.rentalRate) handleItemChange(index, 'rentalValue', p.rentalRate);
+                                                                }}
+                                                            >
+                                                                <span className="font-medium">{p.name}</span>
+                                                                <span className="text-[9px] text-foreground-muted bg-background px-1 py-0.5 rounded border border-border shrink-0 ml-1">
+                                                                    {p.itemCode || 'PRODUCT'}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                </div>
                                             </div>
                                         </td>
-                                        <td className="p-2 border">
+                                        <td className="px-2 py-1 border-r border-border">
                                             <input
                                                 type="number"
                                                 value={item.quantity}
                                                 onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                                                className="w-full outline-none bg-transparent"
                                                 min="1"
+                                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-1 text-center font-mono text-foreground focus:outline-none focus:border-primary"
                                             />
                                         </td>
-                                        <td className="p-2 border">
+                                        <td className="px-2 py-1 border-r border-border">
                                             <input
                                                 type="number"
                                                 value={item.duration}
                                                 onChange={(e) => handleItemChange(index, 'duration', e.target.value)}
-                                                className="w-full outline-none bg-transparent"
                                                 min="1"
+                                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-1 text-center font-mono text-foreground focus:outline-none focus:border-primary"
                                             />
                                         </td>
-                                        <td className="p-2 border">
+                                        <td className="px-2 py-1 border-r border-border">
                                             <input
                                                 type="number"
                                                 value={item.rentalValue}
                                                 onChange={(e) => handleItemChange(index, 'rentalValue', e.target.value)}
-                                                className="w-full outline-none bg-transparent"
+                                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-1 text-end font-mono text-foreground focus:outline-none focus:border-primary"
                                             />
                                         </td>
-                                        {formData.invoiceType === 'WITH_DISCOUNT_AT_ITEM_LEVEL' && (
-                                            <td className="p-2 border">
-                                                <input
-                                                    type="number"
-                                                    value={item.discount}
-                                                    onChange={(e) => handleItemChange(index, 'discount', e.target.value)}
-                                                    className="w-full outline-none bg-transparent"
-                                                />
-                                            </td>
-                                        )}
-                                        <td className="p-2 border bg-gray-50 text-right">
-                                            {item.amount?.toFixed(2)}
+                                        <td className="px-2 py-1 border-r border-border text-end font-mono text-foreground-muted">
+                                            AED {Number(item.taxValue || 0).toFixed(2)}
                                         </td>
-                                        <td className="p-2 border">
-                                            <div className="flex flex-col gap-1">
-                                                <div className="flex items-center gap-1">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={item.isTaxExempt}
-                                                        onChange={(e) => handleItemChange(index, 'isTaxExempt', e.target.checked)}
-                                                        className="h-3 w-3"
-                                                        title="Is Tax Exempt"
-                                                    />
-                                                    <span className="text-[10px]">Exempt</span>
-                                                </div>
-                                                <input
-                                                    type="number"
-                                                    value={item.taxPercentage}
-                                                    onChange={(e) => handleItemChange(index, 'taxPercentage', e.target.value)}
-                                                    className="w-full outline-none bg-transparent text-xs"
-                                                    placeholder="%"
-                                                    disabled={item.isTaxExempt}
-                                                />
-                                                <div className="text-[10px] text-gray-500 text-right">{item.taxValue?.toFixed(2)}</div>
-                                            </div>
+                                        <td className="px-2 py-1 border-r border-border text-end font-mono font-semibold text-foreground">
+                                            AED {Number(item.amount || 0).toFixed(2)}
                                         </td>
-                                        <td className="p-2 border text-center">
-                                            <button onClick={() => handleRemoveItem(index)} className="text-red-500 hover:text-red-700">
-                                                <Trash2 size={14} />
+                                        <td className="px-2 py-1 text-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveItem(index)}
+                                                className="w-5 h-5 rounded border border-border flex items-center justify-center text-rose-500 hover:bg-rose-50 transition-colors mx-auto"
+                                            >
+                                                <Trash2 size={11} />
                                             </button>
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
-                        <button
-                            type="button"
-                            onClick={handleAddItem}
-                            className="text-primary text-xs font-bold mt-2 flex items-center gap-1 hover:underline"
-                        >
-                            <Plus size={14} /> Add another line
-                        </button>
                     </div>
 
-                    {/* Bottom Calculation Section */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-2">Attach File(s)</label>
-                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center text-center">
-                                <Upload size={24} className="text-gray-400 mb-2" />
-                                <span className="text-xs text-gray-500 mb-2">Drag & Drop or Click to Upload</span>
-                                <input
-                                    type="file"
-                                    multiple
-                                    onChange={handleFileChange}
-                                    className="hidden"
-                                    id="file-upload"
-                                />
-                                <label htmlFor="file-upload" className="bg-gray-200 px-3 py-1 rounded text-xs cursor-pointer hover:bg-gray-300">Browse...</label>
-                                {formData.attachments.length > 0 && (
-                                    <div className="mt-2 text-xs text-left w-full">
-                                        <p className="font-bold">Selected files:</p>
-                                        <ul className="list-disc pl-4">
-                                            {formData.attachments.map((file, i) => (
-                                                <li key={i}>{file.name || file}</li> // handle File obj or string URL
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="mt-4">
-                                <label className="block text-xs font-bold text-gray-700 mb-1">Terms & Conditions</label>
-                                <textarea
-                                    name="termsAndConditions"
-                                    value={formData.termsAndConditions}
-                                    onChange={handleChange}
-                                    rows="3"
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                                    placeholder="Mention your company's Terms and Conditions..."
-                                ></textarea>
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="font-bold text-gray-700">Sub Total</span>
-                                <span>{formData.subTotal?.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="font-bold text-gray-700">Total Discount</span>
-                                <input
-                                    type="number"
-                                    name="totalDiscount"
-                                    value={formData.totalDiscount}
-                                    onChange={(e) => {
-                                        const val = parseFloat(e.target.value) || 0;
-                                        setFormData(prev => calculateTotals({ ...prev, totalDiscount: val }));
-                                    }}
-                                    className="w-24 border border-gray-300 rounded px-2 py-1 text-right focus:outline-none"
-                                    disabled={formData.invoiceType !== 'WITH_DISCOUNT_AT_INVOICE_LEVEL'}
-                                    title={formData.invoiceType !== 'WITH_DISCOUNT_AT_INVOICE_LEVEL' ? "Change invoice type to enable" : ""}
-                                />
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="font-bold text-gray-700">Gross Total</span>
-                                <span>{formData.grossTotal?.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="font-bold text-gray-700">Total Tax</span>
-                                <span>{formData.totalTax?.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="font-bold text-gray-700">Other Charges</span>
-                                <input
-                                    type="number"
-                                    name="otherCharges"
-                                    value={formData.otherCharges}
-                                    onChange={(e) => {
-                                        const val = parseFloat(e.target.value) || 0;
-                                        setFormData(prev => calculateTotals({ ...prev, otherCharges: val }));
-                                    }}
-                                    className="w-24 border border-gray-300 rounded px-2 py-1 text-right focus:outline-none"
-                                />
-                            </div>
-                            <div className="flex justify-between items-center text-base font-bold border-t pt-2">
-                                <span className="text-gray-900">Net Total</span>
-                                <span>AED {formData.netTotal?.toFixed(2)}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-6">
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Notes</label>
-                        <textarea
-                            name="notes"
-                            value={formData.notes}
-                            onChange={handleChange}
-                            rows="2"
-                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                            placeholder="Will be displayed on Invoice"
-                        ></textarea>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Template</label>
-                            <input type="text" name="template" value={formData.template} readOnly className="border-none bg-transparent font-bold text-sm" />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Email To</label>
-                            <input
-                                type="email"
-                                name="emailTo"
-                                value={formData.emailTo}
-                                onChange={handleChange}
-                                placeholder="Start adding custom fields..."
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Footer Buttons */}
-                <div className="flex gap-2">
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="bg-green-600 text-white px-6 py-2 rounded text-sm font-bold hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
-                    >
-                        {loading && <Loader2 className="animate-spin" size={16} />} Save
-                    </button>
                     <button
                         type="button"
-                        onClick={() => navigate('/sales-dashboard/rental-invoices')}
-                        className="bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded text-sm font-bold hover:bg-gray-50"
+                        onClick={handleAddItem}
+                        className="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 text-primary rounded text-[11px] font-semibold flex items-center gap-1 transition-colors"
                     >
-                        Cancel
+                        <Plus size={12} /> {t('qform.addItem')}
                     </button>
+                </div>
+
+                {/* Bottom Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2">
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('qform.attachFile')}</label>
+                            <div className="flex items-center gap-2">
+                                <label className="cursor-pointer px-2.5 py-1 border border-border bg-background hover:bg-hover text-foreground rounded text-[11px] font-medium flex items-center gap-1 transition-colors">
+                                    <Upload size={12} /> {t('qform.browse')}
+                                    <input type="file" multiple onChange={handleFileChange} className="hidden" />
+                                </label>
+                                <span className="text-[10px] text-foreground-muted">
+                                    {formData.attachments.length > 0 ? `${formData.attachments.length} file(s)` : t('qform.noFile')}
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('qform.terms')}</label>
+                            <textarea
+                                name="termsAndConditions"
+                                value={formData.termsAndConditions}
+                                onChange={handleChange}
+                                rows="2"
+                                className="w-full text-[11px] border border-border bg-background rounded p-1.5 text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary"
+                                placeholder="Terms & Conditions..."
+                            ></textarea>
+                        </div>
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('qform.notes')}</label>
+                            <textarea
+                                name="notes"
+                                value={formData.notes}
+                                onChange={handleChange}
+                                rows="2"
+                                className="w-full text-[11px] border border-border bg-background rounded p-1.5 text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary"
+                                placeholder="Will be displayed on invoice"
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-1.5 text-[11px] self-start">
+                        <div className="flex justify-between text-foreground-muted">
+                            <span>{t('qform.subTotal')}</span>
+                            <span className="font-mono text-foreground font-semibold">AED {Number(formData.subTotal || 0).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-foreground-muted">
+                            <span>{t('qform.totalDiscount')}</span>
+                            <input
+                                type="number"
+                                name="totalDiscount"
+                                value={formData.totalDiscount}
+                                onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    setFormData(prev => calculateTotals({ ...prev, totalDiscount: val }));
+                                }}
+                                className="w-20 h-6 text-[10px] border border-border bg-background rounded px-1 text-end font-mono text-foreground focus:outline-none focus:border-primary"
+                            />
+                        </div>
+                        <div className="flex justify-between text-foreground-muted">
+                            <span>{t('qform.totalTax')}</span>
+                            <span className="font-mono text-foreground">AED {Number(formData.totalTax || 0).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-foreground-muted">
+                            <span>{isRTL ? 'رسوم أخرى' : 'Other Charges'}</span>
+                            <input
+                                type="number"
+                                name="otherCharges"
+                                value={formData.otherCharges}
+                                onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    setFormData(prev => calculateTotals({ ...prev, otherCharges: val }));
+                                }}
+                                className="w-20 h-6 text-[10px] border border-border bg-background rounded px-1 text-end font-mono text-foreground focus:outline-none focus:border-primary"
+                            />
+                        </div>
+                        <div className="flex justify-between font-bold border-t border-border pt-1 text-xs text-foreground">
+                            <span>{t('qform.netTotal')}</span>
+                            <span className="text-primary font-mono">AED {Number(formData.netTotal || 0).toFixed(2)}</span>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>

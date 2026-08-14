@@ -1,31 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Loader2, Printer, FileText, Search, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 import * as XLSX from 'xlsx';
+import { Search, FileSpreadsheet, Printer, Loader2, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
+import { useLanguage } from '../../../context/LanguageContext';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const SalesOrderByItemReport = () => {
-    const navigate = useNavigate();
+    const { isRTL, t } = useLanguage();
     const componentRef = useRef();
 
     const [filters, setFilters] = useState({
-        fromDate: new Date().toISOString().split('T')[0],
+        fromDate: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
         toDate: new Date().toISOString().split('T')[0],
         itemId: ''
     });
 
     const [items, setItems] = useState([]);
     const [reportData, setReportData] = useState([]);
+    const [tableSearch, setTableSearch] = useState('');
     const [loading, setLoading] = useState(false);
-    const [itemsLoading, setItemsLoading] = useState(true);
+    const [page, setPage] = useState(0);
+    const [size, setSize] = useState(10);
 
     const fetchItems = async () => {
         try {
             const token = `Bearer ${localStorage.getItem('token')}`;
-            // Fetching products and finished goods as they are most likely to be sold
             const [productsRes, fgRes] = await Promise.all([
                 axios.get(`${API_URL}/crm/sales-products`, { headers: { Authorization: token }, params: { size: 1000 } }),
                 axios.get(`${API_URL}/production/finished-goods`, { headers: { Authorization: token }, params: { size: 1000 } })
@@ -45,12 +46,9 @@ const SalesOrderByItemReport = () => {
                 type: 'Finished Good' 
             }));
 
-            // Combine and sort
             setItems([...products, ...finishedGoods]);
         } catch (error) {
             console.error("Failed to fetch items", error);
-        } finally {
-            setItemsLoading(false);
         }
     };
 
@@ -81,6 +79,10 @@ const SalesOrderByItemReport = () => {
         }
     };
 
+    useEffect(() => {
+        fetchReport();
+    }, []);
+
     const handlePrint = useReactToPrint({
         content: () => componentRef.current,
         documentTitle: 'Sales Order By Item Report',
@@ -90,59 +92,91 @@ const SalesOrderByItemReport = () => {
         const ws = XLSX.utils.json_to_sheet(reportData.map(item => ({
             "Customer Name": item.customerName,
             "Quantity": item.quantity,
-            "Amount": item.amount,
-            "Average Price": item.averagePrice
+            "Amount (AED)": item.amount,
+            "Average Price (AED)": item.averagePrice
         })));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Report");
         XLSX.writeFile(wb, "SalesOrderByItemReport.xlsx");
     };
 
-    const calculateTotals = () => {
-        return reportData.reduce((acc, curr) => ({
-            quantity: acc.quantity + (curr.quantity || 0),
-            amount: acc.amount + (curr.amount || 0)
-        }), { quantity: 0, amount: 0 });
-    };
+    const totals = reportData.reduce((acc, curr) => ({
+        quantity: acc.quantity + (Number(curr.quantity) || 0),
+        amount: acc.amount + (Number(curr.amount) || 0)
+    }), { quantity: 0, amount: 0 });
 
-    const totals = calculateTotals();
+    const filteredData = reportData.filter(item =>
+        !tableSearch || (item.customerName && item.customerName.toLowerCase().includes(tableSearch.toLowerCase()))
+    );
 
-    // Get selected item name for header
-    const selectedItemName = filters.itemId 
-        ? items.find(i => i.id.toString() === filters.itemId.toString())?.name 
-        : '';
+    const totalPages = Math.ceil(filteredData.length / size) || 1;
+    const paginatedData = filteredData.slice(page * size, (page + 1) * size);
 
     return (
-        <div className="flex flex-col h-full bg-slate-50">
-            {/* Header / Filter Section */}
-            <div className="bg-white p-4 shadow-sm border-b">
-                <div className="flex flex-wrap gap-4 items-end">
-                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
-                        <input 
-                            type="date" 
-                            className="input"
+        <div className="space-y-2 bg-background min-h-screen text-foreground font-sans w-full" dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Action Header Card */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 bg-card p-2 rounded-lg border border-border shadow-2xs">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                        <BarChart3 size={16} />
+                    </div>
+                    <div>
+                        <h1 className="text-sm font-bold text-foreground leading-tight">
+                            {isRTL ? 'تقرير أوامر المبيعات حسب الصنف' : 'Sales Order by Item'}
+                        </h1>
+                        <p className="text-[10px] text-foreground-muted leading-none">
+                            {isRTL ? 'تحليل المبيعات حسب الصنف والعميل' : 'Detailed breakdown of sales order performance by items'}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                    <button
+                        onClick={handlePrint}
+                        className="px-2.5 py-1 rounded text-[11px] font-semibold border border-border bg-card hover:bg-hover text-foreground flex items-center gap-1 transition-colors"
+                        title="Print"
+                    >
+                        <Printer size={12} /> {t('quotation.print')}
+                    </button>
+                    <button
+                        onClick={handleExport}
+                        className="px-2.5 py-1 rounded text-[11px] font-semibold border border-border bg-card hover:bg-hover text-emerald-600 flex items-center gap-1 transition-colors"
+                        title="Export to Excel"
+                    >
+                        <FileSpreadsheet size={12} /> {isRTL ? 'تصدير' : 'Export'}
+                    </button>
+                </div>
+            </div>
+
+            {/* Filter Section Card */}
+            <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-[11px] items-end">
+                    <div>
+                        <label className="block text-[10px] font-semibold text-foreground mb-0.5">{t('quotation.fromDate')}</label>
+                        <input
+                            type="date"
                             value={filters.fromDate}
-                            onChange={(e) => setFilters(prev => ({...prev, fromDate: e.target.value}))}
+                            onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
+                            className="w-full h-7 text-[11px] bg-background border border-border rounded px-2 text-foreground focus:outline-none focus:border-primary"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
-                        <input 
-                            type="date" 
-                            className="input"
+                        <label className="block text-[10px] font-semibold text-foreground mb-0.5">{t('quotation.toDate')}</label>
+                        <input
+                            type="date"
                             value={filters.toDate}
-                            onChange={(e) => setFilters(prev => ({...prev, toDate: e.target.value}))}
+                            onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
+                            className="w-full h-7 text-[11px] bg-background border border-border rounded px-2 text-foreground focus:outline-none focus:border-primary"
                         />
                     </div>
-                    <div className="min-w-[250px]">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Item</label>
-                        <select 
-                            className="input w-full"
+                    <div>
+                        <label className="block text-[10px] font-semibold text-foreground mb-0.5">{t('qform.item')}</label>
+                        <select
                             value={filters.itemId}
-                            onChange={(e) => setFilters(prev => ({...prev, itemId: e.target.value}))}
+                            onChange={(e) => setFilters(prev => ({ ...prev, itemId: e.target.value }))}
+                            className="w-full h-7 text-[11px] bg-background border border-border rounded px-2 text-foreground focus:outline-none focus:border-primary"
                         >
-                            <option value="">Select Item (Optional)</option>
+                            <option value="">{isRTL ? 'جميع الأصناف' : 'Select Item (Optional)'}</option>
                             {items.map(item => (
                                 <option key={`${item.type}-${item.id}`} value={item.id}>
                                     {item.name}
@@ -150,94 +184,115 @@ const SalesOrderByItemReport = () => {
                             ))}
                         </select>
                     </div>
-                    
-                    <button 
-                        onClick={fetchReport}
-                        disabled={loading}
-                        className="btn-primary flex items-center gap-2"
-                    >
-                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                        Generate
-                    </button>
-
-                    <div className="flex-grow"></div>
-
-                    <div className="flex gap-2">
-                        <button onClick={handlePrint} className="p-2 text-gray-600 hover:bg-gray-100 rounded border" title="Print">
-                            <Printer className="h-5 w-5" />
-                        </button>
-                        <button onClick={handleExport} className="p-2 text-gray-600 hover:bg-gray-100 rounded border" title="Export to Excel">
-                            <FileText className="h-5 w-5" />
+                    <div className="flex items-center gap-1.5">
+                        <button
+                            onClick={fetchReport}
+                            disabled={loading}
+                            className="w-full h-7 bg-primary hover:bg-primary/90 text-primary-foreground rounded text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors shadow-2xs"
+                        >
+                            {loading ? <Loader2 size={12} className="animate-spin" /> : <Search size={12} />}
+                            {t('quotation.search')}
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Report Content */}
-            <div className="flex-1 overflow-auto p-4">
-                {/* Print Container */}
-                <div ref={componentRef} className="bg-white p-6 shadow-sm min-h-[500px]">
-                    
-                    {/* Report Header (Visible in print) */}
-                    <div className="mb-6 text-center">
-                        <div className="text-sm text-gray-500 mb-1 flex items-center gap-1">
-                            {/* Breadcrumb-like style from image */}
-                             <span className="font-semibold text-gray-700">Home</span> &gt; <span>Reports</span>
-                        </div>
-                        <div className="bg-[#a15c8e] text-white py-2 px-4 text-left font-semibold text-lg mb-4">
-                            Sales Order by Item
-                        </div>
-
-                        <h2 className="text-xl font-bold text-gray-800 uppercase">ABSOLUTE ERP</h2>
-                        <h3 className="text-lg font-semibold text-gray-700 uppercase">
-                            SALES ORDER BY ITEM {selectedItemName ? `- ${selectedItemName}` : ''}
-                        </h3>
-                        <p className="text-gray-600">
-                            From {filters.fromDate.split('-').reverse().join('/')} To {filters.toDate.split('-').reverse().join('/')}
-                        </p>
-                    </div>
-
-                    {/* Table */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm border-collapse">
-                            <thead>
-                                <tr className="bg-[#e4d4e2] text-gray-800 border-b border-gray-300">
-                                    <th className="py-2 px-3 text-left font-semibold">Customer Name</th>
-                                    <th className="py-2 px-3 text-right font-semibold">Quantity</th>
-                                    <th className="py-2 px-3 text-right font-semibold">Amount</th>
-                                    <th className="py-2 px-3 text-right font-semibold">Average Price</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {reportData.length > 0 ? (
-                                    <>
-                                        {reportData.map((item, index) => (
-                                            <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                                                <td className="py-2 px-3 text-left">{item.customerName}</td>
-                                                <td className="py-2 px-3 text-right font-medium text-red-600">{item.quantity}</td>
-                                                <td className="py-2 px-3 text-right font-medium text-red-600">{item.amount?.toFixed(2)}</td>
-                                                <td className="py-2 px-3 text-right font-medium text-red-600">{item.averagePrice?.toFixed(2)}</td>
-                                            </tr>
-                                        ))}
-                                        {/* Total Row */}
-                                        <tr className="border-t-2 border-gray-300 font-bold bg-gray-50">
-                                            <td className="py-2 px-3 text-left">Total</td>
-                                            <td className="py-2 px-3 text-right">{totals.quantity}</td>
-                                            <td className="py-2 px-3 text-right">{totals.amount.toFixed(2)}</td>
-                                            <td className="py-2 px-3 text-right"></td>
-                                        </tr>
-                                    </>
-                                ) : (
-                                    <tr>
-                                        <td colSpan="4" className="py-8 text-center text-gray-500">
-                                            No data found for the selected criteria.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+            {/* Table Container */}
+            <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2" ref={componentRef}>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 border-b border-border print:hidden">
+                    <div className="relative w-full sm:w-64">
+                        <input
+                            type="text"
+                            placeholder={t('quotation.searchInTable')}
+                            value={tableSearch}
+                            onChange={(e) => setTableSearch(e.target.value)}
+                            className="w-full h-7 text-[11px] bg-background border border-border rounded px-2.5 pr-8 text-foreground focus:outline-none focus:border-primary"
+                        />
+                        <Search className={`absolute ${isRTL ? 'left-2.5' : 'right-2.5'} top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-foreground-muted`} />
                     </div>
                 </div>
+
+                <div className="rounded border border-border overflow-x-auto">
+                    <table className="w-full text-[11px] border-collapse">
+                        <thead>
+                            <tr className="bg-primary/10 text-foreground font-semibold border-b border-border">
+                                <th className="px-3 py-1.5 text-start border-r border-border min-w-[180px]">{t('quotation.customerName')}</th>
+                                <th className="px-3 py-1.5 text-end border-r border-border w-28">{t('qform.quantity')}</th>
+                                <th className="px-3 py-1.5 text-end border-r border-border w-36">{t('qform.amount')} (AED)</th>
+                                <th className="px-3 py-1.5 text-end w-36">{isRTL ? 'متوسط السعر' : 'Average Price'} (AED)</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="4" className="text-center py-6">
+                                        <Loader2 className="animate-spin h-5 w-5 text-primary mx-auto" />
+                                    </td>
+                                </tr>
+                            ) : paginatedData.length === 0 ? (
+                                <tr>
+                                    <td colSpan="4" className="text-center py-4 text-foreground-muted">
+                                        {t('quotation.noRecord')}
+                                    </td>
+                                </tr>
+                            ) : (
+                                <>
+                                    {paginatedData.map((item, index) => (
+                                        <tr key={index} className="hover:bg-hover">
+                                            <td className="px-3 py-1.5 font-semibold text-foreground border-r border-border">{item.customerName}</td>
+                                            <td className="px-3 py-1.5 text-end font-mono border-r border-border">{item.quantity}</td>
+                                            <td className="px-3 py-1.5 text-end font-mono font-bold text-primary border-r border-border">{(item.amount || 0).toFixed(2)}</td>
+                                            <td className="px-3 py-1.5 text-end font-mono text-foreground-muted">{(item.averagePrice || 0).toFixed(2)}</td>
+                                        </tr>
+                                    ))}
+                                    {/* Summary Row */}
+                                    <tr className="bg-primary/5 font-bold border-t-2 border-border">
+                                        <td className="px-3 py-1.5 text-start uppercase text-[10px] tracking-wider text-foreground">{isRTL ? 'الإجمالي' : 'Total'}</td>
+                                        <td className="px-3 py-1.5 text-end font-mono text-primary border-r border-border">{totals.quantity}</td>
+                                        <td className="px-3 py-1.5 text-end font-mono text-primary font-bold border-r border-border">{(totals.amount || 0).toFixed(2)}</td>
+                                        <td className="px-3 py-1.5"></td>
+                                    </tr>
+                                </>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination Controls */}
+                {!loading && (
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-2 pt-1 text-xs print:hidden">
+                        <div className="text-[10px] text-foreground-muted">
+                            {t('quotation.showing')} {filteredData.length === 0 ? 0 : page * size + 1} {t('quotation.to')} {Math.min((page + 1) * size, filteredData.length)} {t('quotation.of')} {filteredData.length} {t('quotation.entries')}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                onClick={() => setPage(p => Math.max(0, p - 1))}
+                                disabled={page === 0}
+                                className="w-7 h-7 rounded border border-border bg-card flex items-center justify-center text-foreground-muted hover:text-foreground disabled:opacity-40"
+                            >
+                                <ChevronLeft size={14} className={isRTL ? 'rotate-180' : ''} />
+                            </button>
+
+                            {[...Array(totalPages)].map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setPage(i)}
+                                    className={`w-7 h-7 rounded font-semibold text-[11px] ${page === i ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-foreground hover:bg-hover'}`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+
+                            <button
+                                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                                disabled={page >= totalPages - 1}
+                                className="w-7 h-7 rounded border border-border bg-card flex items-center justify-center text-foreground-muted hover:text-foreground disabled:opacity-40"
+                            >
+                                <ChevronRight size={14} className={isRTL ? 'rotate-180' : ''} />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

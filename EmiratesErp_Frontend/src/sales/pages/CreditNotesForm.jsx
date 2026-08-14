@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Save, Loader2, Upload, Paperclip } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, FileText, X } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const CreditNotesForm = () => {
     const navigate = useNavigate();
     const { id } = useParams();
+    const { isRTL, t } = useLanguage();
     const isEditMode = !!id;
 
     const [loading, setLoading] = useState(false);
@@ -30,8 +32,6 @@ const CreditNotesForm = () => {
 
     const [customers, setCustomers] = useState([]);
     const [locations, setLocations] = useState([]);
-    // Using a simpler state for files for now as per previous impl, but styled better
-    const [attachmentFiles, setAttachmentFiles] = useState([]);
 
     useEffect(() => {
         const loadDependencies = async () => {
@@ -40,11 +40,9 @@ const CreditNotesForm = () => {
                 const token = localStorage.getItem('token');
                 const headers = { Authorization: `Bearer ${token}` };
 
-                // Fetch Customers
                 const custRes = await axios.get(`${API_URL}/parties`, { headers });
                 setCustomers(custRes.data.content || custRes.data || []);
 
-                // Fetch Locations
                 try {
                     const locRes = await axios.get(`${API_URL}/locations`, { headers });
                     setLocations(locRes.data || []);
@@ -70,7 +68,6 @@ const CreditNotesForm = () => {
                         attachments: data.attachments || []
                     });
                 }
-
             } catch (err) {
                 console.error("Failed to load data", err);
             } finally {
@@ -87,14 +84,6 @@ const CreditNotesForm = () => {
             ...prev,
             [name]: value
         }));
-    };
-
-    const handleFileChange = (e) => {
-        // Placeholder for consistency with InvoiceForm logic, though backend might not accept files directly yet
-        // standardizing UI first.
-        if (e.target.files) {
-            // For now just logging or simple text attachment logic if needed
-        }
     };
 
     const handleSubmit = async (e) => {
@@ -126,183 +115,239 @@ const CreditNotesForm = () => {
         }
     };
 
-    if (fetchingData) return <div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin text-primary lg:w-12 lg:h-12" /></div>;
+    if (fetchingData) {
+        return (
+            <div className="flex justify-center items-center h-64 bg-background">
+                <Loader2 className="animate-spin text-primary w-8 h-8" />
+            </div>
+        );
+    }
 
     return (
-        <div className="flex flex-col h-screen bg-slate-50">
-            {/* Header */}
-            <header className="bg-primary text-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-10">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/sales-dashboard/credit-notes')} className="text-gray-300 hover:text-white"><ArrowLeft /></button>
-                    <h1 className="text-xl font-bold">{isEditMode ? 'Edit Credit Notes' : 'New Credit Notes'}</h1>
+        <div className="bg-background text-foreground font-sans space-y-2 w-full" dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Top Action Header Card */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 bg-card p-2 rounded-lg border border-border shadow-2xs">
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="w-6 h-6 rounded border border-border flex items-center justify-center text-foreground hover:bg-hover transition-colors"
+                    >
+                        <ArrowLeft size={13} />
+                    </button>
+                    <div>
+                        <h1 className="text-xs font-bold text-foreground leading-tight">
+                            {isEditMode
+                                ? (isRTL ? 'تعديل الإشعار الدائن' : 'Edit Credit Note')
+                                : (isRTL ? 'إشعار دائن جديد' : 'New Credit Note')}
+                        </h1>
+                        <p className="text-[10px] text-foreground-muted leading-none mt-0.5">
+                            {isRTL ? 'الرئيسية > المبيعات > الإشعارات الدائنة > نموذج' : 'Home > Sales > Credit Notes > Form'}
+                        </p>
+                    </div>
                 </div>
-                <div className="flex items-center gap-4">
-                    <button type="button" onClick={() => navigate('/sales-dashboard/credit-notes')} className="px-4 py-2 bg-gray-600 rounded hover:bg-gray-700 font-medium text-sm">Cancel</button>
+
+                <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/sales-dashboard/credit-notes')}
+                        className="px-2.5 py-1 rounded text-[11px] font-semibold border border-border bg-card hover:bg-hover text-foreground transition-colors"
+                    >
+                        {isRTL ? 'إلغاء' : 'Cancel'}
+                    </button>
                     <button
                         type="submit"
                         form="credit-note-form"
                         disabled={loading}
-                        className="px-4 py-2 bg-green-600 rounded hover:bg-green-700 flex items-center gap-2 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded text-[11px] font-semibold flex items-center gap-1 transition-colors shadow-2xs disabled:opacity-50"
                     >
-                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        {isEditMode ? 'Update' : 'Save'}
+                        {loading ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+                        {isEditMode ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'حفظ' : 'Save')}
                     </button>
                 </div>
-            </header>
+            </div>
 
-            <main className="flex-grow overflow-y-auto p-6">
-                <form id="credit-note-form" onSubmit={handleSubmit} className="space-y-6">
+            {/* Main Credit Note Form */}
+            <form id="credit-note-form" onSubmit={handleSubmit} className="space-y-2">
+                {/* Header Information Card */}
+                <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2">
+                    <div className="flex items-center gap-1.5 pb-1 border-b border-border">
+                        <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-primary">
+                            <FileText size={13} />
+                        </div>
+                        <h2 className="text-xs font-bold text-foreground">
+                            {isRTL ? 'معلومات الإشعار الدائن' : 'Credit Note Information'}
+                        </h2>
+                    </div>
 
-                    {/* Header Details */}
-                    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-700 mb-1">Location <span className="text-red-500">*</span></label>
-                                    <select
-                                        name="locationId"
-                                        value={formData.locationId}
-                                        onChange={handleChange}
-                                        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary bg-white"
-                                        required
-                                    >
-                                        <option value="">Select Location</option>
-                                        {locations.map(loc => (
-                                            <option key={loc.id} value={loc.id}>{loc.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-700 mb-1">Customer Name <span className="text-red-500">*</span></label>
-                                    <select
-                                        name="customerId"
-                                        value={formData.customerId}
-                                        onChange={handleChange}
-                                        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary bg-white"
-                                        required
-                                    >
-                                        <option value="">Select Customer</option>
-                                        {customers.map(cust => (
-                                            <option key={cust.id} value={cust.id}>
-                                                {cust.companyName} {cust.contactPersonName ? `(${cust.contactPersonName})` : ''}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-700 mb-1">Credit Notes Date</label>
-                                    <input
-                                        type="date"
-                                        name="creditNoteDate"
-                                        value={formData.creditNoteDate}
-                                        onChange={handleChange}
-                                        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-700 mb-1">Invoice No.</label>
-                                    <input
-                                        type="text"
-                                        name="invoiceNumber"
-                                        value={formData.invoiceNumber}
-                                        onChange={handleChange}
-                                        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary"
-                                    />
-                                </div>
-                            </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'الموقع' : 'Location'} *
+                            </label>
+                            <select
+                                name="locationId"
+                                value={formData.locationId}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                                required
+                            >
+                                <option value="">{isRTL ? 'اختر الموقع' : 'Select Location'}</option>
+                                {locations.map(loc => (
+                                    <option key={loc.id} value={loc.id}>{loc.name}</option>
+                                ))}
+                            </select>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-4 border-t border-gray-100">
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {t('qform.customer')} *
+                            </label>
+                            <select
+                                name="customerId"
+                                value={formData.customerId}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                                required
+                            >
+                                <option value="">{t('qform.selectCustomer')}</option>
+                                {customers.map(c => (
+                                    <option key={c.id} value={c.id}>{c.companyName || c.primaryContactPerson}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {t('qform.quotationDate')} *
+                            </label>
+                            <input
+                                type="date"
+                                name="creditNoteDate"
+                                value={formData.creditNoteDate}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'رقم الفاتورة المرجعية' : 'Invoice Number'}
+                            </label>
+                            <input
+                                type="text"
+                                name="invoiceNumber"
+                                value={formData.invoiceNumber}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                                placeholder={isRTL ? 'مثال: INV-2025-001' : 'e.g. INV-2025-001'}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'رقم الإشعار الدائن' : 'Credit Note Number'}
+                            </label>
+                            <input
+                                type="text"
+                                name="creditNoteNumber"
+                                value={formData.creditNoteNumber}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                                placeholder="CN-0001 (Auto)"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'البريد الإلكتروني' : 'Email To'}
+                            </label>
+                            <input
+                                type="email"
+                                name="emailTo"
+                                value={formData.emailTo}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                                placeholder="client@company.com"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Amount & Terms Card */}
+                <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2">
+                    <div className="flex items-center gap-1.5 pb-1 border-b border-border">
+                        <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-primary">
+                            <FileText size={13} />
+                        </div>
+                        <h2 className="text-xs font-bold text-foreground">
+                            {isRTL ? 'المبالغ والشروط' : 'Financials & Terms'}
+                        </h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'مبلغ الإشعار (AED)' : 'Credit Amount (AED)'} *
+                            </label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="amount"
+                                value={formData.amount}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary font-mono font-bold text-primary"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                {isRTL ? 'نسبة الضريبة (%)' : 'Tax Percentage (%)'}
+                            </label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="taxPercentage"
+                                value={formData.taxPercentage}
+                                onChange={handleChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                                placeholder="5%"
+                            />
+                        </div>
+
+                        <div className="sm:col-span-2 md:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-2">
                             <div>
-                                <label className="block text-xs font-bold text-gray-700 mb-1">Credit Notes#</label>
-                                <input
-                                    type="text"
-                                    name="creditNoteNumber"
-                                    value={formData.creditNoteNumber}
+                                <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                    {t('qform.terms')}
+                                </label>
+                                <textarea
+                                    name="termsAndConditions"
+                                    rows="3"
+                                    value={formData.termsAndConditions}
                                     onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary"
-                                    placeholder="Auto / CN-001"
+                                    className="w-full text-[11px] border border-border bg-background rounded p-2 text-foreground focus:outline-none focus:border-primary"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-semibold text-foreground mb-0.5">
+                                    {t('qform.notes')}
+                                </label>
+                                <textarea
+                                    name="notes"
+                                    rows="3"
+                                    value={formData.notes}
+                                    onChange={handleChange}
+                                    className="w-full text-[11px] border border-border bg-background rounded p-2 text-foreground focus:outline-none focus:border-primary"
                                 />
                             </div>
                         </div>
                     </div>
-
-                    {/* Financials / Footer Totals equivalent */}
-                    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                        <div className="flex flex-col md:flex-row justify-end gap-12">
-                            <div className="w-full md:w-1/3"></div> {/* Spacer */}
-
-                            <div className="w-full md:w-1/3 space-y-2 text-sm bg-gray-50 p-4 rounded-lg">
-                                <h3 className="font-semibold text-gray-700 border-b pb-2 mb-2">Financial Details</h3>
-                                <div className="flex justify-between border-b border-gray-200 pb-2 items-center">
-                                    <span className="font-bold text-gray-700">Amount</span>
-                                    <input
-                                        type="number"
-                                        name="amount"
-                                        value={formData.amount}
-                                        onChange={handleChange}
-                                        className="w-32 border border-gray-300 rounded px-2 py-1 text-right focus:outline-none focus:border-primary"
-                                        placeholder="0.00"
-                                    />
-                                </div>
-                                <div className="flex justify-between border-b border-gray-200 pb-2 items-center">
-                                    <span className="text-gray-600">Tax Percentage (%)</span>
-                                    <input
-                                        type="number"
-                                        name="taxPercentage"
-                                        value={formData.taxPercentage}
-                                        onChange={handleChange}
-                                        className="w-24 border border-gray-300 rounded px-2 py-1 text-right focus:outline-none focus:border-primary"
-                                        placeholder="%"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Extras */}
-                    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-700 mb-1">Attach File</label>
-                                <div className="flex gap-2 items-center border border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
-                                    <label className="cursor-pointer bg-white border border-gray-300 px-3 py-1.5 rounded text-sm hover:bg-gray-50 flex items-center gap-1 shadow-sm transition-colors font-medium">
-                                        <Paperclip size={14} /> Browse... <input type="file" multiple onChange={handleFileChange} className="hidden" />
-                                    </label>
-                                    <span className="text-xs text-gray-500">No file selected</span>
-                                </div>
-                                <p className="text-[10px] text-gray-400 mt-1">Max 5 files, 5MB each</p>
-                            </div>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-700 mb-1">Terms & Conditions</label>
-                                <textarea name="termsAndConditions" value={formData.termsAndConditions} onChange={handleChange} rows="3" className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" placeholder="Mention your company's Terms and Conditions."></textarea>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-700 mb-1">Notes</label>
-                                <textarea name="notes" value={formData.notes} onChange={handleChange} rows="2" className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" placeholder="Will be displayed on Credit Notes"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Email To */}
-                    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Email To</label>
-                        <div className="flex items-center gap-2">
-                            <input type="text" name="emailTo" value={formData.emailTo} onChange={handleChange} className="w-full md:w-1/2 border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-primary" placeholder="Email address" />
-                        </div>
-                        <div className="flex items-center gap-2 mt-2">
-                            <input type="checkbox" id="addFields" className="rounded text-primary focus:ring-primary" />
-                            <label htmlFor="addFields" className="text-xs text-gray-600 font-bold">Additional Fields: <span className="font-normal text-gray-500">Start adding custom fields...</span></label>
-                        </div>
-                    </div>
-
-                </form>
-            </main>
+                </div>
+            </form>
         </div>
     );
 };

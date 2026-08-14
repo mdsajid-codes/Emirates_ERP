@@ -1,30 +1,21 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Plus, Edit, Trash2, Loader2, Search, ChevronLeft, ChevronRight, Eye, X, FileText, Truck } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, Search, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-const getStatusColor = (status) => {
-    switch (status) {
-        case 'DRAFT': return 'text-gray-600 bg-gray-100';
-        case 'OPEN': return 'text-purple-600 bg-purple-100';
-        case 'PARTIALLY_INVOICED': return 'text-orange-600 bg-orange-100';
-        case 'INVOICED': return 'text-teal-600 bg-teal-100';
-        case 'CANCELLED': return 'text-red-600 bg-red-100';
-        default: return 'text-gray-600 bg-gray-100';
-    }
-};
-
 const Orders = () => {
     const navigate = useNavigate();
+    const { isRTL, t } = useLanguage();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     // Filter states
     const [customerName, setCustomerName] = useState('');
-    const [fromDate, setFromDate] = useState(''); // Defaulting to 2025 as per screenshot suggestion
+    const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
     const [selectedTeamMember, setSelectedTeamMember] = useState('');
     const [employees, setEmployees] = useState([]);
@@ -59,14 +50,13 @@ const Orders = () => {
                 endDate: toDate || undefined,
                 salespersonId: selectedTeamMember || undefined
             };
-            // Note: Ensure backend supports these new params. If not, filtering might happen client-side or be ignored.
             const response = await axios.get(`${API_URL}/sales/orders`, { params, ...authHeaders });
             setOrders(response.data.content || []);
             setTotalPages(response.data.totalPages);
             setError(null);
         } catch (err) {
             setError('Failed to fetch sales orders. Please try again.');
-            console.error(err);
+            console.error('Error fetching sales orders:', err);
         } finally {
             setLoading(false);
         }
@@ -92,87 +82,93 @@ const Orders = () => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-slate-50">
-            {/* Header */}
-            <div className="bg-primary p-4 flex justify-between items-center text-primary-foreground">
-                <div>
-                    <h1 className="text-xl font-semibold">Manage Sales Orders</h1>
-                    <div className="text-sm opacity-80">Home &gt; Sales &gt; Manage Sales Orders</div>
+        <div className="flex flex-col min-h-screen bg-background text-foreground font-sans space-y-2.5 w-full" dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Header section matching Quotation.jsx */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 bg-card p-2 rounded-lg border border-border shadow-2xs">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                        <ShoppingCart size={16} />
+                    </div>
+                    <div>
+                        <h1 className="text-sm font-bold text-foreground leading-tight">
+                            {t('so.title')}
+                        </h1>
+                        <p className="text-[10px] text-foreground-muted leading-none">
+                            Home &gt; Sales &gt; {t('so.title')}
+                        </p>
+                    </div>
                 </div>
-                <button onClick={() => navigate('/sales-dashboard/orders/new')} className="bg-white text-gray-800 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-50 flex items-center gap-1 font-bold shadow-sm">
-                    <Plus size={16} /> New Sales Order
+
+                <button
+                    onClick={() => navigate('/sales-dashboard/orders/new')}
+                    className="px-3.5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md text-[11px] font-semibold flex items-center gap-1 transition-colors shadow-2xs self-end sm:self-auto"
+                >
+                    <Plus size={12} /> {t('so.newBtn')}
                 </button>
             </div>
 
-            <div className="p-4 space-y-4">
-                {/* Filters Section */}
-                <div className="bg-white p-4 rounded shadow-sm border border-gray-200">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
-                        <div className="md:col-span-1">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Customer Name</label>
-                            <input
-                                type="text"
-                                className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-blue-500"
-                                placeholder="Search Customer"
-                                value={customerName}
-                                onChange={(e) => setCustomerName(e.target.value)}
-                            />
-                        </div>
-                        <div className="md:col-span-1">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">From</label>
-                            <input
-                                type="date"
-                                className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-blue-500"
-                                value={fromDate}
-                                onChange={(e) => setFromDate(e.target.value)}
-                            />
-                        </div>
-                        <div className="md:col-span-1">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">To</label>
-                            <input
-                                type="date"
-                                className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-blue-500"
-                                value={toDate}
-                                onChange={(e) => setToDate(e.target.value)}
-                            />
-                        </div>
-                        <div className="md:col-span-1">
-                            <button
-                                onClick={fetchOrders}
-                                className="bg-primary text-white text-sm font-medium px-6 py-1.5 rounded hover:bg-violet-800 focus:outline-none w-full md:w-auto"
-                            >
-                                Search
-                            </button>
-                        </div>
+            {/* Single Row Filter Grid */}
+            <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 items-end">
+                    <div>
+                        <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('rentalReceived.customerName')}</label>
+                        <input
+                            type="text"
+                            className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary"
+                            placeholder={t('quotation.searchCustomer')}
+                            value={customerName}
+                            onChange={(e) => setCustomerName(e.target.value)}
+                        />
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                        <div className="md:col-span-1">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Team Members</label>
-                            <div className="relative">
-                                <select
-                                    className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-blue-500 appearance-none bg-white"
-                                    value={selectedTeamMember}
-                                    onChange={(e) => setSelectedTeamMember(e.target.value)}
-                                >
-                                    <option value="">All Sales Persons</option>
-                                    {employees.map(e => (
-                                        <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>
-                                    ))}
-                                </select>
-                                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                                    <X className="h-3 w-3 text-gray-400 mr-1" />
-                                </div>
-                            </div>
-                        </div>
+                    <div>
+                        <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('quotation.fromDate')}</label>
+                        <input
+                            type="date"
+                            className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('quotation.toDate')}</label>
+                        <input
+                            type="date"
+                            className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('qform.salesperson')}</label>
+                        <select
+                            className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            value={selectedTeamMember}
+                            onChange={(e) => setSelectedTeamMember(e.target.value)}
+                        >
+                            <option value="">{t('qform.selectSalesperson')}</option>
+                            {employees.map(e => (
+                                <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <button
+                            onClick={fetchOrders}
+                            className="w-full h-7 bg-primary text-primary-foreground hover:bg-primary/90 rounded text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors shadow-2xs"
+                        >
+                            <Search size={12} /> {t('quotation.search')}
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                {/* Table */}
-                <div className="bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="p-2 border-b flex items-center gap-2">
+            {/* Table Section */}
+            <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2">
+                <div className="flex justify-between items-center text-[11px] text-foreground-muted pb-1 border-b border-border">
+                    <div className="flex items-center gap-1.5">
+                        <span>Show</span>
                         <select
-                            className="border border-gray-300 rounded px-2 py-1 text-xs"
+                            className="h-6 text-[10px] border border-border bg-background rounded px-1 text-foreground focus:outline-none focus:border-primary"
                             value={pageSize}
                             onChange={(e) => setPageSize(Number(e.target.value))}
                         >
@@ -180,115 +176,150 @@ const Orders = () => {
                             <option value={25}>25</option>
                             <option value={50}>50</option>
                         </select>
-                        <div className="flex-grow"></div>
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            className="border border-gray-300 rounded px-2 py-1 text-xs"
-                        />
+                        <span>entries</span>
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-xs text-left">
-                            <thead className="bg-gray-100 text-gray-700 font-bold border-b">
-                                <tr>
-                                    <th className="px-4 py-3 border-r w-16">S.No.</th>
-                                    <th className="px-4 py-3 border-r">Date</th>
-                                    <th className="px-4 py-3 border-r">Sales Order</th>
-                                    <th className="px-4 py-3 border-r">Shipment Date</th>
-                                    <th className="px-4 py-3 border-r">Reference#</th>
-                                    <th className="px-4 py-3 border-r">Customer Name</th>
-                                    <th className="px-4 py-3 border-r">Customer PO No.</th>
-                                    <th className="px-4 py-3 border-r">Status</th>
-                                    <th className="px-4 py-3 border-r text-right">Sales Order Amt</th>
-                                    <th className="px-4 py-3 border-r text-right">Invoiced Amt</th>
-                                    <th className="px-4 py-3 border-r text-right">Balanced</th>
-                                    <th className="px-4 py-3 border-r text-center w-24">Action</th>
-                                    <th className="px-4 py-3 text-center">Delivery Challan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr><td colSpan="13" className="text-center py-10"><Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-500" /></td></tr>
-                                ) : error ? (
-                                    <tr><td colSpan="13" className="text-center py-10 text-red-500">{error}</td></tr>
-                                ) : orders.length === 0 ? (
-                                    <tr><td colSpan="13" className="text-center py-10 font-medium text-gray-500">No record available</td></tr>
-                                ) : (
-                                    orders.map((order, index) => {
-                                        // Calculate dummy values if not present
-                                        const invoicedAmount = order.invoicedAmount || 0;
-                                        const balancedAmount = order.netTotal - invoicedAmount;
-                                        const shipmentDate = order.shipmentDate ? new Date(order.shipmentDate).toLocaleDateString() : new Date(order.salesOrderDate).toLocaleDateString(); // Fallback
+                </div>
 
-                                        return (
-                                            <tr key={order.id} className="border-b hover:bg-gray-50 text-gray-700">
-                                                <td className="px-4 py-2 border-r">{currentPage * pageSize + index + 1}</td>
-                                                <td className="px-4 py-2 border-r">{new Date(order.salesOrderDate).toLocaleDateString()}</td>
-                                                <td className="px-4 py-2 border-r">
-                                                    <span
-                                                        onClick={() => handleView(order.id)}
-                                                        className="text-sky-600 cursor-pointer hover:underline font-medium"
+                <div className="rounded border border-border overflow-x-auto">
+                    <table className="w-full text-[10px] text-left border-collapse">
+                        <thead>
+                            <tr className="bg-primary/10 text-foreground font-semibold border-b border-border">
+                                <th className="px-2 py-1.5 border-r border-border w-8 text-center">{t('quotation.sno')}</th>
+                                <th className="px-2 py-1.5 border-r border-border">{t('qview.quotationDate')}</th>
+                                <th className="px-2 py-1.5 border-r border-border">{t('so.orderNo')}</th>
+                                <th className="px-2 py-1.5 border-r border-border">{t('rentalOrder.shipmentDate')}</th>
+                                <th className="px-2 py-1.5 border-r border-border">{t('qview.refNo')}</th>
+                                <th className="px-2 py-1.5 border-r border-border">{t('rentalReceived.customerName')}</th>
+                                <th className="px-2 py-1.5 border-r border-border">{t('so.poNo')}</th>
+                                <th className="px-2 py-1.5 border-r border-border text-center">{t('quotation.status')}</th>
+                                <th className="px-2 py-1.5 border-r border-border text-right">{t('rentalOrder.orderAmount')}</th>
+                                <th className="px-2 py-1.5 border-r border-border text-right">{t('so.invoicedAmt')}</th>
+                                <th className="px-2 py-1.5 border-r border-border text-right">{t('so.balanced')}</th>
+                                <th className="px-2 py-1.5 border-r border-border text-center w-12">{t('quotation.action')}</th>
+                                <th className="px-2 py-1.5 text-center">{t('so.deliveryChallan')}</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="13" className="py-8 text-center text-foreground-muted">
+                                        <Loader2 className="animate-spin h-5 w-5 mx-auto text-primary" />
+                                    </td>
+                                </tr>
+                            ) : error ? (
+                                <tr>
+                                    <td colSpan="13" className="py-8 text-center text-rose-500 font-medium">{error}</td>
+                                </tr>
+                            ) : orders.length === 0 ? (
+                                <tr>
+                                    <td colSpan="13" className="py-8 text-center text-foreground-muted font-medium">
+                                        {t('quotation.noRecord')}
+                                    </td>
+                                </tr>
+                            ) : (
+                                orders.map((order, index) => {
+                                    const invoicedAmount = order.invoicedAmount || 0;
+                                    const balancedAmount = (order.netTotal || 0) - invoicedAmount;
+                                    const shipmentDate = order.shipmentDate ? new Date(order.shipmentDate).toLocaleDateString() : new Date(order.salesOrderDate).toLocaleDateString();
+
+                                    return (
+                                        <tr key={order.id} className="hover:bg-hover transition-colors text-foreground">
+                                            <td className="px-2 py-1 border-r border-border text-center text-foreground-muted">
+                                                {currentPage * pageSize + index + 1}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border whitespace-nowrap">
+                                                {new Date(order.salesOrderDate).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border font-bold">
+                                                <button
+                                                    onClick={() => handleView(order.id)}
+                                                    className="text-primary hover:underline"
+                                                >
+                                                    {order.salesOrderNumber}
+                                                </button>
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border whitespace-nowrap">
+                                                {shipmentDate}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border">
+                                                {order.reference || '-'}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border font-medium">
+                                                {order.customerName || 'N/A'}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border">
+                                                {order.customerPoNo || '-'}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border">
+                                                <span className={`px-1.5 py-0.5 rounded text-[9px] uppercase font-bold text-white ${order.status === 'OPEN' ? 'bg-blue-500' : order.status === 'PARTIALLY_INVOICED' ? 'bg-amber-600' : order.status === 'INVOICED' ? 'bg-emerald-600' : order.status === 'CANCELLED' ? 'bg-rose-600' : 'bg-slate-400'}`}>
+                                                    {order.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border text-right font-mono font-semibold">
+                                                AED {order.netTotal?.toLocaleString('en-AE', { minimumFractionDigits: 2 })}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border text-right font-mono">
+                                                AED {invoicedAmount.toLocaleString('en-AE', { minimumFractionDigits: 2 })}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border text-right font-mono">
+                                                AED {balancedAmount.toLocaleString('en-AE', { minimumFractionDigits: 2 })}
+                                            </td>
+                                            <td className="px-2 py-1 border-r border-border text-center">
+                                                <div className="flex items-center justify-center gap-1">
+                                                    <button
+                                                        onClick={() => navigate(`/sales-dashboard/orders/edit/${order.id}`)}
+                                                        className="w-5 h-5 rounded border border-border flex items-center justify-center text-foreground-muted hover:bg-hover hover:text-primary transition-colors"
+                                                        title={t('qview.edit')}
                                                     >
-                                                        {order.salesOrderNumber}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-2 border-r">{shipmentDate}</td>
-                                                <td className="px-4 py-2 border-r">{order.reference || '-'}</td>
-                                                <td className="px-4 py-2 border-r">{order.customerName || 'N/A'}</td>
-                                                <td className="px-4 py-2 border-r">{order.customerPoNo || ''}</td>
-                                                <td className="px-4 py-2 border-r font-medium">
-                                                    <span className={`px-2 py-0.5 rounded text-[10px] ${getStatusColor(order.status)}`}>
-                                                        {order.status === 'PARTIALLY_INVOICED' ? 'Partially Invoiced' :
-                                                            order.status === 'OPEN' ? 'OPEN' : order.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-2 border-r text-right">AED {order.netTotal?.toLocaleString('en-AE', { minimumFractionDigits: 2 })}</td>
-                                                <td className="px-4 py-2 border-r text-right">AED {invoicedAmount.toLocaleString('en-AE', { minimumFractionDigits: 2 })}</td>
-                                                <td className="px-4 py-2 border-r text-right">AED {balancedAmount.toLocaleString('en-AE', { minimumFractionDigits: 2 })}</td>
-                                                <td className="px-4 py-2 border-r text-center">
-                                                    <div className="flex justify-center gap-1">
-                                                        <button onClick={() => navigate(`/sales-dashboard/orders/edit/${order.id}`)} className="p-1.5 bg-gray-700 text-white rounded hover:bg-gray-600 shadow-sm" title="Edit"><Edit size={12} /></button>
-                                                        <button onClick={() => handleDelete(order.id)} className="p-1.5 bg-red-500 text-white rounded hover:bg-red-600 shadow-sm" title="Delete"><Trash2 size={12} /></button>
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-2 text-center min-w-[190px]">
-                                                    <div className="flex flex-col gap-1 items-center">
-                                                        <div className="flex flex-col gap-1 items-center">
-                                                            <button
-                                                                onClick={() => navigate(`/sales-dashboard/delivery-orders/new?salesOrderId=${order.id}`)}
-                                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-[10px] py-1 px-2 rounded shadow-sm font-medium transition-colors"
-                                                            >
-                                                                Add DO
-                                                            </button>
-                                                            <button
-                                                                onClick={() => navigate(`/sales-dashboard/invoices/new?salesOrderId=${order.id}`)}
-                                                                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-[10px] py-1 px-2 rounded shadow-sm font-medium transition-colors"
-                                                            >
-                                                                Add Invoice From DO
-                                                            </button>
-                                                            <button
-                                                                onClick={() => navigate(`/sales-dashboard/delivery-orders?salesOrderId=${order.id}`)}
-                                                                className="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-[10px] py-1 px-2 rounded shadow-sm font-medium transition-colors"
-                                                            >
-                                                                View History of DO
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
+                                                        <Edit size={11} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(order.id)}
+                                                        className="w-5 h-5 rounded border border-border flex items-center justify-center text-rose-500 hover:bg-rose-50 transition-colors"
+                                                        title={t('qview.delete')}
+                                                    >
+                                                        <Trash2 size={11} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td className="px-1 py-1 text-center">
+                                                <div className="flex flex-col gap-1 items-center">
+                                                    <button
+                                                        onClick={() => navigate(`/sales-dashboard/delivery-orders/new?salesOrderId=${order.id}`)}
+                                                        className="w-full px-1.5 py-0.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded text-[9px] font-semibold transition-colors shadow-2xs"
+                                                    >
+                                                        {t('so.addDo')}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination */}
+                <div className="flex justify-between items-center pt-1 text-[11px] text-foreground-muted">
+                    <div>
+                        Showing page <span className="font-semibold text-foreground">{currentPage + 1}</span> of <span className="font-semibold text-foreground">{totalPages || 1}</span>
                     </div>
-                    <div className="p-2 border-t flex justify-between items-center text-xs text-gray-500">
-                        <span>Showing {orders.length > 0 ? 1 : 0} to {orders.length} of {orders.length} entries</span>
-                        <div className="flex gap-1">
-                            <button className="px-2 py-1 border rounded hover:bg-gray-100" disabled>Previous</button>
-                            <button className="px-2 py-1 bg-purple-900 text-white rounded">1</button>
-                            <button className="px-2 py-1 border rounded hover:bg-gray-100">Next</button>
-                        </div>
+                    <div className="flex gap-1">
+                        <button
+                            disabled={currentPage === 0}
+                            onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                            className="px-2 py-0.5 border border-border bg-card hover:bg-hover rounded disabled:opacity-40 text-foreground"
+                        >
+                            <ChevronLeft size={12} />
+                        </button>
+                        <button
+                            disabled={currentPage >= totalPages - 1}
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            className="px-2 py-0.5 border border-border bg-card hover:bg-hover rounded disabled:opacity-40 text-foreground"
+                        >
+                            <ChevronRight size={12} />
+                        </button>
                     </div>
                 </div>
             </div>
