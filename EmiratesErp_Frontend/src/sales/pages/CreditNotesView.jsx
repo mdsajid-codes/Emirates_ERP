@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Printer, Edit, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Printer, Edit, Trash2, Loader2, FileText } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const CreditNotesView = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { isRTL, t } = useLanguage();
     const [data, setData] = useState(null);
     const [company, setCompany] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ const CreditNotesView = () => {
     };
 
     const handleDelete = async () => {
-        if (window.confirm('Are you sure you want to delete this record?')) {
+        if (window.confirm(isRTL ? 'هل أنت تأكد من حذف هذا السجل؟' : 'Are you sure you want to delete this record?')) {
             try {
                 const token = localStorage.getItem('token');
                 await axios.delete(`${API_URL}/credit-notes/${id}`, {
@@ -53,115 +55,135 @@ const CreditNotesView = () => {
         }
     };
 
-    if (loading) return <div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
-    if (!data) return <div className="p-8 text-center">Record not found</div>;
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64 bg-background">
+                <Loader2 className="animate-spin h-8 w-8 text-primary" />
+            </div>
+        );
+    }
+
+    if (!data) {
+        return (
+            <div className="p-8 text-center text-foreground-muted bg-background">
+                {isRTL ? 'السجل غير موجود' : 'Record not found'}
+            </div>
+        );
+    }
 
     return (
-        <div className="flex flex-col h-screen bg-slate-50 print:bg-white print:h-auto">
-            {/* Header - Hidden on Print */}
-            <div className="bg-white border-b shadow-sm print:hidden">
-                <div className="px-6 py-2 text-xs text-gray-500 flex items-center gap-1">
-                    <span className="cursor-pointer hover:text-blue-600" onClick={() => navigate('/sales-dashboard')}>Sales Dashboard</span> &gt;
-                    <span className="cursor-pointer hover:text-blue-600" onClick={() => navigate('/sales-dashboard/credit-notes')}>Credit Notes</span> &gt;
-                    <span className="font-medium text-gray-700">View Credit Note</span>
-                </div>
-                <div className="px-6 py-3 bg-primary text-white flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => navigate(-1)} className="hover:bg-white/20 p-1 rounded-full"><ArrowLeft /></button>
-                        <h1 className="text-xl font-semibold">Credit Note Details</h1>
+        <div className="bg-background text-foreground font-sans space-y-2 w-full print:bg-white print:p-0" dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Action Header Bar - Hidden on Print */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 bg-card p-2 rounded-lg border border-border shadow-2xs print:hidden">
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="w-6 h-6 rounded border border-border flex items-center justify-center text-foreground hover:bg-hover transition-colors"
+                    >
+                        <ArrowLeft size={13} />
+                    </button>
+                    <div>
+                        <h1 className="text-xs font-bold text-foreground leading-tight">
+                            {isRTL ? 'إشعار دائن' : 'Credit Note'} #{data.creditNoteNumber || data.id}
+                        </h1>
+                        <p className="text-[10px] text-foreground-muted leading-none mt-0.5">
+                            {isRTL ? 'الرئيسية > المبيعات > الإشعارات الدائنة > عرض' : 'Home > Sales > Credit Notes > View'}
+                        </p>
                     </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                    <button
+                        onClick={handlePrint}
+                        className="px-2.5 py-1 rounded text-[11px] font-semibold border border-border bg-card hover:bg-hover text-foreground flex items-center gap-1 transition-colors"
+                    >
+                        <Printer size={12} /> {t('quotation.print')}
+                    </button>
+                    <button
+                        onClick={() => navigate(`/sales-dashboard/credit-notes/edit/${id}`)}
+                        className="px-2.5 py-1 rounded text-[11px] font-semibold border border-border bg-card hover:bg-hover text-blue-500 flex items-center gap-1 transition-colors"
+                    >
+                        <Edit size={12} /> {t('quotation.edit')}
+                    </button>
+                    <button
+                        onClick={handleDelete}
+                        className="px-2.5 py-1 rounded text-[11px] font-semibold border border-border bg-card hover:bg-hover text-rose-500 flex items-center gap-1 transition-colors"
+                    >
+                        <Trash2 size={12} /> {t('quotation.delete')}
+                    </button>
                 </div>
             </div>
 
-            {/* Toolbar - Hidden on Print */}
-            <div className="px-6 py-3 flex gap-2 items-center bg-white border-b print:hidden">
-                <button onClick={handlePrint} className="p-2 bg-[#0275d8] text-white rounded hover:bg-[#025aa5]" title="Print"><Printer size={16} /></button>
-                <div className="h-6 border-l border-gray-300 mx-1"></div>
-                <button onClick={() => navigate(`/sales-dashboard/credit-notes/edit/${id}`)} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 flex items-center gap-1 text-sm border border-gray-300">
-                    <Edit size={14} /> Edit
-                </button>
-                <button onClick={handleDelete} className="px-3 py-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100 flex items-center gap-1 text-sm border border-red-200">
-                    <Trash2 size={14} /> Delete
-                </button>
-            </div>
-
-            {/* Document View */}
-            <div className="flex-grow overflow-y-auto p-6 bg-slate-50 print:p-0 print:bg-white print:overflow-visible">
-                <div className="w-full bg-white border shadow-sm p-8 relative text-sm print:w-full print:border-none print:shadow-none print:p-0 min-h-[800px] max-w-4xl mx-auto">
-
-                    {/* Company Header */}
-                    <div className="text-center mb-8 border-b pb-4">
-                        <h2 className="text-xl font-bold text-gray-800">{company?.companyName || 'Your Company Name'}</h2>
-                        <p className="text-gray-600">{company?.address || 'Address Line 1'}, {company?.city || 'City'}</p>
+            {/* Document Printable Card */}
+            <div className="bg-card border border-border rounded-lg p-6 shadow-2xs print:border-none print:shadow-none print:p-0">
+                {/* Header Info */}
+                <div className="flex justify-between items-start border-b border-border pb-4 mb-4">
+                    <div>
+                        <h2 className="text-base font-bold text-foreground">{company?.companyName || 'Emirates ERP Trading'}</h2>
+                        <p className="text-[11px] text-foreground-muted">{company?.address || 'Dubai, United Arab Emirates'}</p>
+                        <p className="text-[11px] text-foreground-muted">TRN: {company?.trn || '100023456700003'}</p>
                     </div>
-
-                    <div className="flex justify-between items-start mb-8">
-                        <div>
-                            <h3 className="text-lg font-bold text-primary mb-1">CREDIT NOTE</h3>
-                            <div className="space-y-1 text-gray-700">
-                                <div className="flex"><span className="w-32 font-semibold">Credit Note #:</span><span>{data.creditNoteNumber || '-'}</span></div>
-                                <div className="flex"><span className="w-32 font-semibold">Date:</span><span>{data.creditNoteDate}</span></div>
-                                <div className="flex"><span className="w-32 font-semibold">Reference Invoice:</span><span>{data.invoiceNumber || '-'}</span></div>
-                            </div>
+                    <div className="text-end">
+                        <div className="inline-block bg-primary/10 text-primary font-bold text-xs px-2.5 py-1 rounded border border-primary/20 mb-1">
+                            {isRTL ? 'إشعار دائن' : 'CREDIT NOTE'}
                         </div>
-                        <div className="text-right">
-                            <h3 className="text-lg font-bold text-gray-800">Total Amount</h3>
-                            <div className="text-3xl font-bold text-red-600 mt-2">
-                                {data.amount?.toLocaleString('en-AE', { style: 'currency', currency: 'AED' })}
-                            </div>
-                            <div className="mt-1 text-xs text-gray-500 uppercase">{data.status}</div>
-                        </div>
+                        <p className="text-[11px] text-foreground-muted font-mono">{isRTL ? 'رقم الإشعار:' : 'Credit Note #:'} {data.creditNoteNumber || data.id}</p>
+                        <p className="text-[11px] text-foreground-muted font-mono">{isRTL ? 'التاريخ:' : 'Date:'} {data.creditNoteDate}</p>
+                        {data.invoiceNumber && <p className="text-[11px] text-foreground-muted font-mono">{isRTL ? 'الفاتورة المرجعية:' : 'Ref Invoice:'} {data.invoiceNumber}</p>}
                     </div>
+                </div>
 
-                    <div className="mb-8">
-                        <h4 className="font-bold bg-gray-100 p-2 mb-2 border-b">Bill To</h4>
-                        <div className="px-2 space-y-1">
-                            <div className="font-semibold text-lg">{data.customerName}</div>
-                            <div className="text-gray-600">ID: {data.customerId}</div>
-                        </div>
+                {/* Customer Details */}
+                <div className="bg-background p-3 rounded-lg border border-border mb-4 text-[11px]">
+                    <h3 className="font-bold text-foreground border-b border-border pb-1 mb-1.5">
+                        {isRTL ? 'مقدم إلى' : 'BILL TO'}
+                    </h3>
+                    <p className="font-bold text-xs text-foreground">{data.customerName}</p>
+                    <p className="text-foreground-muted">{isRTL ? 'معرف العميل:' : 'Customer ID:'} #{data.customerId}</p>
+                </div>
+
+                {/* Breakdown Table */}
+                <div className="rounded border border-border overflow-hidden mb-6">
+                    <table className="w-full text-[11px] border-collapse">
+                        <thead>
+                            <tr className="bg-primary/10 text-foreground font-semibold border-b border-border">
+                                <th className="px-3 py-1.5 text-start border-r border-border">{isRTL ? 'البيان' : 'Description'}</th>
+                                <th className="px-3 py-1.5 text-end w-36">{isRTL ? 'المبلغ' : 'Amount'} (AED)</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            <tr>
+                                <td className="px-3 py-2 text-foreground font-medium border-r border-border">{isRTL ? 'مبلغ الإشعار الدائن' : 'Credit Amount'}</td>
+                                <td className="px-3 py-2 text-end font-mono font-bold text-foreground">AED {Number(data.amount || 0).toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td className="px-3 py-2 text-foreground-muted border-r border-border">{isRTL ? 'الرصيد المتبقي المستحق' : 'Balance Due'}</td>
+                                <td className="px-3 py-2 text-end font-mono text-foreground-muted">AED {Number(data.balanceDue || 0).toFixed(2)}</td>
+                            </tr>
+                            <tr className="bg-primary/5 font-bold">
+                                <td className="px-3 py-2 text-foreground border-r border-border">{isRTL ? 'إجمالي المكتسب الدائن' : 'Total Credited Net'}</td>
+                                <td className="px-3 py-2 text-end font-mono text-primary text-xs">AED {Number(data.amount || 0).toFixed(2)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Terms & Notes */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-border pt-4 text-[11px]">
+                    <div>
+                        <h4 className="font-semibold text-foreground mb-1">{t('qform.terms')}</h4>
+                        <p className="text-foreground-muted whitespace-pre-wrap leading-relaxed">{data.termsAndConditions || '-'}</p>
                     </div>
-
-                    {/* Financial Breakdown Table - Simplified for Credit Notes */}
-                    <div className="mb-8">
-                        <table className="w-full text-sm border-collapse border border-gray-300">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="border border-gray-300 px-4 py-2 text-left">Description</th>
-                                    <th className="border border-gray-300 px-4 py-2 text-right w-40">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td className="border border-gray-300 px-4 py-2">Credit Amount</td>
-                                    <td className="border border-gray-300 px-4 py-2 text-right font-medium">{data.amount?.toFixed(2)}</td>
-                                </tr>
-                                <tr>
-                                    <td className="border border-gray-300 px-4 py-2">Balance Due</td>
-                                    <td className="border border-gray-300 px-4 py-2 text-right">{data.balanceDue?.toFixed(2) || '0.00'}</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div>
+                        <h4 className="font-semibold text-foreground mb-1">{t('qform.notes')}</h4>
+                        <p className="text-foreground-muted whitespace-pre-wrap leading-relaxed">{data.notes || '-'}</p>
                     </div>
+                </div>
 
-                    {/* Terms & Notes */}
-                    <div className="grid grid-cols-2 gap-8 mb-8">
-                        <div>
-                            <h4 className="font-bold text-gray-700 text-xs uppercase mb-2">Terms & Conditions</h4>
-                            <p className="text-gray-600 text-xs whitespace-pre-wrap">{data.termsAndConditions || 'No terms specified.'}</p>
-                        </div>
-                        <div>
-                            <h4 className="font-bold text-gray-700 text-xs uppercase mb-2">Notes</h4>
-                            <p className="text-gray-600 text-xs whitespace-pre-wrap">{data.notes || '-'}</p>
-                        </div>
-                    </div>
-
-                    <div className="mt-12 pt-8 border-t border-gray-200 grid grid-cols-2 gap-8">
-                        <div className="text-left">
-                            <p className="text-xs text-gray-500 mb-8">Authorized Signature:</p>
-                            <div className="border-b border-gray-400 w-48"></div>
-                        </div>
-                    </div>
-
+                {/* Signature */}
+                <div className="pt-12 mt-8 border-t border-border text-[10px] text-foreground-muted">
+                    <p className="mb-8">{isRTL ? 'التوقيع المعتمد:' : 'Authorized Signature:'}</p>
+                    <div className="border-b border-foreground-muted w-44"></div>
                 </div>
             </div>
         </div>

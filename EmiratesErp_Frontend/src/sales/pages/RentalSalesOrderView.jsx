@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Edit, FileText, Printer, Mail, Paperclip, ChevronDown, ArrowLeft, Loader2 } from 'lucide-react';
+import { Edit, FileText, Printer, Mail, Paperclip, ChevronDown, ArrowLeft, Loader2, ShoppingCart } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const RentalSalesOrderView = () => {
+    const { t, isRTL } = useLanguage();
     const { id } = useParams();
     const navigate = useNavigate();
     const [order, setOrder] = useState(null);
@@ -139,97 +141,173 @@ const RentalSalesOrderView = () => {
         return parts.join(', ');
     };
 
-    if (loading) return <div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin h-8 w-8 text-blue-600" /></div>;
-    if (error) return <div className="p-8 text-center text-red-600">{error}</div>;
-    if (!order) return <div className="p-8 text-center">Rental Sales Order not found.</div>;
+    if (loading) return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin text-primary h-7 w-7" /></div>;
+    if (error) return <div className="p-4 text-center text-rose-500 text-xs font-semibold">{error}</div>;
+    if (!order) return <div className="p-4 text-center text-foreground-muted text-xs font-semibold">Rental Sales Order not found.</div>;
 
     return (
-        <div className="flex flex-col h-screen bg-slate-50 print:bg-white print:h-auto">
-            {/* Breadcrumb & Header */}
-            <div className="bg-white border-b shadow-sm print:hidden">
-                <div className="px-6 py-2 text-xs text-gray-500 flex items-center gap-1">
-                    <span className="cursor-pointer hover:text-blue-600" onClick={() => navigate('/sales-dashboard')}>Home</span> &gt;
-                    <span className="cursor-pointer hover:text-blue-600" onClick={() => navigate('/sales-dashboard')}>Sales Dashboard</span> &gt;
-                    <span className="font-medium text-gray-700">View Rental Sales Order</span>
-                </div>
-                <div className="px-6 py-3 bg-primary text-white flex justify-between items-center">
-                    <h1 className="text-xl font-semibold">View Rental Sales Order</h1>
-                    <div className="flex gap-2">
-                        <button onClick={() => navigate('/sales-dashboard/rental-sales-orders')} className="px-3 py-1 bg-primary hover:bg-violet-800 text-sm rounded transition-colors">All Orders</button>
-                        <button onClick={() => navigate('/sales-dashboard/rental-sales-orders/new')} className="px-3 py-1 bg-primary hover:bg-violet-800 text-sm rounded transition-colors">+ New Order</button>
+        <div className="bg-background text-foreground font-sans space-y-2 w-full print:bg-white print:p-0" dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Header Card */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 bg-card p-2 rounded-lg border border-border shadow-2xs print:hidden">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                        <ShoppingCart size={16} />
                     </div>
+                    <div>
+                        <h1 className="text-sm font-bold text-foreground leading-tight">
+                            {t('rentalOrder.viewTitle')}
+                        </h1>
+                        <p className="text-[10px] text-foreground-muted leading-none">
+                            Home &gt; Sales &gt; {t('rentalOrder.viewTitle')}
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                    <button
+                        onClick={() => navigate('/sales-dashboard/rental-sales-orders')}
+                        className="px-2.5 py-1 bg-card border border-border text-foreground hover:bg-hover rounded text-xs font-semibold transition-colors"
+                    >
+                        {t('rentalOrder.allOrders')}
+                    </button>
+                    <button
+                        onClick={() => navigate('/sales-dashboard/rental-sales-orders/new')}
+                        className="px-3 py-1 bg-primary text-primary-foreground hover:bg-primary/90 rounded text-xs font-semibold transition-colors shadow-2xs"
+                    >
+                        + {t('rentalOrder.newBtn')}
+                    </button>
                 </div>
             </div>
 
-            {/* Toolbar */}
-            <div className="px-6 py-3 flex flex-wrap gap-2 items-center bg-white border-b print:hidden">
-                <button onClick={() => navigate(`/sales-dashboard/rental-sales-orders/edit/${id}`)} className="p-2 bg-[#5bc0de] text-white rounded hover:bg-[#46b8da]" title="Edit"><Edit size={16} /></button>
-                <button onClick={handleDownloadPdf} className="p-2 bg-[#d9534f] text-white rounded hover:bg-[#d43f3a]" title="PDF"><FileText size={16} /></button>
-                <button onClick={handleWhatsApp} className="p-2 bg-[#5cb85c] text-white rounded hover:bg-[#4cae4c]" title="WhatsApp"><span className="font-bold text-xs">WA</span></button>
-                <button onClick={() => window.print()} className="p-2 bg-[#0275d8] text-white rounded hover:bg-[#025aa5]" title="Print"><Printer size={16} /></button>
-                <button onClick={() => window.print()} className="px-3 py-1.5 bg-[#0275d8] text-white rounded text-sm hover:bg-[#025aa5] flex items-center gap-1"><Printer size={14} /> Print On Letterhead</button>
-                <button onClick={handleEmail} className="p-2 bg-[#f0ad4e] text-white rounded hover:bg-[#eea236]" title="Email"><Mail size={16} /></button>
-                <button className="p-2 bg-[#aeb6bf] text-white rounded hover:bg-[#8e99a4]" title="Attachments" onClick={() => alert("Attachments feature coming soon!")}><Paperclip size={16} /></button>
+            {/* Action Toolbar */}
+            <div className="px-2.5 py-1.5 flex flex-wrap gap-1.5 items-center bg-card border border-border rounded-lg shadow-2xs print:hidden">
+                <button
+                    onClick={() => navigate(`/sales-dashboard/rental-sales-orders/edit/${id}`)}
+                    className="px-2.5 py-1 bg-sky-500 hover:bg-sky-600 text-white rounded text-[11px] font-medium flex items-center gap-1 transition-colors"
+                    title={t('qview.edit')}
+                >
+                    <Edit size={12} /> {t('qview.edit')}
+                </button>
+
+                <button
+                    onClick={handleDownloadPdf}
+                    className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-[11px] font-medium flex items-center gap-1 transition-colors"
+                    title={t('qview.pdf')}
+                >
+                    <FileText size={12} /> {t('qview.pdf')}
+                </button>
+
+                <button
+                    onClick={handleWhatsApp}
+                    className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-medium flex items-center gap-1 transition-colors"
+                    title={t('qview.wa')}
+                >
+                    <span className="font-bold text-[10px]">WA</span>
+                </button>
+
+                <button
+                    onClick={() => window.print()}
+                    className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[11px] font-medium flex items-center gap-1 transition-colors"
+                    title={t('qview.print')}
+                >
+                    <Printer size={12} /> {t('qview.print')}
+                </button>
+
+                <button
+                    onClick={() => window.print()}
+                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[11px] font-medium flex items-center gap-1 transition-colors"
+                >
+                    <Printer size={12} /> {t('qview.printLetterhead')}
+                </button>
+
+                <button
+                    onClick={handleEmail}
+                    className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-[11px] font-medium flex items-center gap-1 transition-colors"
+                    title={t('qview.email')}
+                >
+                    <Mail size={12} /> {t('qview.email')}
+                </button>
+
+                <button
+                    onClick={() => alert("Attachments feature coming soon!")}
+                    className="px-2.5 py-1 bg-slate-500 hover:bg-slate-600 text-white rounded text-[11px] font-medium flex items-center gap-1 transition-colors"
+                    title={t('qview.attachments')}
+                >
+                    <Paperclip size={12} /> {t('qview.attachments')}
+                </button>
 
                 <div className="relative" ref={convertMenuRef}>
-                    <button onClick={() => setShowConvertMenu(!showConvertMenu)} className="px-3 py-1.5 bg-primary text-white rounded text-sm hover:bg-violet-800 flex items-center gap-1">
-                        Convert <ChevronDown size={14} />
+                    <button
+                        onClick={() => setShowConvertMenu(!showConvertMenu)}
+                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded text-[11px] font-medium flex items-center gap-1 transition-colors"
+                    >
+                        {t('qview.convert')} <ChevronDown size={12} />
                     </button>
                     {showConvertMenu && (
-                        <div className="absolute top-full left-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 text-sm">
-
-                            <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-[#0099cc]" onClick={() => navigate(`/sales-dashboard/rental-invoices/new?orderId=${id}`)}>Convert to Rental Invoice</button>
+                        <div className="absolute top-full left-0 z-50 mt-1 w-48 bg-card border border-border rounded-md shadow-xl text-[11px] py-1">
+                            <button
+                                className="block w-full text-left px-3 py-1.5 hover:bg-primary/10 text-primary font-medium"
+                                onClick={() => navigate(`/sales-dashboard/rental-invoices/new?orderId=${id}`)}
+                            >
+                                Convert to Rental Invoice
+                            </button>
                         </div>
                     )}
                 </div>
 
                 <div className="relative" ref={moreMenuRef}>
-                    <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="px-3 py-1.5 bg-primary text-white rounded text-sm hover:bg-violet-800 flex items-center gap-1">
-                        More <ChevronDown size={14} />
+                    <button
+                        onClick={() => setShowMoreMenu(!showMoreMenu)}
+                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded text-[11px] font-medium flex items-center gap-1 transition-colors"
+                    >
+                        {t('qview.more')} <ChevronDown size={12} />
                     </button>
                     {showMoreMenu && (
-                        <div className="absolute top-full left-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 text-sm">
-                            <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700" onClick={() => navigate(`/sales-dashboard/rental-sales-orders/new?cloneId=${id}`)}>Clone</button>
-
-                            {/* Status Actions */}
+                        <div className="absolute top-full left-0 z-50 mt-1 w-44 bg-card border border-border rounded-md shadow-xl text-[11px] py-1">
+                            <button
+                                className="block w-full text-left px-3 py-1.5 hover:bg-hover text-foreground"
+                                onClick={() => navigate(`/sales-dashboard/rental-sales-orders/new?cloneId=${id}`)}
+                            >
+                                Clone
+                            </button>
                             {order.status !== 'SENT' && order.status !== 'ACCEPTED' && order.status !== 'CANCELLED' && (
-                                <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-blue-600" onClick={() => handleStatusUpdate('SENT')}>Mark as Sent</button>
+                                <button className="block w-full text-left px-3 py-1.5 hover:bg-hover text-blue-600" onClick={() => handleStatusUpdate('SENT')}>Mark as Sent</button>
                             )}
                             {order.status !== 'ACCEPTED' && order.status !== 'CANCELLED' && (
-                                <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-green-600" onClick={() => handleStatusUpdate('ACCEPTED')}>Mark as Accepted</button>
+                                <button className="block w-full text-left px-3 py-1.5 hover:bg-hover text-emerald-600" onClick={() => handleStatusUpdate('ACCEPTED')}>Mark as Accepted</button>
                             )}
                             {order.status !== 'REJECTED' && order.status !== 'CANCELLED' && (
-                                <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600" onClick={() => handleStatusUpdate('REJECTED')}>Mark as Rejected</button>
+                                <button className="block w-full text-left px-3 py-1.5 hover:bg-hover text-rose-600" onClick={() => handleStatusUpdate('REJECTED')}>Mark as Rejected</button>
                             )}
                             {order.status !== 'CANCELLED' && (
-                                <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-orange-600" onClick={() => handleStatusUpdate('CANCELLED')}>Mark as Canceled</button>
+                                <button className="block w-full text-left px-3 py-1.5 hover:bg-hover text-amber-600" onClick={() => handleStatusUpdate('CANCELLED')}>Mark as Canceled</button>
                             )}
-
-                            <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600" onClick={() => {
-                                if (window.confirm('Delete this order?')) {
-                                    axios.delete(`${API_URL}/sales/rental-sales-orders/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
-                                        .then(() => navigate('/sales-dashboard/rental-sales-orders'))
-                                        .catch(err => alert("Failed to delete"));
-                                }
-                            }}>Delete</button>
+                            <div className="border-t border-border my-1"></div>
+                            <button
+                                className="block w-full text-left px-3 py-1.5 hover:bg-rose-500/10 text-rose-600 font-medium"
+                                onClick={() => {
+                                    if (window.confirm('Delete this order?')) {
+                                        axios.delete(`${API_URL}/sales/rental-sales-orders/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+                                            .then(() => navigate('/sales-dashboard/rental-sales-orders'))
+                                            .catch(() => alert("Failed to delete"));
+                                    }
+                                }}
+                            >
+                                Delete
+                            </button>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* Status Bar */}
-            <div className="px-6 py-2 bg-[#f9f9f9] border-b text-xs text-gray-500 flex flex-col gap-1 print:hidden">
+            {/* Status & Audit Bar */}
+            <div className="px-3 py-1.5 bg-card border border-border rounded-lg shadow-2xs text-[11px] text-foreground-muted flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 print:hidden">
                 <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold text-white ${order.status === 'SENT' ? 'bg-blue-500' : order.status === 'ACCEPTED' ? 'bg-green-500' : (order.status === 'RENTAL_INVOICED' || order.status === 'INVOICED') ? 'bg-purple-500' : order.status === 'CANCELLED' ? 'bg-orange-500' : order.status === 'REJECTED' ? 'bg-red-500' : 'bg-gray-400'}`}>{order.status}</span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold text-white ${order.status === 'SENT' ? 'bg-blue-500' : order.status === 'ACCEPTED' ? 'bg-emerald-600' : (order.status === 'RENTAL_INVOICED' || order.status === 'INVOICED') ? 'bg-purple-600' : order.status === 'CANCELLED' ? 'bg-amber-600' : order.status === 'REJECTED' ? 'bg-rose-600' : 'bg-slate-400'}`}>{order.status}</span>
+                    <span>{order.createdAt ? new Date(order.createdAt).toLocaleString() : '-'} {t('qview.created')} {order.createdBy || 'System'}</span>
                 </div>
-                <div className="flex justify-between w-full max-w-3xl">
-                    {order.updatedAt && (
-                        <span>{new Date(order.updatedAt).toLocaleString()}  Updated by {order.updatedBy || 'System'}</span>
-                    )}
-                </div>
-                <div className="flex justify-between w-full max-w-3xl">
-                    <span>{order.createdAt ? new Date(order.createdAt).toLocaleString() : '-'}  Created by {order.createdBy || 'System'}</span>
-                </div>
+                {order.updatedAt && (
+                    <span>{new Date(order.updatedAt).toLocaleString()} {t('qview.updated')} {order.updatedBy || 'System'}</span>
+                )}
             </div>
 
             {/* Document View */}

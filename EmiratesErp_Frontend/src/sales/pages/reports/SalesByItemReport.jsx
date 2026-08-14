@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useReactToPrint } from 'react-to-print';
 import * as XLSX from 'xlsx';
-import { Search, FileSpreadsheet, Printer, Loader2 } from 'lucide-react';
-import Pagination from '../../../components/Pagination';
+import { Search, FileSpreadsheet, Printer, Loader2, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
+import { useLanguage } from '../../../context/LanguageContext';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const SalesByItemReport = () => {
+    const { isRTL, t } = useLanguage();
+
     // Filter States
     const [fromDate, setFromDate] = useState(() => {
         const date = new Date();
@@ -17,12 +19,12 @@ const SalesByItemReport = () => {
     const [categoryId, setCategoryId] = useState('');
     const [subCategoryId, setSubCategoryId] = useState('');
     const [itemId, setItemId] = useState('');
+    const [tableSearch, setTableSearch] = useState('');
 
     // Dropdown Data States
     const [categories, setCategories] = useState([]);
     const [subCategories, setSubCategories] = useState([]);
     const [items, setItems] = useState([]);
-    const [itemSearch, setItemSearch] = useState('');
 
     // Report Data States
     const [reportData, setReportData] = useState([]);
@@ -72,16 +74,12 @@ const SalesByItemReport = () => {
         fetchSubCategories();
     }, [categoryId]);
 
-    // Fetch Items (Debounced Search)
+    // Fetch Items
     useEffect(() => {
         const fetchItems = async () => {
             try {
-                const params = {
-                    search: itemSearch,
-                    size: 50 // Limit to 50 suggestions
-                };
                 const response = await axios.get(`${API_URL}/crm/sales-products`, {
-                    params,
+                    params: { size: 500 },
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 });
                 setItems(response.data.content || []);
@@ -89,13 +87,8 @@ const SalesByItemReport = () => {
                 console.error("Failed to fetch items", error);
             }
         };
-
-        const timer = setTimeout(() => {
-            fetchItems();
-        }, 300);
-
-        return () => clearTimeout(timer);
-    }, [itemSearch]);
+        fetchItems();
+    }, []);
 
     // Fetch Report Data
     const fetchReport = async () => {
@@ -136,11 +129,10 @@ const SalesByItemReport = () => {
 
     useEffect(() => {
         fetchReport();
-    }, [pagination.currentPage, pagination.pageSize]); // Refetch on pagination change
+    }, [pagination.currentPage, pagination.pageSize]);
 
-    // Handle Search Button Click
     const handleSearch = () => {
-        setPagination(prev => ({ ...prev, currentPage: 0 })); // Reset to first page
+        setPagination(prev => ({ ...prev, currentPage: 0 }));
         fetchReport();
     };
 
@@ -154,17 +146,16 @@ const SalesByItemReport = () => {
             'Item Name': item.itemName,
             'Quantity': item.quantity,
             'UOM': item.uom,
-            'Amount': item.amount,
-            'Average Price': item.averagePrice
+            'Amount (AED)': item.amount,
+            'Average Price (AED)': item.averagePrice
         }));
 
-        // Add Totals Row
         exportData.push({
             'Item Name': 'Total',
             'Quantity': totals.totalQuantity,
             'UOM': '',
-            'Amount': totals.totalAmount,
-            'Average Price': ''
+            'Amount (AED)': totals.totalAmount,
+            'Average Price (AED)': ''
         });
 
         const ws = XLSX.utils.json_to_sheet(exportData);
@@ -173,212 +164,217 @@ const SalesByItemReport = () => {
         XLSX.writeFile(wb, 'SalesByItemReport.xlsx');
     };
 
-    const handlePageChange = (page) => {
-        setPagination(prev => ({ ...prev, currentPage: page }));
-    };
-
-    const handlePageSizeChange = (size) => {
-        setPagination(prev => ({ ...prev, pageSize: size, currentPage: 0 }));
-    };
+    const filteredReportData = reportData.filter(item =>
+        !tableSearch || (item.itemName && item.itemName.toLowerCase().includes(tableSearch.toLowerCase()))
+    );
 
     return (
-        <div className="flex flex-col h-full bg-slate-50">
-            {/* Header */}
-            <div className="bg-white p-4 border-b flex justify-between items-center shadow-sm">
-                <div>
-                    <h1 className="text-xl font-bold text-slate-800">Sales by Item</h1>
-                    <div className="text-xs text-slate-500 mt-1">
-                        <span className="text-slate-400">Home</span> &gt; <span className="text-slate-400">Reports</span> &gt; <span className="text-fuchsia-600 font-medium">Sales by Item</span>
+        <div className="space-y-2 bg-background min-h-screen text-foreground font-sans w-full" dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Header Card */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 bg-card p-2 rounded-lg border border-border shadow-2xs">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                        <BarChart3 size={16} />
+                    </div>
+                    <div>
+                        <h1 className="text-sm font-bold text-foreground leading-tight">
+                            {isRTL ? 'تقرير المبيعات حسب الصنف' : 'Sales by Item'}
+                        </h1>
+                        <p className="text-[10px] text-foreground-muted leading-none">
+                            {isRTL ? 'عرض وتحليل تفاصيل المبيعات حسب الصنف' : 'Track and analyze detailed sales performance by individual items'}
+                        </p>
                     </div>
                 </div>
-                <div className="flex gap-2">
-                    <button onClick={handlePrint} className="p-2 bg-fuchsia-800 text-white rounded hover:bg-fuchsia-900 transition-colors" title="Print">
-                        <Printer size={18} />
+
+                <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                    <button
+                        onClick={handlePrint}
+                        className="px-2.5 py-1 rounded text-[11px] font-semibold border border-border bg-card hover:bg-hover text-foreground flex items-center gap-1 transition-colors"
+                        title="Print"
+                    >
+                        <Printer size={12} /> {t('quotation.print')}
                     </button>
-                    <button onClick={handleExport} className="p-2 bg-fuchsia-800 text-white rounded hover:bg-fuchsia-900 transition-colors" title="Export to Excel">
-                        <FileSpreadsheet size={18} />
+                    <button
+                        onClick={handleExport}
+                        className="px-2.5 py-1 rounded text-[11px] font-semibold border border-border bg-card hover:bg-hover text-emerald-600 flex items-center gap-1 transition-colors"
+                        title="Export to Excel"
+                    >
+                        <FileSpreadsheet size={12} /> {isRTL ? 'تصدير' : 'Export'}
                     </button>
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="bg-white p-4 m-4 rounded-lg shadow-sm border border-slate-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                    <div className="col-span-1">
-                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">From Date</label>
+            {/* Filter Section Card */}
+            <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 text-[11px] items-end">
+                    <div>
+                        <label className="block text-[10px] font-semibold text-foreground mb-0.5">{t('quotation.fromDate')}</label>
                         <input
                             type="date"
                             value={fromDate}
                             onChange={(e) => setFromDate(e.target.value)}
-                            className="w-full text-sm border-slate-300 rounded-md focus:ring-fuchsia-500 focus:border-fuchsia-500"
+                            className="w-full h-7 text-[11px] bg-background border border-border rounded px-2 text-foreground focus:outline-none focus:border-primary"
                         />
                     </div>
-                    <div className="col-span-1">
-                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">To Date</label>
+                    <div>
+                        <label className="block text-[10px] font-semibold text-foreground mb-0.5">{t('quotation.toDate')}</label>
                         <input
                             type="date"
                             value={toDate}
                             onChange={(e) => setToDate(e.target.value)}
-                            className="w-full text-sm border-slate-300 rounded-md focus:ring-fuchsia-500 focus:border-fuchsia-500"
+                            className="w-full h-7 text-[11px] bg-background border border-border rounded px-2 text-foreground focus:outline-none focus:border-primary"
                         />
                     </div>
-
-                    <div className="col-span-1 lg:col-span-2 flex flex-col gap-2">
-                         <div className="grid grid-cols-2 gap-2">
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Category</label>
-                                <select
-                                    value={categoryId}
-                                    onChange={(e) => setCategoryId(e.target.value)}
-                                    className="w-full text-sm border-slate-300 rounded-md focus:ring-fuchsia-500 focus:border-fuchsia-500"
-                                >
-                                    <option value="">All</option>
-                                    {categories.map(cat => (
-                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Sub Category</label>
-                                <select
-                                    value={subCategoryId}
-                                    onChange={(e) => setSubCategoryId(e.target.value)}
-                                    disabled={!categoryId}
-                                    className="w-full text-sm border-slate-300 rounded-md focus:ring-fuchsia-500 focus:border-fuchsia-500 disabled:bg-slate-100"
-                                >
-                                    <option value="">All</option>
-                                    {subCategories.map(sub => (
-                                        <option key={sub.id} value={sub.id}>{sub.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                         </div>
+                    <div>
+                        <label className="block text-[10px] font-semibold text-foreground mb-0.5">{t('qform.category')}</label>
+                        <select
+                            value={categoryId}
+                            onChange={(e) => setCategoryId(e.target.value)}
+                            className="w-full h-7 text-[11px] bg-background border border-border rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                        >
+                            <option value="">All</option>
+                            {categories.map(cat => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            ))}
+                        </select>
                     </div>
-                    
-                    <div className="col-span-1 lg:col-span-3">
-                         <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Item Name</label>
-                         <select 
-                            value={itemId} 
+                    <div>
+                        <label className="block text-[10px] font-semibold text-foreground mb-0.5">{t('qform.subcategory')}</label>
+                        <select
+                            value={subCategoryId}
+                            onChange={(e) => setSubCategoryId(e.target.value)}
+                            disabled={!categoryId}
+                            className="w-full h-7 text-[11px] bg-background border border-border rounded px-2 text-foreground focus:outline-none focus:border-primary disabled:opacity-50"
+                        >
+                            <option value="">All</option>
+                            {subCategories.map(sub => (
+                                <option key={sub.id} value={sub.id}>{sub.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-semibold text-foreground mb-0.5">{t('qform.item')}</label>
+                        <select
+                            value={itemId}
                             onChange={(e) => setItemId(e.target.value)}
-                            className="w-full text-sm border-slate-300 rounded-md focus:ring-fuchsia-500 focus:border-fuchsia-500"
-                         >
-                             <option value="">--Select--</option>
-                             {items.map(item => (
-                                 <option key={item.id} value={item.id}>{item.name}</option>
-                             ))}
-                         </select>
-                         {/* Optional: Add a real search input to filter the dropdown if the list is long, 
-                             or rely on the combo box nature if it was a better component.
-                             For now, let's keep it simple with a Search Input above if needed, 
-                             but here we are fetching items based on `itemSearch` state? 
-                             Wait, I implemented `itemSearch` in useEffect but didn't provide an input for it.
-                             Let's fix that. */}
+                            className="w-full h-7 text-[11px] bg-background border border-border rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                        >
+                            <option value="">--Select--</option>
+                            {items.map(item => (
+                                <option key={item.id} value={item.id}>{item.name}</option>
+                            ))}
+                        </select>
                     </div>
-
-                    <div className="col-span-1 flex justify-end">
+                    <div className="flex items-center gap-1.5">
                         <button
                             onClick={handleSearch}
-                            className="bg-fuchsia-800 hover:bg-fuchsia-900 text-white px-6 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+                            className="w-full h-7 bg-primary hover:bg-primary/90 text-primary-foreground rounded text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors shadow-2xs"
                         >
-                            <Search size={16} /> Search
+                            <Search size={12} /> {t('quotation.search')}
                         </button>
                     </div>
                 </div>
-                
-                 {/* Item Search Input to filter the dropdown above - a bit crude but works without custom combobox */}
-                 <div className="mt-2 text-xs text-slate-500">
-                    <input 
-                        type="text" 
-                        placeholder="Type to filter items list..." 
-                        value={itemSearch}
-                        onChange={(e) => setItemSearch(e.target.value)}
-                        className="border border-slate-300 rounded px-2 py-1 text-xs w-64"
-                    />
-                </div>
             </div>
 
-            {/* Content */}
-            <div className="flex-1 px-4 pb-4 overflow-hidden flex flex-col">
-                <div className="bg-white rounded-lg shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
-                    {/* Report Header for Print */}
-                    <div ref={componentRef} className="flex flex-col h-full"> 
-                        <div className="p-4 text-center border-b hidden print:block">
-                            <h2 className="text-xl font-bold uppercase">Absolute ERP</h2>
-                            <h3 className="text-lg font-semibold uppercase">Sales By Item</h3>
-                            <p className="text-sm text-slate-600">From {new Date(fromDate).toLocaleDateString()} To {new Date(toDate).toLocaleDateString()}</p>
-                        </div>
-
-                        {/* Pagination Controls (Top) */}
-                        <div className="p-2 border-b flex justify-between items-center print:hidden bg-slate-50">
-                             <Pagination
-                                currentPage={pagination.currentPage}
-                                totalPages={pagination.totalPages}
-                                pageSize={pagination.pageSize}
-                                totalElements={pagination.totalElements}
-                                onPageChange={handlePageChange}
-                                onPageSizeChange={handlePageSizeChange}
-                            />
-                            <div className="relative">
-                                <input type="text" placeholder="Search..." className="pl-8 pr-3 py-1 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-fuchsia-500" />
-                                <Search className="absolute left-2.5 top-1.5 text-slate-400 h-4 w-4" />
-                            </div>
-                        </div>
-
-                        <div className="overflow-auto flex-1">
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-slate-700 uppercase bg-slate-100 border-b sticky top-0">
-                                    <tr>
-                                        <th className="px-4 py-3 font-semibold bg-fuchsia-100/50">Item Name</th>
-                                        <th className="px-4 py-3 font-semibold bg-fuchsia-100/50 text-right">Quantity</th>
-                                        <th className="px-4 py-3 font-semibold bg-fuchsia-100/50">UOM</th>
-                                        <th className="px-4 py-3 font-semibold bg-fuchsia-100/50 text-right">Amount</th>
-                                        <th className="px-4 py-3 font-semibold bg-fuchsia-100/50 text-right">Average Price</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-200">
-                                    {loading ? (
-                                        <tr>
-                                            <td colSpan="5" className="px-4 py-8 text-center text-slate-500">
-                                                <div className="flex justify-center items-center gap-2">
-                                                    <Loader2 className="animate-spin h-5 w-5 text-fuchsia-600" /> Loading data...
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ) : reportData.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="5" className="px-4 py-8 text-center text-slate-500">No records found</td>
-                                        </tr>
-                                    ) : (
-                                        <>
-                                            {reportData.map((item, index) => (
-                                                <tr key={index} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="px-4 py-3 font-medium text-slate-800">{item.itemName}</td>
-                                                    <td className="px-4 py-3 text-right font-mono text-fuchsia-700 font-medium">{item.quantity}</td>
-                                                    <td className="px-4 py-3 text-slate-600">{item.uom}</td>
-                                                    <td className="px-4 py-3 text-right font-mono text-fuchsia-700 font-medium">{item.amount?.toFixed(2)}</td>
-                                                    <td className="px-4 py-3 text-right font-mono text-slate-600">{item.averagePrice?.toFixed(2)}</td>
-                                                </tr>
-                                            ))}
-                                            {/* Summary Row */}
-                                            <tr className="bg-fuchsia-50 font-bold border-t-2 border-slate-300">
-                                                <td className="px-4 py-3 text-right uppercase text-xs tracking-wider text-slate-600">Total</td>
-                                                <td className="px-4 py-3 text-right font-mono text-fuchsia-800">{totals.totalQuantity}</td>
-                                                <td className="px-4 py-3"></td>
-                                                <td className="px-4 py-3 text-right font-mono text-fuchsia-800">{totals.totalAmount?.toFixed(2)}</td>
-                                                <td className="px-4 py-3"></td>
-                                            </tr>
-                                        </>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        {/* Footer Pagination Info for Print (Optional) or just bottom spacing */}
-                        <div className="p-2 border-t text-xs text-slate-400 print:hidden">
-                            Showing {reportData.length} records
-                        </div>
+            {/* Report Data Table Card */}
+            <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2" ref={componentRef}>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 border-b border-border print:hidden">
+                    <div className="relative w-full sm:w-64">
+                        <input
+                            type="text"
+                            placeholder={t('quotation.searchInTable')}
+                            value={tableSearch}
+                            onChange={(e) => setTableSearch(e.target.value)}
+                            className="w-full h-7 text-[11px] bg-background border border-border rounded px-2.5 pr-8 text-foreground focus:outline-none focus:border-primary"
+                        />
+                        <Search className={`absolute ${isRTL ? 'left-2.5' : 'right-2.5'} top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-foreground-muted`} />
                     </div>
                 </div>
+
+                <div className="rounded border border-border overflow-x-auto">
+                    <table className="w-full text-[11px] border-collapse">
+                        <thead>
+                            <tr className="bg-primary/10 text-foreground font-semibold border-b border-border">
+                                <th className="px-3 py-1.5 text-start border-r border-border min-w-[180px]">{t('qform.item')}</th>
+                                <th className="px-3 py-1.5 text-end border-r border-border w-28">{t('qform.quantity')}</th>
+                                <th className="px-3 py-1.5 text-start border-r border-border w-24">UOM</th>
+                                <th className="px-3 py-1.5 text-end border-r border-border w-36">{t('qform.amount')} (AED)</th>
+                                <th className="px-3 py-1.5 text-end w-36">{isRTL ? 'متوسط السعر' : 'Average Price'} (AED)</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="5" className="text-center py-6">
+                                        <Loader2 className="animate-spin h-5 w-5 text-primary mx-auto" />
+                                    </td>
+                                </tr>
+                            ) : filteredReportData.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5" className="text-center py-4 text-foreground-muted">
+                                        {t('quotation.noRecord')}
+                                    </td>
+                                </tr>
+                            ) : (
+                                <>
+                                    {filteredReportData.map((item, index) => (
+                                        <tr key={index} className="hover:bg-hover">
+                                            <td className="px-3 py-1.5 font-semibold text-foreground border-r border-border">{item.itemName}</td>
+                                            <td className="px-3 py-1.5 text-end font-mono border-r border-border">{item.quantity}</td>
+                                            <td className="px-3 py-1.5 text-foreground-muted border-r border-border">{item.uom || 'Unit'}</td>
+                                            <td className="px-3 py-1.5 text-end font-mono font-bold text-primary border-r border-border">{(item.amount || 0).toFixed(2)}</td>
+                                            <td className="px-3 py-1.5 text-end font-mono text-foreground-muted">{(item.averagePrice || 0).toFixed(2)}</td>
+                                        </tr>
+                                    ))}
+                                    {/* Summary Row */}
+                                    <tr className="bg-primary/5 font-bold border-t-2 border-border">
+                                        <td className="px-3 py-1.5 text-start uppercase text-[10px] tracking-wider text-foreground">{isRTL ? 'الإجمالي' : 'Total'}</td>
+                                        <td className="px-3 py-1.5 text-end font-mono text-primary border-r border-border">{totals.totalQuantity}</td>
+                                        <td className="px-3 py-1.5 border-r border-border"></td>
+                                        <td className="px-3 py-1.5 text-end font-mono text-primary font-bold border-r border-border">{(totals.totalAmount || 0).toFixed(2)}</td>
+                                        <td className="px-3 py-1.5"></td>
+                                    </tr>
+                                </>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination Controls */}
+                {!loading && (
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-2 pt-1 text-xs print:hidden">
+                        <div className="text-[10px] text-foreground-muted">
+                            {t('quotation.showing')} {filteredReportData.length === 0 ? 0 : pagination.currentPage * pagination.pageSize + 1} {t('quotation.to')} {Math.min((pagination.currentPage + 1) * pagination.pageSize, pagination.totalElements || filteredReportData.length)} {t('quotation.of')} {pagination.totalElements || filteredReportData.length} {t('quotation.entries')}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                onClick={() => handlePageChange(Math.max(0, pagination.currentPage - 1))}
+                                disabled={pagination.currentPage === 0}
+                                className="w-7 h-7 rounded border border-border bg-card flex items-center justify-center text-foreground-muted hover:text-foreground disabled:opacity-40"
+                            >
+                                <ChevronLeft size={14} className={isRTL ? 'rotate-180' : ''} />
+                            </button>
+
+                            {[...Array(pagination.totalPages || 1)].map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => handlePageChange(i)}
+                                    className={`w-7 h-7 rounded font-semibold text-[11px] ${pagination.currentPage === i ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-foreground hover:bg-hover'}`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+
+                            <button
+                                onClick={() => handlePageChange(Math.min((pagination.totalPages || 1) - 1, pagination.currentPage + 1))}
+                                disabled={pagination.currentPage >= (pagination.totalPages || 1) - 1}
+                                className="w-7 h-7 rounded border border-border bg-card flex items-center justify-center text-foreground-muted hover:text-foreground disabled:opacity-40"
+                            >
+                                <ChevronRight size={14} className={isRTL ? 'rotate-180' : ''} />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

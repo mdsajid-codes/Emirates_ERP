@@ -2,10 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowLeft, Save, Loader2, Plus, Trash2, Paperclip, ChevronDown, Upload } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const InvoiceForm = () => {
+    const { isRTL, t } = useLanguage();
     const { id } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -247,8 +249,8 @@ const InvoiceForm = () => {
             }
 
         } catch (err) {
-            console.error("Failed to fetch dependencies", err);
-            setError("Failed to load data.");
+            setError(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} invoice.`);
+            console.error('Submit error:', err);
         } finally {
             setLoading(false);
         }
@@ -534,367 +536,482 @@ const InvoiceForm = () => {
         }
     };
 
-    if (loading && !formData.customerId) return <div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin text-blue-600 h-8 w-8" /></div>;
+    if (loading && !formData.customerId) return <div className="flex justify-center items-center h-screen bg-background"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
 
     return (
-        <div className="flex flex-col h-screen bg-slate-50">
-            <header className="bg-white shadow-sm p-4 border-b flex items-center justify-between sticky top-0 z-10">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/sales-dashboard/invoices')} className="p-2 rounded-full hover:bg-slate-100"><ArrowLeft className="h-5 w-5 text-slate-600" /></button>
+        <div className="bg-background text-foreground font-sans space-y-2 w-full" dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Top Bar Card */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 bg-card p-2 rounded-lg border border-border shadow-2xs">
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/sales-dashboard/invoices')}
+                        className="p-1 rounded-md hover:bg-hover text-foreground-muted hover:text-foreground transition-colors"
+                    >
+                        <ArrowLeft size={16} className={isRTL ? 'rotate-180' : ''} />
+                    </button>
                     <div>
-                        <h1 className="text-xl font-bold text-slate-800">{isEditing ? 'Edit Sales Invoice' : 'New Sales Invoice'}</h1>
-                        {isEditing && formData.status && (
-                            <span className={`inline-block mt-0.5 text-xs font-bold px-2 py-0.5 rounded-full ${
-                                formData.status === 'PAID' ? 'bg-green-100 text-green-700' :
-                                formData.status === 'PARTIALLY_PAID' ? 'bg-yellow-100 text-yellow-700' :
-                                formData.status === 'INVOICED' ? 'bg-blue-100 text-blue-700' :
-                                'bg-slate-100 text-slate-500'
-                            }`}>{formData.status.replace('_', ' ')}</span>
-                        )}
+                        <h1 className="text-sm font-bold text-foreground leading-tight flex items-center gap-2">
+                            {isEditing ? (isRTL ? 'تعديل فاتورة المبيعات' : 'Edit Sales Invoice') : (isRTL ? 'إنشاء فاتورة مبيعات' : 'Create Sales Invoice')}
+                            {isEditing && formData.status && (
+                                <span className={`px-1.5 py-0.2 text-[9px] font-bold rounded uppercase ${
+                                    formData.status === 'PAID' ? 'bg-emerald-600 text-white' :
+                                    formData.status === 'PARTIALLY_PAID' ? 'bg-amber-600 text-white' :
+                                    formData.status === 'INVOICED' ? 'bg-blue-600 text-white' :
+                                    'bg-slate-500 text-white'
+                                }`}>{formData.status.replace('_', ' ')}</span>
+                            )}
+                        </h1>
+                        <p className="text-[10px] text-foreground-muted leading-none mt-0.5">
+                            {isRTL ? 'الرئيسية > المبيعات > فواتير المبيعات' : 'Home > Sales > Sales Invoices'}
+                        </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
+
+                <div className="flex items-center gap-1.5 self-end sm:self-auto">
                     {isEditing && (formData.status === 'INVOICED' || formData.status === 'PARTIALLY_PAID') && (
-                        <button type="button" onClick={() => { setPaymentForm(p => ({ ...p, amountPaid: formData.balanceDue || '' })); setShowPaymentModal(true); }}
-                            className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 flex items-center gap-2 font-medium text-sm shadow-sm">
-                            💰 Record Payment
+                        <button
+                            type="button"
+                            onClick={() => { setPaymentForm(p => ({ ...p, amountPaid: formData.balanceDue || '' })); setShowPaymentModal(true); }}
+                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-[11px] font-semibold flex items-center gap-1 transition-colors shadow-2xs"
+                        >
+                            💰 {isRTL ? 'تسجيل دفعة' : 'Record Payment'}
                         </button>
                     )}
-                    <button type="button" onClick={() => navigate('/sales-dashboard/invoices')} className="px-4 py-2 border rounded hover:bg-slate-50 text-sm font-medium">Cancel</button>
-                    <button type="submit" form="inv-form" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2 font-medium text-sm shadow-sm">
-                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        {isEditing ? 'Update Invoice' : 'Save Invoice'}
+                    <button
+                        type="button"
+                        onClick={() => navigate('/sales-dashboard/invoices')}
+                        className="px-3 py-1 border border-border bg-card hover:bg-hover text-foreground rounded-md text-[11px] font-semibold transition-colors"
+                    >
+                        {t('qform.cancel')}
+                    </button>
+                    <button
+                        type="submit"
+                        form="inv-form"
+                        disabled={loading}
+                        className="px-3.5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md text-[11px] font-semibold flex items-center gap-1 transition-colors shadow-2xs disabled:opacity-50"
+                    >
+                        {loading ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+                        {isEditing ? t('qform.saveChanges') : (isRTL ? 'حفظ الفاتورة' : 'Save Invoice')}
                     </button>
                 </div>
-            </header>
+            </div>
 
-            <main className="flex-grow overflow-y-auto p-6">
-                <form id="inv-form" onSubmit={handleSubmit} className="space-y-6">
-                    {/* Header Details */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1">Invoice Ledger</label>
-                                    <select name="invoiceLedger" value={formData.invoiceLedger} onChange={handleHeaderChange} className="w-full border border-slate-300 rounded px-2 py-2 text-sm bg-slate-50">
-                                        <option value="Sales">Sales</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1">Customer Name *</label>
-                                    <select name="customerId" value={formData.customerId} onChange={handleHeaderChange} required className="w-full border border-slate-300 rounded px-2 py-2 text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="">Select Customer</option>
-                                        {selectData.customers.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
-                                    </select>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">Billing Address</label>
-                                        <textarea readOnly value={billingAddress} rows="3" className="w-full border border-gray-200 rounded px-2 py-2 text-xs bg-gray-50 text-slate-500 resize-none"></textarea>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">Shipping Address</label>
-                                        <textarea readOnly value={shippingAddress} rows="3" className="w-full border border-gray-200 rounded px-2 py-2 text-xs bg-gray-50 text-slate-500 resize-none"></textarea>
-                                    </div>
-                                </div>
-                            </div>
+            {error && (
+                <div className="bg-rose-500/10 border border-rose-500/30 text-rose-600 px-2.5 py-1.5 rounded-md text-[11px] font-medium">
+                    {error}
+                </div>
+            )}
 
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">Invoice Number</label>
-                                        <input type="text" value={formData.invoiceNumber || 'Auto-generated'} readOnly className="w-full border border-gray-200 rounded px-2 py-2 text-sm bg-gray-50 text-slate-400" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">Invoice Date *</label>
-                                        <input type="date" name="invoiceDate" value={formData.invoiceDate} onChange={handleHeaderChange} required className="w-full border border-slate-300 rounded px-2 py-2 text-sm focus:outline-none focus:border-blue-500" />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">Due Date</label>
-                                        <input type="date" name="dueDate" value={formData.dueDate} onChange={handleHeaderChange} className="w-full border border-slate-300 rounded px-2 py-2 text-sm focus:outline-none focus:border-blue-500" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">Date Of Supply</label>
-                                        <input type="date" name="dateOfSupply" value={formData.dateOfSupply} onChange={handleHeaderChange} className="w-full border border-slate-300 rounded px-2 py-2 text-sm focus:outline-none focus:border-blue-500" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1">Salesperson</label>
-                                    <select name="salespersonId" value={formData.salespersonId} onChange={handleHeaderChange} className="w-full border border-slate-300 rounded px-2 py-2 text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="">Select Salesperson</option>
-                                        {selectData.employees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">Customer PO No</label>
-                                        <input type="text" name="customerPoNo" value={formData.customerPoNo} onChange={handleHeaderChange} className="w-full border border-slate-300 rounded px-2 py-2 text-sm focus:outline-none focus:border-blue-500" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">Customer PO Date</label>
-                                        <input type="date" name="customerPoDate" value={formData.customerPoDate} onChange={handleHeaderChange} className="w-full border border-slate-300 rounded px-2 py-2 text-sm focus:outline-none focus:border-blue-500" />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">Order Number</label>
-                                        <input type="text" name="orderNumber" value={formData.orderNumber} onChange={handleHeaderChange} className="w-full border border-slate-300 rounded px-2 py-2 text-sm focus:outline-none focus:border-blue-500" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">Reference</label>
-                                        <input type="text" name="reference" value={formData.reference} onChange={handleHeaderChange} className="w-full border border-slate-300 rounded px-2 py-2 text-sm focus:outline-none focus:border-blue-500" />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">Sale Type</label>
-                                        <select name="saleType" value={formData.saleType} onChange={handleHeaderChange} className="w-full border border-slate-300 rounded px-2 py-2 text-sm focus:outline-none focus:border-blue-500">
-                                            <option value="Local">Local</option>
-                                            <option value="Export">Export</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">Status</label>
-                                        <select name="status" value={formData.status} onChange={handleHeaderChange} className="w-full border border-slate-300 rounded px-2 py-2 text-sm focus:outline-none focus:border-blue-500">
-                                            <option value="DRAFT">Draft</option>
-                                            <option value="INVOICED">Invoiced (Post to Accounting)</option>
-                                            <option value="CANCELLED">Cancelled</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
+            <form id="inv-form" onSubmit={handleSubmit} className="space-y-2">
+                {/* Header Details Card */}
+                <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{isRTL ? 'دفتر الفواتير' : 'Invoice Ledger'}</label>
+                            <select
+                                name="invoiceLedger"
+                                value={formData.invoiceLedger}
+                                onChange={handleHeaderChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            >
+                                <option value="Sales">Sales</option>
+                            </select>
                         </div>
 
-                        <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-2">
-                            <input type="checkbox" name="enableGrossNetWeight" checked={formData.enableGrossNetWeight} onChange={handleHeaderChange} className="rounded text-blue-600 focus:ring-blue-500" id="grossNetCheck" />
-                            <label htmlFor="grossNetCheck" className="text-sm text-slate-700 cursor-pointer select-none">Enable Gross Weight and Net Weight columns?</label>
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('qform.customer')} *</label>
+                            <select
+                                name="customerId"
+                                value={formData.customerId}
+                                onChange={handleHeaderChange}
+                                required
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            >
+                                <option value="">{t('qform.selectCustomer')}</option>
+                                {selectData.customers.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{isRTL ? 'تاريخ الفاتورة *' : 'Invoice Date *'}</label>
+                            <input
+                                type="date"
+                                name="invoiceDate"
+                                value={formData.invoiceDate}
+                                onChange={handleHeaderChange}
+                                required
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{isRTL ? 'تاريخ الاستحقاق' : 'Due Date'}</label>
+                            <input
+                                type="date"
+                                name="dueDate"
+                                value={formData.dueDate}
+                                onChange={handleHeaderChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{isRTL ? 'رقم امر الشراء للميل' : 'Customer PO No'}</label>
+                            <input
+                                type="text"
+                                name="customerPoNo"
+                                placeholder="Customer PO No"
+                                value={formData.customerPoNo}
+                                onChange={handleHeaderChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{isRTL ? 'تاريخ امر الشراء' : 'Customer PO Date'}</label>
+                            <input
+                                type="date"
+                                name="customerPoDate"
+                                value={formData.customerPoDate}
+                                onChange={handleHeaderChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('qform.salesperson')}</label>
+                            <select
+                                name="salespersonId"
+                                value={formData.salespersonId}
+                                onChange={handleHeaderChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground focus:outline-none focus:border-primary"
+                            >
+                                <option value="">{t('qform.selectSalesperson')}</option>
+                                {selectData.employees.map(emp => <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>)}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('qform.reference')}</label>
+                            <input
+                                type="text"
+                                name="reference"
+                                placeholder={t('qform.enterReference')}
+                                value={formData.reference}
+                                onChange={handleHeaderChange}
+                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary"
+                            />
                         </div>
                     </div>
 
-                    {/* Items Table */}
-                    <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 overflow-x-auto">
-                        <table className="w-full text-sm min-w-[1200px]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 border-t border-border">
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{isRTL ? 'عنوان الفواتير' : 'Billing Address'}</label>
+                            <textarea
+                                readOnly
+                                value={billingAddress}
+                                rows="2"
+                                className="w-full text-[11px] border border-border bg-card-muted/50 rounded p-1.5 text-foreground-muted focus:outline-none"
+                            ></textarea>
+                        </div>
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{isRTL ? 'عنوان الشحن' : 'Shipping Address'}</label>
+                            <textarea
+                                readOnly
+                                value={shippingAddress}
+                                rows="2"
+                                className="w-full text-[11px] border border-border bg-card-muted/50 rounded p-1.5 text-foreground-muted focus:outline-none"
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Items Table Card */}
+                <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2">
+                    <div className="rounded border border-border">
+                        <table className="w-full text-[11px] text-start border-collapse">
                             <thead>
-                                <tr className="bg-slate-50 border-b border-slate-200 text-left">
-                                    <th className="p-3 font-semibold text-slate-700 w-64">Item Details</th>
-                                    {formData.enableGrossNetWeight && <th className="p-3 font-semibold text-slate-700 w-24">Gross Qty</th>}
-                                    {formData.enableGrossNetWeight && <th className="p-3 font-semibold text-slate-700 w-24">Net Qty</th>}
-                                    <th className="p-3 font-semibold text-slate-700 w-24">Send Qty</th>
-                                    <th className="p-3 font-semibold text-slate-700 w-24">Inv Qty</th>
-                                    <th className="p-3 font-semibold text-slate-700 w-32">Rate</th>
-                                    <th className="p-3 font-semibold text-slate-700 w-32">Amount</th>
-                                    <th className="p-3 font-semibold text-slate-700 w-32">Tax</th>
-                                    <th className="p-3 font-semibold text-slate-700 w-24">Packing</th>
-                                    <th className="p-3 font-semibold text-slate-700 w-12"></th>
+                                <tr className="bg-primary/10 text-foreground font-semibold border-b border-border">
+                                    <th className="px-2 py-1.5 border-r border-border w-8 text-center">{isRTL ? 'م' : 'S.No.'}</th>
+                                    <th className="px-2 py-1.5 border-r border-border min-w-[130px]">{t('qform.category')}</th>
+                                    <th className="px-2 py-1.5 border-r border-border min-w-[130px]">{t('qform.subcategory')}</th>
+                                    <th className="px-2 py-1.5 border-r border-border min-w-[160px]">{t('qform.item')}</th>
+                                    <th className="px-2 py-1.5 border-r border-border w-16 text-center">{isRTL ? 'كمية الإرسال' : 'Send Qty'}</th>
+                                    <th className="px-2 py-1.5 border-r border-border w-16 text-center">{isRTL ? 'كمية الفاتورة' : 'Inv Qty'}</th>
+                                    <th className="px-2 py-1.5 border-r border-border w-24 text-end">{t('qform.rate')} (AED)</th>
+                                    <th className="px-2 py-1.5 border-r border-border w-20 text-end">{isRTL ? 'الضريبة' : 'Tax Amt'}</th>
+                                    <th className="px-2 py-1.5 border-r border-border w-28 text-end">{t('qform.amount')} (AED)</th>
+                                    <th className="px-2 py-1.5 text-center w-10">{isRTL ? 'إجراء' : 'Action'}</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-border">
                                 {formData.items.map((item, index) => (
-                                    <tr key={index} className="border-b border-slate-100 align-top">
-                                        <td className="p-3 space-y-2">
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <select name="categoryId" value={item.categoryId} onChange={(e) => handleItemChange(index, e)} className="border border-slate-300 rounded px-2 py-1.5 w-full text-xs">
-                                                    <option value="">Category</option>
-                                                    {selectData.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                                </select>
-                                                <select name="subcategoryId" value={item.subcategoryId} onChange={(e) => handleItemChange(index, e)} disabled={!item.categoryId} className="border border-slate-300 rounded px-2 py-1.5 w-full text-xs">
-                                                    <option value="">Sub Category</option>
-                                                    {item.availableSubcategories?.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
-                                                </select>
-                                            </div>
-                                            <div className="relative group w-full">
+                                    <tr key={index} className="hover:bg-hover transition-colors">
+                                        <td className="px-2 py-1 border-r border-border text-center text-foreground-muted">{index + 1}</td>
+                                        <td className="px-2 py-1 border-r border-border">
+                                            <select
+                                                name="categoryId"
+                                                value={item.categoryId || ''}
+                                                onChange={(e) => handleItemChange(index, e)}
+                                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-1 text-foreground focus:outline-none focus:border-primary"
+                                            >
+                                                <option value="">{t('qform.selectCategory')}</option>
+                                                {selectData.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                            </select>
+                                        </td>
+                                        <td className="px-2 py-1 border-r border-border">
+                                            <select
+                                                name="subcategoryId"
+                                                value={item.subcategoryId || ''}
+                                                onChange={(e) => handleItemChange(index, e)}
+                                                disabled={!item.categoryId}
+                                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-1 text-foreground focus:outline-none focus:border-primary disabled:opacity-50"
+                                            >
+                                                <option value="">{t('qform.selectSubcategory')}</option>
+                                                {(item.availableSubcategories || []).map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
+                                            </select>
+                                        </td>
+                                        <td className="px-2 py-1 border-r border-border relative">
+                                            <div className="relative group">
                                                 <input
                                                     type="text"
                                                     name="searchInput"
                                                     value={item.searchInput || ''}
                                                     onChange={(e) => handleItemChange(index, e)}
-                                                    placeholder="Search Item..."
-                                                    className="w-full border border-slate-300 rounded px-2 py-1.5 text-xs focus:ring-1 focus:ring-primary outline-none"
+                                                    placeholder={t('qform.typeToSearch')}
+                                                    className="w-full h-7 text-[11px] border border-border bg-background rounded px-2 pr-5 text-foreground focus:outline-none focus:border-primary"
                                                     autoComplete="off"
                                                 />
-                                                <div className="absolute z-50 w-full bg-white border border-gray-200 rounded-md mt-1 shadow-lg hidden group-focus-within:block max-h-60 overflow-y-auto">
+                                                <ChevronDown size={11} className="absolute right-1 top-2 text-foreground-muted pointer-events-none" />
+
+                                                <div className="absolute left-0 right-0 top-full z-[100] bg-card border border-border rounded-md mt-0.5 shadow-xl hidden group-focus-within:block max-h-48 overflow-y-auto">
                                                     {selectData.allItems
                                                         .filter(i => {
                                                             const searchParam = (item.searchInput || '').toLowerCase();
-                                                            const matchSearch = (i.label || '').toLowerCase().includes(searchParam);
-
+                                                            const matchSearch = (i.label || i.name || '').toLowerCase().includes(searchParam);
                                                             const iCatId = i.categoryId || i.category?.id;
                                                             const iSubCatId = i.subcategoryId || i.subCategoryId || i.subCategory?.id || i.subcategory?.id;
-
                                                             const matchCat = item.categoryId ? String(iCatId) === String(item.categoryId) : true;
                                                             const matchSubCat = item.subcategoryId ? String(iSubCatId) === String(item.subcategoryId) : true;
-
                                                             return matchSearch && matchCat && matchSubCat;
                                                         })
                                                         .map(itm => (
                                                             <div
                                                                 key={`${itm.uniqueId}-${index}`}
-                                                                className="px-3 py-2 text-xs hover:bg-blue-50 cursor-pointer border-b last:border-b-0 border-gray-100 flex justify-between items-center text-gray-700"
-                                                                onMouseDown={() => {
-                                                                    const event = { target: { name: 'searchInput', value: itm.label } };
-                                                                    handleItemChange(index, event);
+                                                                className="px-2 py-1.5 text-[11px] hover:bg-primary/10 cursor-pointer border-b last:border-b-0 border-border flex justify-between items-center text-foreground"
+                                                                onMouseDown={(e) => {
+                                                                    e.preventDefault();
+                                                                    handleItemChange(index, { target: { name: 'searchInput', value: itm.label || itm.name } });
                                                                 }}
                                                             >
-                                                                <span>{itm.name}</span>
-                                                                <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{itm.type.replace('_', ' ')}</span>
+                                                                <span className="font-medium">{itm.name}</span>
+                                                                <span className="text-[9px] text-foreground-muted bg-background px-1 py-0.5 rounded border border-border shrink-0 ml-1">
+                                                                    {(itm.type || 'ITEM').replace('_', ' ')}
+                                                                </span>
                                                             </div>
                                                         ))}
                                                     {selectData.allItems.filter(i => {
                                                         const searchParam = (item.searchInput || '').toLowerCase();
-                                                        const matchSearch = (i.label || '').toLowerCase().includes(searchParam);
-
+                                                        const matchSearch = (i.label || i.name || '').toLowerCase().includes(searchParam);
                                                         const iCatId = i.categoryId || i.category?.id;
                                                         const iSubCatId = i.subcategoryId || i.subCategoryId || i.subCategory?.id || i.subcategory?.id;
-
                                                         const matchCat = item.categoryId ? String(iCatId) === String(item.categoryId) : true;
                                                         const matchSubCat = item.subcategoryId ? String(iSubCatId) === String(item.subcategoryId) : true;
-
                                                         return matchSearch && matchCat && matchSubCat;
                                                     }).length === 0 && (
-                                                            <div className="px-3 py-2 text-sm text-gray-500 text-center">No items found</div>
-                                                        )}
+                                                        <div className="px-2 py-2 text-[11px] text-foreground-muted text-center">
+                                                            {isRTL ? 'لا توجد نتائج' : 'No items found'}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
-                                            <textarea name="description" value={item.description} onChange={(e) => handleItemChange(index, e)} rows="1" className="border border-slate-300 rounded px-2 py-1.5 w-full text-xs" placeholder="Description"></textarea>
                                         </td>
-                                        {formData.enableGrossNetWeight && (
-                                            <td className="p-3"><input type="number" name="quantityGross" value={item.quantityGross} onChange={(e) => handleItemChange(index, e)} className="border border-slate-300 rounded px-2 py-1.5 w-full text-sm" /></td>
-                                        )}
-                                        {formData.enableGrossNetWeight && (
-                                            <td className="p-3"><input type="number" name="quantityNet" value={item.quantityNet} onChange={(e) => handleItemChange(index, e)} className="border border-slate-300 rounded px-2 py-1.5 w-full text-sm" /></td>
-                                        )}
-                                        <td className="p-3"><input type="number" name="sendQuantity" value={item.sendQuantity} onChange={(e) => handleItemChange(index, e)} className="border border-slate-300 rounded px-2 py-1.5 w-full text-sm" /></td>
-                                        <td className="p-3"><input type="number" name="invoiceQuantity" value={item.invoiceQuantity} onChange={(e) => handleItemChange(index, e)} className="border border-slate-300 rounded px-2 py-1.5 w-full text-sm" min="1" /></td>
-                                        <td className="p-3"><input type="number" name="rate" value={item.rate} onChange={(e) => handleItemChange(index, e)} className="border border-slate-300 rounded px-2 py-1.5 w-full text-sm" /></td>
-                                        <td className="p-3"><input type="number" value={item.amount.toFixed(2)} readOnly className="border border-slate-200 rounded px-2 py-1.5 w-full text-sm bg-slate-50" /></td>
-                                        <td className="p-3 space-y-1">
-                                            <input type="number" value={item.taxValue.toFixed(2)} readOnly className="border border-slate-200 rounded px-2 py-1.5 w-full text-xs bg-slate-50" />
-                                            <div className="flex items-center gap-1">
-                                                <input type="checkbox" name="isTaxExempt" checked={item.isTaxExempt} onChange={(e) => handleItemChange(index, e)} className="rounded text-blue-600 focus:ring-blue-500" />
-                                                <span className="text-[10px] text-slate-500 whitespace-nowrap">Exempt</span>
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <input type="number" name="taxPercentage" value={item.taxPercentage || 0} onChange={(e) => handleItemChange(index, e)} className="border border-slate-300 rounded px-1 py-0.5 w-10 text-[10px]" disabled={item.isTaxExempt} />
-                                                <span className="text-[10px] text-slate-500">%</span>
-                                            </div>
+                                        <td className="px-2 py-1 border-r border-border">
+                                            <input
+                                                type="number"
+                                                name="sendQuantity"
+                                                value={item.sendQuantity}
+                                                onChange={(e) => handleItemChange(index, e)}
+                                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-1 text-center font-mono text-foreground focus:outline-none focus:border-primary"
+                                            />
                                         </td>
-                                        <td className="p-3"><input type="text" name="packingType" value={item.packingType} onChange={(e) => handleItemChange(index, e)} className="border border-slate-300 rounded px-2 py-1.5 w-full text-sm" /></td>
-                                        <td className="p-3 text-center">
-                                            <button type="button" onClick={() => removeItem(index)} className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-full"><Trash2 size={16} /></button>
+                                        <td className="px-2 py-1 border-r border-border">
+                                            <input
+                                                type="number"
+                                                name="invoiceQuantity"
+                                                value={item.invoiceQuantity}
+                                                onChange={(e) => handleItemChange(index, e)}
+                                                min="1"
+                                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-1 text-center font-mono text-foreground focus:outline-none focus:border-primary"
+                                            />
+                                        </td>
+                                        <td className="px-2 py-1 border-r border-border">
+                                            <input
+                                                type="number"
+                                                name="rate"
+                                                value={item.rate}
+                                                onChange={(e) => handleItemChange(index, e)}
+                                                className="w-full h-7 text-[11px] border border-border bg-background rounded px-1 text-end font-mono text-foreground focus:outline-none focus:border-primary"
+                                            />
+                                        </td>
+                                        <td className="px-2 py-1 border-r border-border text-end font-mono text-foreground-muted">
+                                            AED {Number(item.taxValue || 0).toFixed(2)}
+                                        </td>
+                                        <td className="px-2 py-1 border-r border-border text-end font-mono font-semibold text-foreground">
+                                            AED {Number(item.amount || 0).toFixed(2)}
+                                        </td>
+                                        <td className="px-2 py-1 text-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => removeItem(index)}
+                                                className="w-5 h-5 rounded border border-border flex items-center justify-center text-rose-500 hover:bg-rose-50 transition-colors mx-auto"
+                                            >
+                                                <Trash2 size={11} />
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
-                        <button type="button" onClick={addItem} className="mt-4 px-4 py-2 bg-slate-100 text-blue-600 font-medium text-sm rounded hover:bg-slate-200 flex items-center gap-2">
-                            <Plus size={16} /> Add Item
-                        </button>
                     </div>
 
-                    {/* Totals & Footer */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                        <div className="flex flex-col md:flex-row justify-between gap-8">
-                            <div className="w-full md:w-1/2 space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1">Terms & Conditions</label>
-                                    <textarea name="termsAndConditions" value={formData.termsAndConditions} onChange={handleHeaderChange} rows="3" className="w-full border border-slate-300 rounded px-2 py-2 text-sm" placeholder="Terms..."></textarea>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1">Notes</label>
-                                    <textarea name="notes" value={formData.notes} onChange={handleHeaderChange} rows="2" className="w-full border border-slate-300 rounded px-2 py-2 text-sm" placeholder="Notes..."></textarea>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1">Attachments</label>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <label className="cursor-pointer px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded text-sm text-slate-700 flex items-center gap-2 border border-slate-300">
-                                            <Paperclip size={14} /> Attach Files <input type="file" multiple onChange={handleFileChange} className="hidden" />
-                                        </label>
-                                        <span className="text-xs text-slate-400">{attachmentFiles.length} selected</span>
-                                    </div>
-                                </div>
+                    <button
+                        type="button"
+                        onClick={addItem}
+                        className="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 text-primary rounded text-[11px] font-semibold flex items-center gap-1 transition-colors"
+                    >
+                        <Plus size={12} /> {t('qform.addItem')}
+                    </button>
+                </div>
+
+                {/* Bottom Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-2">
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('qform.attachFile')}</label>
+                            <div className="flex items-center gap-2">
+                                <label className="cursor-pointer px-2.5 py-1 border border-border bg-background hover:bg-hover text-foreground rounded text-[11px] font-medium flex items-center gap-1 transition-colors">
+                                    <Paperclip size={12} /> {t('qform.browse')}
+                                    <input type="file" multiple onChange={handleFileChange} className="hidden" />
+                                </label>
+                                <span className="text-[10px] text-foreground-muted">
+                                    {attachmentFiles.length > 0 ? `${attachmentFiles.length} file(s)` : t('qform.noFile')}
+                                </span>
                             </div>
+                        </div>
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('qform.terms')}</label>
+                            <textarea
+                                name="termsAndConditions"
+                                value={formData.termsAndConditions}
+                                onChange={handleHeaderChange}
+                                rows="2"
+                                className="w-full text-[11px] border border-border bg-background rounded p-1.5 text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary"
+                                placeholder="Terms & Conditions..."
+                            ></textarea>
+                        </div>
+                        <div>
+                            <label className="block text-[11px] font-semibold text-foreground mb-0.5">{t('qform.notes')}</label>
+                            <textarea
+                                name="notes"
+                                value={formData.notes}
+                                onChange={handleHeaderChange}
+                                rows="2"
+                                className="w-full text-[11px] border border-border bg-background rounded p-1.5 text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary"
+                                placeholder="Will be displayed on invoice"
+                            ></textarea>
+                        </div>
+                    </div>
 
-                            <div className="w-full md:w-1/3 space-y-3">
-                                <div className="flex justify-between text-sm py-1 border-b border-dashed border-slate-200">
-                                    <span className="text-slate-600">Sub Total</span>
-                                    <span className="font-medium">AED {formData.subTotal.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between text-sm py-1 border-b border-dashed border-slate-200 items-center">
-                                    <span className="text-slate-600">Total Discount</span>
-                                    <input type="number" name="totalDiscount" value={formData.totalDiscount} onChange={handleHeaderChange} className="w-24 text-right border border-slate-300 rounded px-1 py-1 text-sm" />
-                                </div>
-                                <div className="flex justify-between text-sm py-1 border-b border-dashed border-slate-200">
-                                    <span className="text-slate-600">Gross Total</span>
-                                    <span className="font-medium">AED {formData.grossTotal.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between text-sm py-1 border-b border-dashed border-slate-200">
-                                    <span className="text-slate-600">Total Tax</span>
-                                    <span className="font-medium">AED {formData.totalTax.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between text-sm py-1 border-b border-dashed border-slate-200 items-center">
-                                    <span className="text-slate-600">Other Charges</span>
-                                    <input type="number" name="otherCharges" value={formData.otherCharges} onChange={handleHeaderChange} className="w-24 text-right border border-slate-300 rounded px-1 py-1 text-sm" />
-                                </div>
-                                <div className="flex justify-between text-lg font-bold py-2 border-t border-slate-300">
-                                    <span>Net Total</span>
-                                    <span>AED {formData.netTotal.toFixed(2)}</span>
-                                </div>
+                    <div className="bg-card border border-border rounded-lg p-2.5 shadow-2xs space-y-1.5 text-[11px] self-start">
+                        <div className="flex justify-between text-foreground-muted">
+                            <span>{t('qform.subTotal')}</span>
+                            <span className="font-mono text-foreground font-semibold">AED {Number(formData.subTotal || 0).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-foreground-muted">
+                            <span>{t('qform.totalDiscount')}</span>
+                            <input
+                                type="number"
+                                name="totalDiscount"
+                                value={formData.totalDiscount}
+                                onChange={handleHeaderChange}
+                                className="w-20 h-6 text-[10px] border border-border bg-background rounded px-1 text-end font-mono text-foreground focus:outline-none focus:border-primary"
+                            />
+                        </div>
+                        <div className="flex justify-between text-foreground-muted">
+                            <span>{t('qform.totalTax')}</span>
+                            <span className="font-mono text-foreground">AED {Number(formData.totalTax || 0).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-foreground-muted">
+                            <span>{isRTL ? 'رسوم أخرى' : 'Other Charges'}</span>
+                            <input
+                                type="number"
+                                name="otherCharges"
+                                value={formData.otherCharges}
+                                onChange={handleHeaderChange}
+                                className="w-20 h-6 text-[10px] border border-border bg-background rounded px-1 text-end font-mono text-foreground focus:outline-none focus:border-primary"
+                            />
+                        </div>
+                        <div className="flex justify-between font-bold border-t border-border pt-1 text-xs text-foreground">
+                            <span>{t('qform.netTotal')}</span>
+                            <span className="text-primary font-mono">AED {Number(formData.netTotal || 0).toFixed(2)}</span>
+                        </div>
 
-                                <div className="bg-slate-50 p-3 rounded border border-slate-100 mt-4">
-                                    <div className="flex justify-between text-sm items-center mb-2">
-                                        <span className="font-semibold text-slate-700">Amount Received</span>
-                                        <input type="number" name="amountReceived" value={formData.amountReceived} onChange={handleHeaderChange} className="w-24 text-right border border-slate-300 rounded px-1 py-1 text-sm bg-white" />
-                                    </div>
-                                    <div className="flex justify-between text-base font-bold text-red-600 border-t border-slate-200 pt-2">
-                                        <span>Balance Due</span>
-                                        <span>AED {formData.balanceDue?.toFixed(2)}</span>
-                                    </div>
-                                </div>
+                        <div className="bg-primary/5 p-2 rounded border border-border space-y-1 mt-2">
+                            <div className="flex justify-between text-[11px] text-foreground-muted">
+                                <span>{isRTL ? 'المبلغ المستلم' : 'Amount Received'}</span>
+                                <input
+                                    type="number"
+                                    name="amountReceived"
+                                    value={formData.amountReceived}
+                                    onChange={handleHeaderChange}
+                                    className="w-20 h-5 text-[10px] border border-border bg-background rounded px-1 text-end font-mono text-foreground focus:outline-none focus:border-primary"
+                                />
+                            </div>
+                            <div className="flex justify-between text-[11px] font-bold text-rose-500 pt-0.5 border-t border-border">
+                                <span>{isRTL ? 'الرصيد المستحق' : 'Balance Due'}</span>
+                                <span className="font-mono">AED {Number(formData.balanceDue || 0).toFixed(2)}</span>
                             </div>
                         </div>
                     </div>
-                </form>
-            </main>
+                </div>
+            </form>
 
             {/* Record Payment Modal */}
             {showPaymentModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+                    <div className="bg-card rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border border-border">
                         <div className="bg-emerald-600 px-6 py-4 flex items-center justify-between">
                             <h2 className="text-white font-bold text-lg">💰 Record Customer Payment</h2>
                             <button onClick={() => setShowPaymentModal(false)} className="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
                         </div>
                         <form onSubmit={handleRecordPayment} className="p-6 space-y-4">
-                            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm text-emerald-800">
-                                <div className="flex justify-between"><span>Invoice Total</span><span className="font-bold">AED {Number(formData.netTotal).toFixed(2)}</span></div>
-                                <div className="flex justify-between"><span>Already Received</span><span className="font-bold">AED {Number(formData.amountReceived).toFixed(2)}</span></div>
-                                <div className="flex justify-between border-t border-emerald-200 mt-2 pt-2"><span className="font-bold">Balance Due</span><span className="font-bold text-red-600">AED {Number(formData.balanceDue).toFixed(2)}</span></div>
+                            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 text-sm text-foreground">
+                                <div className="flex justify-between"><span>Invoice Total</span><span className="font-bold font-mono">AED {Number(formData.netTotal).toFixed(2)}</span></div>
+                                <div className="flex justify-between"><span>Already Received</span><span className="font-bold font-mono">AED {Number(formData.amountReceived).toFixed(2)}</span></div>
+                                <div className="flex justify-between border-t border-border mt-2 pt-2"><span className="font-bold">Balance Due</span><span className="font-bold font-mono text-rose-500">AED {Number(formData.balanceDue).toFixed(2)}</span></div>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">Amount Received *</label>
+                                <label className="block text-xs font-bold text-foreground mb-1">Amount Received *</label>
                                 <input type="number" step="0.01" min="0.01" value={paymentForm.amountPaid}
                                     onChange={e => setPaymentForm(p => ({ ...p, amountPaid: e.target.value }))}
-                                    required className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-emerald-500" placeholder="Enter amount received" />
+                                    required className="w-full border border-border bg-background rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary" placeholder="Enter amount received" />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1">Payment Date *</label>
+                                    <label className="block text-xs font-bold text-foreground mb-1">Payment Date *</label>
                                     <input type="date" value={paymentForm.paymentDate}
                                         onChange={e => setPaymentForm(p => ({ ...p, paymentDate: e.target.value }))}
-                                        required className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-emerald-500" />
+                                        required className="w-full border border-border bg-background rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1">Payment Method *</label>
+                                    <label className="block text-xs font-bold text-foreground mb-1">Payment Method *</label>
                                     <select value={paymentForm.paymentMethod}
                                         onChange={e => setPaymentForm(p => ({ ...p, paymentMethod: e.target.value }))}
-                                        className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                                        className="w-full border border-border bg-background rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary">
                                         <option value="BANK">Bank Transfer</option>
                                         <option value="CASH">Cash</option>
                                     </select>
@@ -902,25 +1019,19 @@ const InvoiceForm = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">Reference / Cheque No.</label>
+                                <label className="block text-xs font-bold text-foreground mb-1">Reference / Cheque No.</label>
                                 <input type="text" value={paymentForm.referenceNumber}
                                     onChange={e => setPaymentForm(p => ({ ...p, referenceNumber: e.target.value }))}
-                                    className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-emerald-500" placeholder="Optional" />
-                            </div>
-
-                            <div className="bg-blue-50 border border-blue-100 rounded p-3 text-xs text-blue-700">
-                                <strong>Accounting Effect:</strong><br />
-                                Dr. Bank / Cash Account<br />
-                                &nbsp;&nbsp;&nbsp;Cr. Trade &amp; Other Receivables (Customer)
+                                    className="w-full border border-border bg-background rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary" placeholder="Optional" />
                             </div>
 
                             <div className="flex gap-3 pt-2">
                                 <button type="button" onClick={() => setShowPaymentModal(false)}
-                                    className="flex-1 px-4 py-2 border border-slate-300 rounded text-sm font-medium hover:bg-slate-50">Cancel</button>
+                                    className="flex-1 px-4 py-2 border border-border rounded text-sm font-medium hover:bg-hover text-foreground">Cancel</button>
                                 <button type="submit" disabled={paymentLoading}
                                     className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded text-sm font-medium hover:bg-emerald-700 flex items-center justify-center gap-2">
                                     {paymentLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                                    Post Payment to Accounting
+                                    Post Payment
                                 </button>
                             </div>
                         </form>
