@@ -1,42 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { 
     ArrowLeft, 
     Edit, 
     Loader, 
     Printer, 
-    Download, 
+    Trash2,
     FileText,
     TrendingUp,
     Package,
     ShieldCheck
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const InfoCard = ({ title, value, icon: Icon, color = "text-primary" }) => (
-    <div className="bg-card p-6 rounded-2xl border border-border shadow-sm flex items-start gap-4">
-        <div className={`p-3 rounded-xl bg-background-muted ${color}`}>
-            <Icon size={24} />
+    <div className="bg-card p-3 rounded-lg border border-border shadow-2xs flex items-center gap-3">
+        <div className={`p-2 rounded bg-primary/10 ${color}`}>
+            <Icon size={18} />
         </div>
         <div>
-            <p className="text-xs font-black text-foreground-muted uppercase tracking-widest mb-1">{title}</p>
-            <p className="text-lg font-bold text-foreground">{value || '---'}</p>
+            <p className="text-[10px] font-semibold text-foreground-muted uppercase tracking-wider">{title}</p>
+            <p className="text-xs font-bold text-foreground">{value || '---'}</p>
         </div>
     </div>
-);
-
-const SectionTitle = ({ children }) => (
-    <h3 className="text-lg font-black text-foreground mb-6 flex items-center gap-2">
-        <span className="w-1 h-6 bg-primary rounded-full"></span>
-        {children}
-    </h3>
 );
 
 const SalAdditionalExpenseView = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { isRTL, t } = useLanguage();
     const [expense, setExpense] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -59,161 +54,181 @@ const SalAdditionalExpenseView = () => {
         fetchExpense();
     }, [id]);
 
-    if (loading) return <div className="flex justify-center items-center h-screen"><Loader className="animate-spin text-primary" size={48} /></div>;
-    if (error) return <div className="p-8 text-center text-rose-500 font-bold">{error}</div>;
-    if (!expense) return null;
+    const handlePrint = () => {
+        window.print();
+    };
+
+    const handleDelete = async () => {
+        if (window.confirm(isRTL ? 'هل أنت تأكد من حذف هذا السجل؟' : 'Are you sure you want to delete this record?')) {
+            try {
+                const token = localStorage.getItem('token');
+                await axios.delete(`${API_URL}/sales/additional-expenses/${id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                navigate('/sales-dashboard/additional-expenses');
+            } catch (err) {
+                alert("Failed to delete record");
+            }
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64 bg-background">
+                <Loader className="animate-spin text-primary h-8 w-8" />
+            </div>
+        );
+    }
+
+    if (error || !expense) {
+        return (
+            <div className="p-8 text-center text-foreground-muted bg-background">
+                {error || (isRTL ? 'السجل غير موجود' : 'Record not found')}
+            </div>
+        );
+    }
 
     return (
-        <div className="max-w-7xl mx-auto p-4 md:p-8 min-h-screen pb-20">
-            {/* Header */}
-            <div className="flex flex-wrap justify-between items-end gap-6 mb-10">
-                <div>
-                    <button onClick={() => navigate('/sales-dashboard/additional-expenses')} className="flex items-center gap-2 text-primary font-bold mb-4 hover:underline">
-                        <ArrowLeft size={18} /> Back to Additional Expenses
-                    </button>
-                    <div className="flex items-center gap-4">
-                        <h1 className="text-4xl font-black text-foreground">{expense.number || `EXP-${expense.id}`}</h1>
-                        <span className={`px-4 py-1.5 rounded-full text-sm font-black uppercase ${
-                            expense.status === 'Posted' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                        }`}>
-                            {expense.status || 'Draft'}
-                        </span>
-                    </div>
-                </div>
-                <div className="flex gap-3">
-                    <button className="p-3 bg-card border border-border rounded-xl text-foreground-muted hover:text-primary hover:border-primary transition-all shadow-sm">
-                        <Printer size={20} />
-                    </button>
-                    <button className="p-3 bg-card border border-border rounded-xl text-foreground-muted hover:text-primary hover:border-primary transition-all shadow-sm">
-                        <Download size={20} />
-                    </button>
-                    <button 
-                        onClick={() => navigate(`/sales-dashboard/additional-expenses/edit/${id}`)}
-                        className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-black shadow-lg hover:opacity-90 active:scale-95 transition-all flex items-center gap-2"
+        <div className="bg-background text-foreground font-sans space-y-2 w-full print:bg-white print:p-0" dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Top Action Bar - Hidden on Print */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 bg-card p-2 rounded-lg border border-border shadow-2xs print:hidden">
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="w-6 h-6 rounded border border-border flex items-center justify-center text-foreground hover:bg-hover transition-colors"
                     >
-                        <Edit size={18} /> Edit Record
+                        <ArrowLeft size={13} />
                     </button>
-                </div>
-            </div>
-
-            {/* Top Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                <InfoCard title="Total Expense" value={`${expense.totalExpenseAmount?.toLocaleString()} ${expense.currency}`} icon={TrendingUp} color="text-emerald-500" />
-                <InfoCard title="Customer" value={expense.companyName} icon={ ShieldCheck } color="text-blue-500" />
-                <InfoCard title="Date" value={new Date(expense.date).toLocaleDateString()} icon={FileText} color="text-amber-500" />
-                <InfoCard title="SO Reference" value={expense.salesOrderNumber} icon={Package} color="text-indigo-500" />
-            </div>
-
-            {/* Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                <div className="lg:col-span-2 space-y-12">
-                    {/* Expense Lines */}
-                    <section>
-                        <SectionTitle>Service Items</SectionTitle>
-                        <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-                            <table className="min-w-full divide-y divide-border">
-                                <thead className="bg-background-muted text-[10px] uppercase font-black tracking-widest text-foreground-muted">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left">Service Item</th>
-                                        <th className="px-6 py-4 text-right">Amount</th>
-                                        <th className="px-6 py-4 text-left">Tax</th>
-                                        <th className="px-6 py-4 text-right">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
-                                    {(expense.expenseLines || []).map((line, i) => (
-                                        <tr key={i} className="hover:bg-background-muted/30 transition-colors">
-                                            <td className="px-6 py-4 font-bold text-foreground">{line.productName || 'Product ID: ' + line.productId}</td>
-                                            <td className="px-6 py-4 text-right font-mono">{line.amount?.toFixed(2)}</td>
-                                            <td className="px-6 py-4 text-sm text-foreground-muted">{line.taxCode || 'No Tax'} ({line.taxAmount?.toFixed(2)})</td>
-                                            <td className="px-6 py-4 text-right font-black text-primary">{line.totalAmount?.toFixed(2)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    {/* Inventory Items */}
-                    <section>
-                        <SectionTitle>Inventory Allocation</SectionTitle>
-                        <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-                            <table className="min-w-full divide-y divide-border">
-                                <thead className="bg-background-muted text-[10px] uppercase font-black tracking-widest text-foreground-muted">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left">Item</th>
-                                        <th className="px-6 py-4 text-left">Batch</th>
-                                        <th className="px-6 py-4 text-right">Qty</th>
-                                        <th className="px-6 py-4 text-left">UOM</th>
-                                        <th className="px-6 py-4 text-right bg-emerald-50/50">Allocated Expense</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
-                                    {(expense.inventoryItems || []).map((item, i) => (
-                                        <tr key={i} className="hover:bg-background-muted/30 transition-colors">
-                                            <td className="px-6 py-4 font-bold text-foreground">{item.productName || 'Product ID: ' + item.productId}</td>
-                                            <td className="px-6 py-4 text-sm font-mono text-foreground-muted">{item.batch || '---'}</td>
-                                            <td className="px-6 py-4 text-right font-mono">{item.quantity}</td>
-                                            <td className="px-6 py-4 text-left">{item.unitName || '---'}</td>
-                                            <td className="px-6 py-4 text-right font-black text-emerald-600 bg-emerald-50/20">{item.expenseAmount?.toFixed(2)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-                </div>
-
-                <div className="space-y-8">
-                    {/* General Section */}
-                    <div className="bg-card p-8 rounded-3xl border border-border shadow-sm">
-                        <h4 className="text-xs font-black uppercase tracking-widest text-primary mb-6">General Details</h4>
-                        <div className="space-y-6">
-                            <div>
-                                <p className="text-[10px] uppercase font-bold text-foreground-muted mb-1">Contract</p>
-                                <p className="font-bold">{expense.contract || '---'}</p>
-                            </div>
-                            <div>
-                                <p className="text-[10px] uppercase font-bold text-foreground-muted mb-1">Transaction Type</p>
-                                <p className="font-bold">{expense.transactionType}</p>
-                            </div>
-                            <div className="flex justify-between items-center p-4 bg-background-muted rounded-xl">
-                                <div>
-                                    <p className="text-[10px] uppercase font-bold text-foreground-muted mb-1">Currency</p>
-                                    <p className="font-black text-primary">{expense.currency}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] uppercase font-bold text-foreground-muted mb-1">Exchange Rate</p>
-                                    <p className="font-mono font-bold">{expense.exchangeRate?.toFixed(4)}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Comment Section */}
-                    <div className="bg-card p-8 rounded-3xl border border-border shadow-sm">
-                        <h4 className="text-xs font-black uppercase tracking-widest text-foreground-muted mb-4">Comments</h4>
-                        <p className="text-sm italic text-foreground/70 leading-relaxed">
-                            {expense.comment || 'No additional comments provided for this record.'}
+                    <div>
+                        <h1 className="text-xs font-bold text-foreground leading-tight flex items-center gap-2">
+                            {isRTL ? 'مصروف إضافي' : 'Additional Expense'} #{expense.number || `EXP-${expense.id}`}
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+                                expense.status === 'Posted' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-amber-50 text-amber-600 border border-amber-200'
+                            }`}>
+                                {expense.status || 'Draft'}
+                            </span>
+                        </h1>
+                        <p className="text-[10px] text-foreground-muted leading-none mt-0.5">
+                            {isRTL ? 'الرئيسية > المبيعات > المصاريف الإضافية > عرض' : 'Home > Sales > Additional Expenses > View'}
                         </p>
                     </div>
+                </div>
 
-                    {/* Meta Data */}
-                    <div className="px-4 text-[10px] uppercase font-bold text-foreground-muted/50 space-y-2">
-                        <div className="flex justify-between">
-                            <span>Record Created</span>
-                            <span>{new Date().toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>Last Modified</span>
-                            <span>{new Date().toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>System ID</span>
-                            <span>{expense.id}</span>
-                        </div>
+                <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                    <button
+                        onClick={handlePrint}
+                        className="px-2.5 py-1 rounded text-[11px] font-semibold border border-border bg-card hover:bg-hover text-foreground flex items-center gap-1 transition-colors"
+                    >
+                        <Printer size={12} /> {t('quotation.print')}
+                    </button>
+                    <button
+                        onClick={() => navigate(`/sales-dashboard/additional-expenses/edit/${id}`)}
+                        className="px-2.5 py-1 rounded text-[11px] font-semibold border border-border bg-card hover:bg-hover text-blue-500 flex items-center gap-1 transition-colors"
+                    >
+                        <Edit size={12} /> {t('quotation.edit')}
+                    </button>
+                    <button
+                        onClick={handleDelete}
+                        className="px-2.5 py-1 rounded text-[11px] font-semibold border border-border bg-card hover:bg-hover text-rose-500 flex items-center gap-1 transition-colors"
+                    >
+                        <Trash2 size={12} /> {t('quotation.delete')}
+                    </button>
+                </div>
+            </div>
+
+            {/* Metric Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 print:hidden">
+                <InfoCard title={isRTL ? 'إجمالي المصروف' : 'Total Expense'} value={`AED ${Number(expense.totalExpenseAmount || 0).toFixed(2)}`} icon={TrendingUp} color="text-emerald-500" />
+                <InfoCard title={isRTL ? 'العميل' : 'Customer'} value={expense.companyName} icon={ShieldCheck} color="text-blue-500" />
+                <InfoCard title={isRTL ? 'التاريخ' : 'Date'} value={expense.date ? new Date(expense.date).toLocaleDateString() : '-'} icon={FileText} color="text-amber-500" />
+                <InfoCard title={isRTL ? 'أمر المبيعات المرجعي' : 'SO Reference'} value={expense.salesOrderNumber || '-'} icon={Package} color="text-indigo-500" />
+            </div>
+
+            {/* Document Printable Details */}
+            <div className="bg-card border border-border rounded-lg p-4 shadow-2xs space-y-4 print:border-none print:shadow-none print:p-0">
+                {/* Service Items Table */}
+                <div className="space-y-1.5">
+                    <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5 pb-1 border-b border-border">
+                        <FileText size={13} className="text-primary" />
+                        {isRTL ? 'بنود الخدمات' : 'Service Items'}
+                    </h3>
+                    <div className="rounded border border-border overflow-hidden">
+                        <table className="w-full text-[11px] border-collapse">
+                            <thead>
+                                <tr className="bg-primary/10 text-foreground font-semibold border-b border-border">
+                                    <th className="px-3 py-1.5 text-start border-r border-border">{isRTL ? 'عنصر الخدمة' : 'Service Item'}</th>
+                                    <th className="px-3 py-1.5 text-end w-28 border-r border-border">{isRTL ? 'المبلغ' : 'Amount'} (AED)</th>
+                                    <th className="px-3 py-1.5 text-start border-r border-border">{isRTL ? 'الضريبة' : 'Tax'}</th>
+                                    <th className="px-3 py-1.5 text-end w-28">{isRTL ? 'الإجمالي' : 'Total'} (AED)</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {(expense.expenseLines || []).length === 0 ? (
+                                    <tr>
+                                        <td colSpan="4" className="text-center py-4 text-foreground-muted">
+                                            {isRTL ? 'لا توجد خدمات مضافة' : 'No service lines.'}
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    (expense.expenseLines || []).map((line, i) => (
+                                        <tr key={i} className="hover:bg-hover">
+                                            <td className="px-3 py-1.5 font-semibold text-foreground border-r border-border">{line.productName || `Product ID: ${line.productId}`}</td>
+                                            <td className="px-3 py-1.5 text-end font-mono border-r border-border">{(line.amount || 0).toFixed(2)}</td>
+                                            <td className="px-3 py-1.5 text-foreground-muted border-r border-border">{line.taxCode || 'No Tax'} ({(line.taxAmount || 0).toFixed(2)})</td>
+                                            <td className="px-3 py-1.5 text-end font-mono font-bold text-primary">{(line.totalAmount || 0).toFixed(2)}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+
+                {/* Inventory Allocation Table */}
+                <div className="space-y-1.5">
+                    <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5 pb-1 border-b border-border">
+                        <Package size={13} className="text-emerald-500" />
+                        {isRTL ? 'توزيع تكلفة المخزون' : 'Inventory Allocation'}
+                    </h3>
+                    <div className="rounded border border-border overflow-hidden">
+                        <table className="w-full text-[11px] border-collapse">
+                            <thead>
+                                <tr className="bg-primary/10 text-foreground font-semibold border-b border-border">
+                                    <th className="px-3 py-1.5 text-start border-r border-border">{isRTL ? 'الصنف' : 'Item'}</th>
+                                    <th className="px-3 py-1.5 text-start border-r border-border w-24">{isRTL ? 'الدفعة' : 'Batch'}</th>
+                                    <th className="px-3 py-1.5 text-end border-r border-border w-20">{isRTL ? 'الكمية' : 'Qty'}</th>
+                                    <th className="px-3 py-1.5 text-end w-32">{isRTL ? 'المصروف الموزع' : 'Allocated Expense'} (AED)</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {(expense.inventoryItems || []).length === 0 ? (
+                                    <tr>
+                                        <td colSpan="4" className="text-center py-4 text-foreground-muted">
+                                            {isRTL ? 'لا توجد أصناف موزعة' : 'No inventory items allocated.'}
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    (expense.inventoryItems || []).map((item, i) => (
+                                        <tr key={i} className="hover:bg-hover">
+                                            <td className="px-3 py-1.5 font-semibold text-foreground border-r border-border">{item.productName || `Product ID: ${item.productId}`}</td>
+                                            <td className="px-3 py-1.5 text-foreground-muted border-r border-border font-mono">{item.batch || '-'}</td>
+                                            <td className="px-3 py-1.5 text-end font-mono border-r border-border">{item.quantity}</td>
+                                            <td className="px-3 py-1.5 text-end font-mono font-bold text-emerald-600">{(item.expenseAmount || 0).toFixed(2)}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Comments & Meta */}
+                {expense.comment && (
+                    <div className="pt-2 border-t border-border text-[11px]">
+                        <h4 className="font-semibold text-foreground mb-0.5">{t('qform.notes')}</h4>
+                        <p className="text-foreground-muted whitespace-pre-wrap leading-relaxed">{expense.comment}</p>
+                    </div>
+                )}
             </div>
         </div>
     );

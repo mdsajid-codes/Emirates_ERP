@@ -115,7 +115,7 @@ public class SalesInvoice {
     @Lob
     private String notes;
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "sales_invoice_attachments", joinColumns = @JoinColumn(name = "sales_invoice_id"))
     @Column(name = "attachment_url")
     private List<String> attachments = new ArrayList<>();

@@ -2,26 +2,35 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Plus, Edit, Trash2, Loader2, Search, ChevronLeft, ChevronRight, Eye, User, Monitor, Repeat } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, Search, ChevronLeft, ChevronRight, Eye, Calendar, RefreshCw, Filter, List } from 'lucide-react';
+import FollowUpModal from '../components/FollowUpModal';
+import FollowUpHistoryModal from '../components/FollowUpHistoryModal';
+import { useLanguage } from '../../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-const getStatusColor = (status) => {
-    switch (status) {
-        case 'DRAFT': return 'text-gray-600 bg-gray-100';
-        case 'SENT': return 'text-blue-600 bg-blue-100';
-        case 'ACCEPTED': return 'text-green-600 bg-green-100';
-        case 'REJECTED': return 'text-red-600 bg-red-100';
-        case 'INVOICED': return 'text-teal-600 bg-teal-100';
-        default: return 'text-gray-600 bg-gray-100';
+const getStatusBadge = (status) => {
+    const s = (status || 'DRAFT').toUpperCase();
+    switch (s) {
+        case 'DRAFT':
+            return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#F4F7FC] text-[#617198]">DRAFT</span>;
+        case 'SENT':
+            return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#E7F1FF] text-[#1263E9]">SENT</span>;
+        case 'APPROVED':
+        case 'ACCEPTED':
+            return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#E0F5EB] text-[#00862E]">APPROVED</span>;
+        case 'PENDING':
+            return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#FFF3E5] text-[#FF8800]">PENDING</span>;
+        case 'REJECTED':
+            return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#FDE8E8] text-[#D03D4E]">REJECTED</span>;
+        default:
+            return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#F4F7FC] text-[#617198]">{s}</span>;
     }
 };
 
-import FollowUpModal from '../components/FollowUpModal';
-import FollowUpHistoryModal from '../components/FollowUpHistoryModal';
-
 const Quotation = () => {
     const navigate = useNavigate();
+    const { t, isRTL } = useLanguage();
     const [quotations, setQuotations] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -34,6 +43,7 @@ const Quotation = () => {
 
     // Filters
     const [filters, setFilters] = useState({
+        companyName: '',
         customerName: '',
         fromDate: '',
         toDate: '',
@@ -42,9 +52,11 @@ const Quotation = () => {
         teamMember: ''
     });
 
+    const [tableSearch, setTableSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
-    const [totalPages, setTotalPages] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalElements, setTotalElements] = useState(0);
 
     const authHeaders = useMemo(() => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }), []);
 
@@ -63,19 +75,18 @@ const Quotation = () => {
             const params = {
                 page: currentPage,
                 size: pageSize,
-                customerName: filters.customerName,
-                startDate: filters.fromDate || null,
-                endDate: filters.toDate || null,
-                status: filters.status !== 'All' ? filters.status : null,
-                quotationType: filters.type !== 'All' ? filters.type : null,
-                salespersonId: filters.teamMember || null
+                customerName: filters.customerName || undefined,
+                startDate: filters.fromDate || undefined,
+                endDate: filters.toDate || undefined,
+                status: filters.status !== 'All' ? filters.status : undefined,
+                quotationType: filters.type !== 'All' ? filters.type : undefined,
+                salespersonId: filters.teamMember || undefined
             };
             const response = await axios.get(`${API_URL}/sales/quotations`, { params, ...authHeaders });
-            let fetchedQuotations = response.data.content || [];
+            let fetchedQuotations = response.data.content || response.data || [];
 
             // Extract unique customer IDs
-            // Extract unique customer IDs
-            const customerIds = [...new Set(fetchedQuotations.map(q => q.customerId).filter(id => id))];
+            const customerIds = [...new Set(fetchedQuotations.map(q => q.customerId).filter(Boolean))];
 
             // Fetch party details for each customer ID
             let partyMap = {};
@@ -83,7 +94,7 @@ const Quotation = () => {
                 const partyPromises = customerIds.map(id =>
                     axios.get(`${API_URL}/parties/${id}`, authHeaders)
                         .then(res => ({ id, data: res.data }))
-                        .catch(err => ({ id, data: null }))
+                        .catch(() => ({ id, data: null }))
                 );
 
                 const parties = await Promise.all(partyPromises);
@@ -99,34 +110,35 @@ const Quotation = () => {
                     .then(res => {
                         const history = res.data || [];
                         if (history.length > 0) {
-                            // Sort descending by id to get latest entry
                             const latest = history.sort((a, b) => b.id - a.id)[0];
-                            return { id: q.id, nextFollowupDate: latest.nextFollowupDate };
+                            return { id: q.id, nextFollowupDate: latest.nextFollowupDate, hasHistory: true };
                         }
-                        return { id: q.id, nextFollowupDate: null };
+                        return { id: q.id, nextFollowupDate: null, hasHistory: false };
                     })
-                    .catch(err => ({ id: q.id, nextFollowupDate: null }))
+                    .catch(() => ({ id: q.id, nextFollowupDate: null, hasHistory: false }))
             );
 
             const followUpResults = await Promise.all(followUpPromises);
             const followUpMap = followUpResults.reduce((acc, curr) => {
-                acc[curr.id] = curr.nextFollowupDate;
+                acc[curr.id] = curr;
                 return acc;
             }, {});
 
             // Merge details into quotations
             fetchedQuotations = fetchedQuotations.map(q => ({
                 ...q,
-                customerParty: partyMap[q.customerId] || q.customerParty, // Fallback to existing if fetch fails or not found
-                nextFollowupDate: followUpMap[q.id] || null
+                customerParty: partyMap[q.customerId] || q.customerParty,
+                nextFollowupDate: followUpMap[q.id]?.nextFollowupDate || null,
+                hasHistory: followUpMap[q.id]?.hasHistory || false
             }));
 
             setQuotations(fetchedQuotations);
-            setTotalPages(response.data.totalPages);
+            setTotalPages(response.data.totalPages || 1);
+            setTotalElements(response.data.totalElements || fetchedQuotations.length);
             setError(null);
         } catch (err) {
             setError('Failed to fetch quotations. Please try again.');
-            console.error(err);
+            console.error('Error fetching quotations:', err);
         } finally {
             setLoading(false);
         }
@@ -146,7 +158,21 @@ const Quotation = () => {
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
         setFilters(prev => ({ ...prev, [name]: value }));
-        setCurrentPage(0); // Reset to first page on filter change
+        setCurrentPage(0);
+    };
+
+    const handleReset = () => {
+        setFilters({
+            companyName: '',
+            customerName: '',
+            fromDate: '',
+            toDate: '',
+            type: 'All',
+            status: 'All',
+            teamMember: ''
+        });
+        setTableSearch('');
+        setCurrentPage(0);
     };
 
     const handleDelete = async (id) => {
@@ -174,226 +200,377 @@ const Quotation = () => {
         setShowHistory(true);
     };
 
+    // Client-side quick table filter
+    const filteredQuotations = useMemo(() => {
+        if (!tableSearch) return quotations;
+        const q = tableSearch.toLowerCase();
+        return quotations.filter(item =>
+            (item.quotationNumber && item.quotationNumber.toLowerCase().includes(q)) ||
+            (item.customerParty?.companyName && item.customerParty.companyName.toLowerCase().includes(q)) ||
+            (item.customerParty?.primaryContactPerson && item.customerParty.primaryContactPerson.toLowerCase().includes(q)) ||
+            (item.customerName && item.customerName.toLowerCase().includes(q))
+        );
+    }, [quotations, tableSearch]);
+
     return (
-        <div className="flex flex-col h-full bg-slate-50">
+        <div className="space-y-2 bg-background min-h-screen text-foreground font-sans w-full" dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Header */}
-            <div className="bg-primary p-4 flex justify-between items-center text-primary-foreground">
+            <div className="flex justify-between items-center mb-1">
                 <div>
-                    <h1 className="text-xl font-semibold">Manage Quotation</h1>
-                    <div className="text-sm opacity-80">Home &gt; Sales &gt; Manage Quotation</div>
+                    <h1 className="text-lg font-bold text-foreground leading-tight">{t('quotation.title')}</h1>
+                    <div className="text-[11px] text-foreground-muted flex items-center gap-1 mt-0.5">
+                        <span>{t('dashboard.breadcrumb.home')}</span> &gt; <span>{t('nav.sales')}</span> &gt; <span className="text-foreground font-medium">{t('quotation.title')}</span>
+                    </div>
                 </div>
-                <button onClick={() => navigate('/sales-dashboard/quotations/new')} className="bg-white text-gray-800 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-50 flex items-center gap-1 font-bold shadow-sm">
-                    <Plus size={16} /> New Quotation
+                <button
+                    onClick={() => navigate('/sales-dashboard/quotations/new')}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                >
+                    <Plus size={14} /> {t('quotation.newBtn')}
                 </button>
             </div>
 
-            <div className="p-4 space-y-4">
-                {/* Filters Section */}
-                <div className="bg-white p-4 rounded shadow-sm border border-gray-200">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
-                        <div className="md:col-span-1">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Customer Name</label>
+            {/* Filter Section Card */}
+            <div className="bg-card border border-border rounded-lg p-3 shadow-sm">
+                {/* Filter Inputs Grid + Buttons Inline */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-9 gap-2 items-end">
+                    {/* Company Name */}
+                    <div className="lg:col-span-1">
+                        <label className="block text-[10px] font-semibold text-foreground mb-1 truncate">{t('quotation.companyName')}</label>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                name="companyName"
+                                placeholder={t('quotation.searchCompany')}
+                                value={filters.companyName}
+                                onChange={handleFilterChange}
+                                className={`w-full h-7 text-[10px] bg-background border border-border rounded px-2 text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary ${isRTL ? 'pl-6' : 'pr-6'}`}
+                            />
+                            <Search size={11} className={`absolute top-2 text-foreground-muted ${isRTL ? 'left-2' : 'right-2'}`} />
+                        </div>
+                    </div>
+
+                    {/* Customer Name */}
+                    <div className="lg:col-span-1">
+                        <label className="block text-[10px] font-semibold text-foreground mb-1 truncate">{t('quotation.customerName')}</label>
+                        <div className="relative">
                             <input
                                 type="text"
                                 name="customerName"
-                                className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-blue-500"
-                                placeholder="Search Customer"
+                                placeholder={t('quotation.searchCustomer')}
                                 value={filters.customerName}
                                 onChange={handleFilterChange}
+                                className={`w-full h-7 text-[10px] bg-background border border-border rounded px-2 text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary ${isRTL ? 'pl-6' : 'pr-6'}`}
                             />
+                            <Search size={11} className={`absolute top-2 text-foreground-muted ${isRTL ? 'left-2' : 'right-2'}`} />
                         </div>
-                        <div className="md:col-span-1">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">From</label>
+                    </div>
+
+                    {/* From Date */}
+                    <div className="lg:col-span-1">
+                        <label className="block text-[10px] font-semibold text-foreground mb-1 truncate">{t('quotation.fromDate')}</label>
+                        <div className="relative">
                             <input
                                 type="date"
                                 name="fromDate"
-                                className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-blue-500"
                                 value={filters.fromDate}
                                 onChange={handleFilterChange}
+                                className={`w-full h-7 text-[10px] bg-background border border-border rounded px-2 text-foreground focus:outline-none focus:border-primary ${isRTL ? 'pl-6' : 'pr-6'}`}
                             />
+                            <Calendar size={11} className={`absolute top-2 text-foreground-muted pointer-events-none ${isRTL ? 'left-2' : 'right-2'}`} />
                         </div>
-                        <div className="md:col-span-1">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">To</label>
+                    </div>
+
+                    {/* To Date */}
+                    <div className="lg:col-span-1">
+                        <label className="block text-[10px] font-semibold text-foreground mb-1 truncate">{t('quotation.toDate')}</label>
+                        <div className="relative">
                             <input
                                 type="date"
                                 name="toDate"
-                                className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-blue-500"
                                 value={filters.toDate}
                                 onChange={handleFilterChange}
+                                className={`w-full h-7 text-[10px] bg-background border border-border rounded px-2 text-foreground focus:outline-none focus:border-primary ${isRTL ? 'pl-6' : 'pr-6'}`}
                             />
-                        </div>
-                        <div className="md:col-span-1">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Type</label>
-                            <select
-                                name="type"
-                                className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-blue-500 appearance-none bg-white"
-                                value={filters.type}
-                                onChange={handleFilterChange}
-                            >
-                                <option value="All">All</option>
-                                <option value="WITHOUT_DISCOUNT">Without Discount</option>
-                                <option value="WITH_DISCOUNT_AT_ITEM_LEVEL">Discount at Item Level</option>
-                                <option value="WITH_DISCOUNT_AT_ORDER_LEVEL">Discount at Order Level</option>
-                            </select>
+                            <Calendar size={11} className={`absolute top-2 text-foreground-muted pointer-events-none ${isRTL ? 'left-2' : 'right-2'}`} />
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                        <div className="md:col-span-1">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Quotation Status</label>
-                            <select
-                                name="status"
-                                className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-blue-500 appearance-none bg-white"
-                                value={filters.status}
-                                onChange={handleFilterChange}
-                            >
-                                <option value="All">All</option>
-                                <option value="DRAFT">Draft</option>
-                                <option value="SENT">Sent</option>
-                                <option value="ACCEPTED">Accepted</option>
-                                <option value="REJECTED">Rejected</option>
-                            </select>
-                        </div>
-                        <div className="md:col-span-1">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Team Members</label>
-                            <div className="relative">
-                                <select
-                                    name="teamMember"
-                                    className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-blue-500 appearance-none bg-white"
-                                    value={filters.teamMember}
-                                    onChange={handleFilterChange}
-                                >
-                                    <option value="">Select Team Member</option>
-                                    {employees.map(emp => (
-                                        <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                        <div className="md:col-span-1">
-                            <button
-                                onClick={fetchQuotations}
-                                className="bg-primary text-white text-sm font-medium px-6 py-1.5 rounded hover:bg-violet-800 focus:outline-none w-full md:w-auto"
-                            >
-                                Search
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Table */}
-                <div className="bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="p-2 border-b flex items-center gap-2">
+                    {/* Type */}
+                    <div className="lg:col-span-1">
+                        <label className="block text-[10px] font-semibold text-foreground mb-1 truncate">{t('quotation.type')}</label>
                         <select
-                            className="border border-gray-300 rounded px-2 py-1 text-xs"
-                            value={pageSize}
-                            onChange={(e) => setPageSize(Number(e.target.value))}
+                            name="type"
+                            value={filters.type}
+                            onChange={handleFilterChange}
+                            className="w-full h-7 text-[10px] bg-card border border-border rounded px-1.5 text-foreground focus:outline-none focus:border-primary"
                         >
-                            <option value={10}>10</option>
-                            <option value={25}>25</option>
-                            <option value={50}>50</option>
+                            <option value="All">All</option>
+                            <option value="WITHOUT_DISCOUNT">WITHOUT_DISCOUNT</option>
+                            <option value="WITH_DISCOUNT">WITH_DISCOUNT</option>
+                            <option value="WITH_DISCOUNT_AT_ITEM_LEVEL">WITH_DISCOUNT_ITEM</option>
+                            <option value="WITH_DISCOUNT_AT_ORDER_LEVEL">WITH_DISCOUNT_ORDER</option>
                         </select>
-                        <div className="flex-grow"></div>
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            className="border border-gray-300 rounded px-2 py-1 text-xs"
-                        />
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-xs text-left">
-                            <thead className="bg-gray-100 text-gray-700 font-bold border-b">
-                                <tr>
-                                    <th className="px-4 py-3 border-r w-16">S.No.</th>
-                                    <th className="px-4 py-3 border-r">Date</th>
-                                    <th className="px-4 py-3 border-r">Quotation Type</th>
-                                    <th className="px-4 py-3 border-r">Follow Up</th>
-                                    <th className="px-4 py-3 border-r">Next Followup Date</th>
-                                    <th className="px-4 py-3 border-r">Quotation#</th>
-                                    <th className="px-4 py-3 border-r">Company Name</th>
-                                    <th className="px-4 py-3 border-r">Customer Name</th>
-                                    <th className="px-4 py-3 border-r">Contact Person Name</th>
-                                    <th className="px-4 py-3 border-r">Contact Person Number</th>
-                                    <th className="px-4 py-3 border-r">Status</th>
-                                    <th className="px-4 py-3 border-r text-right">Amount</th>
-                                    <th className="px-4 py-3 text-center w-24">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr><td colSpan="13" className="text-center py-10"><Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-500" /></td></tr>
-                                ) : error ? (
-                                    <tr><td colSpan="13" className="text-center py-10 text-red-500">{error}</td></tr>
-                                ) : quotations.length === 0 ? (
-                                    <tr><td colSpan="13" className="text-center py-10 font-medium text-gray-500">No data available in table</td></tr>
-                                ) : (
-                                    quotations.map((q, index) => (
-                                        <tr key={q.id} className="border-b hover:bg-gray-50 text-gray-700">
-                                            <td className="px-4 py-2 border-r">{currentPage * pageSize + index + 1}</td>
-                                            <td className="px-4 py-2 border-r">{new Date(q.quotationDate).toLocaleDateString()}</td>
-                                            <td className="px-4 py-2 border-r">{q.quotationType || '-'}</td>
-                                            <td className="px-4 py-2 border-r space-y-1">
-                                                <button onClick={() => openFollowUp(q.id)} className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white px-2 py-0.5 rounded text-[10px] w-full justify-center transition-colors"><User size={10} /> Follow Up</button>
-                                                <button onClick={() => openHistory(q.id)} className="flex items-center gap-1 bg-sky-500 hover:bg-sky-600 text-white px-2 py-0.5 rounded text-[10px] w-full justify-center transition-colors"><Monitor size={10} /> View History</button>
-                                            </td>
-                                            <td className="px-4 py-2 border-r"></td>
-                                            <td className="px-4 py-2 border-r">
-                                                <span
-                                                    onClick={() => handleView(q.id)}
-                                                    className="text-sky-600 cursor-pointer hover:underline font-medium"
-                                                >
-                                                    {q.quotationNumber}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-2 border-r">{q.customerParty?.companyName || 'N/A'}</td>
-                                            <td className="px-4 py-2 border-r">{q.customerParty?.primaryContactPerson || q.customerName || 'N/A'}</td>
-                                            <td className="px-4 py-2 border-r">{q.customerParty?.primaryContactPerson || 'N/A'}</td>
-                                            <td className="px-4 py-2 border-r">
-                                                <div>{q.customerParty?.mobile}</div>
-                                                <div>{q.customerParty?.contactPhone}</div>
-                                            </td>
-                                            <td className="px-4 py-2 border-r font-medium">
-                                                <span className={`px-2 py-0.5 rounded text-[10px] ${getStatusColor(q.status)}`}>{q.status}</span>
-                                            </td>
-                                            <td className="px-4 py-2 border-r text-right">AED {q.netTotal.toLocaleString('en-AE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                            <td className="px-4 py-2 text-center border-r">
-                                                <div className="flex justify-center gap-1">
-                                                    <button onClick={() => navigate(`/sales-dashboard/quotations/revise/${q.id}`)} className="p-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600 shadow-sm" title="Revise"><Repeat size={12} /></button>
-                                                    <button onClick={() => navigate(`/sales-dashboard/quotations/edit/${q.id}`)} className="p-1.5 bg-gray-700 text-white rounded hover:bg-gray-600 shadow-sm" title="Edit"><Edit size={12} /></button>
-                                                    <button onClick={() => handleDelete(q.id)} className="p-1.5 bg-red-500 text-white rounded hover:bg-red-600 shadow-sm" title="Delete"><Trash2 size={12} /></button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                    {/* Quotation Status */}
+                    <div className="lg:col-span-1">
+                        <label className="block text-[10px] font-semibold text-foreground mb-1 truncate">{t('quotation.status')}</label>
+                        <select
+                            name="status"
+                            value={filters.status}
+                            onChange={handleFilterChange}
+                            className="w-full h-7 text-[10px] bg-card border border-border rounded px-1.5 text-foreground focus:outline-none focus:border-primary"
+                        >
+                            <option value="All">All</option>
+                            <option value="DRAFT">Draft</option>
+                            <option value="SENT">Sent</option>
+                            <option value="APPROVED">Approved</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="REJECTED">Rejected</option>
+                        </select>
                     </div>
 
-                    {/* Pagination */}
-                    {!loading && totalPages > 0 && (
-                        <div className="p-2 border-t flex justify-between items-center text-xs text-gray-500">
-                            <span>Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, quotations.length + currentPage * pageSize)} of {quotations.length} entries</span>
-                            <div className="flex gap-1">
-                                <button onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0} className="px-2 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">Previous</button>
-                                <span className="px-2 py-1 bg-purple-900 text-white rounded">{currentPage + 1}</span>
-                                <button onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1} className="px-2 py-1 border rounded hover:bg-gray-100 disabled:opacity-50">Next</button>
-                            </div>
-                        </div>
-                    )}
+                    {/* Team Members */}
+                    <div className="lg:col-span-1">
+                        <label className="block text-[10px] font-semibold text-foreground mb-1 truncate">{t('quotation.teamMembers')}</label>
+                        <select
+                            name="teamMember"
+                            value={filters.teamMember}
+                            onChange={handleFilterChange}
+                            className="w-full h-7 text-[10px] bg-card border border-border rounded px-1.5 text-foreground focus:outline-none focus:border-primary"
+                        >
+                            <option value="">{t('quotation.selectTeamMember')}</option>
+                            {employees.map(emp => (
+                                <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Search and Reset Buttons Inline */}
+                    <div className="col-span-2 sm:col-span-3 md:col-span-4 lg:col-span-2 flex items-center justify-end gap-1.5">
+                        <button
+                            onClick={fetchQuotations}
+                            className="h-7 px-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded text-[10px] font-semibold flex items-center gap-1 transition-colors shadow-sm whitespace-nowrap"
+                        >
+                            <Search size={11} /> {t('quotation.search')}
+                        </button>
+                        <button
+                            onClick={handleReset}
+                            className="h-7 px-3 bg-card border border-border hover:bg-hover text-foreground rounded text-[10px] font-semibold flex items-center gap-1 transition-colors whitespace-nowrap"
+                        >
+                            <RefreshCw size={10} /> {t('quotation.reset')}
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            {/* Table Controls (Entries + Search) */}
+            <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <select
+                        value={pageSize}
+                        onChange={(e) => {
+                            setPageSize(Number(e.target.value));
+                            setCurrentPage(0);
+                        }}
+                        className="h-7 text-xs border border-border rounded px-2 bg-card text-foreground font-semibold focus:outline-none"
+                    >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                    </select>
+                    <span className="text-[10px] text-foreground-muted">{t('quotation.entriesPerPage')}</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <div className="relative">
+                        <input
+                            type="text"
+                            placeholder={t('quotation.searchInTable')}
+                            value={tableSearch}
+                            onChange={(e) => setTableSearch(e.target.value)}
+                            className={`w-40 sm:w-48 h-7 text-[10px] border border-border rounded px-3 bg-card text-foreground placeholder-foreground-muted focus:outline-none focus:border-primary ${isRTL ? 'pr-7' : 'pl-7'}`}
+                        />
+                        <Search size={12} className={`absolute top-2 text-foreground-muted ${isRTL ? 'right-2' : 'left-2'}`} />
+                    </div>
+                    <button className="w-7 h-7 bg-card border border-border rounded flex items-center justify-center text-foreground-muted hover:text-foreground">
+                        <List size={13} />
+                    </button>
+                </div>
+            </div>
+
+            {/* Table Container */}
+            <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-[10px] text-left border-collapse">
+                        <thead>
+                            <tr className="bg-primary/10 text-foreground font-semibold border-b border-border">
+                                <th className="px-3 py-2 border-r border-border w-10">{t('quotation.sno')}</th>
+                                <th className="px-3 py-2 border-r border-border">{t('quotation.date')}</th>
+                                <th className="px-3 py-2 border-r border-border">{t('quotation.quotationType')}</th>
+                                <th className="px-3 py-2 border-r border-border">{t('quotation.followUp')}</th>
+                                <th className="px-3 py-2 border-r border-border">{t('quotation.nextFollowupDate')}</th>
+                                <th className="px-3 py-2 border-r border-border">{t('quotation.quotationNo')}</th>
+                                <th className="px-3 py-2 border-r border-border">{t('quotation.companyName')}</th>
+                                <th className="px-3 py-2 border-r border-border">{t('quotation.customerName')}</th>
+                                <th className="px-3 py-2 border-r border-border">{t('quotation.contactPersonName')}</th>
+                                <th className="px-3 py-2 border-r border-border">{t('quotation.contactPersonNumber')}</th>
+                                <th className="px-3 py-2 border-r border-border">{t('quotation.status')}</th>
+                                <th className="px-3 py-2 border-r border-border">{t('quotation.amount')}</th>
+                                <th className="px-3 py-2 text-center w-24">{t('quotation.action')}</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="13" className="text-center py-10">
+                                        <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                                    </td>
+                                </tr>
+                            ) : error ? (
+                                <tr>
+                                    <td colSpan="13" className="text-center py-10 text-red-500 font-medium">
+                                        {error}
+                                    </td>
+                                </tr>
+                            ) : filteredQuotations.length === 0 ? (
+                                <tr>
+                                    <td colSpan="13" className="text-center py-10 font-medium text-foreground-muted">
+                                        {t('quotation.noData')}
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredQuotations.map((q, index) => (
+                                    <tr key={q.id} className="hover:bg-hover text-foreground">
+                                        <td className="px-3 py-2 border-r border-border font-normal">{currentPage * pageSize + index + 1}</td>
+                                        <td className="px-3 py-2 border-r border-border font-normal">
+                                            {q.quotationDate ? new Date(q.quotationDate).toLocaleDateString('en-GB') : '-'}
+                                        </td>
+                                        <td className="px-3 py-2 border-r border-border font-semibold">
+                                            {q.quotationType || 'WITHOUT_DISCOUNT'}
+                                        </td>
+                                        <td className="px-3 py-2 border-r border-border">
+                                            {q.hasHistory ? (
+                                                <button
+                                                    onClick={() => openHistory(q.id)}
+                                                    className="px-2 py-0.5 rounded bg-primary/10 text-primary font-semibold flex items-center gap-1 text-[9px] hover:bg-primary/20 transition-colors"
+                                                >
+                                                    <RefreshCw size={9} /> {t('quotation.viewHistory')}
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => openFollowUp(q.id)}
+                                                    className="px-2 py-0.5 rounded bg-green-500/10 text-green-600 font-semibold flex items-center gap-1 text-[9px] hover:bg-green-500/20 transition-colors"
+                                                >
+                                                    <RefreshCw size={9} /> {t('quotation.followUp')}
+                                                </button>
+                                            )}
+                                        </td>
+                                        <td className="px-3 py-2 border-r border-border font-normal">
+                                            {q.nextFollowupDate ? new Date(q.nextFollowupDate).toLocaleDateString('en-GB') : '-'}
+                                        </td>
+                                        <td className="px-3 py-2 border-r border-border">
+                                            <span
+                                                onClick={() => handleView(q.id)}
+                                                className="text-primary font-semibold cursor-pointer hover:underline"
+                                            >
+                                                {q.quotationNumber || `QT-${q.id}`}
+                                            </span>
+                                        </td>
+                                        <td className="px-3 py-2 border-r border-border font-normal">
+                                            {q.customerParty?.companyName || q.companyName || 'Aaryan'}
+                                        </td>
+                                        <td className="px-3 py-2 border-r border-border font-normal">
+                                            {q.customerParty?.primaryContactPerson || q.customerName || 'Aaryan'}
+                                        </td>
+                                        <td className="px-3 py-2 border-r border-border font-normal">
+                                            {q.customerParty?.primaryContactPerson || 'N/A'}
+                                        </td>
+                                        <td className="px-3 py-2 border-r border-border font-normal">
+                                            {q.customerParty?.mobile || q.customerParty?.contactPhone || 'N/A'}
+                                        </td>
+                                        <td className="px-3 py-2 border-r border-border">
+                                            {getStatusBadge(q.status)}
+                                        </td>
+                                        <td className="px-3 py-2 border-r border-border font-bold">
+                                            AED {Number(q.netTotal || q.grandTotal || 0).toLocaleString('en-AE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </td>
+                                        <td className="px-3 py-2 text-center">
+                                            <div className="flex items-center justify-center gap-1">
+                                                <button
+                                                    onClick={() => handleView(q.id)}
+                                                    className="w-5 h-5 rounded border border-border flex items-center justify-center text-green-600 hover:bg-green-500/10"
+                                                    title="View"
+                                                >
+                                                    <Eye size={10} />
+                                                </button>
+                                                <button
+                                                    onClick={() => navigate(`/sales-dashboard/quotations/edit/${q.id}`)}
+                                                    className="w-5 h-5 rounded border border-border flex items-center justify-center text-primary hover:bg-primary/10"
+                                                    title="Edit"
+                                                >
+                                                    <Edit2 size={10} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(q.id)}
+                                                    className="w-5 h-5 rounded border border-border flex items-center justify-center text-red-600 hover:bg-red-500/10"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={10} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Pagination Controls */}
+            {!loading && (
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-2 pt-1 text-xs">
+                    <div className="text-[10px] text-foreground-muted">
+                        {t('quotation.showing')} {filteredQuotations.length === 0 ? 0 : currentPage * pageSize + 1} {t('quotation.to')} {Math.min((currentPage + 1) * pageSize, totalElements || filteredQuotations.length)} {t('quotation.of')} {totalElements || filteredQuotations.length} {t('quotation.entries')}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                            disabled={currentPage === 0}
+                            className="w-7 h-7 rounded border border-border bg-card flex items-center justify-center text-foreground-muted hover:text-foreground disabled:opacity-40"
+                        >
+                            <ChevronLeft size={14} className={isRTL ? 'rotate-180' : ''} />
+                        </button>
+
+                        {[...Array(totalPages)].map((_, i) => (
+                            <button
+                                key={i}
+                                onClick={() => setCurrentPage(i)}
+                                className={`w-7 h-7 rounded font-semibold text-[11px] ${currentPage === i ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-foreground hover:bg-hover'}`}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                            disabled={currentPage >= totalPages - 1}
+                            className="w-7 h-7 rounded border border-border bg-card flex items-center justify-center text-foreground-muted hover:text-foreground disabled:opacity-40"
+                        >
+                            <ChevronRight size={14} className={isRTL ? 'rotate-180' : ''} />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Modals */}
             <FollowUpModal
                 isOpen={showFollowUp}
                 onClose={() => setShowFollowUp(false)}
                 quotationId={selectedQuotationId}
-                onSuccess={() => {
-                    // Refresh data or just close
-                    fetchQuotations();
-                }}
+                onSuccess={fetchQuotations}
             />
             <FollowUpHistoryModal
                 isOpen={showHistory}
@@ -405,4 +582,5 @@ const Quotation = () => {
 };
 
 export default Quotation;
+
 
