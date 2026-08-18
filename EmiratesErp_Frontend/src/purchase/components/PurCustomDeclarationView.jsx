@@ -1,240 +1,279 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { 
-    ArrowLeft, 
-    Edit, 
-    Printer, 
-    Loader, 
-    AlertCircle, 
-    FileCheck, 
-    Truck, 
-    Globe, 
-    DollarSign, 
-    User,
-    CheckCircle2
+import {
+  Printer, ArrowLeft, ArrowRight, Edit, FileText, BadgeCheck, Info
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
+import { loadThemeFromStorage, applyTheme } from '../../utils/themeUtils';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || '';
 
-const DetailItem = ({ label, value, icon: Icon, color = "text-primary" }) => (
-    <div className="flex items-start gap-3 p-4 rounded-xl border border-border/50 bg-background-muted/20">
-        {Icon && <div className={`p-2 rounded-lg bg-card border border-border ${color}`}><Icon size={18} /></div>}
-        <div>
-            <p className="text-xs font-black text-foreground-muted uppercase tracking-wider mb-0.5">{label}</p>
-            <p className="text-sm font-bold text-foreground">{value || '-'}</p>
-        </div>
-    </div>
-);
-
 const PurCustomDeclarationView = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const [declaration, setDeclaration] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+  const { isRTL } = useLanguage();
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchDeclaration = async () => {
-            setLoading(true);
-            try {
-                const token = localStorage.getItem('token');
-                const res = await axios.get(`${API_URL}/purchases/custom-declarations/${id}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setDeclaration(res.data);
-            } catch (err) {
-                console.error('Failed to fetch declaration', err);
-                setError('Failed to load custom declaration details.');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchDeclaration();
-    }, [id]);
+  const [declaration, setDeclaration] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [tenantInfo, setTenantInfo] = useState({ name: 'Emirates ERP Trading LLC', address: 'Dubai, UAE', trn: '100293848100003' });
 
-    const handlePrint = () => {
-        window.print();
+  useEffect(() => {
+    const theme = loadThemeFromStorage();
+    if (theme) applyTheme(theme);
+  }, []);
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchDetails = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const res = await axios.get(`${API_URL}/purchases/custom-declarations/${id}`, { headers });
+        setDeclaration(res.data);
+
+        const tenantId = localStorage.getItem('tenantId');
+        if (tenantId) {
+          try {
+            const tRes = await axios.get(`${API_URL}/tenants/${tenantId}`, { headers });
+            setTenantInfo(tRes.data);
+          } catch (e) {
+            console.warn('Failed to load tenant info', e);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading Custom Declaration:', err);
+        setError(isRTL ? 'تعذر استخراج بيانات البيان الجمركي' : 'Failed to load declaration manifest.');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                <Loader className="h-10 w-10 text-primary animate-spin mb-4" />
-                <p className="text-gray-500 font-medium">Loading declaration details...</p>
-            </div>
-        );
-    }
+    fetchDetails();
+  }, [id, isRTL]);
 
-    if (error || !declaration) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center">
-                <AlertCircle className="h-12 w-12 text-rose-500 mb-4" />
-                <h3 className="text-lg font-bold">Error loading declaration</h3>
-                <p className="text-gray-500 mb-6">{error || 'Record not found'}</p>
-                <button onClick={() => navigate('/purchase-dashboard/custom-declarations')} className="px-6 py-2 bg-primary text-white rounded-lg font-bold">Go Back</button>
-            </div>
-        );
-    }
+  const handlePrint = () => {
+    window.print();
+  };
 
+  if (loading) {
     return (
-        <div className="max-w-7xl mx-auto p-4 md:p-6 min-h-screen">
-            {/* Header Actions */}
-            <div className="flex flex-wrap justify-between items-center gap-4 mb-8 no-print">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/purchase-dashboard/custom-declarations')} className="p-2 hover:bg-background-muted rounded-full transition-colors">
-                        <ArrowLeft size={24} />
-                    </button>
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <h1 className="text-2xl font-black text-foreground">
-                                {declaration.declarationNumber || `DECL-${declaration.id}`}
-                            </h1>
-                            <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-full tracking-widest ${
-                                declaration.status?.toLowerCase() === 'posted' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                            }`}>
-                                {declaration.status || 'Draft'}
-                            </span>
-                        </div>
-                        <p className="text-sm text-foreground-muted">Custom Declaration View</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button onClick={handlePrint} className="px-4 py-2 bg-white border border-border text-foreground rounded-lg font-bold flex items-center gap-2 hover:bg-background-muted transition-all shadow-sm">
-                        <Printer size={18} /> Print
-                    </button>
-                    <button onClick={() => navigate(`/purchase-dashboard/custom-declarations/edit/${id}`)} className="px-4 py-2 bg-primary text-white rounded-lg font-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-md">
-                        <Edit size={18} /> Edit
-                    </button>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                {/* Main Info Card */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden">
-                        <div className="p-6 border-b border-border bg-background-muted/30 flex items-center gap-3">
-                            <Truck className="text-primary" size={20} />
-                            <h3 className="font-black text-sm uppercase tracking-widest">Declaration Particulars</h3>
-                        </div>
-                        <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <DetailItem label="Declaration Number" value={declaration.declarationNumber} icon={FileCheck} />
-                            <DetailItem 
-                                label={declaration.isThirdPartyClearance ? "Custom Agent" : "Custom Office"} 
-                                value={declaration.companyName} 
-                                icon={Globe} 
-                                color="text-indigo-500" 
-                            />
-                            <DetailItem label="Tax Payment Mode" value={declaration.taxIsDue?.replace(/_/g, ' ')} icon={DollarSign} color="text-emerald-500" />
-                            <DetailItem label="Business Activity" value={declaration.businessActivity} icon={Truck} color="text-amber-500" />
-                            <DetailItem label="Entity Name" value={declaration.entityName} icon={User} color="text-blue-500" />
-                            <DetailItem label="Status" value={declaration.status} icon={CheckCircle2} color="text-purple-500" />
-                        </div>
-                    </div>
-
-                    <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden">
-                        <div className="p-6 border-b border-border bg-background-muted/30 flex items-center gap-3">
-                            <Printer className="text-primary" size={20} />
-                            <h3 className="font-black text-sm uppercase tracking-widest">Line Items ({declaration.lines?.length})</h3>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-border text-sm">
-                                <thead className="bg-background-muted/50 text-xs font-black uppercase text-foreground-muted">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left">Item</th>
-                                        <th className="px-6 py-4 text-left">HS Code / Origin</th>
-                                        <th className="px-6 py-4 text-right">CIF Foreign</th>
-                                        <th className="px-6 py-4 text-right">CIF National</th>
-                                        <th className="px-6 py-4 text-right">Duty Amt</th>
-                                        <th className="px-6 py-4 text-right">VAT Amt</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
-                                    {declaration.lines?.map((line, idx) => (
-                                        <tr key={idx} className="hover:bg-background-muted/20 transition-colors">
-                                            <td className="px-6 py-4 font-bold text-foreground">
-                                                {line.itemName}
-                                                <div className="text-[10px] text-foreground-muted font-medium mt-1">Inv: {line.purchaseInvoiceNumber || '-'}</div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-xs font-bold">{line.hsCode || '-'}</div>
-                                                <div className="text-[10px] text-foreground-muted uppercase font-black">{line.origin || '-'}</div>
-                                            </td>
-                                            <td className="px-6 py-4 text-right font-mono">{line.cifForeignValue?.toLocaleString()}</td>
-                                            <td className="px-6 py-4 text-right font-bold">{line.cifNationalValue?.toLocaleString()} AED</td>
-                                            <td className="px-6 py-4 text-right font-black text-primary">{line.dutyAmount?.toLocaleString()} AED</td>
-                                            <td className="px-6 py-4 text-right font-black text-emerald-600">{line.vatAmount?.toLocaleString()} AED</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Summary Sidebar */}
-                <div className="space-y-6">
-                    <div className="bg-primary text-primary-foreground rounded-2xl shadow-xl p-8 relative overflow-hidden">
-                        <div className="relative z-10">
-                            <h3 className="text-xs font-black uppercase tracking-widest opacity-80 mb-6">Total Due (Customs)</h3>
-                            <div className="text-4xl font-black mb-2">
-                                {(declaration.totalDue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                <span className="text-lg ml-2 opacity-80 font-bold">AED</span>
-                            </div>
-                            <p className="text-xs opacity-60 font-medium leading-relaxed">
-                                Includes Duty Amount, Service Charges, and Penalties.
-                            </p>
-                        </div>
-                        <DollarSign className="absolute -bottom-8 -right-8 h-40 w-40 opacity-10 rotate-12" />
-                    </div>
-
-                    <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden">
-                        <div className="p-6 border-b border-border bg-background-muted/30 flex items-center gap-3">
-                            <Calculator className="text-primary" size={18} />
-                            <h3 className="font-black text-sm uppercase tracking-widest">Financial Summary</h3>
-                        </div>
-                        <div className="p-6 space-y-4">
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-foreground-muted font-bold">CIF Foreign Total</span>
-                                <span className="font-bold">{declaration.cifForeignValueTotal?.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-foreground-muted font-bold">CIF National Total</span>
-                                <span className="font-bold">{declaration.cifNationalValueTotal?.toLocaleString()} AED</span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-foreground-muted font-bold">VAT (RCM) Total</span>
-                                <span className="font-black text-emerald-600">{declaration.vatReverseChargeTotal?.toLocaleString()} AED</span>
-                            </div>
-                            <div className="pt-4 border-t border-border flex justify-between items-center">
-                                <span className="text-xs font-black uppercase text-foreground-muted">Service Charge</span>
-                                <span className="font-bold text-primary">{declaration.serviceCharge?.toLocaleString()} AED</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs font-black uppercase text-foreground-muted">Custom Penalty</span>
-                                <span className="font-bold text-rose-500">{declaration.customPenaltyAmount?.toLocaleString()} AED</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-card rounded-2xl border border-border shadow-xl overflow-hidden p-6">
-                        <h3 className="text-xs font-black uppercase tracking-widest text-foreground-muted mb-4 flex items-center gap-2">
-                            <User size={14} /> Responsible Person
-                        </h3>
-                        <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black">
-                                {declaration.responsiblePersonName?.[0] || 'U'}
-                            </div>
-                            <div>
-                                <div className="text-sm font-bold text-foreground">{declaration.responsiblePersonName || 'Not Assigned'}</div>
-                                <div className="text-[10px] text-foreground-muted font-medium">Internal User</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+      <div className="flex flex-col justify-center items-center h-screen bg-[#F7F9FD] gap-3">
+        <div className="w-10 h-10 border-4 border-slate-200 border-t-[var(--color-primary,#00A9A8)] rounded-full animate-spin" />
+        <p className="text-xs font-semibold text-[#0A2551]">{isRTL ? 'جاري تحميل البيان الجمركي...' : 'Loading Custom Declaration...'}</p>
+      </div>
     );
+  }
+
+  if (!declaration) {
+    return (
+      <div className="p-8 text-center text-rose-500 font-bold bg-white m-4 rounded-xl border border-rose-200">
+        {error || (isRTL ? 'البيان الجمركي غير موجود' : 'Custom Declaration Record Not Found')}
+      </div>
+    );
+  }
+
+  const lines = declaration.lines || [];
+  const dutyTotal = lines.reduce((sum, l) => sum + (Number(l.dutyAmount) || 0), 0);
+  const vatTotal = lines.reduce((sum, l) => sum + (Number(l.vatAmount) || 0), 0);
+  const totalDue = Number(declaration.totalDue) || (dutyTotal + (Number(declaration.serviceCharge) || 0));
+
+  return (
+    <div className="bg-[#F7F9FD] min-h-screen text-[#0A2551] font-sans pb-10 -mt-3 lg:-mt-4 -mx-3 lg:-mx-4" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Printable Area Wrapper */}
+      <div className="w-full px-4 pt-3 pb-4 space-y-3 print:px-0 print:pt-0">
+        {/* Top Header Card matching PurchaseOrderView */}
+        <div className="bg-white border border-[#DFE7F4] rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4 shadow-xs print:hidden">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors cursor-pointer text-[#0A2551]"
+            >
+              {isRTL ? <ArrowRight size={20} /> : <ArrowLeft size={20} />}
+            </button>
+            <div className="w-14 h-14 bg-[var(--color-primary,#00A9A8)] rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs">
+              <FileText size={30} strokeWidth={2.2} />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-[#617191] uppercase tracking-wider block">
+                {isRTL ? 'بيان جمركي رسمي (استيراد)' : 'OFFICIAL CUSTOM DECLARATION'}
+              </span>
+              <h1 className="text-2xl font-black text-[#0A2551] tracking-tight leading-none mt-0.5">
+                {declaration.declarationNumber || `DEC-${declaration.id}`}
+              </h1>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="px-3 py-0.5 bg-[#DCFAEE] text-[#138764] rounded-md text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
+                  <BadgeCheck size={12} /> {declaration.status || 'Draft'}
+                </span>
+                <span className="px-2.5 py-0.5 bg-[#F2F6FC] text-[#617191] rounded-md text-[11px] font-semibold flex items-center gap-1">
+                  <Info size={11} /> {isRTL ? `المخلص/الشركة: ${declaration.companyName || '—'}` : `Agent: ${declaration.companyName || '—'}`}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => navigate(`/purchase-dashboard/custom-declarations/edit/${declaration.id}`)}
+              className="flex items-center gap-2 h-[38px] px-4 bg-white border border-[#DFE7F4] rounded-xl text-xs font-bold hover:border-[var(--color-primary,#00A9A8)] hover:text-[var(--color-primary,#00A9A8)] transition-all cursor-pointer"
+            >
+              <Edit size={14} /> {isRTL ? 'تعديل البيان' : 'Edit Declaration'}
+            </button>
+            <button
+              onClick={handlePrint}
+              className="flex items-center gap-2 h-[38px] px-4 bg-[var(--color-primary,#00A9A8)] text-white rounded-xl text-xs font-bold hover:opacity-95 transition-all cursor-pointer shadow-xs"
+            >
+              <Printer size={14} /> {isRTL ? 'طباعة البيان' : 'Print Manifest'}
+            </button>
+          </div>
+        </div>
+
+        {/* Executive Voucher Card */}
+        <div className="bg-white border border-[#DFE7F4] rounded-2xl p-6 sm:p-8 space-y-6 shadow-xs print:shadow-none print:border-none print:p-0">
+          <div className="border-b border-[#E4EAF0] pb-6 flex flex-wrap justify-between items-start gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-[#102A5B]">
+                {tenantInfo.name || 'Emirates ERP Trading LLC'}
+              </h2>
+              <p className="text-xs text-[#5F6F91] mt-1 max-w-sm">
+                {tenantInfo.address || 'Dubai Business Bay, United Arab Emirates'}
+              </p>
+              <p className="text-xs text-[#5F6F91]">TRN: {tenantInfo.trn || '100293848100003'}</p>
+            </div>
+
+            <div className={`text-${isRTL ? 'left' : 'right'}`}>
+              <div className="inline-block px-3 py-1 bg-[var(--color-primary,#00A9A8)]/10 text-[var(--color-primary,#00A9A8)] rounded-lg text-xs font-extrabold uppercase tracking-wider mb-2">
+                {isRTL ? 'سند بيان جمركي' : 'CUSTOMS MANIFEST'}
+              </div>
+              <p className="text-xs font-semibold text-[#102A5B]">
+                {isRTL ? 'رقم البيان:' : 'Declaration #:'} <span className="font-bold">{declaration.declarationNumber || `DEC-${declaration.id}`}</span>
+              </p>
+              <p className="text-xs text-[#5F6F91]">
+                {isRTL ? 'التاريخ:' : 'Date:'} {declaration.createdAt ? new Date(declaration.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+              </p>
+            </div>
+          </div>
+
+          {/* Declaration Metadata Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-[#F8FAFC] p-4 rounded-xl border border-[#E4EAF0]">
+            <div>
+              <span className="text-[11px] font-bold text-[#617198] uppercase block mb-0.5">
+                {isRTL ? 'مخلص الجمارك / الشركة' : 'CUSTOMS AGENT'}
+              </span>
+              <p className="text-sm font-bold text-[#102A5B]">{declaration.companyName || '—'}</p>
+            </div>
+
+            <div>
+              <span className="text-[11px] font-bold text-[#617198] uppercase block mb-0.5">
+                {isRTL ? 'وضع دفع الضريبة' : 'TAX PAYMENT MODE'}
+              </span>
+              <p className="text-xs font-bold text-[#102A5B]">{declaration.taxIsDue === 'USE_IN_TAX_RETURN' ? 'Reverse Charge (RCM)' : 'Pay Directly'}</p>
+            </div>
+
+            <div>
+              <span className="text-[11px] font-bold text-[#617198] uppercase block mb-0.5">
+                {isRTL ? 'رسوم الخدمة' : 'SERVICE CHARGES'}
+              </span>
+              <p className="text-xs font-bold text-[#102A5B]">AED {(Number(declaration.serviceCharge) || 0).toFixed(2)}</p>
+            </div>
+
+            <div>
+              <span className="text-[11px] font-bold text-[#617198] uppercase block mb-0.5">
+                {isRTL ? 'إجمالي المستحق الجمركي (AED)' : 'TOTAL CUSTOMS DUE'}
+              </span>
+              <p className="text-lg font-black text-[var(--color-primary,#00A9A8)]">
+                AED {totalDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            </div>
+          </div>
+
+          {/* Declaration Items Table */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold text-[#102A5B]">
+              {isRTL ? 'تفاصيل البضائع المستوردة والرسوم الجمركية' : 'Imported Goods Customs Line Items'}
+            </h3>
+
+            <div className="border border-[#DBE5F3] rounded-[11.09px] overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#EEF5FF] border-b border-[#DBE5F3] text-[#102A5B] font-semibold text-[12px] h-[38.39px]">
+                    <th className="py-2.5 px-3 whitespace-nowrap">{isRTL ? 'ت' : 'S.No.'}</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap">{isRTL ? 'الصنف / المنتج' : 'Item / Description'}</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap">{isRTL ? 'رمز HS' : 'HS Code'}</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap text-right">{isRTL ? 'CIF الوطنية (AED)' : 'CIF National'}</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap text-center">{isRTL ? 'نسبة الجمرك' : 'Duty %'}</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap text-right">{isRTL ? 'رسوم الجمرك (AED)' : 'Duty Amt'}</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap text-right">{isRTL ? 'ضريبة RCM (AED)' : 'VAT RCM Amt'}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#DBE5F3]">
+                  {lines.length > 0 ? (
+                    lines.map((l, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/80 transition-colors h-[42.39px] text-xs">
+                        <td className="py-2 px-3 text-[#5F6F91] whitespace-nowrap">{idx + 1}</td>
+                        <td className="py-2 px-3 font-semibold text-[#102A5B] whitespace-nowrap">
+                          {l.description || l.itemName || `Item #${l.itemId}`}
+                        </td>
+                        <td className="py-2 px-3 font-mono text-[#5F6F91] whitespace-nowrap">{l.hsCode || '—'}</td>
+                        <td className="py-2 px-3 text-right font-medium text-[#102A5B] whitespace-nowrap">
+                          AED {(Number(l.cifNational) || 0).toFixed(2)}
+                        </td>
+                        <td className="py-2 px-3 text-center text-[#5F6F91] whitespace-nowrap">{l.dutyRate}%</td>
+                        <td className="py-2 px-3 text-right font-bold text-[var(--color-primary,#00A9A8)] whitespace-nowrap">
+                          AED {(Number(l.dutyAmount) || 0).toFixed(2)}
+                        </td>
+                        <td className="py-2 px-3 text-right font-bold text-indigo-600 whitespace-nowrap">
+                          AED {(Number(l.vatAmount) || 0).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="py-6 text-center text-xs text-[#5F6F91]">
+                        {isRTL ? 'لا تتوفر بنود بضائع مسجلة' : 'No line items recorded.'}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Declaration Financial Summary */}
+          <div className="flex justify-end pt-2">
+            <div className="w-full sm:w-80 bg-[#F8FAFC] border border-[#DFE7F4] rounded-xl p-4 space-y-2">
+              <div className="flex justify-between items-center text-xs text-[#5F6F91]">
+                <span>{isRTL ? 'إجمالي رسوم الجمرك:' : 'Customs Duty Total:'}</span>
+                <span className="font-bold text-[#102A5B]">AED {dutyTotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs text-[#5F6F91]">
+                <span>{isRTL ? 'إجمالي ضريبة RCM:' : 'VAT Reverse Charge:'}</span>
+                <span className="font-bold text-indigo-600">AED {vatTotal.toFixed(2)}</span>
+              </div>
+              <div className="border-t border-[#DFE7F4] pt-2 flex justify-between items-center text-xs font-bold text-[var(--color-primary,#00A9A8)]">
+                <span>{isRTL ? 'إجمالي المستحق الجمركي:' : 'Total Customs Due:'}</span>
+                <span>AED {totalDue.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-10 border-t border-[#E4EAF0] grid grid-cols-2 gap-8 text-center text-xs font-semibold text-[#5F6F91]">
+            <div>
+              <div className="border-b border-[#DCE5F3] h-12 mb-1" />
+              <span>{isRTL ? 'توقيع مخلص الجمارك / إعداد' : 'Customs Broker Signatory'}</span>
+            </div>
+            <div>
+              <div className="border-b border-[#DCE5F3] h-12 mb-1" />
+              <span>{isRTL ? 'توقيع المعتمد / الاعتماد' : 'Authorized Officer Signatory'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default PurCustomDeclarationView;

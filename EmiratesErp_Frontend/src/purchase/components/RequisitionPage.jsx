@@ -1,22 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { PlusCircle, Edit, Trash2, Loader, AlertCircle, Search, Eye } from 'lucide-react';
-import Pagination from '../../components/Pagination';
+import {
+  Plus, Edit2, Trash2, Search, Calendar, RefreshCw,
+  FileText, ChevronLeft, ChevronRight, Eye, AlertCircle, Loader,
+  ClipboardList, CheckCircle2, Clock
+} from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
+import { loadThemeFromStorage, applyTheme } from '../../utils/themeUtils';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const RequisitionPage = () => {
+    const { isRTL } = useLanguage();
+    const navigate = useNavigate();
+
     const [requisitions, setRequisitions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const navigate = useNavigate();
+    const [dateFilter, setDateFilter] = useState('May 20, 2025');
 
     // Pagination State
     const [page, setPage] = useState(0);
     const [size, setSize] = useState(10);
-    const [totalPages, setTotalPages] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
     const [totalElements, setTotalElements] = useState(0);
 
     const fetchRequisitions = async () => {
@@ -29,10 +37,10 @@ const RequisitionPage = () => {
                 params: { page, size, sort: 'createdAt,desc' }
             });
             
-            if (res.data.content) {
+            if (res.data && res.data.content) {
                 setRequisitions(res.data.content);
-                setTotalPages(res.data.totalPages);
-                setTotalElements(res.data.totalElements);
+                setTotalPages(res.data.totalPages || 1);
+                setTotalElements(res.data.totalElements || res.data.content.length);
             } else {
                 const data = res.data || [];
                 setRequisitions(data);
@@ -41,18 +49,20 @@ const RequisitionPage = () => {
             }
         } catch (err) {
             console.error('Failed to fetch requisitions:', err);
-            setError('Failed to fetch requisitions.');
+            setError(isRTL ? 'فشل في استخراج بيانات طلبات الشراء' : 'Failed to fetch requisitions.');
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
+        const theme = loadThemeFromStorage();
+        if (theme) applyTheme(theme);
         fetchRequisitions();
     }, [page, size]);
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this requisition?')) return;
+        if (!window.confirm(isRTL ? 'هل أنت تأكد من حذف طلب الشراء هذا؟' : 'Are you sure you want to delete this requisition?')) return;
         try {
             const token = localStorage.getItem('token');
             await axios.delete(`${API_URL}/purchases/requisitions/${id}`, {
@@ -61,7 +71,7 @@ const RequisitionPage = () => {
             fetchRequisitions();
         } catch (err) {
             console.error('Failed to delete requisition:', err);
-            setError('Failed to delete requisition.');
+            setError(isRTL ? 'فشل في حذف طلب الشراء.' : 'Failed to delete requisition.');
         }
     };
 
@@ -71,112 +81,266 @@ const RequisitionPage = () => {
         (req.entity && req.entity.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
-    const getStatusClass = (status) => {
-        if (!status) return 'bg-slate-100 text-slate-800';
-        switch (status.toUpperCase()) {
-            case 'APPROVED': return 'bg-green-100 text-green-800';
-            case 'DRAFT': return 'bg-yellow-100 text-yellow-800';
-            case 'PENDING': return 'bg-blue-100 text-blue-800';
-            case 'REJECTED': return 'bg-red-100 text-red-800';
-            case 'CANCELLED': return 'bg-gray-100 text-gray-800';
-            case 'COMPLETED': return 'bg-teal-100 text-teal-800';
-            default: return 'bg-slate-100 text-slate-800';
-        }
+    const pendingCount = requisitions.filter(r => r.status === 'PENDING' || r.status === 'DRAFT').length;
+    const approvedCount = requisitions.filter(r => r.status === 'APPROVED' || r.status === 'COMPLETED').length;
+
+    const formatStatus = (s) => {
+        if (!s) return 'N/A';
+        const statusMap = {
+            'DRAFT': isRTL ? 'مسودة' : 'DRAFT',
+            'PENDING': isRTL ? 'قيد الانتظار' : 'PENDING',
+            'APPROVED': isRTL ? 'معتمد' : 'APPROVED',
+            'REJECTED': isRTL ? 'مرفوض' : 'REJECTED',
+            'COMPLETED': isRTL ? 'مكتمل' : 'COMPLETED',
+            'CANCELLED': isRTL ? 'ملغى' : 'CANCELLED'
+        };
+        return statusMap[s] || s;
     };
 
     return (
-        <div className="p-6 md:p-8">
-            <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-                <h1 className="text-3xl font-bold">Purchase Requisitions</h1>
-                <div className="flex items-center gap-2">
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Search by Req# / Requested By / Entity..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="input w-full sm:w-72 pr-10 bg-background-muted border-border"
-                        />
-                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground-muted" />
+        <div className="p-3 lg:p-4 space-y-3 font-sans select-none text-[#18233B]" dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Header Section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                    <h1 className="text-[22px] sm:text-[24px] font-bold text-[#172033] tracking-tight leading-none mb-1">
+                        {isRTL ? 'طلبات الشراء' : 'Purchase Requisitions'}
+                    </h1>
+                    <div className="flex items-center gap-2 text-[11px]">
+                        <span className="font-medium text-[var(--color-primary,#00A9A8)] cursor-pointer hover:underline">{isRTL ? 'الرئيسية' : 'Home'}</span>
+                        <span className="text-[#617198]">/</span>
+                        <span className="font-medium text-[#617198]">{isRTL ? 'المشتريات' : 'Purchase'}</span>
                     </div>
-                    <Link to="/purchase-dashboard/requisitions/new" className="btn-primary flex items-center gap-2">
-                        <PlusCircle size={18} /> New Requisition
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E4EAF0] rounded-[11px] text-xs font-semibold text-[#18233B] hover:bg-slate-50 transition-colors shadow-xs cursor-pointer">
+                        <Calendar size={14} className="text-[#18233B]" />
+                        <span>{dateFilter}</span>
+                    </button>
+
+                    <button
+                        onClick={fetchRequisitions}
+                        className="w-8 h-8 bg-white border border-[#E7EAF0] rounded-[10px] flex items-center justify-center text-[#657186] hover:bg-slate-50 shadow-xs cursor-pointer transition-all active:scale-95"
+                        title={isRTL ? 'تحديث' : 'Refresh'}
+                    >
+                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                    </button>
+
+                    <Link
+                        to="/purchase-dashboard/requisitions/new"
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[var(--color-primary,#00A9A8)] text-white rounded-[10px] text-xs font-bold hover:bg-[#008f8e] transition-all shadow-xs cursor-pointer"
+                    >
+                        <Plus size={15} strokeWidth={2.5} />
+                        <span>{isRTL ? '+ طلب شراء جديد' : 'New Requisition'}</span>
                     </Link>
                 </div>
             </div>
 
-            {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+            {/* Top 4 Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                {/* Total Requisitions */}
+                <div className="bg-white border border-[#E4EAF0] rounded-[11.86px] p-3 shadow-[0px_0.988px_2.965px_rgba(0,0,0,0.06)] flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-[var(--color-primary,#00A9A8)]/10 flex items-center justify-center text-[var(--color-primary,#00A9A8)] shrink-0">
+                        <ClipboardList size={20} strokeWidth={2.2} />
+                    </div>
+                    <div className="min-w-0">
+                        <span className="text-[12px] font-semibold text-[var(--color-primary,#00A9A8)] block truncate">
+                            {isRTL ? 'إجمالي الطلبات' : 'Total Requisitions'}
+                        </span>
+                        <span className="text-[20px] font-bold text-[#172033] block leading-tight">
+                            {totalElements}
+                        </span>
+                    </div>
+                </div>
 
-            <div className="bg-card rounded-xl shadow-sm overflow-hidden border">
-                {loading ? (
-                    <div className="flex justify-center items-center h-80"><Loader className="h-8 w-8 animate-spin text-primary" /></div>
-                ) : (
-                    <>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full">
-                                <thead className="bg-background-muted">
-                                    <tr>
-                                        <th className="th-cell">Date</th>
-                                        <th className="th-cell">Req Number</th>
-                                        <th className="th-cell">Requested By</th>
-                                        <th className="th-cell">Recipient</th>
-                                        <th className="th-cell">Required Date</th>
-                                        <th className="th-cell">Entity</th>
-                                        <th className="th-cell">Status</th>
-                                        <th className="th-cell">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-foreground-muted">
-                                    {filtered.length > 0 ? filtered.map(req => (
-                                        <tr key={req.id} className="border-b hover:bg-background-muted">
-                                            <td className="td-cell">{req.requisitionDate ? new Date(req.requisitionDate).toLocaleDateString() : ''}</td>
-                                            <td className="td-cell font-medium text-foreground">
+                {/* Pending Requisitions */}
+                <div className="bg-white border border-[#E4EAF0] rounded-[11.86px] p-3 shadow-[0px_0.988px_2.965px_rgba(0,0,0,0.06)] flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-600 shrink-0">
+                        <Clock size={20} strokeWidth={2.2} />
+                    </div>
+                    <div className="min-w-0">
+                        <span className="text-[12px] font-semibold text-[var(--color-primary,#00A9A8)] block truncate">
+                            {isRTL ? 'قيد الانتظار' : 'Pending Requisitions'}
+                        </span>
+                        <span className="text-[20px] font-bold text-[#172033] block leading-tight">
+                            {pendingCount}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Approved Requisitions */}
+                <div className="bg-white border border-[#E4EAF0] rounded-[11.86px] p-3 shadow-[0px_0.988px_2.965px_rgba(0,0,0,0.06)] flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
+                        <CheckCircle2 size={20} strokeWidth={2.2} />
+                    </div>
+                    <div className="min-w-0">
+                        <span className="text-[12px] font-semibold text-[var(--color-primary,#00A9A8)] block truncate">
+                            {isRTL ? 'طلبات معتمدة' : 'Approved Requisitions'}
+                        </span>
+                        <span className="text-[20px] font-bold text-[#172033] block leading-tight">
+                            {approvedCount}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Sync Status */}
+                <div className="bg-white border border-[#E4EAF0] rounded-[11.86px] p-3 shadow-[0px_0.988px_2.965px_rgba(0,0,0,0.06)] flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-[#EEF4FF] flex items-center justify-center text-[var(--color-primary,#00A9A8)] shrink-0">
+                        <RefreshCw size={20} strokeWidth={2.2} />
+                    </div>
+                    <div className="min-w-0">
+                        <span className="text-[12px] font-semibold text-[var(--color-primary,#00A9A8)] block truncate">
+                            {isRTL ? 'حالة المزامنة' : 'Sync Status'}
+                        </span>
+                        <span className="text-[20px] font-bold text-[#172033] block leading-tight">
+                            Live
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {error && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2">
+                    <AlertCircle size={16} />
+                    <span>{error}</span>
+                </div>
+            )}
+
+            {/* Main Table Container */}
+            <div className="bg-white border border-[#DBE5F3] rounded-[11.09px] overflow-hidden shadow-xs">
+                {/* Search Bar Header */}
+                <div className="p-3 border-b border-[#DBE5F3] bg-[#F8FAFC] flex justify-between items-center gap-3">
+                    <div className="relative w-full max-w-sm">
+                        <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                        <input
+                            type="text"
+                            placeholder={isRTL ? 'بحث برقم الطلب / طالب الشراء / الكيان...' : 'Search by Req# / Requested By / Entity...'}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-9 rtl:pr-9 rtl:pl-3 pr-3 py-1.5 bg-white border border-[#DFE7F4] rounded-lg text-xs font-semibold text-[#0A2551] outline-none focus:border-[var(--color-primary,#00A9A8)] transition-all"
+                        />
+                    </div>
+                    <span className="text-[11px] font-semibold text-[#617198]">
+                        {isRTL ? `عرض ${filtered.length} طلبات` : `Showing ${filtered.length} requisitions`}
+                    </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left rtl:text-right border-collapse">
+                        <thead>
+                            <tr className="bg-[#EEF5FF] border-b border-[#DBE5F3] text-[#102A5B] font-semibold text-[12px] h-[38.39px]">
+                                <th className="py-2.5 px-3 whitespace-nowrap">{isRTL ? 'ت' : 'S.No.'}</th>
+                                <th className="py-2.5 px-3 whitespace-nowrap">{isRTL ? 'التاريخ' : 'Date'}</th>
+                                <th className="py-2.5 px-3 whitespace-nowrap">{isRTL ? 'رقم الطلب' : 'Req Number'}</th>
+                                <th className="py-2.5 px-3 whitespace-nowrap">{isRTL ? 'المطلوب بواسطة' : 'Requested By'}</th>
+                                <th className="py-2.5 px-3 whitespace-nowrap">{isRTL ? 'المستلم' : 'Recipient'}</th>
+                                <th className="py-2.5 px-3 whitespace-nowrap">{isRTL ? 'التاريخ المطلوب' : 'Required Date'}</th>
+                                <th className="py-2.5 px-3 whitespace-nowrap">{isRTL ? 'الكيان' : 'Entity'}</th>
+                                <th className="py-2.5 px-3 whitespace-nowrap">{isRTL ? 'الحالة' : 'Status'}</th>
+                                <th className="py-2.5 px-3 whitespace-nowrap text-center">{isRTL ? 'الإجراء' : 'Action'}</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#DBE5F3]">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="9" className="py-12 text-center text-slate-400">
+                                        <Loader className="w-6 h-6 animate-spin mx-auto text-[var(--color-primary,#00A9A8)]" />
+                                        <p className="text-xs font-semibold mt-2">{isRTL ? 'جاري التحميل...' : 'Loading Requisitions...'}</p>
+                                    </td>
+                                </tr>
+                            ) : filtered.length > 0 ? (
+                                filtered.map((req, idx) => (
+                                    <tr key={req.id} className="hover:bg-slate-50/80 transition-colors h-[42.39px]">
+                                        <td className="py-2 px-3 text-[11.09px] text-[#102A5B] font-normal">{page * size + idx + 1}</td>
+                                        <td className="py-2 px-3 text-[11.09px] text-[#102A5B] font-normal whitespace-nowrap">
+                                            {req.requisitionDate ? new Date(req.requisitionDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                                        </td>
+                                        <td className="py-2 px-3 text-[11.09px] text-[#102A5B] font-bold whitespace-nowrap">
+                                            <Link to={`/purchase-dashboard/requisitions/view/${req.id}`} className="hover:underline text-[var(--color-primary,#00A9A8)]">
+                                                {req.requisitionNumber || `REQ-${req.id}`}
+                                            </Link>
+                                        </td>
+                                        <td className="py-2 px-3 text-[11.09px] text-[#102A5B] font-bold whitespace-nowrap">{req.requestedBy || '-'}</td>
+                                        <td className="py-2 px-3 text-[11.09px] text-[#102A5B] font-normal whitespace-nowrap">{req.recipient || '-'}</td>
+                                        <td className="py-2 px-3 text-[11.09px] text-[#102A5B] font-normal whitespace-nowrap">
+                                            {req.requiredDate ? new Date(req.requiredDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                                        </td>
+                                        <td className="py-2 px-3 text-[11.09px] text-[#102A5B] font-semibold whitespace-nowrap">{req.entity || '-'}</td>
+                                        <td className="py-2 px-3 whitespace-nowrap">
+                                            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-[6.68px] bg-[#F4F7FC] text-[#617198] text-[11px] font-semibold uppercase tracking-wider">
+                                                {formatStatus(req.status)}
+                                            </span>
+                                        </td>
+                                        <td className="py-2 px-3 whitespace-nowrap">
+                                            <div className="flex items-center justify-center gap-1.5">
                                                 <button
                                                     onClick={() => navigate(`/purchase-dashboard/requisitions/view/${req.id}`)}
-                                                    className="text-primary underline hover:text-primary/80 font-semibold"
+                                                    className="w-[24.95px] h-[27.72px] border border-[#DBE5F3] rounded-[5.54px] flex items-center justify-center text-[#00A9A8] hover:bg-teal-50 transition-colors cursor-pointer"
+                                                    title={isRTL ? 'عرض الطلب' : 'View Requisition'}
                                                 >
-                                                    {req.requisitionNumber || `REQ-${req.id}`}
+                                                    <Eye size={12} />
                                                 </button>
-                                            </td>
-                                            <td className="td-cell">{req.requestedBy || '-'}</td>
-                                            <td className="td-cell">{req.recipient || '-'}</td>
-                                            <td className="td-cell">{req.requiredDate ? new Date(req.requiredDate).toLocaleDateString() : '-'}</td>
-                                            <td className="td-cell">{req.entity || '-'}</td>
-                                            <td className="td-cell">
-                                                <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusClass(req.status)}`}>
-                                                    {req.status || 'N/A'}
-                                                </span>
-                                            </td>
-                                            <td className="td-cell">
-                                                <div className="flex items-center gap-1">
-                                                    <button onClick={() => navigate(`/purchase-dashboard/requisitions/view/${req.id}`)} className="p-2 hover:text-primary hover:bg-background-muted rounded-full" title="View"><Eye className="h-4 w-4" /></button>
-                                                    <button onClick={() => navigate(`/purchase-dashboard/requisitions/edit/${req.id}`)} className="p-2 hover:text-primary hover:bg-background-muted rounded-full" title="Edit"><Edit className="h-4 w-4" /></button>
-                                                    <button onClick={() => handleDelete(req.id)} className="p-2 hover:text-red-600 hover:bg-background-muted rounded-full" title="Delete"><Trash2 className="h-4 w-4" /></button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )) : (
-                                        <tr>
-                                            <td colSpan="8" className="text-center py-10 text-foreground-muted">
-                                                <AlertCircle className="mx-auto h-12 w-12 text-foreground-muted/50" />
-                                                <h3 className="mt-2 text-sm font-medium">No requisitions found</h3>
-                                                <p className="mt-1 text-sm">Create a new requisition to get started.</p>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                                <button
+                                                    onClick={() => navigate(`/purchase-dashboard/requisitions/edit/${req.id}`)}
+                                                    className="w-[24.95px] h-[27.72px] border border-[#DBE5F3] rounded-[5.54px] flex items-center justify-center text-[#06275C] hover:bg-slate-100 transition-colors cursor-pointer"
+                                                    title={isRTL ? 'تعديل' : 'Edit'}
+                                                >
+                                                    <Edit2 size={12} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(req.id)}
+                                                    className="w-[24.95px] h-[27.72px] border border-[#DBE5F3] rounded-[5.54px] flex items-center justify-center text-[#D03D4E] hover:bg-rose-50 transition-colors cursor-pointer"
+                                                    title={isRTL ? 'حذف' : 'Delete'}
+                                                >
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="9" className="py-12 text-center text-slate-400">
+                                        <AlertCircle className="w-8 h-8 mx-auto opacity-40 mb-1" />
+                                        <p className="text-xs font-semibold">{isRTL ? 'لم يتم العثور على طلبات شراء' : 'No requisitions found'}</p>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-                        <Pagination 
-                            currentPage={page}
-                            totalPages={totalPages}
-                            onPageChange={setPage}
-                            pageSize={size}
-                            onPageSizeChange={(newSize) => { setSize(newSize); setPage(0); }}
-                            totalElements={totalElements}
-                        />
-                    </>
+            {/* Pagination Bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#62708E] pt-1">
+                <span>
+                    {totalElements === 0
+                        ? (isRTL ? 'عرض 0 إلى 0 من أصل 0 مدخلات' : 'Showing 0 to 0 of 0 entries')
+                        : (isRTL
+                                ? `عرض ${page * size + 1} إلى ${Math.min((page + 1) * size, totalElements)} من أصل ${totalElements} مدخلات`
+                                : `Showing ${page * size + 1} to ${Math.min((page + 1) * size, totalElements)} of ${totalElements} entries`)}
+                </span>
+
+                {totalPages > 0 && (
+                    <div className="flex items-center gap-1">
+                        <button
+                            onClick={() => setPage(p => Math.max(0, p - 1))}
+                            disabled={page === 0}
+                            className="w-7 h-7 bg-white rounded border border-slate-200 flex items-center justify-center text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 cursor-pointer shadow-xs"
+                        >
+                            <ChevronLeft size={14} />
+                        </button>
+                        <span className="px-3 py-1 bg-[#00A9A8] text-white rounded font-bold">
+                            {page + 1} / {totalPages}
+                        </span>
+                        <button
+                            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                            disabled={page >= totalPages - 1}
+                            className="w-7 h-7 bg-white rounded border border-slate-200 flex items-center justify-center text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 cursor-pointer shadow-xs"
+                        >
+                            <ChevronRight size={14} />
+                        </button>
+                    </div>
                 )}
             </div>
         </div>

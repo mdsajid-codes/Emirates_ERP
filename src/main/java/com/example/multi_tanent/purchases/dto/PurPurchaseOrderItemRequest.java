@@ -24,6 +24,10 @@ public class PurPurchaseOrderItemRequest {
 
     /** item could be raw material or other master */
     private Long itemId;
+    private Long crmProductId;
+    private Long rawMaterialId;
+    private Long semiFinishedId;
+    private Long finishedGoodId;
 
     private String description;
 

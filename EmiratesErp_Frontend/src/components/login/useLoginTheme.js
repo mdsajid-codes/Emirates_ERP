@@ -1,24 +1,23 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { POS_FALLBACK_THEME, loadThemeFromStorage } from '../../utils/themeUtils';
+import { DEFAULT_THEME, loadThemeFromStorage } from '../../utils/themeUtils';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const LOGIN_FALLBACK_THEME = {
-  ...POS_FALLBACK_THEME,
-  primary: '#184341',
-  secondary: '#97B3AE',
-  surface: '#ECF2F5',
-  cardBg: '#C4DADE',
-  accent: '#97B3AE',
-  text: '#0E1B22',
+  primary: DEFAULT_THEME.primaryColor,     // '#00A9A8'
+  secondary: DEFAULT_THEME.secondaryColor, // '#ffffff'
+  surface: DEFAULT_THEME.backgroundColor,   // '#F7FAFF'
+  cardBg: DEFAULT_THEME.surfaceColor,       // '#ffffff'
+  accent: DEFAULT_THEME.accentColor,       // '#02888D'
+  text: DEFAULT_THEME.textColor,           // '#18233B'
 
   // Dedicated 3D Animation Object Palette (high contrast against right panel bg)
-  animPrimary: '#184341',   // Bright Mint / Teal
-  animSecondary: '#FDE047', // Vivid Gold / Yellow
-  animAccent: '#FDE047',    // Bright Sky Blue
-  animLight: '#FFFFFF',     // Pure White lines/glows
-  animGlow: '#A7F3D0',      // Soft Mint Glow
+  animPrimary: '#003E5B',   // Deep Teal / Navy
+  animSecondary: '#FFA713', // Warm Amber / Gold
+  animAccent: DEFAULT_THEME.accentColor, // '#02888D'
+  animLight: DEFAULT_THEME.primaryColor, // '#00A9A8'
+  animGlow: DEFAULT_THEME.primaryColor,  // '#00A9A8'
 };
 
 export function useLoginTheme() {
@@ -83,3 +82,4 @@ export function useLoginTheme() {
 
   return { loginTheme, loading };
 }
+

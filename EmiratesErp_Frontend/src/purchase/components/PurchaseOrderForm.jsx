@@ -6,11 +6,110 @@ import {
     ShoppingCart, Info, CheckCircle, AlertTriangle, Package,
     Truck, FileText, ChevronRight, X, MapPin,
     User,
-    Calendar
+    Calendar, Search, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import LocationModal from '../../components/base/LocationModal';
+import { useLanguage } from '../../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || '';
+
+const SearchableItemSelect = ({ items, value, onChange, placeholder = "Select Item" }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const containerRef = useRef(null);
+
+    const selectedItem = useMemo(() => {
+        return items.find(i => String(i.id) === String(value));
+    }, [items, value]);
+
+    const filteredItems = useMemo(() => {
+        if (!searchTerm) return items;
+        const lower = searchTerm.toLowerCase();
+        return items.filter(i =>
+            (i.label && i.label.toLowerCase().includes(lower)) ||
+            (i.name && i.name.toLowerCase().includes(lower)) ||
+            (i.itemCode && i.itemCode.toLowerCase().includes(lower))
+        );
+    }, [items, searchTerm]);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (containerRef.current && !containerRef.current.contains(e.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    return (
+        <div className="relative w-full" ref={containerRef}>
+            <button
+                type="button"
+                onClick={() => setIsOpen(prev => !prev)}
+                className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-xs text-[#102A5B] flex items-center justify-between outline-none focus:border-[var(--color-primary,#00A9A8)] cursor-pointer min-h-[30px]"
+            >
+                <span className="truncate pr-1">
+                    {selectedItem ? (selectedItem.label || selectedItem.name || selectedItem.itemCode) : placeholder}
+                </span>
+                <ChevronDown size={14} className={`text-slate-400 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isOpen && (
+                <div className="absolute z-50 left-0 min-w-[280px] mt-1 bg-white border border-[#D8E2F1] rounded-md shadow-xl max-h-60 overflow-y-auto">
+                    <div className="p-1.5 sticky top-0 bg-white border-b border-[#E4EAF0] z-10">
+                        <div className="relative flex items-center">
+                            <Search size={13} className="absolute left-2 text-slate-400 pointer-events-none" />
+                            <input
+                                type="text"
+                                autoFocus
+                                placeholder="Search item code/name..."
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                className="w-full pl-7 pr-2 py-1 bg-slate-50 border border-[#D8E2F1] rounded text-xs outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                            />
+                            {searchTerm && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchTerm('')}
+                                    className="absolute right-2 text-slate-400 hover:text-slate-600"
+                                >
+                                    <X size={12} />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="py-1">
+                        {filteredItems.length === 0 ? (
+                            <div className="px-3 py-2 text-xs text-slate-400 text-center">No matching items</div>
+                        ) : (
+                            filteredItems.map(item => {
+                                const isSelected = String(item.id) === String(value);
+                                return (
+                                    <div
+                                        key={`${item.type}-${item.id}`}
+                                        onClick={() => {
+                                            onChange({ target: { name: 'itemId', value: item.id } });
+                                            setIsOpen(false);
+                                            setSearchTerm('');
+                                        }}
+                                        className={`px-2.5 py-1.5 text-xs cursor-pointer flex items-center justify-between transition-colors ${isSelected ? 'bg-indigo-50 font-semibold text-[var(--color-primary,#00A9A8)]' : 'hover:bg-slate-50 text-[#102A5B]'
+                                            }`}
+                                    >
+                                        <span className="truncate">{item.label || item.name || item.itemCode}</span>
+                                        {isSelected && <CheckCircle size={12} className="text-[var(--color-primary,#00A9A8)] shrink-0 ml-1.5" />}
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const Input = ({ label, icon: Icon, ...props }) => (
     <div className="space-y-1.5">
@@ -62,6 +161,7 @@ const TextArea = ({ label, ...props }) => (
 );
 
 const PurchaseOrderForm = () => {
+    const { isRTL } = useLanguage();
     const navigate = useNavigate();
     const location = useLocation();
     const { id } = useParams();
@@ -76,7 +176,8 @@ const PurchaseOrderForm = () => {
         reference: '',
         date: new Date().toISOString().split('T')[0],
         projectNumber: '',
-        discountMode: 'Without Discount',
+        discountMode: 'Without Discount', // Without Discount | Item Level | Order Level
+        orderDiscountPercentage: 0,
         currency: 'AED',
         remark: '',
         deliverToType: 'Organization',
@@ -106,6 +207,33 @@ const PurchaseOrderForm = () => {
     const [categories, setCategories] = useState([]);
     const [subCategoriesByCategory, setSubCategoriesByCategory] = useState({});
 
+    // Location Modal state
+    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+    const [locationModalLoading, setLocationModalLoading] = useState(false);
+
+    const handleSaveLocation = async (locationData) => {
+        setLocationModalLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(`${API_URL}/locations`, locationData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const newLoc = res.data;
+            setLocations(prev => [...prev, newLoc]);
+            setForm(prev => ({
+                ...prev,
+                deliverToId: newLoc.id,
+                deliverToAddress: [newLoc.address, newLoc.city, newLoc.state, newLoc.country].filter(Boolean).join(', ')
+            }));
+            setIsLocationModalOpen(false);
+        } catch (err) {
+            console.error('Failed to create location:', err);
+            setError('Failed to create location.');
+        } finally {
+            setLocationModalLoading(false);
+        }
+    };
+
     useEffect(() => {
         const load = async () => {
             setLoading(true);
@@ -115,9 +243,12 @@ const PurchaseOrderForm = () => {
                 const headers = { Authorization: `Bearer ${token}` };
 
                 const [
-                    rawRes, unitRes, taxRes, catRes, supRes, locRes, custRes
+                    rawRes, sfRes, fgRes, prodRes, unitRes, taxRes, catRes, supRes, locRes, custRes
                 ] = await Promise.all([
                     axios.get(`${API_URL}/production/raw-materials`, { headers, params: { page: 0, size: 1000 } }),
+                    axios.get(`${API_URL}/production/semi-finished`, { headers, params: { page: 0, size: 1000 } }),
+                    axios.get(`${API_URL}/production/finished-goods`, { headers, params: { page: 0, size: 1000 } }),
+                    axios.get(`${API_URL}/crm/sales-products`, { headers, params: { page: 0, size: 1000 } }),
                     axios.get(`${API_URL}/production/units`, { headers, params: { page: 0, size: 500 } }),
                     axios.get(`${API_URL}/production/taxes`, { headers, params: { page: 0, size: 100 } }),
                     axios.get(`${API_URL}/production/categories`, { headers, params: { page: 0, size: 500 } }),
@@ -126,7 +257,16 @@ const PurchaseOrderForm = () => {
                     axios.get(`${API_URL}/parties`, { headers, params: { type: 'CUSTOMER', page: 0, size: 500 } })
                 ]);
 
-                setRawMaterials(rawRes.data.content ?? rawRes.data ?? []);
+                const getList = (res) => Array.isArray(res.data) ? res.data : (res.data.content || []);
+
+                const products = getList(prodRes).map(p => ({ ...p, type: 'PRODUCT', label: `${p.name} (${p.itemCode || 'PRD'}) - CRM Product` }));
+                const rawMaterials = getList(rawRes).map(r => ({ ...r, type: 'RAW_MATERIAL', label: `${r.name} (${r.itemCode || 'RM'}) - Raw Material` }));
+                const semiFinished = getList(sfRes).map(s => ({ ...s, type: 'SEMI_FINISHED', label: `${s.name} (${s.itemCode || 'SF'}) - Semi-Finished` }));
+                const finishedGoods = getList(fgRes).map(f => ({ ...f, type: 'FINISHED_GOOD', label: `${f.name} (${f.itemCode || 'FG'}) - Finished Good` }));
+
+                const compiledItems = [...products, ...rawMaterials, ...semiFinished, ...finishedGoods];
+
+                setRawMaterials(compiledItems);
                 setUnits(unitRes.data.content ?? unitRes.data ?? []);
                 setTaxes(taxRes.data.content ?? taxRes.data ?? []);
                 setCategories(catRes.data.content ?? catRes.data ?? []);
@@ -200,19 +340,19 @@ const PurchaseOrderForm = () => {
 
         if (location.state?.requisitionData && !isEditing) {
             const req = location.state.requisitionData;
-            
+
             if (req.id) {
                 setSourceRequisitionId(req.id);
             }
 
             const mappedItems = (req.items || []).map((item, index) => ({
                 lineNumber: index + 1,
-                categoryId: '', 
+                categoryId: '',
                 subCategoryId: '',
                 itemId: item.itemId || '',
                 description: [item.itemName, item.content].filter(Boolean).join(' - ') || item.description || '',
                 quantity: item.quantity || 1,
-                unitId: item.uom || '', 
+                unitId: item.uom || '',
                 rate: 0,
                 taxId: '',
                 taxExempt: false,
@@ -275,10 +415,40 @@ const PurchaseOrderForm = () => {
         const { name, value, type, checked } = e.target;
         setForm(prev => {
             const items = [...prev.items];
-            items[idx] = {
-                ...items[idx],
-                [name]: type === 'checkbox' ? checked : (type === 'number' ? (value === '' ? '' : Number(value)) : value)
-            };
+            const currentItem = { ...items[idx] };
+
+            if (name === 'itemId') {
+                const itemIdVal = value ? (type === 'number' ? Number(value) : value) : '';
+                currentItem.itemId = itemIdVal;
+
+                // Auto-fill item description, rate, and unit if selected
+                const mat = rawMaterials.find(m => String(m.id) === String(itemIdVal));
+                if (mat) {
+                    currentItem.description = mat.description || mat.name || '';
+
+                    // Extract rate / unit price from various potential properties
+                    const extractedRate = mat.unitPrice ?? mat.purchaseRate ?? mat.price ?? mat.costPrice ?? mat.salesPrice ?? mat.rate ?? 0;
+                    currentItem.rate = Number(extractedRate) || 0;
+
+                    // Extract unitId or match by unit name/code in units master
+                    const uId = mat.unitId || mat.unit?.id;
+                    if (uId) {
+                        currentItem.unitId = uId;
+                    } else if (mat.unit || mat.uom || mat.unitName) {
+                        const targetUomName = String(mat.unit || mat.uom || mat.unitName).toLowerCase();
+                        const matchedUnit = units.find(u =>
+                            String(u.name || u.code || '').toLowerCase() === targetUomName
+                        );
+                        if (matchedUnit) {
+                            currentItem.unitId = matchedUnit.id;
+                        }
+                    }
+                }
+            } else {
+                currentItem[name] = type === 'checkbox' ? checked : (type === 'number' ? (value === '' ? '' : Number(value)) : value);
+            }
+
+            items[idx] = currentItem;
             return { ...prev, items };
         });
     };
@@ -324,28 +494,43 @@ const PurchaseOrderForm = () => {
 
     const totals = useMemo(() => {
         let subTotal = 0;
-        let totalDiscount = 0;
+        let itemDiscounts = 0;
         let totalTax = 0;
+
         (form.items || []).forEach(it => {
             const qty = Number(it.quantity) || 0;
             const rate = Number(it.rate) || 0;
-            const lineDiscount = Number(it.lineDiscount) || 0;
             const amount = qty * rate;
-            const net = Math.max(0, amount - lineDiscount);
-
             subTotal += amount;
-            totalDiscount += lineDiscount;
 
+            let lineDiscountVal = 0;
+            if (form.discountMode === 'Item Level') {
+                const discPercent = Number(it.lineDiscount) || 0;
+                lineDiscountVal = amount * (discPercent / 100);
+            }
+            itemDiscounts += lineDiscountVal;
+
+            const taxableAmount = Math.max(0, amount - lineDiscountVal);
             const taxMaster = taxes.find(t => String(t.id) === String(it.taxId));
-            const taxRate = Number(it.taxPercent !== '' ? it.taxPercent : (taxMaster ? taxMaster.rate : 0)) || 0;
+            const taxRate = Number(it.taxPercent !== '' && it.taxPercent !== undefined ? it.taxPercent : (taxMaster ? taxMaster.rate : 0)) || 0;
 
-            if (!it.taxExempt && taxRate > 0) totalTax += net * (taxRate / 100);
+            if (!it.taxExempt && taxRate > 0) {
+                totalTax += taxableAmount * (taxRate / 100);
+            }
         });
 
+        let totalDiscount = 0;
+        if (form.discountMode === 'Item Level') {
+            totalDiscount = itemDiscounts;
+        } else if (form.discountMode === 'Order Level') {
+            const orderDiscPercent = Number(form.orderDiscountPercentage) || 0;
+            totalDiscount = subTotal * (orderDiscPercent / 100);
+        }
+
         const otherCharges = Number(form.otherCharges) || 0;
-        const totalAmount = (subTotal - totalDiscount) + totalTax + otherCharges;
+        const totalAmount = Math.max(0, subTotal - totalDiscount) + totalTax + otherCharges;
         return { subTotal, totalDiscount, totalTax, otherCharges, totalAmount };
-    }, [form.items, form.otherCharges, taxes]);
+    }, [form.items, form.discountMode, form.orderDiscountPercentage, form.otherCharges, taxes]);
 
     const validate = () => {
         if (!form.locationId) return 'Operational location is required';
@@ -367,16 +552,26 @@ const PurchaseOrderForm = () => {
 
             const orderPayload = {
                 ...form,
-                items: form.items.map(it => ({
-                    ...it,
-                    categoryId: it.categoryId || null,
-                    subCategoryId: it.subCategoryId || null,
-                    itemId: it.itemId || null,
-                    description: it.description || null,
-                    taxId: it.taxId || null,
-                    taxPercent: it.taxPercent !== '' ? Number(it.taxPercent) : null,
-                    lineDiscount: Number(it.lineDiscount) || 0
-                })),
+                items: form.items.map(it => {
+                    const selMat = rawMaterials.find(m => String(m.id) === String(it.itemId));
+                    const type = selMat?.type;
+                    const numId = it.itemId ? Number(it.itemId) : null;
+
+                    return {
+                        ...it,
+                        categoryId: it.categoryId || null,
+                        subCategoryId: it.subCategoryId || null,
+                        itemId: numId,
+                        crmProductId: type === 'PRODUCT' ? numId : null,
+                        rawMaterialId: type === 'RAW_MATERIAL' ? numId : null,
+                        semiFinishedId: type === 'SEMI_FINISHED' ? numId : null,
+                        finishedGoodId: type === 'FINISHED_GOOD' ? numId : null,
+                        description: it.description || null,
+                        taxId: it.taxId || null,
+                        taxPercent: it.taxPercent !== '' ? Number(it.taxPercent) : null,
+                        lineDiscount: Number(it.lineDiscount) || 0
+                    };
+                }),
                 attachments: undefined,
                 otherCharges: Number(form.otherCharges) || 0
             };
@@ -440,562 +635,834 @@ const PurchaseOrderForm = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8">
-            <div className="max-w-7xl mx-auto space-y-8">
-                {/* Header Area */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <Link
-                            to="/purchase-dashboard/purchase-orders"
-                            className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-indigo-600 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/10 transition-all group"
-                        >
-                            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-                        </Link>
-                        <div>
-                            <h1 className="text-3xl font-black text-slate-800 tracking-tight">
-                                {isEditing ? "Modify" : "Create"} <span className="text-indigo-600">Purchase</span> Order
-                            </h1>
-                            <p className="text-sm font-medium text-slate-400">
-                                {isEditing ? `Synchronizing updates for manifest #${form.poNumber}` : "Drafting a new procurement request for approval"}
-                            </p>
-                        </div>
+        <div className="w-full min-h-screen bg-[#f8fafc] p-2 sm:p-3 lg:p-4 font-sans" dir={isRTL ? 'rtl' : 'ltr'}>
+            <div className="w-full space-y-3">
+                {/* Header Area based on Figma Spec */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                    <div>
+                        <h1 className="text-[24px] sm:text-[28px] font-bold text-[#102A5B] leading-tight tracking-tight">
+                            {isEditing ? (isRTL ? 'تعديل أمر الشراء' : 'Edit Purchase Order') : (isRTL ? 'إنشاء أمر شراء' : 'Create Purchase Order')}
+                        </h1>
+                        <p className="text-[12px] font-normal text-[#5F6F91]">
+                            {isRTL ? 'إنشاء وإدارة أوامر الشراء الخاصة بك' : 'Create and manage your procurement orders'}
+                        </p>
                     </div>
+
+                    <button
+                        type="button"
+                        onClick={(e) => { setForm(prev => ({ ...prev, status: 'Draft' })); handleSubmit(e); }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#DCE5F3] rounded-[5.29px] text-[12px] font-semibold text-[#102A5B] hover:bg-slate-50 transition-all cursor-pointer shadow-xs"
+                    >
+                        <Save size={16} className="text-[#102A5B]" />
+                        <span>{isRTL ? 'حفظ كمسودة' : 'Save as Draft'}</span>
+                    </button>
                 </div>
 
                 {error && (
                     <motion.div
-                        initial={{ opacity: 0, y: -20 }}
+                        initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-rose-50 border border-rose-100 p-4 rounded-3xl flex items-center gap-3 text-rose-600 shadow-sm"
+                        className="bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-center gap-3 text-rose-600 shadow-xs text-xs font-semibold"
                     >
-                        <AlertTriangle size={20} />
-                        <span className="text-sm font-bold">{error}</span>
+                        <AlertTriangle size={18} />
+                        <span>{error}</span>
                         <button onClick={() => setError(null)} className="ml-auto p-1 hover:bg-rose-100 rounded-full transition-colors">
-                            <X size={16} />
+                            <X size={14} />
                         </button>
                     </motion.div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-12 pb-24">
-                    {/* Section 1: Core Metadata */}
-                    <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-white/40 shadow-2xl shadow-indigo-900/5 p-8 md:p-12 space-y-10">
-                        <div className="flex items-center gap-4 border-b border-indigo-50 pb-8">
-                            <div className="p-4 bg-indigo-500/10 rounded-[1.25rem] text-indigo-600">
-                                <Info size={28} />
+                <form onSubmit={handleSubmit} className="space-y-3 pb-16">
+                    {/* SECTION 1: PO DETAILS */}
+                    <div className="bg-white border border-[#DCE5F3] rounded-[11.86px] p-3 space-y-3">
+                        <div className="flex items-center justify-between border-b border-[#E4EAF0] pb-2">
+                            <div className="flex items-center gap-2">
+                                <div className="w-[22px] h-[22px] rounded-full bg-[var(--color-primary,#00A9A8)] text-white text-[11px] font-bold flex items-center justify-center">
+                                    1
+                                </div>
+                                <h2 className="text-[18px] font-semibold text-[#102A5B]">
+                                    {isRTL ? 'تفاصيل أمر الشراء' : 'PO Details'}
+                                </h2>
                             </div>
-                            <div>
-                                <h3 className="text-2xl font-black text-slate-800 tracking-tight">Core Metadata</h3>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Administrative Manifest Headers
-                                </p>
+                            <button type="button" className="flex items-center gap-1 text-[12px] font-semibold text-[#102A5B] hover:opacity-80">
+                                <span>{isRTL ? 'طَي' : 'Collapse'}</span>
+                                <ChevronRight size={12} className={`rotate-90 ${isRTL ? '-rotate-90' : ''}`} />
+                            </button>
+                        </div>
+
+                        {/* PO Details Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3.5">
+                            {/* Operating Location */}
+                            <div className="space-y-1">
+                                <label className="text-[13.22px] font-semibold text-[#102A5B] block">
+                                    {isRTL ? 'موقع التشغيل' : 'Operating Location'} <span className="text-rose-500">*</span>
+                                </label>
+                                <select
+                                    name="locationId"
+                                    value={form.locationId}
+                                    onChange={handleChange}
+                                    className="w-full h-[31.72px] px-2.5 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-semibold text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                    required
+                                >
+                                    <option value="">{isRTL ? 'حدد الموقع' : 'Select Location'}</option>
+                                    {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                                </select>
+                            </div>
+
+                            {/* Purchasing Group / Order Category */}
+                            <div className="space-y-1">
+                                <label className="text-[13.22px] font-semibold text-[#102A5B] block">
+                                    {isRTL ? 'فئة الطلب' : 'Order Category'} <span className="text-rose-500">*</span>
+                                </label>
+                                <select
+                                    name="orderCategory"
+                                    value={form.orderCategory}
+                                    onChange={handleChange}
+                                    className="w-full h-[31.72px] px-2.5 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-semibold text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                >
+                                    <option value="Domestic">{isRTL ? 'محلي' : 'Domestic'}</option>
+                                    <option value="Imported">{isRTL ? 'مستورد' : 'Imported'}</option>
+                                </select>
+                            </div>
+
+                            {/* PO Number */}
+                            <div className="space-y-1">
+                                <label className="text-[13.22px] font-semibold text-[#102A5B] block">
+                                    {isRTL ? 'رقم أمر الشراء' : 'PO Number'}
+                                </label>
+                                <input
+                                    type="text"
+                                    name="poNumber"
+                                    value={form.poNumber}
+                                    onChange={handleChange}
+                                    placeholder={isRTL ? 'توليد تلقائي' : 'Auto-generated'}
+                                    className="w-full h-[32.39px] px-2.5 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-normal text-[#5F6F91] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                />
+                            </div>
+
+                            {/* PO Date */}
+                            <div className="space-y-1">
+                                <label className="text-[13.22px] font-semibold text-[#102A5B] block">
+                                    {isRTL ? 'تاريخ أمر الشراء' : 'PO Date'} <span className="text-rose-500">*</span>
+                                </label>
+                                <input
+                                    type="date"
+                                    name="date"
+                                    value={form.date}
+                                    onChange={handleChange}
+                                    className="w-full h-[32.39px] px-2.5 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-normal text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                    required
+                                />
+                            </div>
+
+                            {/* Currency */}
+                            <div className="space-y-1">
+                                <label className="text-[13.22px] font-semibold text-[#102A5B] block">
+                                    {isRTL ? 'العملة' : 'Currency'} <span className="text-rose-500">*</span>
+                                </label>
+                                <select
+                                    name="currency"
+                                    value={form.currency}
+                                    onChange={handleChange}
+                                    className="w-full h-[32.39px] px-2.5 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-semibold text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                >
+                                    <option value="AED">{isRTL ? 'درهم إماراتي - AED' : 'AED - UAE Dirham'}</option>
+                                </select>
+                            </div>
+
+                            {/* Discount Mode */}
+                            <div className="space-y-1">
+                                <label className="text-[13.22px] font-semibold text-[#102A5B] block">
+                                    {isRTL ? 'وضع الخصم' : 'Discount Mode'}
+                                </label>
+                                <select
+                                    name="discountMode"
+                                    value={form.discountMode}
+                                    onChange={handleChange}
+                                    className="w-full h-[32.39px] px-2.5 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-semibold text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                >
+                                    <option value="Without Discount">{isRTL ? 'بدون خصم' : 'Without Discount'}</option>
+                                    <option value="Item Level">{isRTL ? 'على مستوى الصنف' : 'Item Level'}</option>
+                                    <option value="Order Level">{isRTL ? 'على مستوى الطلب' : 'Order Level'}</option>
+                                </select>
+                            </div>
+
+                            {/* Document Template */}
+                            <div className="space-y-1">
+                                <label className="text-[13.22px] font-semibold text-[#102A5B] block">
+                                    {isRTL ? 'القالب' : 'Template'}
+                                </label>
+                                <select
+                                    name="template"
+                                    value={form.template}
+                                    onChange={handleChange}
+                                    className="w-full h-[32.39px] px-2.5 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-semibold text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                >
+                                    <option value="Standard">{isRTL ? 'قالب قياسي' : 'Standard Template'}</option>
+                                    <option value="Detailed">{isRTL ? 'قالب مفصل' : 'Detailed Template'}</option>
+                                </select>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-8">
-                            <Select label="Operational Location" name="locationId" value={form.locationId} onChange={handleChange} icon={MapPin} required>
-                                <option value="">Select Location</option>
-                                {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                            </Select>
-
-                            <Select label="Classification" name="orderCategory" value={form.orderCategory} onChange={handleChange} icon={Package}>
-                                <option value="Domestic">Domestic Protocol</option>
-                                <option value="Imported">Import Protocol</option>
-                            </Select>
-
-                            <Select label="Strategic Vendor" name="supplierId" value={form.supplierId} onChange={handleChange} icon={User}>
-                                <option value="">Select Supplier</option>
-                                {suppliers.map(s => <option key={s.id} value={s.id}>{s.companyName || s.name || `${s.firstName} ${s.lastName}`}</option>)}
-                            </Select>
-
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Settlement Currency</label>
-                                <div className="px-6 py-4 bg-indigo-600 rounded-2xl text-sm font-black text-white shadow-xl shadow-indigo-500/20 flex items-center justify-between">
-                                    <span className="opacity-60">United Arab Emirates</span>
-                                    <span>{form.currency} (AED)</span>
+                        {/* Bottom row of Section 1 */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 pt-1">
+                            {/* Attachments Upload Box */}
+                            <div className="space-y-1">
+                                <label className="text-[13.22px] font-semibold text-[#102A5B] block">{isRTL ? 'المرفقات' : 'Attachments'}</label>
+                                <div className="h-[50px] bg-[#F8FBFE] border border-dashed border-[#CBD5E1] rounded-[10.06px] px-3 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Upload size={18} className="text-[var(--color-primary,#00A9A8)]" />
+                                        <div>
+                                            <p className="text-[12px] font-normal text-[#334155]">{isRTL ? 'اسحب وإسقاط الملفات هنا أو' : 'Drag & drop files here or'}</p>
+                                            <p className="text-[10px] text-[var(--color-primary,#00A9A8)]">{isRTL ? 'يدعم: PDF, JPG, PNG (بحد أقصى 10MB)' : 'Supports: PDF, JPG, PNG (Max. 10MB each)'}</p>
+                                        </div>
+                                    </div>
+                                    <input ref={fileInputRef} type="file" multiple onChange={handleFileChange} className="hidden" id="attachments-input" />
+                                    <label htmlFor="attachments-input" className="px-3 py-1 bg-white border border-[#CBD5E1] rounded-[10.06px] text-[12px] text-[#0F172A] font-normal cursor-pointer hover:bg-slate-50">
+                                        {isRTL ? 'تحديد الملفات' : 'Select Files'}
+                                    </label>
                                 </div>
                             </div>
 
-                            <Input label="System Reference" name="poNumber" value={form.poNumber} onChange={handleChange} icon={FileText} placeholder="PENDING ALLOCATION" disabled={!isEditing && !form.poNumber} />
-                            <Input label="External Reference" name="reference" value={form.reference} onChange={handleChange} icon={Truck} placeholder="Vendor Doc #" />
-                            <Input label="Execution Date" name="date" type="date" value={form.date} onChange={handleChange} icon={Calendar} required />
-                            <Input label="Project Attribution" name="projectNumber" value={form.projectNumber} onChange={handleChange} icon={FileText} placeholder="PRJ-XXXX" />
-                            <Input label="Internal Note" name="remark" value={form.remark} onChange={handleChange} icon={Plus} placeholder="Context for auditors..." />
+                            {/* Reference / Remarks */}
+                            <div className="space-y-1 lg:col-span-1">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-[13.22px] font-semibold text-[#102A5B]">{isRTL ? 'المرجع / الملاحظات' : 'Reference / Remarks'}</label>
+                                    <span className="text-[12px] text-[#5F6F91]">0/250</span>
+                                </div>
+                                <input
+                                    type="text"
+                                    name="reference"
+                                    value={form.reference}
+                                    onChange={handleChange}
+                                    placeholder={isRTL ? 'أدخل المرجع أو الملاحظات' : 'Enter reference or remarks'}
+                                    className="w-full h-[52.87px] px-3 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-normal text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                />
+                            </div>
+
+                            {/* Internal Notes */}
+                            <div className="space-y-1 lg:col-span-1">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-[13.22px] font-semibold text-[#102A5B]">{isRTL ? 'ملاحظات داخلية' : 'Internal Notes'}</label>
+                                    <span className="text-[12px] text-[#5F6F91]">0/250</span>
+                                </div>
+                                <input
+                                    type="text"
+                                    name="remark"
+                                    value={form.remark}
+                                    onChange={handleChange}
+                                    placeholder={isRTL ? 'أدخل ملاحظات داخلية (اختياري)' : 'Enter internal notes (optional)'}
+                                    className="w-full h-[52.87px] px-3 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-normal text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                />
+                            </div>
                         </div>
                     </div>
 
-                    {/* Section 2: Line Items */}
-                    <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-white/40 shadow-2xl shadow-indigo-900/5 overflow-hidden">
-                        <div className="p-8 md:p-12 space-y-8 pb-0">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-indigo-50 pb-8">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-4 bg-indigo-500/10 rounded-[1.25rem] text-indigo-600">
-                                        <ShoppingCart size={28} />
+                    {/* TWO-COLUMN LAYOUT FOR SECTION 2 & 3 + SUMMARY */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                        {/* LEFT: SECTION 2 VENDOR DETAILS */}
+                        <div className="lg:col-span-3 bg-white border border-[#DCE5F3] rounded-[15.86px] p-4 space-y-4">
+                            <div className="flex items-center justify-between border-b border-[#E4EAF0] pb-3">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-[26.44px] h-[26.44px] rounded-full bg-[var(--color-primary,#00A9A8)] text-white text-[13.22px] font-bold flex items-center justify-center">
+                                        2
                                     </div>
-                                    <div>
-                                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Procurement Items</h3>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Line Item Specifications
-                                        </p>
-                                    </div>
+                                    <h2 className="text-[23.79px] font-semibold text-[#102A5B] leading-[37px]">
+                                        {isRTL ? 'تفاصيل المورد' : 'Vendor Details'}
+                                    </h2>
                                 </div>
-                                <div className="flex items-center gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => navigate('/company-settings/party-type/new', { state: { partyType: 'SUPPLIER' } })}
+                                    className="text-[13.22px] font-semibold text-[var(--color-sidebar-bg,#013E5B)] hover:underline cursor-pointer"
+                                >
+                                    {isRTL ? '+ إضافة مورد جديد' : '+ Add New Vendor'}
+                                </button>
+                            </div>
+
+                            <div className="space-y-3">
+                                {/* Vendor Select */}
+                                <div className="space-y-1">
+                                    <label className="text-[13.22px] font-semibold text-[#102A5B] block">
+                                        {isRTL ? 'المورد' : 'Vendor'} <span className="text-rose-500">*</span>
+                                    </label>
                                     <select
-                                        name="discountMode"
-                                        value={form.discountMode}
+                                        name="supplierId"
+                                        value={form.supplierId}
                                         onChange={handleChange}
-                                        className="bg-slate-100/50 border-none outline-none px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-500 focus:ring-2 focus:ring-indigo-500 transition-all"
+                                        className="w-full h-[34px] px-3 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-normal text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                        required
                                     >
-                                        <option value="Without Discount">No Discounting</option>
-                                        <option value="Item level">Item-Level Discount</option>
-                                        <option value="Order level">Order-Level Discount</option>
+                                        <option value="">{isRTL ? 'اختر المورد / البائع' : 'Select Vendor / Supplier'}</option>
+                                        {suppliers.map(s => <option key={s.id} value={s.id}>{s.companyName || s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim() || `Vendor #${s.id}`}</option>)}
                                     </select>
-                                    <button
-                                        type="button"
-                                        onClick={addItem}
-                                        className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 hover:shadow-xl hover:shadow-indigo-500/30 transition-all active:scale-95"
-                                    >
-                                        <Plus size={16} /> Add Position
-                                    </button>
                                 </div>
+
+                                {(() => {
+                                    const selectedVendor = suppliers.find(s => String(s.id) === String(form.supplierId));
+
+                                    // Helper function to extract text address safely from string or object
+                                    const formatAddress = (addr, city, region, country) => {
+                                        let street = '';
+                                        if (typeof addr === 'string') {
+                                            street = addr;
+                                        } else if (addr && typeof addr === 'object') {
+                                            street = [addr.addressLine1, addr.addressLine2, addr.street, addr.building].filter(Boolean).join(', ');
+                                            city = city || addr.city;
+                                            country = country || addr.country;
+                                        }
+                                        return [street, city, region, country].filter(Boolean).join(', ');
+                                    };
+
+                                    const vendorAddress = selectedVendor
+                                        ? (formatAddress(
+                                            selectedVendor.address || selectedVendor.billingAddress,
+                                            selectedVendor.city,
+                                            selectedVendor.region,
+                                            selectedVendor.country
+                                        ) || 'N/A')
+                                        : '';
+
+                                    const contactPerson = selectedVendor
+                                        ? (selectedVendor.primaryContactPerson ||
+                                            (selectedVendor.primaryFirstName ? `${selectedVendor.primaryFirstName} ${selectedVendor.primaryLastName || ''}`.trim() : '') ||
+                                            selectedVendor.contactPerson ||
+                                            selectedVendor.name ||
+                                            `${selectedVendor.firstName || ''} ${selectedVendor.lastName || ''}`.trim() ||
+                                            'N/A')
+                                        : '';
+
+                                    const contactNumber = selectedVendor
+                                        ? (selectedVendor.contactPhone || selectedVendor.mobile || selectedVendor.workPhone || selectedVendor.phone || selectedVendor.contactNumber || 'N/A')
+                                        : '';
+
+                                    const email = selectedVendor
+                                        ? (selectedVendor.contactEmail || selectedVendor.email || 'N/A')
+                                        : '';
+
+                                    const trn = selectedVendor
+                                        ? (selectedVendor.vatTrnNumber || selectedVendor.vatNumber || selectedVendor.trn || selectedVendor.taxRegistrationNo || selectedVendor.vatNo || selectedVendor.gstNo || 'N/A')
+                                        : '';
+
+                                    return (
+                                        <>
+                                            {/* Vendor Address */}
+                                            <div className="space-y-1">
+                                                <label className="text-[13.22px] font-semibold text-[#102A5B] block">
+                                                    {isRTL ? 'عنوان المورد' : 'Vendor Address'}
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    readOnly
+                                                    value={vendorAddress}
+                                                    placeholder={isRTL ? 'حدد المورد لتعبئة العنوان تلقائياً' : 'Select vendor to auto-populate address'}
+                                                    className="w-full h-[34px] px-3 bg-slate-50 border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-normal text-[#102A5B] outline-none"
+                                                />
+                                            </div>
+
+                                            {/* Contact Person & Contact Number */}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="space-y-1">
+                                                    <label className="text-[13.22px] font-semibold text-[#102A5B] block">{isRTL ? 'الشخص المسئول' : 'Contact Person'}</label>
+                                                    <input
+                                                        type="text"
+                                                        readOnly
+                                                        value={contactPerson}
+                                                        placeholder="N/A"
+                                                        className="w-full h-[32.39px] px-2.5 bg-slate-50 border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-normal text-[#102A5B]"
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[13.22px] font-semibold text-[#102A5B] block">{isRTL ? 'رقم التواصل' : 'Contact Number'}</label>
+                                                    <input
+                                                        type="text"
+                                                        readOnly
+                                                        value={contactNumber}
+                                                        placeholder="N/A"
+                                                        className="w-full h-[32.39px] px-2.5 bg-slate-50 border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-normal text-[#102A5B]"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Email & Tax Registration No */}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="space-y-1">
+                                                    <label className="text-[13.22px] font-semibold text-[#102A5B] block">{isRTL ? 'البريد الإلكتروني' : 'Email'}</label>
+                                                    <input
+                                                        type="email"
+                                                        readOnly
+                                                        value={email}
+                                                        placeholder="N/A"
+                                                        className="w-full h-[32.39px] px-2.5 bg-slate-50 border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-normal text-[#102A5B]"
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[13.22px] font-semibold text-[#102A5B] block">{isRTL ? 'رقم التسجيل الضريبي' : 'Tax Registration No.'}</label>
+                                                    <input
+                                                        type="text"
+                                                        readOnly
+                                                        value={trn}
+                                                        placeholder="N/A"
+                                                        className="w-full h-[32.39px] px-2.5 bg-slate-50 border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-normal text-[#102A5B]"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Vendor VAT No */}
+                                            <div className="space-y-1">
+                                                <label className="text-[13.22px] font-semibold text-[#102A5B] block">
+                                                    {isRTL ? 'الرقم الضريبي للمورد' : 'Vendor VAT No.'}
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    readOnly
+                                                    value={trn}
+                                                    placeholder="N/A"
+                                                    className="w-full h-[32.39px] px-2.5 bg-slate-50 border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-normal text-[#102A5B]"
+                                                />
+                                            </div>
+                                        </>
+                                    );
+                                })()}
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead className="bg-slate-50/50">
-                                    <tr>
-                                        <th className="px-12 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Material Specification</th>
-                                        <th className="px-6 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] w-48 text-center">Quantities</th>
-                                        <th className="px-6 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] w-48 text-center">Unit Price</th>
-                                        {form.discountMode === 'Item level' && (
-                                            <th className="px-6 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] w-32 text-center">Incentive</th>
-                                        )}
-                                        <th className="px-6 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] w-48 text-center">Tax Protocol</th>
-                                        <th className="px-12 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] w-48 text-right">Net Value</th>
-                                        <th className="px-8 py-6 w-20"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100/50">
-                                    <AnimatePresence mode="popLayout">
-                                        {form.items.map((it, idx) => {
-                                            const qty = Number(it.quantity) || 0;
-                                            const rate = Number(it.rate) || 0;
-                                            const discount = Number(it.lineDiscount) || 0;
-                                            const amount = Math.max(0, (qty * rate) - discount);
+                        {/* RIGHT: SECTION 3 PROCUREMENT ITEMS */}
+                        <div className="lg:col-span-9 bg-white border border-[#DCE5F3] rounded-[15.86px] p-4 flex flex-col justify-between space-y-4">
+                            <div className="space-y-3">
+                                {/* Header bar of items section */}
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E4EAF0] pb-3">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-[26.44px] h-[26.44px] rounded-full bg-[var(--color-primary,#00A9A8)] text-white text-[13.22px] font-bold flex items-center justify-center">
+                                            3
+                                        </div>
+                                        <h2 className="text-[23.79px] font-semibold text-[#102A5B] leading-[37px]">
+                                            {isRTL ? 'أصناف المشتريات' : 'Procurement Items'}
+                                        </h2>
+                                        <span className="px-2.5 py-0.5 bg-[#EEF3FB] rounded-[5.29px] text-[13.22px] font-semibold text-[#102A5B]">
+                                            {form.items.length > 0 ? (isRTL ? `${form.items.length} أصناف` : `${form.items.length} Items`) : (isRTL ? '24 أصناف' : '24 Items')}
+                                        </span>
+                                    </div>
 
-                                            return (
-                                                <motion.tr
-                                                    layout
-                                                    initial={{ opacity: 0, x: -20 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    exit={{ opacity: 0, x: 20 }}
-                                                    key={idx}
-                                                    className="group hover:bg-indigo-50/30 transition-colors"
-                                                >
-                                                    <td className="px-12 py-8 align-top">
-                                                        <div className="space-y-4">
-                                                            <div className="flex gap-3">
-                                                                <select
-                                                                    name="categoryId"
-                                                                    value={it.categoryId}
-                                                                    onChange={async (e) => {
-                                                                        handleItemChange(idx, e);
-                                                                        await fetchSubCategoriesForCategory(e.target.value);
-                                                                    }}
-                                                                    className="w-1/2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
-                                                                >
-                                                                    <option value="">Category</option>
-                                                                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                                                </select>
-                                                                <select
-                                                                    name="subCategoryId"
-                                                                    value={it.subCategoryId}
-                                                                    onChange={e => handleItemChange(idx, e)}
-                                                                    className="w-1/2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
-                                                                >
-                                                                    <option value="">Sub-Category</option>
-                                                                    {(subCategoriesByCategory[it.categoryId] || []).map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
-                                                                </select>
-                                                            </div>
-                                                            <select
-                                                                name="itemId"
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            className="px-3.5 py-1.5 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[13.22px] font-semibold text-[#102A5B] hover:bg-slate-50 flex items-center gap-1.5 cursor-pointer"
+                                        >
+                                            <span>{isRTL ? '▣ استيراد من إكسل' : '▣ Import from Excel'}</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={addItem}
+                                            className="px-4 py-1.5 bg-[var(--color-primary,#00A9A8)] text-white rounded-[5.29px] text-[13.22px] font-semibold hover:opacity-95 flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <Plus size={16} />
+                                            <span>{isRTL ? 'إضافة صنف' : 'Add Item'}</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Items Table Container */}
+                                <div className="overflow-x-visible min-h-[220px] border border-[#E4EAF0] rounded-lg">
+                                    <table className="w-full text-left border-collapse text-xs">
+                                        <thead>
+                                            <tr className="bg-[#EEF5FF] border-b border-[#E4EAF0] text-[#102A5B] font-semibold">
+                                                <th className="py-2 px-2.5">#</th>
+                                                <th className="py-2 px-2.5">{isRTL ? 'رمز الصنف' : 'Item Code'}</th>
+                                                <th className="py-2 px-2.5">{isRTL ? 'وصف الصنف' : 'Item Description'}</th>
+                                                <th className="py-2 px-2.5">{isRTL ? 'وحدة القياس' : 'UOM'}</th>
+                                                <th className="py-2 px-2.5 text-center">{isRTL ? 'الكمية' : 'Qty'}</th>
+                                                <th className="py-2 px-2.5 text-right">{isRTL ? 'سعر الوحدة (درهم)' : 'Unit Price (AED)'}</th>
+                                                <th className="py-2 px-2.5 text-center">{isRTL ? 'الضريبة (%)' : 'Tax (%)'}</th>
+                                                <th className="py-2 px-2.5 text-center">{isRTL ? 'الخصم (%)' : 'Discount (%)'}</th>
+                                                <th className="py-2 px-2.5 text-right">{isRTL ? 'المبلغ (درهم)' : 'Amount (AED)'}</th>
+                                                <th className="py-2 px-2.5 text-center">{isRTL ? 'الإجراء' : 'Action'}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[#E4EAF0] text-[#102A5B]">
+                                            {form.items.map((it, idx) => {
+                                                const qty = Number(it.quantity) || 0;
+                                                const rate = Number(it.rate) || 0;
+                                                const discount = Number(it.lineDiscount) || 0;
+                                                const amount = Math.max(0, (qty * rate) - discount);
+                                                const rawMat = rawMaterials.find(m => String(m.id) === String(it.itemId));
+                                                const unitObj = units.find(u => String(u.id) === String(it.unitId));
+
+                                                return (
+                                                    <tr key={idx} className="hover:bg-slate-50">
+                                                        <td className="py-2 px-2 text-center">{idx + 1}</td>
+                                                        <td className="py-2 px-2 font-semibold min-w-[200px]">
+                                                            <SearchableItemSelect
+                                                                items={rawMaterials}
                                                                 value={it.itemId}
                                                                 onChange={e => handleItemChange(idx, e)}
-                                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-black text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
-                                                            >
-                                                                <option value="">Define Item Identifier</option>
-                                                                {rawMaterials.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                                                            </select>
+                                                                placeholder="Select Item"
+                                                            />
+                                                        </td>
+                                                        <td className="py-2 px-2">
                                                             <input
+                                                                type="text"
                                                                 name="description"
-                                                                value={it.description}
+                                                                value={it.description || ''}
                                                                 onChange={e => handleItemChange(idx, e)}
-                                                                placeholder="Detailed technical specifications..."
-                                                                className="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-medium text-slate-500 outline-none focus:bg-white focus:border-indigo-100 transition-all"
+                                                                placeholder="Item description..."
+                                                                className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-xs outline-none focus:border-[var(--color-primary,#00A9A8)]"
                                                             />
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-8 align-top">
-                                                        <div className="space-y-3">
-                                                            <input
-                                                                type="number"
-                                                                name="quantity"
-                                                                value={it.quantity}
-                                                                onChange={e => handleItemChange(idx, e)}
-                                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-center text-sm font-black text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
-                                                                min="0"
-                                                            />
+                                                        </td>
+                                                        <td className="py-2 px-2">
                                                             <select
                                                                 name="unitId"
                                                                 value={it.unitId}
                                                                 onChange={e => handleItemChange(idx, e)}
-                                                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black text-center text-slate-400 outline-none focus:bg-white focus:border-indigo-100 transition-all"
+                                                                className="w-full bg-white border border-[#D8E2F1] rounded px-1 py-1 text-xs outline-none focus:border-[var(--color-primary,#00A9A8)]"
                                                             >
                                                                 <option value="">UOM</option>
-                                                                {units.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                                                                {units.map(u => <option key={u.id} value={u.id}>{u.name || u.code}</option>)}
                                                             </select>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-8 align-top">
-                                                        <div className="relative group/price">
+                                                        </td>
+                                                        <td className="py-2 px-2 text-center">
+                                                            <input
+                                                                type="number"
+                                                                name="quantity"
+                                                                min="0"
+                                                                value={it.quantity}
+                                                                onChange={e => handleItemChange(idx, e)}
+                                                                className="w-16 bg-white border border-[#D8E2F1] rounded text-center py-1 text-xs outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                                            />
+                                                        </td>
+                                                        <td className="py-2 px-2 text-right">
                                                             <input
                                                                 type="number"
                                                                 name="rate"
+                                                                min="0"
                                                                 value={it.rate}
                                                                 onChange={e => handleItemChange(idx, e)}
-                                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-center text-sm font-black text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
-                                                                min="0"
-                                                            />
-                                                            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none opacity-20 text-xs font-black">
-                                                                {form.currency}
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    {form.discountMode === 'Item level' && (
-                                                        <td className="px-6 py-8 align-top">
-                                                            <input
-                                                                type="number"
-                                                                name="lineDiscount"
-                                                                value={it.lineDiscount}
-                                                                onChange={e => handleItemChange(idx, e)}
-                                                                className="w-full px-4 py-3 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-center text-sm font-black outline-none focus:ring-2 focus:ring-emerald-500"
-                                                                min="0"
+                                                                className="w-20 bg-white border border-[#D8E2F1] rounded text-right py-1 text-xs outline-none focus:border-[var(--color-primary,#00A9A8)]"
                                                             />
                                                         </td>
-                                                    )}
-                                                    <td className="px-6 py-8 align-top">
-                                                        <div className="space-y-3">
+                                                        <td className="py-2 px-2 text-center">
                                                             <select
                                                                 name="taxId"
                                                                 value={it.taxId}
                                                                 onChange={e => handleItemChange(idx, e)}
-                                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-center text-[10px] font-black text-slate-600 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+                                                                className="w-16 bg-white border border-[#D8E2F1] rounded text-center py-1 text-xs outline-none"
                                                             >
-                                                                <option value="">No Levy</option>
-                                                                {taxes.map(t => <option key={t.id} value={t.id}>{t.code} ({t.rate}%)</option>)}
+                                                                <option value="">0%</option>
+                                                                {taxes.map(t => <option key={t.id} value={t.id}>{t.rate}%</option>)}
                                                             </select>
-                                                            <label className="flex items-center justify-center gap-2 cursor-pointer group/exempt">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    name="taxExempt"
-                                                                    checked={it.taxExempt}
-                                                                    onChange={e => handleItemChange(idx, e)}
-                                                                    className="w-4 h-4 rounded-lg border-slate-300 text-indigo-600 focus:ring-indigo-500 transition-all cursor-pointer"
-                                                                />
-                                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover/exempt:text-indigo-500 transition-colors">Exempt</span>
-                                                            </label>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-12 py-11 text-right align-top">
-                                                        <span className="text-xl font-black text-slate-800 tabular-nums">
+                                                        </td>
+                                                        <td className="py-2 px-2 text-center">
+                                                            <input
+                                                                type="number"
+                                                                name="lineDiscount"
+                                                                min="0"
+                                                                disabled={form.discountMode !== 'Item Level'}
+                                                                value={form.discountMode === 'Item Level' ? it.lineDiscount : 0}
+                                                                onChange={e => handleItemChange(idx, e)}
+                                                                placeholder="0"
+                                                                className={`w-16 rounded text-center py-1 text-xs outline-none ${form.discountMode === 'Item Level'
+                                                                        ? 'bg-white border border-[#D8E2F1] focus:border-[var(--color-primary,#00A9A8)]'
+                                                                        : 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
+                                                                    }`}
+                                                            />
+                                                        </td>
+                                                        <td className="py-2 px-2 text-right font-bold">
                                                             {amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-8 py-10 text-center align-top">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeItem(idx)}
-                                                            className="p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all active:scale-95"
-                                                        >
-                                                            <Trash2 size={20} />
-                                                        </button>
-                                                    </td>
-                                                </motion.tr>
-                                            );
-                                        })}
-                                    </AnimatePresence>
-                                </tbody>
-                            </table>
-                            {form.items.length === 0 && (
-                                <div className="p-20 text-center space-y-4">
-                                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-300">
-                                        <Package size={32} />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="font-black text-slate-400 uppercase tracking-[0.2em] text-xs">Awaiting Line Entry</p>
-                                        <p className="text-sm font-bold text-slate-300">Click "Add Position" to populate the manifest</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Summary & Totals */}
-                        <div className="p-12 bg-slate-50/50 border-t border-indigo-50 flex flex-col md:flex-row justify-between gap-12">
-                            <div className="w-full md:w-1/2 space-y-6">
-                                <div className="p-6 bg-white/50 rounded-[2rem] border border-white p-8 space-y-4 shadow-sm">
-                                    <h4 className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                        <Info size={14} className="text-indigo-500" /> Procurement Intelligence
-                                    </h4>
-                                    <p className="text-sm font-bold text-slate-500 leading-relaxed italic">
-                                        "Automated tax calculations and discount protocols are applied based on your classification settings. Ensure vendor tax IDs are validated before manifest finalization."
-                                    </p>
+                                                        </td>
+                                                        <td className="py-2 px-2 text-center">
+                                                            <button type="button" onClick={() => removeItem(idx)} className="text-rose-500 hover:text-rose-700 p-1 cursor-pointer">
+                                                                <Trash2 size={13} />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
-                            <div className="w-full md:w-1/3 space-y-4">
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center text-sm font-bold text-slate-400">
-                                        <span>Gross Manifest Value</span>
-                                        <span className="text-slate-600 tabular-nums">{totals.subTotal.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm font-bold text-emerald-500 bg-emerald-500/5 px-4 py-2 rounded-xl">
-                                        <span>Consolidated Discounts</span>
-                                        <span className="tabular-nums">- {totals.totalDiscount.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm font-bold text-amber-500">
-                                        <span>Taxation Levies</span>
-                                        <span className="tabular-nums">+ {totals.totalTax.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="font-bold text-slate-400">Additional Charges</span>
-                                        <div className="relative w-32">
+
+                            {/* Summary Totals Row inside Section 3 */}
+                            <div className="grid grid-cols-5 gap-2 pt-3 border-t border-[#E4EAF0] text-center">
+                                <div className="p-2 bg-slate-50 rounded-lg">
+                                    <span className="text-[10px] text-[#5F6F91] block">{isRTL ? 'إجمالي الأصناف' : 'Total Items'}</span>
+                                    <span className="text-[16px] font-bold text-[var(--color-primary,#00A9A8)]">{form.items.length}</span>
+                                </div>
+                                <div className="p-2 bg-slate-50 rounded-lg">
+                                    <span className="text-[10px] text-[#5F6F91] block">{isRTL ? 'المجموع الفرعي (درهم)' : 'Sub Total (AED)'}</span>
+                                    <span className="text-[15px] font-bold text-[var(--color-primary,#00A9A8)]">{totals.subTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                </div>
+                                <div className="p-2 bg-slate-50 rounded-lg">
+                                    <span className="text-[10px] text-[#5F6F91] block">{isRTL ? 'إجمالي الضريبة (درهم)' : 'Total Tax (AED)'}</span>
+                                    <span className="text-[15px] font-bold text-[var(--color-primary,#00A9A8)]">{totals.totalTax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                </div>
+                                <div className="p-2 bg-slate-50 rounded-lg flex flex-col justify-center items-center">
+                                    <span className="text-[10px] text-[#5F6F91] block">{isRTL ? 'إجمالي الخصم (درهم)' : 'Total Discount (AED)'}</span>
+                                    {form.discountMode === 'Order Level' ? (
+                                        <div className="flex items-center gap-1 mt-0.5">
                                             <input
                                                 type="number"
-                                                name="otherCharges"
-                                                value={form.otherCharges}
+                                                name="orderDiscountPercentage"
+                                                min="0"
+                                                max="100"
+                                                value={form.orderDiscountPercentage}
                                                 onChange={handleChange}
-                                                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-right text-sm font-black text-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                                                className="w-12 h-6 text-center text-xs bg-white border border-[#D8E2F1] rounded font-bold text-[var(--color-primary,#00A9A8)] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                                placeholder="%"
                                             />
-                                            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none opacity-20 text-[10px] font-black">
-                                                FIXED
-                                            </div>
+                                            <span className="text-xs font-bold text-[#5F6F91]">%</span>
+                                            <span className="text-[11px] font-bold text-[var(--color-primary,#00A9A8)] ml-1">
+                                                ({totals.totalDiscount.toFixed(2)})
+                                            </span>
                                         </div>
-                                    </div>
-                                </div>
-                                <div className="pt-6 border-t-2 border-dashed border-indigo-100 mt-6 flex justify-between items-end">
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Net Manifest Value</p>
-                                        <p className="text-4xl font-black text-indigo-600 tabular-nums tracking-tighter">
-                                            {totals.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <span className="px-3 py-1 bg-indigo-500 text-white text-[10px] font-black rounded-lg shadow-lg shadow-indigo-500/20">
-                                            {form.currency}
+                                    ) : (
+                                        <span className="text-[15px] font-bold text-[var(--color-primary,#00A9A8)]">
+                                            {totals.totalDiscount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </span>
-                                    </div>
+                                    )}
+                                </div>
+                                <div className="p-2 bg-[var(--color-primary,#00A9A8)] text-white rounded-lg flex flex-col justify-center">
+                                    <span className="text-[10px] opacity-90 block">{isRTL ? 'المجموع الكلي (درهم)' : 'Grand Total (AED)'}</span>
+                                    <span className="text-[16px] font-bold">{totals.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Section 3: Strategic Logistics & Documentation */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                        {/* Attachments */}
-                        <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-white/40 shadow-2xl shadow-indigo-900/5 p-8 md:p-12 space-y-8">
-                            <div className="flex items-center gap-4 border-b border-indigo-50 pb-8">
-                                <div className="p-4 bg-indigo-500/10 rounded-[1.25rem] text-indigo-600">
-                                    <Paperclip size={28} />
+                    {/* SECTION 4, 5, 6 THREE-COLUMN GRID */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        {/* SECTION 4: DELIVERY DETAILS */}
+                        <div className="bg-white border border-[#DCE5F3] rounded-[15.86px] p-4 space-y-3">
+                            <div className="flex items-center gap-2 border-b border-[#E4EAF0] pb-2.5">
+                                <div className="w-[26.44px] h-[26.44px] rounded-full bg-[var(--color-primary,#00A9A8)] text-white text-[13.22px] font-bold flex items-center justify-center">
+                                    4
                                 </div>
-                                <div>
-                                    <h3 className="text-2xl font-black text-slate-800 tracking-tight">Documentation</h3>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Digital Artifacts
-                                    </p>
-                                </div>
+                                <h2 className="text-[20px] font-semibold text-[#102A5B]">{isRTL ? 'تفاصيل التسليم' : 'Delivery Details'}</h2>
                             </div>
 
-                            <div className="space-y-6">
-                                <div className="p-10 border-2 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center gap-4 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all group">
-                                    <input ref={fileInputRef} type="file" multiple onChange={handleFileChange} className="hidden" id="file-upload" />
-                                    <label htmlFor="file-upload" className="flex flex-col items-center cursor-pointer">
-                                        <div className="p-5 bg-white shadow-lg rounded-full text-indigo-500 group-hover:scale-110 transition-transform">
-                                            <Upload size={32} />
-                                        </div>
-                                        <div className="mt-4 text-center">
-                                            <p className="text-sm font-black text-slate-700">Select Procurement Docs</p>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">PDF, Image, or Zip</p>
-                                        </div>
-                                    </label>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <AnimatePresence>
-                                        {form.attachments.map(att => (
-                                            <motion.div
-                                                initial={{ opacity: 0, scale: 0.95 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                exit={{ opacity: 0, scale: 0.95 }}
-                                                key={att.id}
-                                                className="bg-white border border-slate-100 p-4 rounded-2xl flex items-center justify-between group shadow-sm"
-                                            >
-                                                <div className="flex items-center gap-3 overflow-hidden">
-                                                    <FileText size={18} className="text-indigo-400 shrink-0" />
-                                                    <span
-                                                        className="text-xs font-bold text-slate-600 truncate cursor-pointer hover:text-indigo-600"
-                                                        onClick={() => att.url && window.open(att.url, '_blank')}
-                                                    >
-                                                        {att.fileName}
-                                                    </span>
-                                                </div>
-                                                <button type="button" onClick={() => removeExistingAttachment(att.id)} className="p-2 text-slate-300 hover:text-rose-500 transition-colors">
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </motion.div>
-                                        ))}
-                                        {attachmentFiles.map((f, i) => (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                key={`new-${i}`}
-                                                className="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-center justify-between group shadow-sm"
-                                            >
-                                                <div className="flex items-center gap-3 overflow-hidden">
-                                                    <div className="relative">
-                                                        <FileText size={18} className="text-indigo-600 shrink-0" />
-                                                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full border border-white" />
-                                                    </div>
-                                                    <span className="text-xs font-black text-indigo-700 truncate">{f.name}</span>
-                                                </div>
-                                                <button type="button" onClick={() => removeNewFile(i)} className="p-2 text-indigo-300 hover:text-rose-500 transition-colors">
-                                                    <X size={14} />
-                                                </button>
-                                            </motion.div>
-                                        ))}
-                                    </AnimatePresence>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Delivery Configuration */}
-                        <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-white/40 shadow-2xl shadow-indigo-900/5 p-8 md:p-12 space-y-8">
-                            <div className="flex items-center gap-4 border-b border-indigo-50 pb-8">
-                                <div className="p-4 bg-indigo-500/10 rounded-[1.25rem] text-indigo-600">
-                                    <Truck size={28} />
-                                </div>
-                                <div>
-                                    <h3 className="text-2xl font-black text-slate-800 tracking-tight">Logistics Protocol</h3>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Fulfillment Configuration
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-8">
-                                <div className="grid grid-cols-2 gap-4 p-2 bg-slate-100/50 rounded-2xl">
-                                    {['Organization', 'Customer'].map(type => (
+                            <div className="space-y-2.5">
+                                <div className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-[12px] font-semibold text-[#102A5B] block">
+                                            {isRTL ? 'عنوان التسليم' : 'Delivery Address'} <span className="text-rose-500">*</span>
+                                        </label>
                                         <button
-                                            key={type}
                                             type="button"
-                                            onClick={() => toggleDeliverToType(type)}
-                                            className={`py-3 rounded-[1.25rem] text-[10px] font-black uppercase tracking-widest transition-all ${form.deliverToType === type
-                                                ? 'bg-white text-indigo-600 shadow-lg shadow-indigo-500/10'
-                                                : 'text-slate-400 hover:text-slate-600'
-                                                }`}
+                                            onClick={() => setIsLocationModalOpen(true)}
+                                            className="text-[11px] font-semibold text-[var(--color-primary,#00A9A8)] hover:underline cursor-pointer"
                                         >
-                                            {type} Destination
+                                            {isRTL ? '+ إضافة موقع' : '+ Add Location'}
                                         </button>
-                                    ))}
-                                </div>
-
-                                <div className="space-y-6">
-                                    <Select
-                                        label="Strategic Destination"
+                                    </div>
+                                    <select
+                                        name="deliverToId"
                                         value={form.deliverToId}
                                         onChange={handleDeliverToIdChange}
-                                        icon={MapPin}
+                                        className="w-full h-[32px] px-2.5 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[12px] text-[#102A5B] outline-none"
                                     >
-                                        <option value="">Select Endpoint</option>
-                                        {form.deliverToType === 'Organization'
-                                            ? locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)
-                                            : customers.map(c => <option key={c.id} value={c.id}>{c.companyName || `${c.firstName} ${c.lastName}`}</option>)
-                                        }
-                                    </Select>
+                                        <option value="">{isRTL ? 'حدد الموقع' : 'Select Location'}</option>
+                                        {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                                    </select>
+                                </div>
 
-                                    <TextArea
-                                        label="Precision Address"
-                                        placeholder="Full geographic coordinates..."
-                                        rows={3}
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                        <label className="text-[12px] font-semibold text-[#102A5B] block">{isRTL ? 'عناية' : 'Attention To'}</label>
+                                        <input
+                                            type="text"
+                                            name="attentionTo"
+                                            value={form.attentionTo || ''}
+                                            onChange={handleChange}
+                                            placeholder={isRTL ? 'اسم جهة الاتصال...' : 'Contact name...'}
+                                            className="w-full h-[32px] px-2.5 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[12px] text-[#102A5B] outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[12px] font-semibold text-[#102A5B] block">{isRTL ? 'رقم التواصل' : 'Contact Number'}</label>
+                                        <input
+                                            type="text"
+                                            name="deliveryContactNumber"
+                                            value={form.deliveryContactNumber || ''}
+                                            onChange={handleChange}
+                                            placeholder={isRTL ? 'رقم الهاتف...' : 'Phone number...'}
+                                            className="w-full h-[32px] px-2.5 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[12px] text-[#102A5B] outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-[12px] font-semibold text-[#102A5B]">{isRTL ? 'تعليمات التسليم' : 'Delivery Instructions'}</label>
+                                        <span className="text-[10px] text-[#5F6F91]">0/250</span>
+                                    </div>
+                                    <textarea
+                                        rows={2}
+                                        name="deliverToAddress"
                                         value={form.deliverToAddress}
-                                        onChange={(e) => setForm(prev => ({ ...prev, deliverToAddress: e.target.value }))}
-                                        icon={Truck}
+                                        onChange={handleChange}
+                                        placeholder={isRTL ? 'التسليم بين 8 صباحاً - 5 مساءً في أيام العمل.' : 'Deliver between 8 AM - 5 PM on working days.'}
+                                        className="w-full p-2 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[12px] text-[#102A5B] outline-none"
                                     />
+                                </div>
 
-                                    <Input label="Notification Email" name="emailTo" value={form.emailTo} onChange={handleChange} icon={Plus} placeholder="stakeholder@enterprise.com" />
+                                <label className="flex items-center gap-2 cursor-pointer pt-1">
+                                    <input
+                                        type="checkbox"
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                const selectedVendor = suppliers.find(s => String(s.id) === String(form.supplierId));
+                                                if (selectedVendor) {
+                                                    const street = typeof selectedVendor.address === 'string' ? selectedVendor.address : '';
+                                                    const fullAddr = [street, selectedVendor.city, selectedVendor.country].filter(Boolean).join(', ');
+                                                    setForm(prev => ({ ...prev, deliverToAddress: fullAddr }));
+                                                }
+                                            }
+                                        }}
+                                        className="rounded border-[#D8E2F1] text-[var(--color-primary,#00A9A8)]"
+                                    />
+                                    <span className="text-[12px] text-[#102A5B]">{isRTL ? 'نفس عنوان المورد' : 'Same as Vendor Address'}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* SECTION 5: ADDITIONAL INFORMATION */}
+                        <div className="bg-white border border-[#DCE5F3] rounded-[15.86px] p-4 space-y-3">
+                            <div className="flex items-center gap-2 border-b border-[#E4EAF0] pb-2.5">
+                                <div className="w-[26.44px] h-[26.44px] rounded-full bg-[var(--color-primary,#00A9A8)] text-white text-[13.22px] font-bold flex items-center justify-center">
+                                    5
+                                </div>
+                                <h2 className="text-[20px] font-semibold text-[#102A5B]">{isRTL ? 'معلومات إضافية' : 'Additional Information'}</h2>
+                            </div>
+
+                            <div className="space-y-2.5">
+                                <div className="space-y-1">
+                                    <label className="text-[12px] font-semibold text-[#102A5B] block">{isRTL ? 'المشروع' : 'Project'}</label>
+                                    <input
+                                        type="text"
+                                        name="projectNumber"
+                                        value={form.projectNumber}
+                                        onChange={handleChange}
+                                        placeholder={isRTL ? 'رمز / اسم المشروع...' : 'Project code / name...'}
+                                        className="w-full h-[32px] px-2.5 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[12px] text-[#102A5B] outline-none"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                        <label className="text-[12px] font-semibold text-[#102A5B] block">{isRTL ? 'حساب دفتر الاستاد العام' : 'GL Account'}</label>
+                                        <input
+                                            type="text"
+                                            name="glAccount"
+                                            value={form.glAccount || ''}
+                                            onChange={handleChange}
+                                            placeholder="5200 - Raw Materials"
+                                            className="w-full h-[32px] px-2 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[11px] text-[#102A5B] outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[12px] font-semibold text-[#102A5B] block">{isRTL ? 'مركز التكلفة' : 'Cost Center'}</label>
+                                        <input
+                                            type="text"
+                                            name="costCenter"
+                                            value={form.costCenter || ''}
+                                            onChange={handleChange}
+                                            placeholder="CC-1001 Production"
+                                            className="w-full h-[32px] px-2 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[11px] text-[#102A5B] outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-[12px] font-semibold text-[#102A5B]">{isRTL ? 'الشروط والأحكام' : 'Terms & Conditions'}</label>
+                                        <span className="text-[10px] text-[#5F6F91]">0/500</span>
+                                    </div>
+                                    <textarea
+                                        rows={2}
+                                        value={form.termsAndConditions}
+                                        onChange={handleChange}
+                                        name="termsAndConditions"
+                                        placeholder={isRTL ? 'الدفع خلال 30 يوماً من تاريخ استلام البضائع.' : 'Payment within 30 days from the date of goods receipt.'}
+                                        className="w-full p-2 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[12px] text-[#102A5B] outline-none"
+                                    />
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Section 4: Terms & Notes */}
-                    <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-white/40 shadow-2xl shadow-indigo-900/5 p-8 md:p-12">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                            <TextArea
-                                label="Compliance Terms & Conditions"
-                                name="termsAndConditions"
-                                value={form.termsAndConditions}
-                                onChange={handleChange}
-                                rows={4}
-                                placeholder="Legal framework for this procurement..."
-                            />
-                            <TextArea
-                                label="Strategic Operational Notes"
-                                name="notes"
-                                value={form.notes}
-                                onChange={handleChange}
-                                rows={4}
-                                placeholder="Displayed on public-facing manifest..."
-                            />
-                        </div>
-                    </div>
+                        {/* SECTION 6: APPROVALS */}
+                        <div className="bg-white border border-[#DCE5F3] rounded-[15.86px] p-4 space-y-3 flex flex-col justify-between">
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2 border-b border-[#E4EAF0] pb-2.5">
+                                    <div className="w-[26.44px] h-[26.44px] rounded-full bg-[var(--color-primary,#00A9A8)] text-white text-[13.22px] font-bold flex items-center justify-center">
+                                        6
+                                    </div>
+                                    <h2 className="text-[20px] font-semibold text-[#102A5B]">{isRTL ? 'الموافقات' : 'Approvals'}</h2>
+                                </div>
 
-                    {/* Form Submission Actions */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-12 border-t border-slate-200">
-                        <div className="flex items-center gap-6">
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Document Template</span>
-                                <span className="text-sm font-black text-indigo-600 mt-1 flex items-center gap-2">
-                                    <FileText size={16} /> Enterprise Standard V2.0
-                                </span>
-                            </div>
-                            <div className="w-px h-10 bg-slate-200" />
-                            <div className="flex flex-col text-slate-400">
-                                <span className="text-[10px] font-black uppercase tracking-widest">Status</span>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                                    <span className="text-xs font-bold">Drafting Workspace</span>
+                                <div className="space-y-2.5">
+                                    <div className="space-y-1">
+                                        <label className="text-[12px] font-semibold text-[#102A5B] block">{isRTL ? 'مسار عمل الموافقة' : 'Approval Workflow'}</label>
+                                        <select
+                                            name="approvalWorkflow"
+                                            value={form.approvalWorkflow || 'Standard Approval'}
+                                            onChange={handleChange}
+                                            className="w-full h-[32px] px-2.5 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[12px] text-[#102A5B] outline-none"
+                                        >
+                                            <option value="Standard Approval">{isRTL ? 'مسار موافقة الشراء' : 'Purchase Approval Workflow'}</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-[12px] font-semibold text-[#102A5B]">{isRTL ? 'ملاحظة للمعتمد' : 'Note to Approver'}</label>
+                                            <span className="text-[10px] text-[#5F6F91]">0/250</span>
+                                        </div>
+                                        <textarea
+                                            rows={2}
+                                            name="notes"
+                                            value={form.notes}
+                                            onChange={handleChange}
+                                            placeholder={isRTL ? 'يرجى مراجعة واعتماد أمر الشراء هذا.' : 'Please review and approve this PO.'}
+                                            className="w-full p-2 bg-white border border-[#D8E2F1] rounded-[5.29px] text-[12px] text-[#102A5B] outline-none"
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="flex items-center gap-4 w-full sm:w-auto">
-                            <button
-                                type="button"
-                                onClick={() => navigate('/purchase-dashboard/purchase-orders')}
-                                className="flex-1 sm:flex-none px-10 py-4 bg-white border border-slate-200 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-500 hover:text-rose-500 hover:border-rose-100 hover:bg-rose-50 transition-all active:scale-95"
-                            >
-                                Abort
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="flex-1 sm:flex-none flex items-center justify-center gap-3 px-12 py-4 bg-indigo-600 text-white rounded-[1.25rem] text-xs font-black uppercase tracking-widest hover:bg-indigo-700 hover:shadow-2xl hover:shadow-indigo-500/40 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
-                            >
-                                {loading ? <Loader className="animate-spin" size={18} /> : <Save size={18} />}
-                                {isEditing ? 'Commit Updates' : 'Authorize Manifest'}
-                            </button>
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-2 pt-3 border-t border-[#E4EAF0]">
+                                <button
+                                    type="button"
+                                    onClick={() => navigate('/purchase-dashboard/purchase-orders')}
+                                    className="flex-1 py-2 bg-white border border-[#DCE5F3] rounded-[5.29px] text-[12px] font-semibold text-[#102A5B] hover:bg-slate-50 cursor-pointer"
+                                >
+                                    {isRTL ? 'إلغاء' : 'Cancel'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={(e) => { setForm(prev => ({ ...prev, status: 'Draft' })); handleSubmit(e); }}
+                                    className="flex-1 py-2 bg-white border border-[#DCE5F3] rounded-[5.29px] text-[12px] font-semibold text-[#102A5B] hover:bg-slate-50 cursor-pointer"
+                                >
+                                    {isRTL ? 'حفظ كمسودة' : 'Save as Draft'}
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 py-2 bg-[var(--color-sidebar-bg,#013E5B)] text-white rounded-[5.29px] text-[12px] font-semibold hover:opacity-95 cursor-pointer shadow-xs"
+                                >
+                                    {isRTL ? 'تقديم للموافقة' : 'Submit for Approval'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </form>
+
+                {/* Add Location Modal */}
+                <LocationModal
+                    isOpen={isLocationModalOpen}
+                    onClose={() => setIsLocationModalOpen(false)}
+                    onSave={handleSaveLocation}
+                    loading={locationModalLoading}
+                />
             </div>
         </div>
     );

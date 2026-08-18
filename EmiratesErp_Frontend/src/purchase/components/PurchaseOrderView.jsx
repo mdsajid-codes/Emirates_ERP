@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from 'axios'; // standard import
+import axiosInstance from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Loader, Printer, ArrowLeft, Mail, Paperclip,
-    FileText, Edit, ChevronDown, Check, Download,
+    Printer, ArrowLeft, ArrowRight, Edit, ChevronDown, Check, Download,
     Send, Box, MapPin, Calendar, Hash, ShieldCheck,
-    Info, ExternalLink, BadgeCheck, FileDigit, Truck,
-    Calculator
+    Info, BadgeCheck, FileDigit, Truck, Clock, Paperclip, Plus
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
+import { loadThemeFromStorage, applyTheme } from '../../utils/themeUtils';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || '';
 
@@ -28,16 +29,21 @@ const numberToWords = (num) => {
 };
 
 const PurchaseOrderView = () => {
+    const { isRTL } = useLanguage();
     const { id } = useParams();
     const navigate = useNavigate();
     const [po, setPo] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [actionLoading, setActionLoading] = useState(false);
     const [error, setError] = useState('');
     const [showMore, setShowMore] = useState(false);
     const [isLetterHead, setIsLetterHead] = useState(false);
-    const [tenantInfo, setTenantInfo] = useState({ name: 'Transcold Air conditioner spare parts trading llc', address: 'Abu Dhabi', logo: '/logo.png' });
+    const [tenantInfo, setTenantInfo] = useState({ name: '', address: '', logo: '' });
     const [supplierInfo, setSupplierInfo] = useState(null);
+
+    useEffect(() => {
+        const theme = loadThemeFromStorage();
+        if (theme) applyTheme(theme);
+    }, []);
 
     useEffect(() => {
         if (!id) return;
@@ -46,405 +52,435 @@ const PurchaseOrderView = () => {
             try {
                 const token = localStorage.getItem('token');
                 const headers = { Authorization: `Bearer ${token}` };
-                const res = await axios.get(`${API_URL}/purchases/orders/${id}`, { headers });
+                const res = await axiosInstance.get(`${API_URL}/purchases/orders/${id}`, { headers });
                 const data = res.data;
                 setPo(data);
 
                 const tenantId = localStorage.getItem('tenantId');
                 if (tenantId) {
                     try {
-                        const tRes = await axios.get(`${API_URL}/tenants/${tenantId}`, { headers });
+                        const tRes = await axiosInstance.get(`${API_URL}/tenants/${tenantId}`, { headers });
                         setTenantInfo(tRes.data);
                     } catch (terr) { console.warn('Tenant load fail', terr); }
                 }
 
                 if (data.supplierId) {
                     try {
-                        const sRes = await axios.get(`${API_URL}/parties/${data.supplierId}`, { headers });
+                        const sRes = await axiosInstance.get(`${API_URL}/parties/${data.supplierId}`, { headers });
                         setSupplierInfo(sRes.data);
                     } catch (serr) { console.warn('Supplier load fail', serr); }
                 }
             } catch (err) {
                 console.error('Failed to load PO', err);
-                setError('System failed to extract manifest. Please verify connectivity.');
+                setError(isRTL ? 'تعذر استخراج أمر الشراء' : 'Failed to load purchase order manifest.');
             } finally {
                 setLoading(false);
             }
         };
         load();
-    }, [id]);
+    }, [id, isRTL]);
 
     const handlePrint = () => window.print();
 
     if (loading) {
         return (
-            <div className="flex flex-col justify-center items-center h-screen bg-slate-50 gap-6">
-                <div className="relative">
-                    <div className="w-24 h-24 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
-                    <Box className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-indigo-600" size={32} />
-                </div>
-                <div className="text-center">
-                    <p className="text-lg font-black text-slate-800 tracking-tight">Synchronizing Manifest</p>
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mt-1">Connecting to Secure Vault</p>
-                </div>
+            <div className="flex flex-col justify-center items-center h-screen bg-[#F7F9FD] gap-4">
+                <div className="w-12 h-12 border-4 border-slate-200 border-t-[#00A9A8] rounded-full animate-spin" />
+                <p className="text-sm font-semibold text-[#0A2551]">{isRTL ? 'جاري التحميل...' : 'Loading Purchase Order...'}</p>
             </div>
         );
     }
 
-    if (!po) return <div className="p-12 text-center text-rose-500 font-black uppercase tracking-widest">{error || 'Manifest Not Found'}</div>;
+    if (!po) return <div className="p-8 text-center text-rose-500 font-bold">{error || 'Order Manifest Not Found'}</div>;
 
-    const totalAmountWords = numberToWords(Math.floor(po.totalAmount || 0));
+    const totalQty = (po.items || []).reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+    const subTotal = (Number(po.subTotal) || 0) + (Number(po.totalDiscount) || 0);
+    const totalSavings = Number(po.totalDiscount) || 0;
+    const vatAmount = Number(po.totalTax) || 0;
+    const shipping = Number(po.otherCharges) || 0;
+    const netPayable = Number(po.totalAmount) || 0;
+
+    // Check availability of real data for bottom widgets
+    const hasAttachments = Array.isArray(po.attachments) && po.attachments.length > 0;
+    const hasNotes = Boolean(po.notes || po.termsAndConditions);
+    const hasActivityTimeline = Array.isArray(po.history) && po.history.length > 0;
+    const hasApprovalInfo = Boolean(po.approvedBy || po.authorizedBy || po.approvalDate);
+    const hasIntelligence = Boolean(po.validatedBy || po.validatedAt || po.intelligenceNotes);
 
     return (
-        <div className="bg-slate-50 min-h-screen pb-24 print:bg-white print:pb-0 font-sans">
-            {/* Top Navigation & Status Bar - Hidden in Print */}
-            <div className="print:hidden sticky top-0 z-50">
-                <div className="bg-white/80 backdrop-blur-xl border-b border-white px-8 py-3 flex justify-between items-center shadow-sm">
-                    <div className="flex items-center gap-6">
-                        <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                            <ArrowLeft size={20} className="text-slate-600" />
-                        </button>
-                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                            <span>Manifest</span>
-                            <ChevronDown size={10} />
-                            <span className="text-indigo-600">PO-{po.poNumber}</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 px-4 py-1.5 bg-indigo-50 rounded-full border border-indigo-100">
-                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Authorized</span>
-                        </div>
-                        <Link to="/purchase-dashboard/purchase-orders/new" className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg active:scale-95">
-                            Create New
-                        </Link>
-                    </div>
-                </div>
-
-                <div className="px-8 py-6 bg-white border-b border-slate-100 flex flex-wrap gap-3 items-center shadow-sm">
-                    <Link to={`/purchase-dashboard/purchase-orders/edit/${po.id}`} className="group flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-600 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-sm">
-                        <Edit size={16} className="group-hover:scale-110 transition-transform" /> Edit Manifest
-                    </Link>
-
-                    <button className="group flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-600 hover:border-rose-200 hover:text-rose-600 transition-all shadow-sm">
-                        <Download size={16} className="group-hover:translate-y-0.5 transition-transform" /> PDF Export
-                    </button>
-
-                    <button onClick={() => { setIsLetterHead(false); setTimeout(handlePrint, 100); }} className="group flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95">
-                        <Printer size={16} className="group-hover:rotate-12 transition-transform" /> Quick Print
-                    </button>
-
-                    <button onClick={() => { setIsLetterHead(true); setTimeout(handlePrint, 100); }} className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-slate-900 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-900 hover:bg-slate-900 hover:text-white transition-all shadow-sm">
-                        <ShieldCheck size={16} /> Letterhead Print
-                    </button>
-
-                    <div className="relative">
-                        <button onClick={() => setShowMore(!showMore)} className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-200 transition-all shadow-sm">
-                            Workflows <ChevronDown size={14} className={`transition-transform ${showMore ? 'rotate-180' : ''}`} />
-                        </button>
-                        <AnimatePresence>
-                            {showMore && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    className="absolute top-full left-0 mt-3 w-64 bg-white/95 backdrop-blur-xl border border-white shadow-2xl rounded-3xl py-4 z-50"
-                                >
-                                    <button onClick={() => navigate(`/purchase-dashboard/purchase-orders/${id}/grn/new`)} className="flex items-center gap-3 w-full text-left px-6 py-3 hover:bg-slate-50 text-sm font-bold text-slate-700 transition-colors">
-                                        <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600"><Check size={14} /></div> Receive Inventory (GRN)
-                                    </button>
-                                    <div className="h-px bg-slate-100 mx-4 my-2" />
-                                    <button onClick={() => navigate('/purchase-dashboard/bills/new', { state: { fromPo: po } })} className="flex items-center gap-3 w-full text-left px-6 py-3 hover:bg-blue-50 text-sm font-bold text-blue-600 transition-colors">
-                                        <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><FileDigit size={14} /></div> Finalize Bill
-                                    </button>
-                                    <button onClick={() => navigate('/purchase-dashboard/payments/new', { state: { fromPo: po } })} className="flex items-center gap-3 w-full text-left px-6 py-3 hover:bg-amber-50 text-sm font-bold text-amber-600 transition-colors">
-                                        <div className="p-2 bg-amber-50 rounded-lg text-amber-600"><Send size={14} /></div> Initiate Payment
-                                    </button>
-                                    <button onClick={() => navigate('/purchase-dashboard/additional-expenses/new', { state: { fromPo: po } })} className="flex items-center gap-3 w-full text-left px-6 py-3 hover:bg-purple-50 text-sm font-bold text-purple-600 transition-colors">
-                                        <div className="p-2 bg-purple-50 rounded-lg text-purple-600"><Calculator size={14} /></div> Additional Expenses
-                                    </button>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </div>
-            </div>
-
-            {/* DOCUMENT AREA */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="max-w-[210mm] mx-auto mt-12 bg-white shadow-[0_32px_128px_-16px_rgba(0,0,0,0.1)] print:shadow-none print:mt-0 print:w-full print:max-w-none border border-slate-100 p-16 min-h-[297mm] text-slate-800 relative rounded-[2.5rem] print:rounded-none"
-            >
-                {/* Visual Accent */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-indigo-600 rounded-b-xl print:hidden" />
-
-                {/* Ribbon Status - Hidden in Print */}
-                <div className="absolute top-12 right-12 flex flex-col items-end print:hidden">
-                    <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100 text-[10px] font-black uppercase tracking-widest mb-2">
-                        <BadgeCheck size={12} /> Authenticated
-                    </div>
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Procurement v2.4</p>
-                </div>
-
-                {/* Header Section */}
-                {!isLetterHead && (
-                    <div className="flex justify-between items-start mb-16 pb-12 border-b-2 border-slate-100">
-                        <div className="flex gap-8 items-center">
-                            {tenantInfo.logo ? (
-                                <div className="w-24 h-24 bg-slate-50 border border-slate-100 p-4 flex items-center justify-center rounded-3xl shadow-inner">
-                                    <img src={tenantInfo.logo.startsWith('/') ? tenantInfo.logo : `${API_URL}/uploads/${tenantInfo.logo}`} alt="Logo" className="max-w-full max-h-full transition-all" onError={(e) => e.target.style.display = 'none'} />
-                                </div>
-                            ) : (
-                                <div className="w-24 h-24 bg-indigo-600 flex items-center justify-center rounded-3xl shadow-xl shadow-indigo-200">
-                                    <Box size={40} className="text-white" />
-                                </div>
-                            )}
-                            <div>
-                                <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter leading-none">{tenantInfo.companyName || tenantInfo.name}</h1>
-                                <p className="mt-3 text-xs font-bold text-slate-400 leading-relaxed max-w-sm">
-                                    {tenantInfo.address || tenantInfo.location || 'Global Headquarters'}<br />
-                                    {tenantInfo.email && <span className="lowercase text-indigo-500">{tenantInfo.email}</span>}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Manifest Metadata */}
-                <div className="grid grid-cols-2 gap-16 mb-16">
-                    <div>
-                        <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-8 leading-none">
-                            Purchase<br /><span className="text-indigo-600">Manifest</span>
-                        </h2>
-                        <div className="space-y-4">
+        <div className="bg-[#F7F9FD] min-h-screen text-[#0A2551] font-sans pb-10 -mt-3 lg:-mt-4 -mx-3 lg:-mx-4" dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* FULL SCREEN DASHBOARD CONTENT */}
+            <div className="w-full px-4 pt-3 pb-4 space-y-3">
+                {/* TOP SECTION: PO Banner & Order Summary Card */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
+                    {/* Left Column (8 cols): PO Header + Specs Meta */}
+                    <div className="lg:col-span-8 space-y-3 flex flex-col justify-between">
+                        {/* Main PO Info Card */}
+                        <div className="bg-white border border-[#DFE7F4] rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4 shadow-xs">
                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 border border-slate-100">
-                                    <Hash size={18} />
+                                <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full transition-colors cursor-pointer text-[#0A2551]">
+                                    {isRTL ? <ArrowRight size={20} /> : <ArrowLeft size={20} />}
+                                </button>
+                                <div className="w-14 h-14 bg-[#00A9A8] rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs">
+                                    <Box size={30} strokeWidth={2.2} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Master Order ID</p>
-                                    <p className="text-sm font-black text-slate-700">PO-{po.poNumber}</p>
+                                    <span className="text-[11px] font-bold text-[#617191] uppercase tracking-wider block">{isRTL ? 'أمر الشراء' : 'PURCHASE ORDER'}</span>
+                                    <h1 className="text-2xl font-black text-[#0A2551] tracking-tight leading-none mt-0.5">
+                                        {po.poNumber ? (po.poNumber.startsWith('PO-') ? po.poNumber : `PO-${po.poNumber}`) : ''}
+                                    </h1>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <span className="px-3 py-0.5 bg-[#DCFAEE] text-[#138764] rounded-md text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                            <BadgeCheck size={12} /> {po.status || (isRTL ? 'معتمد' : 'AUTHENTICATED')}
+                                        </span>
+                                        {po.version && (
+                                            <span className="px-2.5 py-0.5 bg-[#F2F6FC] text-[#617191] rounded-md text-[11px] font-semibold flex items-center gap-1">
+                                                <Info size={11} /> {isRTL ? `الإصدار ${po.version}` : `Version ${po.version}`}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 border border-slate-100">
-                                    <Calendar size={18} />
+
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <button onClick={() => navigate(`/purchase-dashboard/purchase-orders/edit/${po.id}`)} className="flex items-center gap-2 h-[38px] px-4 bg-white border border-[#DFE7F4] rounded-xl text-xs font-bold hover:border-[#00A9A8] hover:text-[#00A9A8] transition-all cursor-pointer">
+                                    <Edit size={14} /> {isRTL ? 'تعديل البيان' : 'Edit Manifest'}
+                                </button>
+                                <button className="flex items-center gap-2 h-[38px] px-4 bg-white border border-[#DFE7F4] rounded-xl text-xs font-bold hover:border-[#00A9A8] hover:text-[#00A9A8] transition-all cursor-pointer">
+                                    <Download size={14} /> {isRTL ? 'تصدير PDF' : 'PDF Export'}
+                                </button>
+                                <button onClick={() => { setIsLetterHead(false); setTimeout(handlePrint, 100); }} className="flex items-center gap-2 h-[38px] px-5 bg-[#00A9A8] text-white rounded-xl text-xs font-bold hover:bg-[#008f8e] transition-all cursor-pointer shadow-xs">
+                                    <Printer size={14} /> {isRTL ? 'طباعة سريعة' : 'Quick Print'}
+                                </button>
+                                <button onClick={() => { setIsLetterHead(true); setTimeout(handlePrint, 100); }} className="flex items-center gap-2 h-[38px] px-4 bg-white border border-[#DFE7F4] rounded-xl text-xs font-bold hover:border-[#00A9A8] transition-all cursor-pointer">
+                                    <ShieldCheck size={14} /> {isRTL ? 'طباعة بالورق الرسمي' : 'Letterhead Print'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Organization Index & Metrics */}
+                        <div className="bg-white border border-[#DFE7F4] rounded-2xl p-4 shadow-xs space-y-3">
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs divide-x divide-[#DFE7F4] rtl:divide-x-reverse">
+                                {tenantInfo.trnNumber && (
+                                    <div className="px-2">
+                                        <span className="text-[10.5px] font-semibold text-[#617191] block">{isRTL ? 'الرقم الضريبي للمؤسسة' : 'Enterprise TRN'}</span>
+                                        <strong className="text-xs font-bold text-[#0A2551] truncate block mt-0.5">{tenantInfo.trnNumber}</strong>
+                                    </div>
+                                )}
+                                {po.reference && (
+                                    <div className="px-2">
+                                        <span className="text-[10.5px] font-semibold text-[#617191] block">{isRTL ? 'بروتوكول المرجع' : 'Reference Protocol'}</span>
+                                        <strong className="text-xs font-bold text-[#0A2551] truncate block mt-0.5">{po.reference}</strong>
+                                    </div>
+                                )}
+                                {po.branchName && (
+                                    <div className="px-2">
+                                        <span className="text-[10.5px] font-semibold text-[#617191] block">{isRTL ? 'فرع المصدر' : 'Origin Node'}</span>
+                                        <strong className="text-xs font-bold text-[#0A2551] truncate block mt-0.5">{po.branchName}</strong>
+                                    </div>
+                                )}
+                                <div className="px-2">
+                                    <span className="text-[10.5px] font-semibold text-[#617191] block">{isRTL ? 'رقم الطلب الرئيسي' : 'Master Order ID'}</span>
+                                    <strong className="text-xs font-bold text-[#0A2551] truncate block mt-0.5">
+                                        {po.poNumber ? (po.poNumber.startsWith('PO-') ? po.poNumber : `PO-${po.poNumber}`) : ''}
+                                    </strong>
                                 </div>
-                                <div>
-                                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Authorization Date</p>
-                                    <p className="text-sm font-black text-slate-700">{po.date ? new Date(po.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</p>
+                                <div className="px-2">
+                                    <span className="text-[10.5px] font-semibold text-[#617191] block">{isRTL ? 'المورد / شريك التوريد' : 'Supply Partner'}</span>
+                                    <strong className="text-xs font-bold text-[#0A2551] truncate block mt-0.5">{supplierInfo ? (supplierInfo.companyName || supplierInfo.name) : po.supplierName}</strong>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-100 shadow-inner">
-                        <div className="flex items-center gap-2 mb-6">
-                            <div className="w-2 h-2 rounded-full bg-slate-300" />
-                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Organization Index</h3>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="font-bold text-slate-400">Enterprise TRN</span>
-                                <span className="font-black text-slate-700">{tenantInfo.trnNumber || tenantInfo.taxId || '-'}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="font-bold text-slate-400">Reference Protocol</span>
-                                <span className="font-black text-slate-700">{po.reference || 'DIRECT-PROC'}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="font-bold text-slate-400">Origin Node</span>
-                                <span className="font-black text-slate-700">{po.branchName || 'Central Hub'}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                {/* Addresses */}
-                <div className="grid grid-cols-2 gap-16 mb-16">
-                    <div>
-                        <div className="flex items-center gap-2 mb-4 border-b border-indigo-50 pb-2">
-                            <Truck size={14} className="text-indigo-400" />
-                            <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Supply Partner</h4>
-                        </div>
-                        <div className="bg-white p-2 rounded-2xl">
-                            <h5 className="text-lg font-black text-slate-800 mb-2">{supplierInfo ? (supplierInfo.companyName || supplierInfo.name) : po.supplierName}</h5>
-                            <p className="text-xs font-bold text-slate-500 leading-relaxed whitespace-pre-wrap">
-                                {supplierInfo ? (
-                                    <>
-                                        {supplierInfo.addressLine1} {supplierInfo.addressLine2}<br />
-                                        {supplierInfo.city}, {supplierInfo.state} {supplierInfo.country}<br />
-                                        {supplierInfo.phone && <span className="text-slate-400 mt-1 block">Contact: {supplierInfo.phone}</span>}
-                                    </>
-                                ) : (po.supplierAddress || 'Verified Address Undefined')}
-                            </p>
-                            <div className="mt-4 px-3 py-1 bg-slate-50 rounded-lg inline-block text-[10px] font-black text-slate-400 uppercase border border-slate-100">
-                                TRN: {supplierInfo ? (supplierInfo.trnNumber || supplierInfo.taxId) : (po.supplierTrn || '-')}
-                            </div>
-                        </div>
-                    </div>
-
-                    {po.deliverToAddress && (
-                        <div>
-                            <div className="flex items-center gap-2 mb-4 border-b border-rose-50 pb-2">
-                                <MapPin size={14} className="text-rose-400" />
-                                <h4 className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Fulfillment Endpoint</h4>
-                            </div>
-                            <div className="bg-rose-50 flex items-start gap-4 p-6 rounded-[1.5rem] border border-rose-100">
-                                <div className="p-3 bg-white rounded-xl shadow-sm"><MapPin size={24} className="text-rose-500" /></div>
-                                <p className="text-xs font-bold text-rose-800 leading-relaxed whitespace-pre-wrap">{po.deliverToAddress}</p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Items Table */}
-                <div className="mb-16 border border-slate-100 rounded-[2rem] overflow-hidden shadow-sm">
-                    <table className="w-full border-collapse text-left">
-                        <thead>
-                            <tr className="bg-slate-50 text-slate-400">
-                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest w-12 text-center">#</th>
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest">Item Specification</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-center">Protocol</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right">Unit Rate</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-center">Tax</th>
-                                <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-right">Net Value</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {(po.items || []).map((it, i) => {
-                                const qty = Number(it.quantity) || 0;
-                                const rate = Number(it.rate) || 0;
-                                const disc = Number(it.lineDiscount) || 0;
-                                const taxPct = Number(it.taxPercent) || 0;
-                                const netAmount = (qty * rate) - disc;
-                                const taxAmt = netAmount * (taxPct / 100);
-                                const total = netAmount + taxAmt;
-
-                                return (
-                                    <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-6 py-8 text-xs font-black text-slate-300 text-center">{it.lineNumber || i + 1}</td>
-                                        <td className="px-8 py-8">
-                                            <div className="text-sm font-black text-slate-800 mb-1">{it.itemName}</div>
-                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide leading-relaxed">{it.description || 'Enterprise Standard Logistics'}</div>
-                                        </td>
-                                        <td className="px-6 py-8 text-center">
-                                            <span className="text-xs font-black text-slate-700">{qty}</span>
-                                            <span className="ml-1.5 text-[10px] font-black text-slate-400 uppercase">{it.unitName || 'UNITS'}</span>
-                                        </td>
-                                        <td className="px-6 py-8 text-right font-bold text-sm text-slate-700 tabular-nums">{rate.toFixed(2)}</td>
-                                        <td className="px-6 py-8 text-center">
-                                            <div className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded inline-block">{taxPct}%</div>
-                                        </td>
-                                        <td className="px-8 py-8 text-right font-black text-sm text-slate-900 tabular-nums">{total.toFixed(2)}</td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Footer Analysis Section */}
-                <div className="grid grid-cols-12 gap-16">
-                    {/* Legal & Intelligence (8 cols) */}
-                    <div className="col-span-12 lg:col-span-7 flex flex-col justify-between space-y-8">
-                        <div className="p-8 bg-indigo-50/50 rounded-[2rem] border border-indigo-100 flex items-start gap-4">
-                            <div className="p-3 bg-white rounded-2xl text-indigo-500 shadow-sm shadow-indigo-100"><Info size={24} /></div>
-                            <div>
-                                <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Procurement Intelligence</h4>
-                                <p className="text-xs font-bold text-indigo-700/60 italic leading-relaxed">
-                                    "Total manifest value of <span className="font-black text-indigo-800">{(po.totalAmount || 0).toFixed(2)} {po.currency}</span> is validated against enterprise tax protocols. This document serves as a binding procurement authorization."
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-6">
-                            {(po.notes || po.termsAndConditions) && (
-                                <div className="grid grid-cols-2 gap-8">
-                                    {po.notes && (
-                                        <div>
-                                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2 border-b border-slate-100 pb-1">Operational Notes</p>
-                                            <p className="text-[10px] font-bold text-slate-500 leading-relaxed whitespace-pre-wrap">{po.notes}</p>
+                            {(po.paymentTerms || po.currency || po.incoterms || po.deliverToAddress) && (
+                                <>
+                                    <div className="h-px bg-[#DFE7F4]" />
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs divide-x divide-[#DFE7F4] rtl:divide-x-reverse">
+                                        {po.paymentTerms && (
+                                            <div className="px-2">
+                                                <span className="text-[10.5px] font-semibold text-[#617191] block">{isRTL ? 'شروط الدفع' : 'Payment Terms'}</span>
+                                                <strong className="text-xs font-bold text-[#0A2551] block mt-0.5">{po.paymentTerms}</strong>
+                                            </div>
+                                        )}
+                                        <div className="px-2">
+                                            <span className="text-[10.5px] font-semibold text-[#617191] block">{isRTL ? 'العملة' : 'Currency'}</span>
+                                            <strong className="text-xs font-bold text-[#0A2551] block mt-0.5">{po.currency || 'AED'}</strong>
                                         </div>
+                                        {po.incoterms && (
+                                            <div className="px-2">
+                                                <span className="text-[10.5px] font-semibold text-[#617191] block">{isRTL ? 'الشروط التجارية' : 'Incoterms'}</span>
+                                                <strong className="text-xs font-bold text-[#0A2551] block mt-0.5">{po.incoterms}</strong>
+                                            </div>
+                                        )}
+                                        {po.deliverToAddress && (
+                                            <div className="px-2">
+                                                <span className="text-[10.5px] font-semibold text-[#617191] block">{isRTL ? 'موقع التسليم' : 'Incoterms Location'}</span>
+                                                <strong className="text-xs font-bold text-[#0A2551] block mt-0.5">{po.deliverToAddress}</strong>
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right Column (4 cols): Real Order Summary Card */}
+                    <div className="lg:col-span-4 bg-[#006A78] text-white rounded-2xl p-5 flex flex-col justify-between shadow-md">
+                        <div className="flex justify-between items-center border-b border-white/20 pb-3">
+                            <h3 className="text-base font-bold tracking-tight">{isRTL ? 'ملخص الطلب' : 'Order Summary'}</h3>
+                            <span className="px-3 py-1 bg-white/10 rounded-lg text-xs font-bold border border-white/20">{po.currency || 'AED'}</span>
+                        </div>
+
+                        <div className="space-y-3 py-3 text-xs">
+                            <div className="flex justify-between items-center opacity-90">
+                                <span>{isRTL ? 'إجمالي البيان' : 'Gross Manifest'}</span>
+                                <span className="font-bold">{subTotal.toFixed(2)}</span>
+                            </div>
+                            {totalSavings > 0 && (
+                                <div className="flex justify-between items-center opacity-90">
+                                    <span>{isRTL ? 'الوفورات المجمعة' : 'Consolidated Savings'}</span>
+                                    <span className="font-bold">- {totalSavings.toFixed(2)}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between items-center opacity-90">
+                                <span>{isRTL ? 'الرسوم المالية (الضريبة)' : 'Fiscal Levies (VAT)'}</span>
+                                <span className="font-bold">+ {vatAmount.toFixed(2)}</span>
+                            </div>
+                            {shipping > 0 && (
+                                <div className="flex justify-between items-center opacity-90">
+                                    <span>{isRTL ? 'رسوم الشحن اللوجستي' : 'Logistics Surcharge'}</span>
+                                    <span className="font-bold">+ {shipping.toFixed(2)}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="pt-3 border-t border-white/20 flex justify-between items-end">
+                            <div>
+                                <span className="text-[10px] uppercase font-bold text-white/70 block tracking-widest">{isRTL ? 'الصافي المستحق' : 'NET PAYABLE'}</span>
+                            </div>
+                            <div className="text-right">
+                                <span className="text-3xl font-black tracking-tight leading-none block">{netPayable.toFixed(2)} <span className="text-xs font-normal">AED</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* MIDDLE SECTION: Delivery Details & Item Specifications */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
+                    {/* Delivery Details (4 cols) - Rendered only if deliverToAddress or dates exist */}
+                    {po.deliverToAddress ? (
+                        <div className="lg:col-span-4 bg-white border border-[#DFE7F4] rounded-2xl p-5 space-y-4 flex flex-col justify-between shadow-xs">
+                            <div className="flex items-center gap-2 border-b border-[#DFE7F4] pb-3">
+                                <Truck size={18} className="text-[#00A9A8]" />
+                                <h3 className="text-sm font-bold text-[#0A2551]">{isRTL ? 'تفاصيل التسليم' : 'Delivery Details'}</h3>
+                            </div>
+
+                            <div className="space-y-3 text-xs">
+                                <div>
+                                    <span className="text-[10.5px] font-semibold text-[#617191] block">{isRTL ? 'التسليم إلى' : 'Deliver To'}</span>
+                                    <p className="font-bold text-[#0A2551] leading-relaxed mt-0.5">
+                                        {po.deliverToAddress}
+                                    </p>
+                                </div>
+
+                                {(po.deliveryDate || po.shipVia) && (
+                                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#DFE7F4]">
+                                        {po.deliveryDate && (
+                                            <div>
+                                                <span className="text-[10.5px] font-semibold text-[#617191] block">{isRTL ? 'تاريخ التسليم المطلوب' : 'Requested Delivery Date'}</span>
+                                                <p className="font-bold text-[#0A2551] flex items-center gap-1 mt-0.5">
+                                                    <Calendar size={13} className="text-[#00A9A8]" /> {new Date(po.deliveryDate).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {po.shipVia && (
+                                            <div>
+                                                <span className="text-[10.5px] font-semibold text-[#617191] block">{isRTL ? 'طريقة التسليم' : 'Deliver Via'}</span>
+                                                <p className="font-bold text-[#0A2551] flex items-center gap-1 mt-0.5">
+                                                    <Truck size={13} className="text-[#00A9A8]" /> {po.shipVia}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ) : null}
+
+                    {/* Item Specifications (Spans 12 cols if no delivery details, else 8 cols) */}
+                    <div className={`${po.deliverToAddress ? 'lg:col-span-8' : 'lg:col-span-12'} bg-white border border-[#DFE7F4] rounded-2xl p-5 space-y-3 flex flex-col justify-between shadow-xs`}>
+                        <div className="flex items-center gap-2 border-b border-[#DFE7F4] pb-3">
+                            <Box size={18} className="text-[#00A9A8]" />
+                            <h3 className="text-sm font-bold text-[#0A2551]">{isRTL ? 'مواصفات الأصناف' : 'Item Specifications'}</h3>
+                        </div>
+
+                        {/* Items Table */}
+                        <div className="border border-[#DFE7F4] rounded-xl overflow-hidden">
+                            <table className="w-full text-left border-collapse text-xs" dir={isRTL ? 'rtl' : 'ltr'}>
+                                <thead>
+                                    <tr className="bg-[#F2F6FC] text-[#617191] font-bold text-[11px] h-9 border-b border-[#DFE7F4]">
+                                        <th className="py-1.5 px-3 text-center w-8">#</th>
+                                        <th className="py-1.5 px-3">{isRTL ? 'وصف الصنف' : 'Item Specification'}</th>
+                                        <th className="py-1.5 px-3 text-center">{isRTL ? 'الكمية' : 'Qty'}</th>
+                                        <th className="py-1.5 px-3 text-center">{isRTL ? 'الوحدة' : 'Unit'}</th>
+                                        <th className="py-1.5 px-3 text-center">{isRTL ? 'السعر (AED)' : 'Unit Rate (AED)'}</th>
+                                        <th className="py-1.5 px-3 text-center">{isRTL ? 'الضريبة' : 'Tax'}</th>
+                                        <th className="py-1.5 px-3 text-right">{isRTL ? 'المبلغ (AED)' : 'Net Value (AED)'}</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-[#DFE7F4] text-[#0A2551] text-xs">
+                                    {(po.items || []).map((it, i) => {
+                                        const qty = Number(it.quantity) || 0;
+                                        const rate = Number(it.rate) || 0;
+                                        const disc = Number(it.lineDiscount) || 0;
+                                        const taxPct = Number(it.taxPercent) || 0;
+                                        const netAmount = Math.max(0, (qty * rate) - disc);
+                                        const taxAmt = netAmount * (taxPct / 100);
+                                        const total = netAmount + taxAmt;
+
+                                        return (
+                                            <tr key={i} className="hover:bg-slate-50/70 transition-colors">
+                                                <td className="py-2.5 px-3 text-center text-[#617191]">{it.lineNumber || i + 1}</td>
+                                                <td className="py-2.5 px-3">
+                                                    <div className="font-bold text-[#0A2551] text-[12px]">{it.itemName || it.description || `Item #${i+1}`}</div>
+                                                    {it.description && <div className="text-[10px] text-[#617191]">{it.description}</div>}
+                                                </td>
+                                                <td className="py-2.5 px-3 text-center font-bold">{qty}</td>
+                                                <td className="py-2.5 px-3 text-center font-bold">{it.unitName || 'Units'}</td>
+                                                <td className="py-2.5 px-3 text-center font-bold">{rate.toFixed(2)}</td>
+                                                <td className="py-2.5 px-3 text-center">
+                                                    <span className="inline-block px-2 py-0.5 bg-[#DCFAEE] text-[#138764] rounded font-bold text-[10.5px]">{taxPct}%</span>
+                                                </td>
+                                                <td className="py-2.5 px-3 text-right font-bold">{total.toFixed(2)}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Items Footer Summary */}
+                        <div className="flex justify-end gap-6 pt-1 text-xs">
+                            <div className="text-right">
+                                <span className="text-[10px] font-semibold text-[#617191] block">{isRTL ? 'إجمالي الأصناف' : 'Total Items'}</span>
+                                <strong className="text-sm font-black text-[#0A2551]">{totalQty || (po.items || []).length}</strong>
+                            </div>
+                            <div className="text-right">
+                                <span className="text-[10px] font-semibold text-[#617191] block">{isRTL ? 'إجمالي القيمة الصافية (AED)' : 'Total Net Value (AED)'}</span>
+                                <strong className="text-sm font-black text-[#0A2551]">{netPayable.toFixed(2)}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* BOTTOM SECTION: Dynamically render bottom widgets ONLY IF REAL DATA EXISTS */}
+                {(hasIntelligence || hasApprovalInfo || hasActivityTimeline || hasAttachments || hasNotes) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 items-stretch">
+                        {/* Procurement Intelligence */}
+                        {hasIntelligence && (
+                            <div className="bg-white border border-[#DFE7F4] rounded-2xl p-4 space-y-3 shadow-xs">
+                                <div className="flex items-center gap-2 border-b border-[#DFE7F4] pb-2">
+                                    <Info size={16} className="text-[#00A9A8]" />
+                                    <h4 className="text-xs font-bold text-[#0A2551]">{isRTL ? 'معلومات التوريد' : 'Procurement Intelligence'}</h4>
+                                </div>
+                                <p className="text-[11px] text-[#617191] leading-relaxed">
+                                    {po.intelligenceNotes || `Total manifest value of ${netPayable.toFixed(2)} AED is validated.`}
+                                </p>
+                                {(po.validatedAt || po.validatedBy) && (
+                                    <div className="pt-2 border-t border-[#DFE7F4] text-[10px] text-[#617191] space-y-0.5">
+                                        {po.validatedAt && <div>Validated At: {new Date(po.validatedAt).toLocaleString()}</div>}
+                                        {po.validatedBy && <div>Validated By: {po.validatedBy}</div>}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Authorized Protocol */}
+                        {hasApprovalInfo && (
+                            <div className="bg-white border border-[#DFE7F4] rounded-2xl p-4 space-y-3 relative shadow-xs">
+                                <div className="flex items-center gap-2 border-b border-[#DFE7F4] pb-2">
+                                    <ShieldCheck size={16} className="text-[#00A9A8]" />
+                                    <h4 className="text-xs font-bold text-[#0A2551]">{isRTL ? 'البروتوكول المعتمد' : 'Authorized Protocol'}</h4>
+                                </div>
+                                <p className="text-[11px] text-[#617191] leading-relaxed">
+                                    This purchase order has been authenticated in accordance with enterprise protocols.
+                                </p>
+                                <div className="flex justify-between items-end pt-2 text-[10px]">
+                                    <div>
+                                        <strong className="text-xs font-bold text-[#0A2551] block">{po.approvedBy || po.authorizedBy || 'Authorized Officer'}</strong>
+                                        <span className="text-[#617191]">Procurement Officer</span>
+                                    </div>
+                                    {po.approvalDate && <span className="text-[#617191]">{new Date(po.approvalDate).toLocaleDateString()}</span>}
+                                </div>
+                                <div className="absolute bottom-3 right-3 w-14 h-14 rounded-full border-2 border-blue-600 flex items-center justify-center rotate-[-12deg] opacity-80 pointer-events-none">
+                                    <span className="text-[8px] font-black text-blue-600 uppercase tracking-tighter">AUTHORIZED</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Activity Timeline */}
+                        {hasActivityTimeline && (
+                            <div className="bg-white border border-[#DFE7F4] rounded-2xl p-4 space-y-3 shadow-xs">
+                                <div className="flex items-center gap-2 border-b border-[#DFE7F4] pb-2">
+                                    <Clock size={16} className="text-[#00A9A8]" />
+                                    <h4 className="text-xs font-bold text-[#0A2551]">{isRTL ? 'جدول النشاط' : 'Activity Timeline'}</h4>
+                                </div>
+                                <div className="space-y-2 text-[10.5px]">
+                                    {(po.history || []).map((h, idx) => (
+                                        <div key={idx} className="flex items-start gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1 shrink-0" />
+                                            <div>
+                                                <strong className="block text-[#0A2551] font-bold">{h.action || h.status}</strong>
+                                                <span className="text-[9.5px] text-[#617191]">{h.timestamp ? new Date(h.timestamp).toLocaleString() : ''}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Attachments */}
+                        {hasAttachments && (
+                            <div className="bg-white border border-[#DFE7F4] rounded-2xl p-4 space-y-3 shadow-xs flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center gap-1.5 border-b border-[#DFE7F4] pb-2">
+                                        <Paperclip size={14} className="text-[#00A9A8]" />
+                                        <h4 className="text-xs font-bold text-[#0A2551]">{isRTL ? 'المرفقات' : `Attachments (${po.attachments.length})`}</h4>
+                                    </div>
+                                    <div className="space-y-1.5 mt-2">
+                                        {po.attachments.map((att, idx) => (
+                                            <a key={idx} href={`${API_URL}/uploads/${att.fileName || att}`} target="_blank" rel="noreferrer" className="p-2 border border-[#DFE7F4] rounded-xl flex items-center justify-between text-[10px] hover:border-[#00A9A8] transition-colors">
+                                                <span className="font-bold truncate max-w-[120px]">{att.fileName || att}</span>
+                                                <Download size={12} className="text-[#00A9A8] shrink-0" />
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Notes */}
+                        {hasNotes && (
+                            <div className="bg-white border border-[#DFE7F4] rounded-2xl p-4 space-y-3 shadow-xs flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center gap-1.5 border-b border-[#DFE7F4] pb-2">
+                                        <FileDigit size={14} className="text-[#00A9A8]" />
+                                        <h4 className="text-xs font-bold text-[#0A2551]">{isRTL ? 'الملاحظات' : 'Notes & Terms'}</h4>
+                                    </div>
+                                    {po.notes && (
+                                        <p className="text-[11px] text-[#0A2551] mt-2 font-medium">
+                                            {po.notes}
+                                        </p>
                                     )}
                                     {po.termsAndConditions && (
-                                        <div>
-                                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2 border-b border-slate-100 pb-1">Compliance Terms</p>
-                                            <p className="text-[10px] font-bold text-slate-500 leading-relaxed whitespace-pre-wrap">{po.termsAndConditions}</p>
-                                        </div>
+                                        <p className="text-[10px] text-[#617191] mt-1 italic">
+                                            {po.termsAndConditions}
+                                        </p>
                                     )}
                                 </div>
-                            )}
-
-                            <div>
-                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2">Authenticated Total In Words</p>
-                                <p className="text-xs font-black text-slate-700 uppercase tracking-tight italic bg-slate-50 px-4 py-3 rounded-xl border border-slate-100 text-center">
-                                    {totalAmountWords} {po.currency} Only
-                                </p>
                             </div>
-                        </div>
+                        )}
                     </div>
-
-                    {/* Financial Summary & Auth (5 cols) */}
-                    <div className="col-span-12 lg:col-span-5 flex flex-col">
-                        <div className="bg-slate-900 rounded-[2rem] p-8 text-white shadow-2xl shadow-indigo-200">
-                            <div className="space-y-4 mb-8">
-                                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                    <span>Gross Manifest</span>
-                                    <span className="text-white">{(Number(po.subTotal || 0) + Number(po.totalDiscount || 0)).toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-400/10 px-3 py-1.5 rounded-lg border border-emerald-400/20">
-                                    <span>Consolidated Savings</span>
-                                    <span>- {Number(po.totalDiscount || 0).toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                    <span>Fiscal Levies (VAT)</span>
-                                    <span className="text-white">+ {Number(po.totalTax || 0).toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                    <span>Logistics Surcharge</span>
-                                    <span className="text-white">{(Number(po.otherCharges || 0)).toFixed(2)}</span>
-                                </div>
-                            </div>
-                            <div className="pt-6 border-t border-slate-800 flex justify-between items-center">
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Net Payable</span>
-                                    <span className="text-3xl font-black text-white tracking-tighter tabular-nums leading-none mt-1">
-                                        {Number(po.totalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </span>
-                                </div>
-                                <div className="px-3 py-1 bg-white/10 rounded-lg text-white text-[10px] font-black uppercase border border-white/20">
-                                    {po.currency}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-12 text-center">
-                            <div className="w-48 h-px bg-slate-200 mx-auto mb-4" />
-                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Authorized Protocol</p>
-                            <p className="text-xs font-black text-slate-900 mt-2 uppercase tracking-widest">{tenantInfo.companyName || tenantInfo.name}</p>
-                            <div className="mt-4 flex justify-center gap-1 opacity-20">
-                                <ShieldCheck size={16} />
-                                <BadgeCheck size={16} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Print Footer Page Numbering Placeholder */}
-                <div className="hidden print:block absolute bottom-12 right-12 text-[10px] font-black text-slate-300 uppercase tracking-widest">
-                    Page 1 of 1
-                </div>
-            </motion.div>
-
-            {/* Float Actions - Hidden in Print */}
-            <div className="fixed bottom-8 right-8 flex flex-col gap-3 print:hidden">
-                <button onClick={() => navigate(`/purchase-dashboard/purchase-orders/edit/${po.id}`)} className="p-4 bg-white text-indigo-600 rounded-full shadow-2xl border border-indigo-50 hover:scale-110 active:scale-95 transition-all group">
-                    <Edit size={24} className="group-hover:rotate-12 transition-transform" />
-                </button>
-                <button onClick={handlePrint} className="p-4 bg-indigo-600 text-white rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all group">
-                    <Printer size={24} className="group-hover:-rotate-12 transition-transform" />
-                </button>
+                )}
             </div>
         </div>
     );

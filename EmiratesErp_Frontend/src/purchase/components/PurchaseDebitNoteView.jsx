@@ -1,287 +1,306 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Loader, Printer, ArrowLeft, Mail, Paperclip, FileText, Edit, Trash2 } from 'lucide-react';
+import {
+  Printer, ArrowLeft, ArrowRight, Edit, FileText, BadgeCheck, Info
+} from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
+import { loadThemeFromStorage, applyTheme } from '../../utils/themeUtils';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || '';
-
-// Basic number to words converter
-const numberToWords = (num) => {
-    if (!num) return 'Zero';
-    const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
-    const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-
-    const n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
-    if (!n) return '';
-    let str = '';
-    str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
-    str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
-    str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
-    str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
-    str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
-    return str.trim();
-};
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 const PurchaseDebitNoteView = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const [debitNote, setDebitNote] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [tenantInfo, setTenantInfo] = useState({ name: 'Transcold Air conditioner spare parts trading llc', address: 'Abu Dhabi', logo: '/logo.png' });
+  const { isRTL } = useLanguage();
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        const load = async () => {
-            setLoading(true);
-            try {
-                const token = localStorage.getItem('token');
-                const headers = { Authorization: `Bearer ${token}` };
+  const [debitNote, setDebitNote] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [tenantInfo, setTenantInfo] = useState({ name: 'Emirates ERP Trading LLC', address: 'Dubai, UAE', trn: '100293848100003' });
+  const [supplierInfo, setSupplierInfo] = useState(null);
 
-                const res = await axios.get(`${API_URL}/purchases/debit-notes/${id}`, { headers });
-                setDebitNote(res.data);
+  useEffect(() => {
+    const theme = loadThemeFromStorage();
+    if (theme) applyTheme(theme);
+  }, []);
 
-                // Fetch Tenant Info
-                const tenantId = localStorage.getItem('tenantId');
-                if (tenantId) {
-                    try {
-                        const tRes = await axios.get(`${API_URL}/tenants/${tenantId}`, { headers });
-                        setTenantInfo(tRes.data);
-                    } catch (e) { console.warn(e); }
-                }
+  useEffect(() => {
+    if (!id) return;
+    const fetchDebitNoteDetails = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { Authorization: `Bearer ${token}` };
 
-            } catch (err) {
-                console.error(err);
-                setError('Failed to load debit note.');
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
-    }, [id]);
+        const res = await axios.get(`${API_URL}/purchases/debit-notes/${id}`, { headers });
+        const data = res.data;
+        setDebitNote(data);
 
-    const handlePrint = () => {
-        window.print();
-    };
-
-    const handleDelete = async () => {
-        if (!window.confirm('Delete this Debit Note permanently?')) return;
-        try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`${API_URL}/purchases/debit-notes/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            navigate('/purchase-dashboard/debit-notes');
-        } catch (err) {
-            alert('Failed to delete: ' + err.message);
+        const tenantId = localStorage.getItem('tenantId');
+        if (tenantId) {
+          try {
+            const tRes = await axios.get(`${API_URL}/tenants/${tenantId}`, { headers });
+            setTenantInfo(tRes.data);
+          } catch (e) {
+            console.warn('Failed to load tenant info', e);
+          }
         }
+
+        if (data.supplierId) {
+          try {
+            const sRes = await axios.get(`${API_URL}/parties/${data.supplierId}`, { headers });
+            setSupplierInfo(sRes.data);
+          } catch (e) {
+            console.warn('Failed to load supplier info', e);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading Debit Note:', err);
+        setError(isRTL ? 'تعذر استخراج بيانات الإشعار المدين' : 'Failed to load debit note manifest.');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    if (loading) return <div className="flex justify-center items-center h-screen"><Loader className="animate-spin text-blue-600" size={40} /></div>;
-    if (!debitNote) return <div className="p-8 text-center text-red-500">{error || 'Record not found'}</div>;
+    fetchDebitNoteDetails();
+  }, [id, isRTL]);
 
-    // Calculate totals from items if not in header
-    const items = debitNote.items || [];
-    const subTotal = items.reduce((sum, it) => sum + (Number(it.amount) || 0), 0);
-    const totalTax = items.reduce((sum, it) => sum + (Number(it.taxAmount) || 0), 0);
-    // Note: 'it.amount' in our Form was "Net Amount". 
-    // Backend 'amount' usually stored as Line Total.
-    const totalAmount = subTotal + totalTax;
+  const handlePrint = () => {
+    window.print();
+  };
 
+  if (loading) {
     return (
-        <div className="bg-slate-50 min-h-screen pb-12 print:bg-white print:pb-0 font-sans">
-            {/* Nav Bar */}
-            <div className="print:hidden">
-                <div className="bg-white border-b px-6 py-3 flex justify-between items-center text-xs text-slate-600">
-                    <div className="flex items-center gap-2">
-                        <Link to="/purchase-dashboard/debit-notes" className="flex items-center gap-1 hover:text-blue-600">
-                            <ArrowLeft size={14} /> Back to List
-                        </Link>
-                    </div>
-                </div>
-
-                <div className="bg-rose-500 px-6 py-4 text-white text-xl font-medium shadow-sm flex justify-between items-center">
-                    <div>
-                        View Debit Note # {debitNote.debitNoteNumber || '...'}
-                    </div>
-                    <div className={`px-2 py-1 rounded font-bold uppercase text-xs ${debitNote.status === 'OPEN' ? 'bg-green-100 text-green-800' :
-                            debitNote.status === 'CLOSED' ? 'bg-gray-100 text-gray-800' :
-                                debitNote.status === 'VOID' ? 'bg-red-100 text-red-800' :
-                                    'bg-blue-100 text-blue-800'
-                        }`}>
-                        {debitNote.status}
-                    </div>
-                </div>
-
-                {/* Toolbar */}
-                <div className="px-6 py-4 flex flex-wrap gap-2 items-center border-b bg-white shadow-sm sticky top-0 z-10">
-                    <Link to={`/purchase-dashboard/debit-notes/edit/${id}`} className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition shadow-sm" title="Edit">
-                        <Edit size={18} />
-                    </Link>
-                    <button onClick={handleDelete} className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition shadow-sm" title="Delete">
-                        <Trash2 size={18} />
-                    </button>
-                    <span className="w-px h-6 bg-slate-300 mx-2"></span>
-                    <button onClick={handlePrint} className="p-2 bg-slate-700 text-white rounded hover:bg-slate-800 transition shadow-sm" title="Print">
-                        <Printer size={18} />
-                    </button>
-                    <button className="p-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition shadow-sm" title="Email">
-                        <Mail size={18} />
-                    </button>
-
-                    {debitNote.attachments && debitNote.attachments.length > 0 && (
-                        <div className="relative group ml-auto">
-                            <button className="flex items-center gap-2 px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-xs font-bold">
-                                <Paperclip size={14} /> {debitNote.attachments.length} Attachment(s)
-                            </button>
-                            <div className="absolute right-0 top-full mt-1 w-64 bg-white border rounded shadow-lg py-1 z-20 hidden group-hover:block">
-                                {debitNote.attachments.map((path, i) => (
-                                    <a key={i} href={path.startsWith('http') ? path : `${API_URL}/uploads/${path}`} target="_blank" rel="noreferrer" className="block px-4 py-2 hover:bg-slate-100 text-xs truncate text-blue-600">
-                                        {path.split('/').pop()}
-                                    </a>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Document */}
-            <div className="max-w-[210mm] mx-auto mt-6 bg-white shadow-lg print:shadow-none print:mt-0 print:w-full print:max-w-none border p-8 min-h-[297mm] text-slate-800 relative">
-
-                {/* Header */}
-                <div className="flex justify-between items-start mb-8 pb-4 border-b-2 border-slate-800">
-                    <div className="flex gap-4 items-center">
-                        {tenantInfo.logo && (
-                            <div className="w-16 h-16 bg-slate-100 flex items-center justify-center rounded overflow-hidden">
-                                <img src={tenantInfo.logo.startsWith('http') ? tenantInfo.logo : (tenantInfo.logo.startsWith('/') ? tenantInfo.logo : `${API_URL}/uploads/${tenantInfo.logo}`)} alt="Logo" className="object-contain w-full h-full" onError={(e) => e.target.style.display = 'none'} />
-                            </div>
-                        )}
-                        <div>
-                            <h1 className="text-xl font-bold uppercase tracking-wide">{tenantInfo.companyName || tenantInfo.name}</h1>
-                            <p className="text-sm font-medium text-slate-600">
-                                {tenantInfo.address}<br />
-                                {tenantInfo.email && <span className='lowercase'>{tenantInfo.email}</span>}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                        <h2 className="text-3xl font-bold text-slate-900 uppercase mb-1">Debit Note</h2>
-                        <p className="text-sm font-bold text-slate-600">#{debitNote.debitNoteNumber}</p>
-                    </div>
-                </div>
-
-                {/* Info Grid */}
-                <div className="flex justify-between items-start mb-8 gap-8">
-                    <div className="flex-1">
-                        <div className="font-bold text-slate-800 border-b border-slate-300 mb-2 pb-1 text-sm uppercase">Bill To / Vendor</div>
-                        <div className="text-sm">
-                            <div className="font-bold text-lg">{debitNote.supplierName}</div>
-                            <div className="text-slate-600">
-                                {/* Assuming supplier details are not fully in debitNote object, showing what we have or '...' */}
-                                {/* If needed we can fetch supplier details separately like in InvoiceView */}
-                                {/* For now keeping it simple */}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="w-[300px] text-sm">
-                        <div className="grid grid-cols-[100px_1fr] border-b border-slate-200 py-1">
-                            <span className="font-semibold text-slate-600">Date:</span>
-                            <span>{debitNote.debitNoteDate ? new Date(debitNote.debitNoteDate).toLocaleDateString() : '-'}</span>
-                        </div>
-                        <div className="grid grid-cols-[100px_1fr] border-b border-slate-200 py-1">
-                            <span className="font-semibold text-slate-600">Due Date:</span>
-                            <span>{debitNote.debitNoteDueDate ? new Date(debitNote.debitNoteDueDate).toLocaleDateString() : '-'}</span>
-                        </div>
-                        <div className="grid grid-cols-[100px_1fr] border-b border-slate-200 py-1">
-                            <span className="font-semibold text-slate-600">Ref Bill #:</span>
-                            <span>{debitNote.billNumber}</span>
-                        </div>
-                        {debitNote.otherReferences && (
-                            <div className="grid grid-cols-[100px_1fr] border-b border-slate-200 py-1">
-                                <span className="font-semibold text-slate-600">Reference:</span>
-                                <span>{debitNote.otherReferences}</span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Items */}
-                <table className="w-full border-collapse border border-slate-300 text-sm mb-6">
-                    <thead className="bg-slate-100 text-slate-800 font-bold">
-                        <tr>
-                            <th className="border border-slate-300 px-2 py-2 w-12 text-center">#</th>
-                            <th className="border border-slate-300 px-3 py-2 text-left">Item Details</th>
-                            <th className="border border-slate-300 px-3 py-2 text-left w-32">Location</th>
-                            <th className="border border-slate-300 px-2 py-2 text-center w-20">Qty</th>
-                            <th className="border border-slate-300 px-2 py-2 text-right w-24">Rate</th>
-                            <th className="border border-slate-300 px-2 py-2 text-right w-24">Discount</th>
-                            <th className="border border-slate-300 px-2 py-2 text-center w-20">Tax</th>
-                            <th className="border border-slate-300 px-2 py-2 text-right w-28">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items.map((it, i) => (
-                            <tr key={i}>
-                                <td className="border border-slate-300 px-2 py-2 text-center">{i + 1}</td>
-                                <td className="border border-slate-300 px-3 py-2">
-                                    <div className="font-semibold">{it.itemName || 'Item ' + it.itemId}</div>
-                                </td>
-                                <td className="border border-slate-300 px-3 py-2 text-xs truncate max-w-[150px]">
-                                    {it.locationName || it.locationId}
-                                </td>
-                                <td className="border border-slate-300 px-2 py-2 text-center">{Number(it.quantity).toFixed(2)}</td>
-                                <td className="border border-slate-300 px-2 py-2 text-right">{Number(it.rate).toFixed(2)}</td>
-                                <td className="border border-slate-300 px-2 py-2 text-right">{Number(it.discount).toFixed(2)}</td>
-                                <td className="border border-slate-300 px-2 py-2 text-center">{Number(it.taxValue || 0)}%</td>
-                                <td className="border border-slate-300 px-2 py-2 text-right font-medium">{Number(it.amount).toFixed(2)}</td>
-                            </tr>
-                        ))}
-                        {items.length === 0 && <tr><td colSpan="8" className="p-4 text-center text-gray-400">No items found</td></tr>}
-                    </tbody>
-                </table>
-
-                {/* Totals */}
-                <div className="flex gap-8 items-stretch min-h-[150px]">
-                    <div className="flex-1 flex flex-col justify-between p-3 border border-slate-200 bg-slate-50 rounded">
-                        <div>
-                            <div className="font-bold text-xs text-slate-500 uppercase mb-2">Total In Words</div>
-                            <div className="font-medium text-slate-800 capitalize italic">{numberToWords(Math.floor(totalAmount))} AED Only</div>
-                        </div>
-                        {debitNote.notes && (
-                            <div className="mt-4">
-                                <div className="font-bold text-xs text-slate-500 uppercase mb-1">Notes</div>
-                                <div className="text-sm text-slate-700">{debitNote.notes}</div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="w-[300px] text-sm">
-                        <div className="flex justify-between py-2 border-b border-slate-200">
-                            <span className="font-semibold text-slate-700">Sub Total</span>
-                            <span>{subTotal.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between py-2 border-b border-slate-200">
-                            <span className="font-semibold text-slate-700">Tax Total</span>
-                            <span>{totalTax.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between py-3 font-bold text-lg bg-slate-100 px-2 rounded mt-2">
-                            <span>Total</span>
-                            <span>AED {totalAmount.toFixed(2)}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Signature */}
-                <div className="mt-16 flex justify-end">
-                    <div className="text-center w-48 border-t border-slate-400 pt-2">
-                        <div className="font-bold text-slate-700 text-sm">Authorized Signature</div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
+      <div className="flex flex-col justify-center items-center h-screen bg-[#F7F9FD] gap-3">
+        <div className="w-10 h-10 border-4 border-slate-200 border-t-[var(--color-primary,#00A9A8)] rounded-full animate-spin" />
+        <p className="text-xs font-semibold text-[#0A2551]">{isRTL ? 'جاري تحميل الإشعار المدين...' : 'Loading Debit Note...'}</p>
+      </div>
     );
+  }
+
+  if (!debitNote) {
+    return (
+      <div className="p-8 text-center text-rose-500 font-bold bg-white m-4 rounded-xl border border-rose-200">
+        {error || (isRTL ? 'الإشعار المدين غير موجود' : 'Debit Note Not Found')}
+      </div>
+    );
+  }
+
+  const items = debitNote.items || [];
+  const subTotal = items.reduce((sum, it) => sum + (Number(it.amount) || 0), 0);
+  const totalTax = items.reduce((sum, it) => sum + (Number(it.taxAmount) || 0), 0);
+  const netAmount = subTotal + totalTax;
+
+  return (
+    <div className="bg-[#F7F9FD] min-h-screen text-[#0A2551] font-sans pb-10 -mt-3 lg:-mt-4 -mx-3 lg:-mx-4" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Printable Area Wrapper */}
+      <div className="w-full px-4 pt-3 pb-4 space-y-3 print:px-0 print:pt-0">
+        {/* Top Header Card matching PurchaseOrderView */}
+        <div className="bg-white border border-[#DFE7F4] rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4 shadow-xs print:hidden">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors cursor-pointer text-[#0A2551]"
+            >
+              {isRTL ? <ArrowRight size={20} /> : <ArrowLeft size={20} />}
+            </button>
+            <div className="w-14 h-14 bg-[var(--color-primary,#00A9A8)] rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs">
+              <FileText size={30} strokeWidth={2.2} />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-[#617191] uppercase tracking-wider block">
+                {isRTL ? 'إشعار الخصم (إشعار مدين)' : 'PURCHASE DEBIT NOTE'}
+              </span>
+              <h1 className="text-2xl font-black text-[#0A2551] tracking-tight leading-none mt-0.5">
+                {debitNote.debitNoteNumber || `DN-${debitNote.id}`}
+              </h1>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="px-3 py-0.5 bg-[#DCFAEE] text-[#138764] rounded-md text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
+                  <BadgeCheck size={12} /> {debitNote.status || (isRTL ? 'مفتوح' : 'OPEN')}
+                </span>
+                <span className="px-2.5 py-0.5 bg-[#F2F6FC] text-[#617191] rounded-md text-[11px] font-semibold flex items-center gap-1">
+                  <Info size={11} /> {isRTL ? `رقم الفاتورة: ${debitNote.billNumber || '—'}` : `Bill #: ${debitNote.billNumber || '—'}`}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => navigate(`/purchase-dashboard/debit-notes/edit/${debitNote.id}`)}
+              className="flex items-center gap-2 h-[38px] px-4 bg-white border border-[#DFE7F4] rounded-xl text-xs font-bold hover:border-[var(--color-primary,#00A9A8)] hover:text-[var(--color-primary,#00A9A8)] transition-all cursor-pointer"
+            >
+              <Edit size={14} /> {isRTL ? 'تعديل الإشعار' : 'Edit Manifest'}
+            </button>
+            <button
+              onClick={handlePrint}
+              className="flex items-center gap-2 h-[38px] px-4 bg-[var(--color-primary,#00A9A8)] text-white rounded-xl text-xs font-bold hover:opacity-95 transition-all cursor-pointer shadow-xs"
+            >
+              <Printer size={14} /> {isRTL ? 'طباعة الإشعار' : 'Print Debit Note'}
+            </button>
+          </div>
+        </div>
+
+        {/* Executive Voucher Card */}
+        <div className="bg-white border border-[#DFE7F4] rounded-2xl p-6 sm:p-8 space-y-6 shadow-xs print:shadow-none print:border-none print:p-0">
+          <div className="border-b border-[#E4EAF0] pb-6 flex flex-wrap justify-between items-start gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-[#102A5B]">
+                {tenantInfo.name || 'Emirates ERP Trading LLC'}
+              </h2>
+              <p className="text-xs text-[#5F6F91] mt-1 max-w-sm">
+                {tenantInfo.address || 'Dubai Business Bay, United Arab Emirates'}
+              </p>
+              <p className="text-xs text-[#5F6F91]">TRN: {tenantInfo.trn || '100293848100003'}</p>
+            </div>
+
+            <div className={`text-${isRTL ? 'left' : 'right'}`}>
+              <div className="inline-block px-3 py-1 bg-[var(--color-primary,#00A9A8)]/10 text-[var(--color-primary,#00A9A8)] rounded-lg text-xs font-extrabold uppercase tracking-wider mb-2">
+                {isRTL ? 'إشعار مدين رسمي' : 'OFFICIAL DEBIT NOTE'}
+              </div>
+              <p className="text-xs font-semibold text-[#102A5B]">
+                {isRTL ? 'رقم الإشعار:' : 'Debit Note #:'} <span className="font-bold">{debitNote.debitNoteNumber || `DN-${debitNote.id}`}</span>
+              </p>
+              <p className="text-xs text-[#5F6F91]">
+                {isRTL ? 'تاريخ الإشعار:' : 'Date:'} {debitNote.debitNoteDate ? new Date(debitNote.debitNoteDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+              </p>
+            </div>
+          </div>
+
+          {/* Supplier & Debit Note Info Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-[#F8FAFC] p-4 rounded-xl border border-[#E4EAF0]">
+            <div>
+              <span className="text-[11px] font-bold text-[#617198] uppercase block mb-0.5">
+                {isRTL ? 'المورد / الطرف' : 'SUPPLIER NAME'}
+              </span>
+              <p className="text-sm font-bold text-[#102A5B]">{debitNote.supplierName || '—'}</p>
+              {supplierInfo?.code && <p className="text-xs text-[#5F6F91]">{isRTL ? 'رمز المورد:' : 'Code:'} {supplierInfo.code}</p>}
+            </div>
+
+            <div>
+              <span className="text-[11px] font-bold text-[#617198] uppercase block mb-0.5">
+                {isRTL ? 'رقم الفاتورة المرتبطة' : 'BILL NUMBER'}
+              </span>
+              <p className="text-sm font-bold text-[#102A5B]">{debitNote.billNumber || '—'}</p>
+            </div>
+
+            <div>
+              <span className="text-[11px] font-bold text-[#617198] uppercase block mb-0.5">
+                {isRTL ? 'بوليسة الشحن والمركبة' : 'LOGISTICS REF'}
+              </span>
+              <p className="text-xs font-bold text-[#102A5B]">{debitNote.billOfLading || 'N/A'}</p>
+              {debitNote.motorVehicleNo && <p className="text-[11px] text-[#5F6F91]">Vehicle: {debitNote.motorVehicleNo}</p>}
+            </div>
+
+            <div>
+              <span className="text-[11px] font-bold text-[#617198] uppercase block mb-0.5">
+                {isRTL ? 'المبلغ الإجمالي (AED)' : 'TOTAL AMOUNT (AED)'}
+              </span>
+              <p className="text-lg font-black text-[var(--color-primary,#00A9A8)]">
+                AED {netAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            </div>
+          </div>
+
+          {/* Line Items Table */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold text-[#102A5B]">
+              {isRTL ? 'تفاصيل الأصناف للإشعار المدين' : 'Line Items Breakdown'}
+            </h3>
+
+            <div className="border border-[#DBE5F3] rounded-[11.09px] overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#EEF5FF] border-b border-[#DBE5F3] text-[#102A5B] font-semibold text-[12px] h-[38.39px]">
+                    <th className="py-2.5 px-3 whitespace-nowrap">{isRTL ? 'ت' : 'S.No.'}</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap">{isRTL ? 'الصنف' : 'Item Description'}</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap text-right">{isRTL ? 'الكمية' : 'Qty'}</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap text-right">{isRTL ? 'السعر (AED)' : 'Rate (AED)'}</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap text-right">{isRTL ? 'الخصم (AED)' : 'Discount'}</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap text-right">{isRTL ? 'الضريبة (AED)' : 'Tax'}</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap text-right">{isRTL ? 'المبلغ (AED)' : 'Amount (AED)'}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#DBE5F3]">
+                  {items.length > 0 ? (
+                    items.map((it, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/80 transition-colors h-[42.39px] text-xs">
+                        <td className="py-2 px-3 text-[#5F6F91] whitespace-nowrap">{idx + 1}</td>
+                        <td className="py-2 px-3 font-semibold text-[#102A5B] whitespace-nowrap">
+                          {it.itemName || it.materialName || `Item #${it.itemId}`}
+                        </td>
+                        <td className="py-2 px-3 text-right font-medium text-[#102A5B] whitespace-nowrap">{it.quantity}</td>
+                        <td className="py-2 px-3 text-right font-medium text-[#102A5B] whitespace-nowrap">
+                          AED {(Number(it.rate) || 0).toFixed(2)}
+                        </td>
+                        <td className="py-2 px-3 text-right text-[#5F6F91] whitespace-nowrap">
+                          AED {(Number(it.discount) || 0).toFixed(2)}
+                        </td>
+                        <td className="py-2 px-3 text-right text-[#5F6F91] whitespace-nowrap">
+                          AED {(Number(it.taxAmount) || 0).toFixed(2)}
+                        </td>
+                        <td className="py-2 px-3 text-right font-bold text-[#172033] whitespace-nowrap">
+                          AED {((Number(it.amount) || 0) + (Number(it.taxAmount) || 0)).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="py-6 text-center text-xs text-[#5F6F91]">
+                        {isRTL ? 'لا تتوفر أصناف مسجلة لهذا الإشعار المدين' : 'No line items recorded for this debit note.'}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Debit Note Summary Box */}
+          <div className="flex justify-end pt-2">
+            <div className="w-full sm:w-80 bg-[#F8FAFC] border border-[#DFE7F4] rounded-xl p-4 space-y-2">
+              <div className="flex justify-between items-center text-xs text-[#5F6F91]">
+                <span>{isRTL ? 'المجموع الفرعي:' : 'Sub Total:'}</span>
+                <span className="font-bold text-[#102A5B]">AED {subTotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs text-[#5F6F91]">
+                <span>{isRTL ? 'إجمالي الضريبة:' : 'Total Tax:'}</span>
+                <span className="font-bold text-[#102A5B]">AED {totalTax.toFixed(2)}</span>
+              </div>
+              <div className="border-t border-[#DFE7F4] pt-2 flex justify-between items-center text-xs font-bold text-[var(--color-primary,#00A9A8)]">
+                <span>{isRTL ? 'الإجمالي النهائي:' : 'Net Total (AED):'}</span>
+                <span>AED {netAmount.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Notes & Signatures */}
+          {debitNote.notes && (
+            <div className="pt-2 border-t border-[#E4EAF0]">
+              <span className="text-[11px] font-bold text-[#617198] uppercase block mb-1">
+                {isRTL ? 'الملاحظات:' : 'Notes / Remarks:'}
+              </span>
+              <p className="text-xs text-[#5F6F91] italic bg-[#F8FAFC] p-3 rounded-lg border border-[#E4EAF0]">
+                {debitNote.notes}
+              </p>
+            </div>
+          )}
+
+          <div className="pt-10 border-t border-[#E4EAF0] grid grid-cols-2 gap-8 text-center text-xs font-semibold text-[#5F6F91]">
+            <div>
+              <div className="border-b border-[#DCE5F3] h-12 mb-1" />
+              <span>{isRTL ? 'توقيع المحاسب / إعداد' : 'Prepared By (Accountant)'}</span>
+            </div>
+            <div>
+              <div className="border-b border-[#DCE5F3] h-12 mb-1" />
+              <span>{isRTL ? 'توقيع المعتمد / الاعتماد' : 'Authorized Signatory'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default PurchaseDebitNoteView;

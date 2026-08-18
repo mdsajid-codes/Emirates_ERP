@@ -32,7 +32,6 @@ const NAV_ITEMS = [
     { name: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard, Component: PosDashboardView },
     { name: 'Sales',     label: 'Sales',     icon: ShoppingCart,    Component: SalesView },
     { name: 'Customers', label: 'Customers', icon: Users,           Component: CustomersView },
-    { name: 'Quotations',label: 'Quotations',icon: ClipboardList,   Component: null },
     { name: 'Orders',    label: 'Orders',    icon: Package,         Component: null },
     { name: 'Invoices',  label: 'Invoices',  icon: ClipboardList,   Component: null },
     { name: 'Products',  label: 'Products',  icon: Package,         Component: ProductsView },
