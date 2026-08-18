@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Loader2, Save, X, Building, User, Mail, Briefcase, Percent, Plus, Trash2, ChevronDown, FileText, Truck, Share2, TrendingUp } from 'lucide-react';
 
@@ -25,23 +25,31 @@ const ToggleSection = ({ title, icon, children, defaultOpen = false }) => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex justify-between items-center py-4 text-lg font-semibold text-gray-900 dark:text-white"
+        className="w-full py-4 flex items-center justify-between text-left focus:outline-none"
       >
-        <span className="flex items-center">{icon} {title}</span>
-        <ChevronDown className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <div className="flex items-center space-x-3">
+          {icon}
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{title}</h3>
+        </div>
+        <ChevronDown
+          className={`w-5 h-5 text-gray-500 transform transition-transform duration-200 ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+        />
       </button>
-      {isOpen && <div className="pb-6 space-y-6">{children}</div>}
+      {isOpen && <div className="pb-6 space-y-4">{children}</div>}
     </div>
   );
 };
 
 const emptyAddress = () => ({
   attention: '',
-  addressLine: '',
+  country: '',
+  addressLine1: '',
+  addressLine2: '',
   city: '',
   state: '',
   zipCode: '',
-  country: '',
   phone: '',
   fax: '',
 });
@@ -49,10 +57,13 @@ const emptyAddress = () => ({
 const PartyForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const isEditing = !!id;
 
+  const defaultPartyType = location.state?.partyType || 'CUSTOMER';
+
   const [party, setParty] = useState({
-    partyType: 'CUSTOMER',
+    partyType: defaultPartyType,
     companyName: '',
     primaryContactPerson: '',
     contactEmail: '',

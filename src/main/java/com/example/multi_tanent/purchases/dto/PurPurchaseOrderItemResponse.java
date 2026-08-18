@@ -23,6 +23,10 @@ public class PurPurchaseOrderItemResponse {
 
     private Long itemId;
     private String itemName;
+    private Long crmProductId;
+    private Long rawMaterialId;
+    private Long semiFinishedId;
+    private Long finishedGoodId;
     private String description;
 
     private BigDecimal quantity;

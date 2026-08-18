@@ -62,6 +62,8 @@
     <include file="db/changelog/purchases/004-create-additional-expense-tables.xml"/>
     <include file="db/changelog/purchases/005-rename-expense-account-to-product.xml"/>
     <include file="db/changelog/purchases/006-add-unit-id-to-pur-additional-expense-line.xml"/>
+    <include file="db/changelog/purchases/007-add-product-columns-to-pur-order-item.xml"/>
+    <include file="db/changelog/purchases/008-create-custom-declaration-tables.xml"/>
 
     <!-- Warehouse Module -->
     <include file="db/changelog/warehouse/048-create-warehouse-schema.xml"/>

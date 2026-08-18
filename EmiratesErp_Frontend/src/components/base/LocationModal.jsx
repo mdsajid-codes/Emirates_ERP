@@ -43,54 +43,149 @@ const LocationModal = ({ isOpen, onClose, onSave, location, loading }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
-                <div className="p-4 border-b flex justify-between items-center">
-                    <h2 className="text-xl font-semibold">{location ? 'Edit' : 'Add'} Work Location</h2>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100">
-                        <X className="h-5 w-5 text-slate-500" />
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex justify-center items-center z-50 p-4 transition-all">
+            <div className="bg-white rounded-[16px] shadow-2xl w-full max-w-[500px] border border-[#E4EAF0] overflow-hidden">
+                {/* Modal Header */}
+                <div className="px-6 py-5 border-b border-[#F0F4F8] flex justify-between items-center bg-white">
+                    <h2 className="text-[20px] font-bold text-[#102A5B] tracking-tight">
+                        {location ? 'Edit' : 'Add'} Work Location
+                    </h2>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="text-[#5F6F91] hover:text-[#102A5B] p-1 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                    >
+                        <X size={18} />
                     </button>
                 </div>
+
                 <form onSubmit={handleSubmit}>
-                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto">
-                        <div className="md:col-span-2">
-                            <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">Location Name *</label>
-                            <input id="name" name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g. Main Warehouse" />
-                        </div>
-                        <div className="md:col-span-2">
-                            <label htmlFor="address" className="block text-sm font-medium text-slate-700 mb-1">Address</label>
-                            <input id="address" name="address" value={formData.address} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Street address" />
-                        </div>
+                    {/* Modal Body */}
+                    <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                        {/* Location Name */}
                         <div>
-                            <label htmlFor="city" className="block text-sm font-medium text-slate-700 mb-1">City</label>
-                            <input id="city" name="city" value={formData.city} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="City" />
+                            <label htmlFor="name" className="block text-[13px] font-semibold text-[#102A5B] mb-1.5">
+                                Location Name <span className="text-rose-500">*</span>
+                            </label>
+                            <input
+                                id="name"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                required
+                                className="w-full h-[40px] px-3.5 bg-white border border-[#D8E2F1] rounded-[8px] text-[13px] text-[#102A5B] placeholder:text-slate-300 outline-none focus:border-[var(--color-primary,#00A9A8)] transition-all"
+                                placeholder="e.g. Main Warehouse"
+                            />
                         </div>
+
+                        {/* Address */}
                         <div>
-                            <label htmlFor="state" className="block text-sm font-medium text-slate-700 mb-1">State</label>
-                            <input id="state" name="state" value={formData.state} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="State" />
+                            <label htmlFor="address" className="block text-[13px] font-semibold text-[#102A5B] mb-1.5">
+                                Address
+                            </label>
+                            <input
+                                id="address"
+                                name="address"
+                                value={formData.address}
+                                onChange={handleChange}
+                                className="w-full h-[40px] px-3.5 bg-white border border-[#D8E2F1] rounded-[8px] text-[13px] text-[#102A5B] placeholder:text-slate-300 outline-none focus:border-[var(--color-primary,#00A9A8)] transition-all"
+                                placeholder="Street address"
+                            />
                         </div>
-                        <div>
-                            <label htmlFor="postalCode" className="block text-sm font-medium text-slate-700 mb-1">Postal Code</label>
-                            <input id="postalCode" name="postalCode" value={formData.postalCode} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Postal code" />
+
+                        {/* City & State */}
+                        <div className="grid grid-cols-2 gap-3.5">
+                            <div>
+                                <label htmlFor="city" className="block text-[13px] font-semibold text-[#102A5B] mb-1.5">
+                                    City
+                                </label>
+                                <input
+                                    id="city"
+                                    name="city"
+                                    value={formData.city}
+                                    onChange={handleChange}
+                                    className="w-full h-[40px] px-3.5 bg-white border border-[#D8E2F1] rounded-[8px] text-[13px] text-[#102A5B] placeholder:text-slate-300 outline-none focus:border-[var(--color-primary,#00A9A8)] transition-all"
+                                    placeholder="City"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="state" className="block text-[13px] font-semibold text-[#102A5B] mb-1.5">
+                                    State
+                                </label>
+                                <input
+                                    id="state"
+                                    name="state"
+                                    value={formData.state}
+                                    onChange={handleChange}
+                                    className="w-full h-[40px] px-3.5 bg-white border border-[#D8E2F1] rounded-[8px] text-[13px] text-[#102A5B] placeholder:text-slate-300 outline-none focus:border-[var(--color-primary,#00A9A8)] transition-all"
+                                    placeholder="State"
+                                />
+                            </div>
                         </div>
-                        <div>
-                            <label htmlFor="country" className="block text-sm font-medium text-slate-700 mb-1">Country</label>
-                            <input id="country" name="country" value={formData.country} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Country" />
+
+                        {/* Postal Code & Country */}
+                        <div className="grid grid-cols-2 gap-3.5">
+                            <div>
+                                <label htmlFor="postalCode" className="block text-[13px] font-semibold text-[#102A5B] mb-1.5">
+                                    Postal Code
+                                </label>
+                                <input
+                                    id="postalCode"
+                                    name="postalCode"
+                                    value={formData.postalCode}
+                                    onChange={handleChange}
+                                    className="w-full h-[40px] px-3.5 bg-white border border-[#D8E2F1] rounded-[8px] text-[13px] text-[#102A5B] placeholder:text-slate-300 outline-none focus:border-[var(--color-primary,#00A9A8)] transition-all"
+                                    placeholder="Postal code"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="country" className="block text-[13px] font-semibold text-[#102A5B] mb-1.5">
+                                    Country
+                                </label>
+                                <input
+                                    id="country"
+                                    name="country"
+                                    value={formData.country}
+                                    onChange={handleChange}
+                                    className="w-full h-[40px] px-3.5 bg-white border border-[#D8E2F1] rounded-[8px] text-[13px] text-[#102A5B] placeholder:text-slate-300 outline-none focus:border-[var(--color-primary,#00A9A8)] transition-all"
+                                    placeholder="Country"
+                                />
+                            </div>
                         </div>
-                        <div className="md:col-span-2 mt-2">
-                            <label className="inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="primary" checked={formData.primary} onChange={handleChange} className="h-4 w-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500" />
-                                <span className="ml-2 text-sm text-slate-700">Set as primary location</span>
+
+                        {/* Primary Checkbox */}
+                        <div className="pt-1">
+                            <label className="inline-flex items-center gap-2.5 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    name="primary"
+                                    checked={formData.primary}
+                                    onChange={handleChange}
+                                    className="h-4 w-4 border-[#D8E2F1] rounded text-[var(--color-primary,#00A9A8)] focus:ring-[var(--color-primary,#00A9A8)] cursor-pointer"
+                                />
+                                <span className="text-[13px] font-normal text-[#102A5B]">Set as primary location</span>
                             </label>
                         </div>
-                        {modalError && <p className="md:col-span-2 text-red-500 text-sm mt-1">{modalError}</p>}
+
+                        {modalError && <p className="text-rose-500 text-xs font-semibold">{modalError}</p>}
                     </div>
-                    <div className="p-4 border-t bg-slate-50 flex justify-end gap-2 rounded-b-lg">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors" disabled={loading}>
+
+                    {/* Modal Footer */}
+                    <div className="px-6 py-4 border-t border-[#F0F4F8] bg-white flex justify-end items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-5 py-2 text-[13px] font-semibold text-[#102A5B] bg-white border border-[#D8E2F1] rounded-[8px] hover:bg-slate-50 transition-colors cursor-pointer"
+                            disabled={loading}
+                        >
                             Cancel
                         </button>
-                        <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-[#1a237e] rounded-md hover:bg-blue-900 transition-colors flex items-center disabled:opacity-70 disabled:cursor-not-allowed" disabled={loading}>
-                            {loading && <Loader className="animate-spin h-4 w-4 mr-2" />}
+                        <button
+                            type="submit"
+                            className="px-6 py-2 text-[13px] font-semibold text-white bg-[var(--color-sidebar-bg,#06275C)] rounded-[8px] hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
+                            disabled={loading}
+                        >
+                            {loading && <Loader className="animate-spin h-4 w-4" />}
                             Save
                         </button>
                     </div>

@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Loader, Printer, Edit, Trash2, CheckCircle, XCircle, FileText, Target } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader, Printer, Edit2, Trash2, CheckCircle, XCircle, FileText, Target, Box, BadgeCheck, User, Calendar, ShieldCheck } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const RequisitionView = () => {
+    const { isRTL } = useLanguage();
     const navigate = useNavigate();
     const { id } = useParams();
     const [requisition, setRequisition] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [actionLoading, setActionLoading] = useState(false);
 
     const fetchRequisition = async () => {
         setLoading(true);
@@ -23,7 +24,7 @@ const RequisitionView = () => {
             setRequisition(res.data);
         } catch (err) {
             console.error(err);
-            setError('Failed to load requisition details.');
+            setError(isRTL ? 'فشل في تحميل تفاصيل طلب الشراء.' : 'Failed to load requisition details.');
         } finally {
             setLoading(false);
         }
@@ -34,38 +35,36 @@ const RequisitionView = () => {
     }, [id]);
 
     const handleUpdateStatus = async (newStatus) => {
-        if (!window.confirm(`Are you sure you want to change the status to ${newStatus}?`)) return;
+        if (!window.confirm(isRTL ? `هل تريد تغيير الحالة إلى ${newStatus}؟` : `Are you sure you want to change the status to ${newStatus}?`)) return;
         try {
             const token = localStorage.getItem('token');
             await axios.patch(`${API_URL}/purchases/requisitions/${id}/status`, null, {
                 headers: { Authorization: `Bearer ${token}` },
                 params: { status: newStatus }
             });
-            fetchRequisition(); // Refresh
+            fetchRequisition();
         } catch (err) {
             console.error(err);
-            alert('Failed to update status.');
+            alert(isRTL ? 'فشل تحديث الحالة.' : 'Failed to update status.');
         }
     };
 
     const handleConvertToPO = () => {
-        if (!window.confirm('Are you sure you want to convert this Requisition to a Purchase Order?')) return;
+        if (!window.confirm(isRTL ? 'تحويل طلب الشراء إلى أمر شراء مباشر؟' : 'Convert this Requisition to a Purchase Order?')) return;
         navigate(`/purchase-dashboard/purchase-orders/new`, { 
             state: { requisitionData: requisition } 
         });
     };
 
-
     const handleConvertToTendering = () => {
-        if (!window.confirm('Are you sure you want to convert this Requisition to a Supplier Tendering?')) return;
+        if (!window.confirm(isRTL ? 'تحويل طلب الشراء إلى مناقصة توريد؟' : 'Convert this Requisition to a Supplier Tendering?')) return;
         navigate(`/purchase-dashboard/supplier-tendering/new`, { 
             state: { requisitionData: requisition } 
         });
     };
 
-
     const handleDelete = async () => {
-        if (!window.confirm('Are you sure you want to delete this requisition?')) return;
+        if (!window.confirm(isRTL ? 'هل أنت تأكد من حذف طلب الشراء؟' : 'Are you sure you want to delete this requisition?')) return;
         try {
             const token = localStorage.getItem('token');
             await axios.delete(`${API_URL}/purchases/requisitions/${id}`, {
@@ -74,180 +73,172 @@ const RequisitionView = () => {
             navigate('/purchase-dashboard/requisitions');
         } catch (err) {
             console.error(err);
-            alert('Failed to delete requisition.');
+            alert(isRTL ? 'فشل في حذف الطلب.' : 'Failed to delete requisition.');
         }
     };
 
-    const handlePrint = () => {
-        window.print();
-    };
+    if (loading) {
+        return (
+            <div className="flex flex-col justify-center items-center h-screen bg-[#F8FAFC]">
+                <div className="w-12 h-12 border-4 border-slate-200 border-t-[#00A9A8] rounded-full animate-spin mb-3" />
+                <p className="text-sm font-bold text-[#0A2551]">{isRTL ? 'جاري تحميل تفاصيل طلب الشراء...' : 'Loading Requisition Details...'}</p>
+            </div>
+        );
+    }
 
-    if (loading) return <div className="flex justify-center p-12"><Loader className="animate-spin text-blue-600" size={32} /></div>;
-    if (error) return <div className="p-12 text-center text-red-600 font-semibold">{error}</div>;
-    if (!requisition) return <div className="p-12 text-center">Requisition not found.</div>;
+    if (error || !requisition) {
+        return <div className="p-12 text-center text-rose-600 font-bold">{error || (isRTL ? 'لم يتم العثور على طلب الشراء.' : 'Requisition not found.')}</div>;
+    }
 
-    const getStatusClass = (status) => {
-        if (!status) return 'bg-slate-100 text-slate-800';
-        switch (status.toUpperCase()) {
-            case 'APPROVED': return 'bg-green-100 text-green-800 border-green-200';
-            case 'DRAFT': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'PENDING': return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'REJECTED': return 'bg-red-100 text-red-800 border-red-200';
-            case 'CANCELLED': return 'bg-gray-100 text-gray-800 border-gray-200';
-            case 'COMPLETED': return 'bg-teal-100 text-teal-800 border-teal-200';
-            default: return 'bg-slate-100 text-slate-800 border-slate-200';
-        }
-    };
+    const status = requisition.status || 'DRAFT';
 
     return (
-        <div className="max-w-7xl mx-auto p-4 md:p-6 bg-white rounded-lg shadow min-h-screen">
-            <div className="flex justify-between items-center mb-6 border-b pb-4 print:hidden">
-                <div className="flex items-center gap-4">
-                    <Link to="/purchase-dashboard/requisitions" className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                        <ArrowLeft size={20} />
-                    </Link>
-                    <h1 className="text-2xl font-bold text-slate-800">Requisition #{requisition.requisitionNumber}</h1>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button onClick={handlePrint} className="px-4 py-2 border rounded-md flex items-center gap-2 hover:bg-slate-50 transition-colors">
-                        <Printer size={18} /> Print
+        <div className="bg-[#F7F9FD] min-h-screen text-[#0A2551] font-sans pb-10 -mt-3 lg:-mt-4 -mx-3 lg:-mx-4" dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Top Action Header Bar */}
+            <div className="sticky top-0 z-50 bg-white border-b border-[#DFE7F4] px-6 py-2.5 flex items-center justify-between shadow-xs">
+                <button onClick={() => navigate('/purchase-dashboard/requisitions')} className="flex items-center gap-2 text-xs font-bold text-[#102A5B] hover:text-[#00A9A8] transition-colors cursor-pointer">
+                    {isRTL ? <ArrowRight size={16} /> : <ArrowLeft size={16} />}
+                    <span>{isRTL ? 'الرجوع للقائمة' : 'Back to Requisitions List'}</span>
+                </button>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                    <button onClick={() => window.print()} className="px-3 py-1.5 border border-[#DFE7F4] rounded-lg text-xs font-semibold text-[#102A5B] hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <Printer size={14} />
+                        <span>{isRTL ? 'طباعة' : 'Print'}</span>
                     </button>
-                    <Link to={`/purchase-dashboard/requisitions/edit/${id}`} className="px-4 py-2 bg-blue-600 text-white rounded-md flex items-center gap-2 hover:bg-blue-700 transition-colors">
-                        <Edit size={18} /> Edit
-                    </Link>
-                    <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded-md flex items-center gap-2 hover:bg-red-700 transition-colors">
-                        <Trash2 size={18} /> Delete
+
+                    <button onClick={() => navigate(`/purchase-dashboard/requisitions/edit/${id}`)} className="px-3 py-1.5 border border-[#DFE7F4] rounded-lg text-xs font-semibold text-[#102A5B] hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <Edit2 size={14} />
+                        <span>{isRTL ? 'تعديل' : 'Edit'}</span>
                     </button>
-                </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 border rounded-lg p-6 bg-slate-50">
-                <div>
-                    <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Requisition Number</div>
-                    <div className="font-semibold text-slate-800 text-lg">{requisition.requisitionNumber}</div>
-                </div>
-                <div>
-                    <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Date</div>
-                    <div className="font-semibold text-slate-800 text-lg">{requisition.requisitionDate ? new Date(requisition.requisitionDate).toLocaleDateString() : '-'}</div>
-                </div>
-                <div>
-                    <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Status</div>
-                    <span className={`px-3 py-1 text-sm font-bold rounded-full border ${getStatusClass(requisition.status)}`}>
-                        {requisition.status || 'N/A'}
-                    </span>
-                </div>
-                <div>
-                    <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Requested By</div>
-                    <div className="font-medium text-slate-700">{requisition.requestedBy || '-'}</div>
-                </div>
-                <div>
-                    <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Recipient</div>
-                    <div className="font-medium text-slate-700">{requisition.recipient || '-'}</div>
-                </div>
-                <div>
-                    <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Required Date</div>
-                    <div className="font-medium text-slate-700">{requisition.requiredDate ? new Date(requisition.requiredDate).toLocaleDateString() : '-'}</div>
-                </div>
-                <div>
-                    <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Entity</div>
-                    <div className="font-medium text-slate-700">{requisition.entity || '-'}</div>
-                </div>
-                <div>
-                    <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Basis</div>
-                    <div className="font-medium text-slate-700">{requisition.basis || '-'}</div>
-                </div>
-                <div className="md:col-span-3">
-                    <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Comment</div>
-                    <div className="p-3 bg-white border rounded text-slate-700 italic">{requisition.comment || 'No comments'}</div>
-                </div>
-            </div>
-
-            <div className="border rounded-lg overflow-hidden mb-8">
-                <table className="min-w-full">
-                    <thead className="bg-slate-100 text-slate-700 border-b">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider w-16 text-center">#</th>
-                            <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Resource Type</th>
-                            <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Item Details</th>
-                            <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Spec/Content</th>
-                            <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-right">Quantity</th>
-                            <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">UOM</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white">
-                        {(requisition.items || []).map((item, idx) => (
-                            <tr key={item.id} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 text-center">{idx + 1}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-700">{item.resourceType || '-'}</td>
-                                <td className="px-6 py-4 text-sm text-slate-700">
-                                    <div className="font-bold">{item.itemName || '-'}</div>
-                                    <div className="text-xs text-slate-400">ID: {item.itemId || 'N/A'}</div>
-                                    {item.comment && <div className="mt-1 text-xs text-blue-600 flex items-center gap-1"><span className="font-bold underline">Note:</span> {item.comment}</div>}
-                                </td>
-                                <td className="px-6 py-4 text-sm text-slate-600 italic">{item.content || '-'}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-bold text-right">{item.quantity}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{item.uom || '-'}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            <div className="flex flex-col md:flex-row justify-between items-center bg-blue-50 p-6 rounded-lg border border-blue-100 print:hidden gap-4">
-                <div className="flex flex-col gap-1">
-                    <div className="text-slate-700 font-bold">Actions & Status</div>
-                    <div className="text-xs text-slate-500">Manage the lifecycle of this requisition</div>
-                </div>
-                
-                <div className="flex flex-wrap gap-3 justify-center">
-                    {/* Status Management */}
-                    <div className="flex gap-2 border-r pr-3 border-blue-200">
-                        <button 
-                            onClick={() => handleUpdateStatus('APPROVED')}
-                            className="px-4 py-2 bg-green-600 text-white rounded-md flex items-center gap-2 hover:bg-green-700 active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={requisition.status === 'APPROVED' || requisition.status === 'COMPLETED' || actionLoading}
-                        >
-                            <CheckCircle size={16} /> Approve
+                    {status !== 'APPROVED' && status !== 'COMPLETED' && (
+                        <button onClick={() => handleUpdateStatus('APPROVED')} className="px-3.5 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1.5 cursor-pointer">
+                            <CheckCircle size={14} />
+                            <span>{isRTL ? 'اعتماد الطلب' : 'Approve'}</span>
                         </button>
-                        <button 
-                            onClick={() => handleUpdateStatus('REJECTED')}
-                            className="px-4 py-2 bg-red-600 text-white rounded-md flex items-center gap-2 hover:bg-red-700 active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={requisition.status === 'REJECTED' || requisition.status === 'COMPLETED' || actionLoading}
-                        >
-                            <XCircle size={16} /> Reject
+                    )}
+
+                    {status !== 'REJECTED' && status !== 'COMPLETED' && (
+                        <button onClick={() => handleUpdateStatus('REJECTED')} className="px-3.5 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition-colors flex items-center gap-1.5 cursor-pointer">
+                            <XCircle size={14} />
+                            <span>{isRTL ? 'رفض الطلب' : 'Reject'}</span>
                         </button>
+                    )}
+
+                    {(status === 'APPROVED' || status === 'COMPLETED') && (
+                        <>
+                            <button onClick={handleConvertToPO} className="px-4 py-1.5 bg-[#00A9A8] text-white rounded-lg text-xs font-bold hover:bg-[#008f8e] transition-colors flex items-center gap-1.5 cursor-pointer">
+                                <FileText size={14} />
+                                <span>{isRTL ? 'تحويل إلى أمر شراء' : 'Convert to PO'}</span>
+                            </button>
+                            <button onClick={handleConvertToTendering} className="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors flex items-center gap-1.5 cursor-pointer">
+                                <Target size={14} />
+                                <span>{isRTL ? 'تحويل إلى مناقصة' : 'Convert to Tendering'}</span>
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
+
+            <div className="w-full px-4 lg:px-6 space-y-4">
+                {/* Hero Header Banner */}
+                <div className="bg-white border border-[#DFE7F4] rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4 shadow-xs">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-[#00A9A8] rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs">
+                            <Box size={30} strokeWidth={2.2} />
+                        </div>
+                        <div>
+                            <span className="text-[11px] font-bold text-[#617191] uppercase tracking-wider block">{isRTL ? 'طلب شراء مواد' : 'PURCHASE REQUISITION'}</span>
+                            <h1 className="text-2xl font-black text-[#0A2551] tracking-tight leading-none mt-0.5">{requisition.requisitionNumber || `REQ-${requisition.id}`}</h1>
+                            <div className="flex items-center gap-2 mt-2">
+                                <span className="px-3 py-0.5 bg-[#DCFAEE] text-[#138764] rounded-md text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                    <BadgeCheck size={12} /> {status}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Conversion Actions */}
-                    <div className="flex gap-2">
-                        <button 
-                            onClick={handleConvertToPO}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md flex items-center gap-2 hover:bg-blue-700 active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={(requisition.status !== 'APPROVED' && requisition.status !== 'COMPLETED') || actionLoading}
-                            title={!(requisition.status === 'APPROVED' || requisition.status === 'COMPLETED') ? "Only available for approved or completed requisitions" : ""}
-                        >
-                            {actionLoading ? <Loader size={16} className="animate-spin" /> : <FileText size={16} />}
-                            Convert to PO
-                        </button>
-                        <button 
-                            onClick={handleConvertToTendering}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-md flex items-center gap-2 hover:bg-indigo-700 active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={(requisition.status !== 'APPROVED' && requisition.status !== 'COMPLETED') || actionLoading}
-                            title={!(requisition.status === 'APPROVED' || requisition.status === 'COMPLETED') ? "Only available for approved or completed requisitions" : ""}
-                        >
-                            {actionLoading ? <Loader size={16} className="animate-spin" /> : <Target size={16} />}
-                            Convert to Tendering
-                        </button>
+                    <div className="flex items-center gap-6 text-xs border-l rtl:border-l-0 rtl:border-r border-[#DFE7F4] pl-6 rtl:pr-6">
+                        <div>
+                            <span className="text-[#617191] font-medium block">{isRTL ? 'المطلوب بواسطة' : 'Requested By'}</span>
+                            <span className="font-bold text-[#0A2551]">{requisition.requestedBy || '-'}</span>
+                        </div>
+                        <div>
+                            <span className="text-[#617191] font-medium block">{isRTL ? 'تاريخ الطلب' : 'Requisition Date'}</span>
+                            <span className="font-bold text-[#0A2551]">{requisition.requisitionDate ? new Date(requisition.requisitionDate).toLocaleDateString() : '-'}</span>
+                        </div>
+                        <div>
+                            <span className="text-[#617191] font-medium block">{isRTL ? 'التاريخ المطلوب' : 'Required Date'}</span>
+                            <span className="font-bold text-[#0A2551]">{requisition.requiredDate ? new Date(requisition.requiredDate).toLocaleDateString() : '-'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Details Meta Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div className="bg-white border border-[#DFE7F4] rounded-xl p-3.5 shadow-xs">
+                        <span className="text-[10px] font-bold text-[#617191] uppercase block mb-1">{isRTL ? 'الكيان المؤسسي' : 'Entity'}</span>
+                        <span className="text-xs font-bold text-[#0A2551]">{requisition.entity || '-'}</span>
+                    </div>
+                    <div className="bg-white border border-[#DFE7F4] rounded-xl p-3.5 shadow-xs">
+                        <span className="text-[10px] font-bold text-[#617191] uppercase block mb-1">{isRTL ? 'المستلم' : 'Recipient'}</span>
+                        <span className="text-xs font-bold text-[#0A2551]">{requisition.recipient || '-'}</span>
+                    </div>
+                    <div className="bg-white border border-[#DFE7F4] rounded-xl p-3.5 shadow-xs">
+                        <span className="text-[10px] font-bold text-[#617191] uppercase block mb-1">{isRTL ? 'الأساس' : 'Basis'}</span>
+                        <span className="text-xs font-bold text-[#0A2551]">{requisition.basis || '-'}</span>
+                    </div>
+                    <div className="bg-white border border-[#DFE7F4] rounded-xl p-3.5 shadow-xs">
+                        <span className="text-[10px] font-bold text-[#617191] uppercase block mb-1">{isRTL ? 'إجمالي الأصناف' : 'Total Items'}</span>
+                        <span className="text-xs font-bold text-[#00A9A8]">{requisition.items?.length || 0}</span>
+                    </div>
+                </div>
+
+                {/* Items Specification Table Card */}
+                <div className="bg-white border border-[#DFE7F4] rounded-2xl shadow-xs overflow-hidden">
+                    <div className="px-5 py-3.5 border-b border-[#DFE7F4] bg-[#F8FAFC] flex justify-between items-center">
+                        <h3 className="text-xs font-bold text-[#0A2551] uppercase tracking-wider">{isRTL ? 'جدول الأصناف المطلوبة' : 'Requisition Items Specification'}</h3>
+                        <span className="text-[11px] font-semibold text-[#617191]">{isRTL ? `${requisition.items?.length || 0} أصناف` : `${requisition.items?.length || 0} Items`}</span>
                     </div>
 
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse text-xs">
+                            <thead>
+                                <tr className="bg-[#F2F6FC] border-b border-[#DFE7F4] text-[#617191] uppercase text-[10.5px] font-bold">
+                                    <th className="p-3 text-left rtl:text-right">#</th>
+                                    <th className="p-3 text-left rtl:text-right">{isRTL ? 'نوع المورد' : 'Resource Type'}</th>
+                                    <th className="p-3 text-left rtl:text-right">{isRTL ? 'تفاصيل الصنف' : 'Item Details'}</th>
+                                    <th className="p-3 text-left rtl:text-right">{isRTL ? 'المواصفات' : 'Specification / Content'}</th>
+                                    <th className="p-3 text-center">{isRTL ? 'الكمية' : 'Qty'}</th>
+                                    <th className="p-3 text-center">{isRTL ? 'الوحدة' : 'UOM'}</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#DFE7F4]">
+                                {(requisition.items || []).map((item, idx) => (
+                                    <tr key={item.id || idx} className="hover:bg-slate-50/60">
+                                        <td className="p-3 font-bold text-[#0A2551]">{idx + 1}</td>
+                                        <td className="p-3 font-semibold text-[#617191]">{item.resourceType || '-'}</td>
+                                        <td className="p-3">
+                                            <div className="font-bold text-[#0A2551]">{item.itemName || '-'}</div>
+                                            {item.comment && <div className="text-[11px] text-[#00A9A8] font-medium mt-0.5">{item.comment}</div>}
+                                        </td>
+                                        <td className="p-3 font-medium text-[#617191]">{item.content || '-'}</td>
+                                        <td className="p-3 text-center font-bold text-[#0A2551]">{item.quantity}</td>
+                                        <td className="p-3 text-center font-semibold text-[#617191]">{item.uom || 'PCS'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-                    <button 
-                        onClick={() => handleUpdateStatus('CANCELLED')}
-                        className="px-4 py-2 bg-slate-600 text-white rounded-md flex items-center gap-2 hover:bg-slate-700 active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={requisition.status === 'CANCELLED' || requisition.status === 'COMPLETED' || actionLoading}
-                    >
-                        <ArrowLeft size={16} /> Cancel
-                    </button>
+                {/* Remarks & Logs */}
+                <div className="bg-white border border-[#DFE7F4] rounded-2xl p-4 shadow-xs space-y-2">
+                    <h4 className="text-xs font-bold text-[#0A2551] uppercase tracking-wider">{isRTL ? 'ملاحظات وتعليقات الطلب' : 'Operational Remarks & Notes'}</h4>
+                    <p className="text-xs text-[#617191] bg-[#F8FAFC] p-3 rounded-xl border border-[#DFE7F4] font-medium">
+                        {requisition.comment || (isRTL ? 'لا توجد ملاحظات إضافية مسجلة.' : 'No operational remarks recorded.')}
+                    </p>
                 </div>
             </div>
         </div>

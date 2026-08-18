@@ -2,52 +2,26 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { 
-    Plus, 
-    Trash2, 
-    Save, 
-    Loader, 
-    ArrowLeft, 
-    PlusCircle, 
-    X, 
-    Calculator, 
-    ChevronDown,
-    DollarSign,
-    Calculator as CalcIcon
+    Plus, Trash2, Save, Loader, ArrowLeft, X, AlertTriangle
 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useLanguage } from '../../context/LanguageContext';
+import { loadThemeFromStorage, applyTheme } from '../../utils/themeUtils';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || '';
 
-const Input = ({ label, ...props }) => (
-    <div className="flex-1 min-w-[200px]">
-        <label className="block text-sm font-semibold text-foreground/70 mb-1.5">{label}</label>
-        <input {...props} className="w-full px-4 py-2.5 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" />
-    </div>
-);
-
-const Select = ({ label, children, ...props }) => (
-    <div className="flex-1 min-w-[200px]">
-        <label className="block text-sm font-semibold text-foreground/70 mb-1.5">{label}</label>
-        <select {...props} className="w-full px-4 py-2.5 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white transition-all appearance-none cursor-pointer">
-            {children}
-        </select>
-    </div>
-);
-
-const TabButton = ({ active, children, onClick }) => (
-    <button
-        type="button"
-        onClick={onClick}
-        className={`px-6 py-3 text-sm font-medium transition-all border-b-2 ${
-            active 
-            ? 'border-primary text-primary bg-primary/5' 
-            : 'border-transparent text-foreground-muted hover:text-foreground hover:bg-background-muted'
-        }`}
-    >
-        {children}
-    </button>
+const InputGroup = ({ label, required, children }) => (
+  <div className="space-y-1">
+    <label className="text-[12px] font-medium text-[#102A5B] flex items-center gap-1">
+      <span>{label}</span>
+      {required && <span className="text-rose-500 font-bold">*</span>}
+    </label>
+    {children}
+  </div>
 );
 
 const PurAdditionalExpenseForm = () => {
+    const { isRTL, t } = useLanguage();
     const navigate = useNavigate();
     const { id } = useParams();
     const isEditing = !!id;
@@ -55,9 +29,8 @@ const PurAdditionalExpenseForm = () => {
 
     const [activeTab, setActiveTab] = useState('main');
     const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
-    const [showCurrencyModal, setShowCurrencyModal] = useState(false);
-    const [showGenerateMenu, setShowGenerateMenu] = useState(false);
 
     const [form, setForm] = useState({
         number: '',
@@ -83,6 +56,11 @@ const PurAdditionalExpenseForm = () => {
     const [invoices, setInvoices] = useState([]);
     const [grns, setGrns] = useState([]);
     const [currencies, setCurrencies] = useState([]);
+
+    useEffect(() => {
+        const theme = loadThemeFromStorage();
+        if (theme) applyTheme(theme);
+    }, []);
 
     useEffect(() => {
         const loadMasters = async () => {
@@ -140,7 +118,7 @@ const PurAdditionalExpenseForm = () => {
                 }
             } catch (err) {
                 console.error('Failed to load masters', err);
-                setError('Failed to load required data.');
+                setError(isRTL ? 'فشل تحميل البيانات الأساسية' : 'Failed to load required data.');
             } finally {
                 setLoading(false);
             }
@@ -148,676 +126,498 @@ const PurAdditionalExpenseForm = () => {
         loadMasters();
     }, [id, isEditing]);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setForm(prev => {
-            const newForm = { ...prev, [name]: value };
-            // Reset Purchase Order if Supplier changes
-            if (name === 'supplierId') {
-                newForm.purchaseOrderId = '';
-            }
-            
-            // Auto-populate inventory items if purchase order is selected on the main tab
-            if (name === 'purchaseOrderId' && value) {
-                const selectedPo = purchaseOrders.find(po => String(po.id) === String(value));
-                if (selectedPo && selectedPo.items && selectedPo.items.length > 0) {
-                    newForm.inventoryItems = selectedPo.items.map(poItem => ({
-                        documentType: 'Purchase Order',
-                        documentId: selectedPo.poNumber || selectedPo.id,
-                        productId: poItem.item?.id || '',
-                        batch: '',
-                        quantity: poItem.quantity || 1,
-                        unitId: poItem.unit?.id || '',
-                        price: poItem.rate || 0,
-                        amount: poItem.amount || ((poItem.quantity || 1) * (poItem.rate || 0)),
-                        factor: 1,
-                        expenseAmount: 0
-                    }));
-                }
-            }
-            
-            return newForm;
-        });
-    };
-
-    // Filter POs by selected supplier
-    const filteredPurchaseOrders = useMemo(() => {
-        if (!form.supplierId) return purchaseOrders;
-        return purchaseOrders.filter(po => String(po.supplierId) === String(form.supplierId));
-    }, [purchaseOrders, form.supplierId]);
-
-    // Expense Lines logic
     const addExpenseLine = () => {
         setForm(prev => ({
             ...prev,
             expenseLines: [
                 ...prev.expenseLines,
-                { productId: '', unitId: '', amount: 0, taxId: '', taxAmount: 0, totalAmount: 0 }
+                { productId: '', costType: '', amount: 0, taxId: '', taxValue: 0, totalAmount: 0 }
             ]
         }));
     };
 
-    const updateExpenseLine = (idx, field, value) => {
+    const updateExpenseLine = (index, field, value) => {
         setForm(prev => {
             const lines = [...prev.expenseLines];
-            const line = { ...lines[idx], [field]: value };
+            lines[index] = { ...lines[index], [field]: value };
             
-            // Recalculate tax if taxId or amount changes
             if (field === 'amount' || field === 'taxId') {
-                const tax = taxes.find(t => t.id === Number(line.taxId));
-                const amt = Number(line.amount) || 0;
-                line.taxAmount = tax ? (amt * (tax.rate / 100)) : 0;
-                line.totalAmount = amt + line.taxAmount;
+                const amt = Number(lines[index].amount) || 0;
+                let taxRate = 0;
+                if (lines[index].taxId) {
+                    const taxObj = taxes.find(t => t.id == lines[index].taxId);
+                    if (taxObj) taxRate = taxObj.rate || 0;
+                }
+                lines[index].taxValue = (amt * taxRate) / 100;
+                lines[index].totalAmount = amt + lines[index].taxValue;
             }
-            
-            lines[idx] = line;
             return { ...prev, expenseLines: lines };
         });
     };
 
-    const removeExpenseLine = (idx) => {
+    const removeExpenseLine = (index) => {
         setForm(prev => ({
             ...prev,
-            expenseLines: prev.expenseLines.filter((_, i) => i !== idx)
+            expenseLines: prev.expenseLines.filter((_, i) => i !== index)
         }));
     };
 
-    // Inventory Items logic
     const addInventoryItem = () => {
         setForm(prev => ({
             ...prev,
             inventoryItems: [
                 ...prev.inventoryItems,
-                { documentType: 'Purchase Invoice', documentId: '', productId: '', batch: '', quantity: 1, unitId: '', price: 0, amount: 0, factor: 1, expenseAmount: 0 }
+                { documentType: 'Purchase Order', documentId: '', productId: '', batch: '', quantity: 1, unitId: '', price: 0, factor: 1, expenseAmount: 0 }
             ]
         }));
     };
 
-    const updateInventoryItem = (idx, field, value) => {
+    const updateInventoryItem = (index, field, value) => {
         setForm(prev => {
             const items = [...prev.inventoryItems];
-            const item = { ...items[idx], [field]: value };
-            
-            if (field === 'quantity' || field === 'price') {
-                item.amount = (Number(item.quantity) || 0) * (Number(item.price) || 0);
-            }
-            
-            if (field === 'documentId' && value) {
-                if (item.documentType === 'Purchase Invoice') {
-                    const selectedInv = invoices.find(inv => String(inv.billNumber || inv.id) === String(value));
-                    if (selectedInv && selectedInv.lines && selectedInv.lines.length > 0) {
-                        const newItems = selectedInv.lines.map(line => ({
-                            documentType: 'Purchase Invoice',
-                            documentId: value,
-                            productId: line.item?.id || '',
-                            batch: '',
-                            quantity: line.quantityNet || line.quantityGross || 1,
-                            unitId: line.unit?.id || '',
-                            price: line.rate || 0,
-                            amount: line.amount || (line.rate * (line.quantityNet || line.quantityGross || 1)) || 0,
-                            factor: 1,
-                            expenseAmount: 0
-                        }));
-                        items.splice(idx, 1, ...newItems);
-                        return { ...prev, inventoryItems: items };
-                    }
-                } else if (item.documentType === 'GRN') {
-                    const selectedGrn = grns.find(g => String(g.grnNumber || g.id) === String(value));
-                    if (selectedGrn && selectedGrn.items && selectedGrn.items.length > 0) {
-                        const newItems = selectedGrn.items.map(line => ({
-                            documentType: 'GRN',
-                            documentId: value,
-                            productId: line.purchaseOrderItem?.item?.id || line.item?.id || '',
-                            batch: line.lotNo || line.batchNumber || '',
-                            quantity: line.acceptedQuantity || line.receivedQuantity || 1,
-                            unitId: line.unit?.id || line.purchaseOrderItem?.unit?.id || '',
-                            price: line.rate || line.ratePerKg || 0,
-                            amount: line.totalValue || ((line.acceptedQuantity || line.receivedQuantity || 1) * (line.rate || line.ratePerKg || 0)) || 0,
-                            factor: 1,
-                            expenseAmount: 0
-                        }));
-                        items.splice(idx, 1, ...newItems);
-                        return { ...prev, inventoryItems: items };
-                    }
-                } else if (item.documentType === 'Purchase Order') {
-                    const selectedPo = purchaseOrders.find(po => String(po.poNumber || po.id) === String(value));
-                    if (selectedPo && selectedPo.items && selectedPo.items.length > 0) {
-                        const newItems = selectedPo.items.map(line => ({
-                            documentType: 'Purchase Order',
-                            documentId: value,
-                            productId: line.item?.id || '',
-                            batch: '',
-                            quantity: line.quantity || 1,
-                            unitId: line.unit?.id || '',
-                            price: line.rate || 0,
-                            amount: line.amount || ((line.quantity || 1) * (line.rate || 0)),
-                            factor: 1,
-                            expenseAmount: 0
-                        }));
-                        items.splice(idx, 1, ...newItems);
-                        return { ...prev, inventoryItems: items };
-                    }
-                }
-            }
-            
-            items[idx] = item;
+            items[index] = { ...items[index], [field]: value };
             return { ...prev, inventoryItems: items };
         });
     };
 
-    const removeInventoryItem = (idx) => {
+    const removeInventoryItem = (index) => {
         setForm(prev => ({
             ...prev,
-            inventoryItems: prev.inventoryItems.filter((_, i) => i !== idx)
+            inventoryItems: prev.inventoryItems.filter((_, i) => i !== index)
         }));
-    };
-
-    // Distribution logic
-    const distributeExpenses = (method) => {
-        const totalExpense = form.expenseLines.reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
-        if (totalExpense === 0 || form.inventoryItems.length === 0) return;
-
-        setForm(prev => {
-            const items = [...prev.inventoryItems];
-            if (method === 'By Quantity') {
-                const totalQty = items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
-                if (totalQty === 0) return prev;
-                items.forEach(i => {
-                    i.expenseAmount = (totalExpense * (Number(i.quantity) || 0)) / totalQty;
-                });
-            } else if (method === 'By Amount') {
-                const totalAmt = items.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
-                if (totalAmt === 0) return prev;
-                items.forEach(i => {
-                    i.expenseAmount = (totalExpense * (Number(i.amount) || 0)) / totalAmt;
-                });
-            }
-            return { ...prev, inventoryItems: items };
-        });
     };
 
     const totalExpenseAmount = useMemo(() => {
         return form.expenseLines.reduce((sum, l) => sum + (Number(l.totalAmount) || 0), 0);
     }, [form.expenseLines]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+    useEffect(() => {
+        if (!form.inventoryItems.length || totalExpenseAmount <= 0) return;
+        const totalFactor = form.inventoryItems.reduce((sum, i) => sum + (Number(i.factor) || 1), 0);
+        if (totalFactor <= 0) return;
+
+        setForm(prev => ({
+            ...prev,
+            inventoryItems: prev.inventoryItems.map(item => {
+                const factor = Number(item.factor) || 1;
+                const allocated = (totalExpenseAmount * factor) / totalFactor;
+                return { ...item, expenseAmount: allocated };
+            })
+        }));
+    }, [totalExpenseAmount, form.inventoryItems.length]);
+
+    const handleSubmit = async (statusOverride) => {
+        setSubmitting(true);
         setError(null);
         try {
             const token = localStorage.getItem('token');
             const headers = { Authorization: `Bearer ${token}` };
-            
+
+            const payload = {
+                ...form,
+                status: statusOverride || form.status,
+                totalAmount: totalExpenseAmount
+            };
+
             if (isEditing) {
-                await axios.put(`${API_URL}/purchases/additional-expenses/${id}`, form, { headers });
+                await axios.put(`${API_URL}/purchases/additional-expenses/${id}`, payload, { headers });
             } else {
-                await axios.post(`${API_URL}/purchases/additional-expenses`, form, { headers });
+                await axios.post(`${API_URL}/purchases/additional-expenses`, payload, { headers });
             }
+
             navigate('/purchase-dashboard/additional-expenses');
         } catch (err) {
-            console.error('Failed to save', err);
-            setError(err.response?.data?.message || 'Failed to save additional expense.');
+            console.error('Failed to save additional expense', err);
+            setError(err.response?.data?.message || err.message || (isRTL ? 'فشل حفظ المصروف الإضافي' : 'Failed to save additional expense.'));
+            window.scrollTo(0, 0);
         } finally {
-            setLoading(false);
+            setSubmitting(false);
         }
     };
 
-    const handleGenerateBankPayment = () => {
-        if (!isEditing) return;
-        navigate('/purchase-dashboard/payments/new', {
-            state: {
-                supplierId: form.supplierId,
-                amount: totalExpenseAmount,
-                basis: form.number,
-                isAdditionalExpense: true,
-                aeId: id
-            }
-        });
-    };
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-center items-center">
+                <Loader className="h-10 w-10 animate-spin text-[var(--color-primary,#00A9A8)]" />
+                <p className="mt-3 text-xs font-bold text-[#102A5B] uppercase tracking-wider">
+                    {isRTL ? 'جاري تحميل المصروف الإضافي...' : 'Initializing Additional Expense Workspace...'}
+                </p>
+            </div>
+        );
+    }
 
     return (
-        <div className="max-w-7xl mx-auto p-4 md:p-6 min-h-screen">
-            <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/purchase-dashboard/additional-expenses')} className="p-2 hover:bg-background-muted rounded-full transition-colors">
-                        <ArrowLeft size={24} />
-                    </button>
+        <div className="w-full min-h-screen bg-[#f8fafc] p-2 sm:p-3 lg:p-4 font-sans text-[#18233B]" dir={isRTL ? 'rtl' : 'ltr'}>
+            <div className="w-full space-y-3">
+                {/* Header Area matching PurchaseOrderForm Spec */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                     <div>
-                        <h1 className="text-2xl font-bold text-foreground">
-                            {isEditing ? `Edit Additional Expense: ${form.number}` : 'Create Additional Expense'}
+                        <h1 className="text-[24px] sm:text-[28px] font-bold text-[#102A5B] leading-tight tracking-tight">
+                            {isEditing
+                                ? (t('additionalExpense.editExpense') || (isRTL ? 'تعديل المصروف الإضافي' : 'Edit Additional Expense'))
+                                : (t('additionalExpense.newExpense') || (isRTL ? 'إنشاء مصروف إضافي جديد' : 'Create Additional Expense'))}
                         </h1>
-                        <nav className="text-sm text-foreground-muted">
-                            <Link to="/purchase-dashboard" className="hover:text-primary">Purchase</Link> / 
-                            <Link to="/purchase-dashboard/additional-expenses" className="ml-1 hover:text-primary">Additional Expenses</Link> / 
-                            <span className="ml-1 font-medium text-foreground">{isEditing ? 'Edit' : 'New'}</span>
-                        </nav>
+                        <p className="text-[12px] font-normal text-[#5F6F91]">
+                            {isRTL ? 'تخصيص وتوثيق التكاليف الإضافية على سندات الشراء' : 'Track and allocate additional landed costs to your purchases'}
+                        </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => handleSubmit('Posted')}
+                            disabled={submitting}
+                            className="flex items-center gap-1.5 px-4 py-1.5 bg-[var(--color-primary,#00A9A8)] text-[var(--color-primary-foreground,#ffffff)] rounded-[var(--theme-border-radius,11px)] text-xs font-bold hover:opacity-95 shadow-xs cursor-pointer transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            <Save size={16} className="text-white" />
+                            <span>{isEditing ? (isRTL ? 'تحديث وتطبيق' : 'Post & Update') : (isRTL ? 'اعتماد وإغلاق' : 'Post and Close')}</span>
+                        </button>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button 
-                        type="button" 
-                        onClick={async () => {
-                            setForm(prev => ({ ...prev, status: 'Posted' }));
-                            // We need to wait for state update or pass the status directly
-                            const updatedForm = { ...form, status: 'Posted' };
-                            setLoading(true);
-                            try {
-                                const token = localStorage.getItem('token');
-                                const headers = { Authorization: `Bearer ${token}` };
-                                if (isEditing) {
-                                    await axios.put(`${API_URL}/purchases/additional-expenses/${id}`, updatedForm, { headers });
-                                } else {
-                                    await axios.post(`${API_URL}/purchases/additional-expenses`, updatedForm, { headers });
-                                }
-                                navigate('/purchase-dashboard/additional-expenses');
-                            } catch (err) {
-                                setError(err.response?.data?.message || 'Failed to post additional expense.');
-                            } finally {
-                                setLoading(false);
-                            }
-                        }}
-                        className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-semibold shadow-lg hover:opacity-90 active:scale-95 transition-all flex items-center gap-2"
-                        disabled={loading}
-                    >
-                        {loading ? <Loader className="animate-spin" size={18} /> : <Save size={18} />}
-                        Post and close
-                    </button>
-                    <button 
-                        type="button" 
-                        onClick={handleSubmit}
-                        className="px-6 py-2.5 bg-card border border-border text-foreground rounded-lg font-semibold hover:bg-background-muted transition-all"
-                    >
-                        Save
-                    </button>
 
-                    {isEditing && (
-                        <div className="relative">
-                            <button 
-                                type="button" 
-                                onClick={() => setShowGenerateMenu(!showGenerateMenu)}
-                                className="px-4 py-2.5 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-all flex items-center gap-2"
-                            >
-                                Generate
-                                <ChevronDown size={16} />
-                            </button>
-                            {showGenerateMenu && (
-                                <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-2">
-                                    <button 
-                                        onClick={handleGenerateBankPayment}
-                                        className="w-full text-left px-4 py-2 text-sm hover:bg-background-muted transition-colors flex items-center gap-2"
-                                    >
-                                        <DollarSign size={14} />
-                                        Bank Payment
-                                    </button>
+                {error && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-center gap-3 text-rose-600 shadow-xs text-xs font-semibold"
+                    >
+                        <AlertTriangle size={18} />
+                        <span>{error}</span>
+                        <button onClick={() => setError(null)} className="ml-auto p-1 hover:bg-rose-100 rounded-full transition-colors">
+                            <X size={14} />
+                        </button>
+                    </motion.div>
+                )}
+
+                <div className="space-y-3 pb-16">
+                    {/* SECTION 1: PRIMARY EXPENSE DETAILS */}
+                    <div className="bg-white border border-[#DCE5F3] rounded-[11.86px] p-3 space-y-3">
+                        <div className="flex items-center justify-between border-b border-[#E4EAF0] pb-2">
+                            <div className="flex items-center gap-2">
+                                <div className="w-[22px] h-[22px] rounded-full bg-[var(--color-primary,#00A9A8)] text-white text-[11px] font-bold flex items-center justify-center">
+                                    1
                                 </div>
-                            )}
+                                <h2 className="text-[14px] font-bold text-[#102A5B]">
+                                    {isRTL ? 'معلومات المصروف الإضافي الرئيسية' : 'Primary Additional Expense Details'}
+                                </h2>
+                            </div>
                         </div>
-                    )}
-                </div>
-            </div>
 
-            {error && (
-                <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2 shadow-sm">
-                    <X className="h-4 w-4" />
-                    <p className="text-sm font-medium">{error}</p>
-                </div>
-            )}
-
-            <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-xl">
-                <div className="flex border-b border-border bg-background-muted/30">
-                    <TabButton active={activeTab === 'main'} onClick={() => setActiveTab('main')}>Main</TabButton>
-                    <TabButton active={activeTab === 'expenses'} onClick={() => setActiveTab('expenses')}>Expenses ({form.expenseLines.length})</TabButton>
-                    <TabButton active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')}>Inventory ({form.inventoryItems.length})</TabButton>
-                    <TabButton active={activeTab === 'terms'} onClick={() => setActiveTab('terms')}>Payment Terms</TabButton>
-                    <TabButton active={activeTab === 'info'} onClick={() => setActiveTab('info')}>Additional Information</TabButton>
-                </div>
-
-                <div className="p-8">
-                    {activeTab === 'main' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            <div className="space-y-6">
-                                <Select label="Supplier" name="supplierId" value={form.supplierId} onChange={handleChange}>
-                                    <option value="">Select Supplier</option>
-                                    {companies.map(c => <option key={c.id} value={c.id}>{c.companyName || c.name}</option>)}
-                                </Select>
-                                <Select label="Contract" name="contract" value={form.contract} onChange={handleChange}>
-                                    <option value="">Select Contract</option>
-                                    <option value="Main Contract">Main Contract</option>
-                                </Select>
-                                <Select label="Purchase Order" name="purchaseOrderId" value={form.purchaseOrderId} onChange={handleChange}>
-                                    <option value="">Select Purchase Order</option>
-                                    {filteredPurchaseOrders.map(po => (
-                                        <option key={po.id} value={po.id}>
-                                            {po.poNumber || `PO-${po.id}`} {po.date ? `(${new Date(po.date).toLocaleDateString()})` : ''}
-                                        </option>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            {/* Supplier */}
+                            <InputGroup label={t('additionalExpense.supplier') || (isRTL ? 'المورد / الشركة' : 'Supplier')} required>
+                                <select
+                                    value={form.supplierId}
+                                    onChange={e => setForm({ ...form, supplierId: e.target.value })}
+                                    required
+                                    className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-xs text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)] min-h-[30px]"
+                                >
+                                    <option value="">{isRTL ? 'اختر المورد...' : 'Select Supplier...'}</option>
+                                    {companies.map(c => (
+                                        <option key={c.id} value={c.id}>{c.companyName || c.name}</option>
                                     ))}
-                                </Select>
-                            </div>
-                            <div className="space-y-6">
-                                <Input label="Number" name="number" value={form.number} onChange={handleChange} placeholder="<Auto>" />
-                                <Select label="Transaction Type" name="transactionType" value={form.transactionType} onChange={handleChange}>
-                                    <option value="For Purchase">For Purchase</option>
-                                    <option value="For Sales">For Sales</option>
-                                </Select>
-                                <div className="flex items-end gap-2">
-                                    <div className="flex-1">
-                                        <label className="block text-sm font-semibold text-foreground/70 mb-1.5">Currency</label>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => setShowCurrencyModal(true)}
-                                            className="w-full px-4 py-2.5 bg-background-muted border border-border rounded-lg text-sm text-primary font-bold hover:bg-border transition-all flex items-center justify-between"
-                                        >
-                                            {form.currency} = {form.exchangeRate} AED
-                                            <ChevronDown size={14} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="md:col-span-2 lg:col-span-1">
-                                <Input label="Date" type="date" name="date" value={form.date} onChange={handleChange} />
-                                <div className="mt-6">
-                                    <label className="block text-sm font-semibold text-foreground/70 mb-1.5">Comment</label>
-                                    <textarea 
-                                        name="comment" 
-                                        value={form.comment} 
-                                        onChange={handleChange}
-                                        rows={4}
-                                        className="w-full px-4 py-2.5 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"
-                                        placeholder="Add internal notes..."
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                                </select>
+                            </InputGroup>
 
-                    {activeTab === 'expenses' && (
-                        <div className="space-y-6">
-                            <div className="flex justify-between items-center bg-background-muted p-4 rounded-xl border border-border">
-                                <div className="flex items-center gap-2">
-                                    <button type="button" onClick={addExpenseLine} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg flex items-center gap-2 text-sm font-bold shadow-sm hover:opacity-90 active:scale-95 transition-all">
-                                        <PlusCircle size={16} /> Add Expense
-                                    </button>
-                                </div>
-                                <div className="text-right">
-                                    <span className="text-sm text-foreground-muted">Total Expenses</span>
-                                    <div className="text-2xl font-black text-primary">{totalExpenseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} {form.currency}</div>
-                                </div>
-                            </div>
+                            {/* Expense Number */}
+                            <InputGroup label={t('additionalExpense.number') || (isRTL ? 'رقم السند' : 'Expense Number')}>
+                                <input
+                                    type="text"
+                                    value={form.number}
+                                    onChange={e => setForm({ ...form, number: e.target.value })}
+                                    placeholder="<Auto>"
+                                    className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-xs font-semibold text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)] min-h-[30px]"
+                                />
+                            </InputGroup>
 
-                            <div className="overflow-x-auto border rounded-2xl shadow-sm">
-                                <table className="min-w-full divide-y divide-border">
-                                    <thead className="bg-background-muted text-xs uppercase font-black text-foreground-muted">
-                                        <tr>
-                                            <th className="px-6 py-4 text-left">#</th>
-                                            <th className="px-6 py-4 text-left">Service Item</th>
-                                            <th className="px-6 py-4 text-left">UOM</th>
-                                            <th className="px-6 py-4 text-right">Amount</th>
-                                            <th className="px-6 py-4 text-left">Tax</th>
-                                            <th className="px-6 py-4 text-right">Total</th>
-                                            <th className="px-6 py-4 text-center"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border bg-card">
-                                        {form.expenseLines.map((line, idx) => (
-                                            <tr key={idx} className="hover:bg-background-muted transition-colors">
-                                                <td className="px-6 py-4 text-sm font-medium">{idx + 1}</td>
-                                                <td className="px-6 py-4 min-w-[300px]">
-                                                    <select 
-                                                        value={line.productId} 
-                                                        onChange={(e) => updateExpenseLine(idx, 'productId', e.target.value)}
-                                                        className="w-full p-2 border border-border rounded-lg text-sm bg-card"
-                                                    >
-                                                        <option value="">Select Item</option>
-                                                        {products.map(p => (
-                                                            <option key={`${p.category}-${p.id}`} value={p.id}>
-                                                                [{p.category}] {p.name} ({p.itemCode})
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </td>
-                                                <td className="px-6 py-4 w-32">
-                                                    <select 
-                                                        value={line.unitId} 
-                                                        onChange={(e) => updateExpenseLine(idx, 'unitId', e.target.value)}
-                                                        className="w-full p-2 border border-border rounded-lg text-sm bg-card"
-                                                    >
-                                                        <option value="">UOM</option>
-                                                        {units.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                                                    </select>
-                                                </td>
-                                                <td className="px-6 py-4 w-40">
-                                                    <input 
-                                                        type="number" 
-                                                        value={line.amount} 
-                                                        onChange={(e) => updateExpenseLine(idx, 'amount', e.target.value)}
-                                                        className="w-full p-2 border border-border rounded-lg text-right text-sm bg-card font-mono"
-                                                    />
-                                                </td>
-                                                <td className="px-6 py-4 w-48">
-                                                    <select 
-                                                        value={line.taxId} 
-                                                        onChange={(e) => updateExpenseLine(idx, 'taxId', e.target.value)}
-                                                        className="w-full p-2 border border-border rounded-lg text-sm bg-card"
-                                                    >
-                                                        <option value="">No Tax</option>
-                                                        {taxes.map(t => <option key={t.id} value={t.id}>{t.code || t.name} ({t.rate}%)</option>)}
-                                                    </select>
-                                                </td>
-                                                <td className="px-6 py-4 text-right text-sm font-bold text-foreground">
-                                                    {(line.totalAmount || 0).toFixed(2)}
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <button type="button" onClick={() => removeExpenseLine(idx)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </td>
-                                            </tr>
+                            {/* Date */}
+                            <InputGroup label={isRTL ? 'التاريخ' : 'Date'} required>
+                                <input
+                                    type="date"
+                                    value={form.date}
+                                    onChange={e => setForm({ ...form, date: e.target.value })}
+                                    required
+                                    className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-xs text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)] min-h-[30px]"
+                                />
+                            </InputGroup>
+
+                            {/* Transaction Type */}
+                            <InputGroup label={t('additionalExpense.transactionType') || (isRTL ? 'نوع المعاملة' : 'Transaction Type')}>
+                                <select
+                                    value={form.transactionType}
+                                    onChange={e => setForm({ ...form, transactionType: e.target.value })}
+                                    className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-xs text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)] min-h-[30px]"
+                                >
+                                    <option value="For Purchase">{isRTL ? 'للمشتريات (For Purchase)' : 'For Purchase'}</option>
+                                    <option value="For Import">{isRTL ? 'للاستيراد (For Import)' : 'For Import'}</option>
+                                </select>
+                            </InputGroup>
+
+                            {/* Purchase Order */}
+                            <InputGroup label={t('additionalExpense.purchaseOrder') || (isRTL ? 'أمر الشراء المرتبط' : 'Purchase Order')}>
+                                <select
+                                    value={form.purchaseOrderId}
+                                    onChange={e => setForm({ ...form, purchaseOrderId: e.target.value })}
+                                    className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-xs text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)] min-h-[30px]"
+                                >
+                                    <option value="">{isRTL ? 'اختر أمر الشراء...' : 'Select Purchase Order...'}</option>
+                                    {purchaseOrders.map(po => (
+                                        <option key={po.id} value={po.id}>{po.poNumber || `PO-${po.id}`}</option>
+                                    ))}
+                                </select>
+                            </InputGroup>
+
+                            {/* Currency */}
+                            <InputGroup label={t('additionalExpense.currency') || (isRTL ? 'العملة' : 'Currency')}>
+                                <div className="flex gap-1">
+                                    <select
+                                        value={form.currency}
+                                        onChange={e => setForm({ ...form, currency: e.target.value })}
+                                        className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-xs text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)] min-h-[30px]"
+                                    >
+                                        <option value="AED">AED (AED = 1 AED)</option>
+                                        {currencies.map(c => (
+                                            <option key={c.id} value={c.currencyCode}>{c.currencyCode}</option>
                                         ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'inventory' && (
-                        <div className="space-y-6">
-                            <div className="flex justify-between items-center bg-background-muted p-4 rounded-xl border border-border">
-                                <div className="flex items-center gap-4">
-                                    <button type="button" onClick={addInventoryItem} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg flex items-center gap-2 text-sm font-bold shadow-sm hover:opacity-90 active:scale-95 transition-all">
-                                        <PlusCircle size={16} /> Add Item
-                                    </button>
-                                    <div className="relative group">
-                                        <button type="button" className="px-4 py-2 bg-white border border-border text-foreground rounded-lg flex items-center gap-2 text-sm font-bold hover:bg-background-muted shadow-sm transition-all shadow-sm active:scale-95">
-                                            Distribute Expenses <ChevronDown size={14} />
-                                        </button>
-                                        <div className="absolute top-full left-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl hidden group-hover:block z-50 overflow-hidden">
-                                            <button type="button" onClick={() => distributeExpenses('By Quantity')} className="w-full text-left px-4 py-3 text-sm hover:bg-background-muted flex items-center gap-2 transition-colors">
-                                                <CalcIcon size={14} /> By Quantity
-                                            </button>
-                                            <button type="button" onClick={() => distributeExpenses('By Amount')} className="w-full text-left px-4 py-3 text-sm hover:bg-background-muted flex items-center gap-2 transition-colors">
-                                                <DollarSign size={14} /> By Amount
-                                            </button>
-                                        </div>
-                                    </div>
+                                    </select>
                                 </div>
-                                <div className="flex gap-8">
-                                    <div className="text-right">
-                                        <span className="text-xs text-foreground-muted uppercase font-bold tracking-wider">Line Items</span>
-                                        <div className="text-xl font-black text-foreground">{form.inventoryItems.length}</div>
-                                    </div>
-                                    <div className="text-right">
-                                        <span className="text-xs text-foreground-muted uppercase font-bold tracking-wider">Allocated Cost</span>
-                                        <div className="text-xl font-black text-emerald-600">
-                                            {form.inventoryItems.reduce((sum, i) => sum + (Number(i.expenseAmount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} {form.currency}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            </InputGroup>
 
-                            <div className="overflow-x-auto border rounded-2xl shadow-sm">
-                                <table className="min-w-full divide-y divide-border text-sm">
-                                    <thead className="bg-background-muted text-xs uppercase font-black text-foreground-muted">
-                                        <tr>
-                                            <th className="px-6 py-4 text-left">Document</th>
-                                            <th className="px-6 py-4 text-left">Item</th>
-                                            <th className="px-6 py-4 text-left">Batch</th>
-                                            <th className="px-6 py-4 text-right">Qty</th>
-                                            <th className="px-6 py-4 text-left">UOM</th>
-                                            <th className="px-6 py-4 text-right">Price</th>
-                                            <th className="px-6 py-4 text-right">Factor</th>
-                                            <th className="px-6 py-4 text-right bg-primary/5 text-primary">Expense Amount</th>
-                                            <th className="px-6 py-4 text-center"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border bg-card">
-                                        {form.inventoryItems.map((item, idx) => (
-                                            <tr key={idx} className="hover:bg-background-muted transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <select 
-                                                        value={item.documentType} 
-                                                        onChange={(e) => updateInventoryItem(idx, 'documentType', e.target.value)}
-                                                        className="w-full p-1.5 border border-border rounded-lg bg-card text-xs mb-1 block"
-                                                    >
-                                                        <option value="Purchase Invoice">Purchase Invoice</option>
-                                                        <option value="GRN">GRN</option>
-                                                        <option value="Purchase Order">Purchase Order</option>
-                                                    </select>
-                                                    <select 
-                                                        value={item.documentId} 
-                                                        onChange={(e) => updateInventoryItem(idx, 'documentId', e.target.value)}
-                                                        className="w-full p-1.5 border border-border rounded-lg bg-card text-xs font-bold"
-                                                    >
-                                                        <option value="">Select ID</option>
-                                                        {item.documentType === 'Purchase Invoice' && invoices.map(inv => (
-                                                            <option key={inv.id} value={inv.billNumber || inv.id}>
-                                                                {inv.billNumber || `INV-${inv.id}`}
-                                                            </option>
-                                                        ))}
-                                                        {item.documentType === 'GRN' && grns.map(g => (
-                                                            <option key={g.id} value={g.grnNumber || g.id}>
-                                                                {g.grnNumber || `GRN-${g.id}`}
-                                                            </option>
-                                                        ))}
-                                                        {item.documentType === 'Purchase Order' && purchaseOrders.map(po => (
-                                                            <option key={po.id} value={po.poNumber || po.id}>
-                                                                {po.poNumber || `PO-${po.id}`}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </td>
-                                                <td className="px-6 py-4 min-w-[200px]">
-                                                    <select 
-                                                        value={item.productId} 
-                                                        onChange={(e) => updateInventoryItem(idx, 'productId', e.target.value)}
-                                                        className="w-full p-2 border border-border rounded-lg text-sm bg-card font-semibold"
-                                                    >
-                                                        <option value="">Select Product</option>
-                                                        {products.map(p => (
-                                                            <option key={`${p.category}-${p.id}`} value={p.id}>
-                                                                [{p.category}] {p.name} ({p.itemCode})
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </td>
-                                                <td className="px-6 py-4 w-32">
-                                                    <input type="text" value={item.batch} onChange={(e) => updateInventoryItem(idx, 'batch', e.target.value)} className="w-full p-2 border border-border rounded-lg text-sm bg-card" placeholder="Batch" />
-                                                </td>
-                                                <td className="px-6 py-4 w-24">
-                                                    <input type="number" value={item.quantity} onChange={(e) => updateInventoryItem(idx, 'quantity', e.target.value)} className="w-full p-2 border border-border rounded-lg text-right text-sm bg-card font-mono" />
-                                                </td>
-                                                <td className="px-6 py-4 w-32">
-                                                    <select 
-                                                        value={item.unitId} 
-                                                        onChange={(e) => updateInventoryItem(idx, 'unitId', e.target.value)}
-                                                        className="w-full p-2 border border-border rounded-lg text-sm bg-card"
-                                                    >
-                                                        <option value="">UOM</option>
-                                                        {units.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                                                    </select>
-                                                </td>
-                                                <td className="px-6 py-4 w-32">
-                                                    <input type="number" value={item.price} onChange={(e) => updateInventoryItem(idx, 'price', e.target.value)} className="w-full p-2 border border-border rounded-lg text-right text-sm bg-card font-mono" />
-                                                </td>
-                                                <td className="px-6 py-4 w-20">
-                                                    <input type="number" value={item.factor} onChange={(e) => updateInventoryItem(idx, 'factor', e.target.value)} className="w-full p-2 border border-border rounded-lg text-right text-sm bg-card font-mono" step="0.01" />
-                                                </td>
-                                                <td className="px-6 py-4 w-36 bg-primary/5">
-                                                    <input 
-                                                        type="number" 
-                                                        value={item.expenseAmount} 
-                                                        onChange={(e) => updateInventoryItem(idx, 'expenseAmount', e.target.value)}
-                                                        className="w-full p-2 border-2 border-primary/20 rounded-lg text-right text-sm bg-card font-black text-primary shadow-inner"
-                                                        readOnly
-                                                    />
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <button type="button" onClick={() => removeInventoryItem(idx)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'terms' && (
-                        <div className="flex flex-col items-center justify-center py-20 text-foreground-muted">
-                            <Calculator size={48} className="opacity-20 mb-4" />
-                            <h3 className="text-xl font-bold">Payment Terms</h3>
-                            <p>This module section is coming soon.</p>
-                        </div>
-                    )}
-
-                    {activeTab === 'info' && (
-                        <div className="flex flex-col items-center justify-center py-20 text-foreground-muted">
-                            <PlusCircle size={48} className="opacity-20 mb-4" />
-                            <h3 className="text-xl font-bold">Additional Information</h3>
-                            <p>Custom fields and metadata tracking coming soon.</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Currency Modal (Simulated) */}
-            {showCurrencyModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="bg-card w-full max-w-md rounded-2xl shadow-2xl border border-border overflow-hidden">
-                        <div className="p-6 border-b border-border flex justify-between items-center bg-background-muted/50">
-                            <h3 className="text-lg font-bold">Prices and Currency</h3>
-                            <button onClick={() => setShowCurrencyModal(false)} className="p-2 hover:bg-border rounded-full transition-colors"><X size={20} /></button>
-                        </div>
-                        <div className="p-8 space-y-6">
-                            <div>
-                                <h4 className="text-sm font-black text-primary uppercase tracking-widest mb-4">Document Currency</h4>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Select label="Currency" value={form.currency} onChange={(e) => setForm(prev => ({ ...prev, currency: e.target.value }))}>
-                                        <option value="">Select</option>
-                                        {currencies.map(c => <option key={c.id} value={c.currencyCode}>{c.currencyCode}</option>)}
-                                    </Select>
-                                    <Input label="Rate" type="number" value={form.exchangeRate} onChange={(e) => setForm(prev => ({ ...prev, exchangeRate: Number(e.target.value) }))} step="0.0001" />
-                                </div>
-                            </div>
-                            <div className="p-4 bg-primary/5 rounded-xl border border-primary/10">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium">Accounting Currency</span>
-                                    <span className="font-bold">USD (fixed)</span>
-                                </div>
-                                <div className="flex justify-between items-center mt-2">
-                                    <span className="text-sm font-medium">Rate to USD</span>
-                                    <span className="font-mono text-primary font-bold">{ (1 / (form.exchangeRate || 1)).toFixed(6) }</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="p-6 bg-background-muted border-t border-border flex justify-end gap-3">
-                            <button onClick={() => setShowCurrencyModal(false)} className="px-6 py-2 rounded-lg font-bold hover:bg-border transition-all">Cancel</button>
-                            <button onClick={() => setShowCurrencyModal(false)} className="px-8 py-2 bg-primary text-primary-foreground rounded-lg font-bold shadow-lg active:scale-95 transition-all">OK</button>
+                            {/* Comment */}
+                            <InputGroup label={t('additionalExpense.comment') || (isRTL ? 'البيان / ملاحظات' : 'Internal Comment')}>
+                                <input
+                                    type="text"
+                                    value={form.comment}
+                                    onChange={e => setForm({ ...form, comment: e.target.value })}
+                                    placeholder={isRTL ? 'أدخل تفاصيل وملاحظات المصروف...' : 'Add internal notes...'}
+                                    className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-xs text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)] min-h-[30px]"
+                                />
+                            </InputGroup>
                         </div>
                     </div>
+
+                    {/* SECTION 2: EXPENSES LINES & ALLOCATION TABS */}
+                    <div className="bg-white border border-[#DCE5F3] rounded-[11.86px] p-3 space-y-3">
+                        <div className="flex items-center justify-between border-b border-[#E4EAF0] pb-2">
+                            <div className="flex items-center gap-2">
+                                <div className="w-[22px] h-[22px] rounded-full bg-[var(--color-primary,#00A9A8)] text-white text-[11px] font-bold flex items-center justify-center">
+                                    2
+                                </div>
+                                <h2 className="text-[14px] font-bold text-[#102A5B]">
+                                    {isRTL ? 'سطور المصاريف وتوزيع التكلفة' : 'Expense Lines & Allocation Breakdown'}
+                                </h2>
+                            </div>
+
+                            <div className="flex items-center gap-1 bg-[#F8FAFC] border border-[#DCE5F3] p-0.5 rounded-lg text-xs font-semibold">
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('main')}
+                                    className={`px-3 py-1 rounded-md transition-all cursor-pointer ${activeTab === 'main' ? 'bg-[var(--color-primary,#00A9A8)] text-white font-bold' : 'text-[#5F6F91] hover:text-[#102A5B]'}`}
+                                >
+                                    {isRTL ? `المصاريف (${form.expenseLines.length})` : `Expenses (${form.expenseLines.length})`}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('inventory')}
+                                    className={`px-3 py-1 rounded-md transition-all cursor-pointer ${activeTab === 'inventory' ? 'bg-[var(--color-primary,#00A9A8)] text-white font-bold' : 'text-[#5F6F91] hover:text-[#102A5B]'}`}
+                                >
+                                    {isRTL ? `المخزون والمنتجات (${form.inventoryItems.length})` : `Inventory (${form.inventoryItems.length})`}
+                                </button>
+                            </div>
+                        </div>
+
+                        {activeTab === 'main' && (
+                            <div className="space-y-3">
+                                <div className="overflow-x-auto border border-[#DBE5F3] rounded-[11.09px]">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-[#EEF5FF] border-b border-[#DBE5F3] text-[#102A5B] font-semibold text-[12px] h-[38.39px]">
+                                                <th className="py-2.5 px-3 min-w-[200px]">{isRTL ? 'المنتج / خدمة المصروف' : 'Expense Product / Service'}</th>
+                                                <th className="py-2.5 px-3 min-w-[150px]">{isRTL ? 'نوع التكلفة' : 'Cost Type'}</th>
+                                                <th className="py-2.5 px-3 text-right min-w-[120px]">{isRTL ? 'المبلغ (AED)' : 'Amount (AED)'}</th>
+                                                <th className="py-2.5 px-3 text-center min-w-[120px]">{isRTL ? 'نسبة الضريبة' : 'VAT Rate'}</th>
+                                                <th className="py-2.5 px-3 text-right min-w-[120px]">{isRTL ? 'إجمالي السطر (AED)' : 'Total (AED)'}</th>
+                                                <th className="py-2.5 px-3 text-center w-12">{isRTL ? 'حذف' : 'Delete'}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[#DBE5F3]">
+                                            {form.expenseLines.map((l, idx) => (
+                                                <tr key={idx} className="hover:bg-slate-50/80 transition-colors text-xs">
+                                                    <td className="p-2">
+                                                        <select
+                                                            className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-xs text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                                            value={l.productId}
+                                                            onChange={e => updateExpenseLine(idx, 'productId', e.target.value)}
+                                                        >
+                                                            <option value="">{isRTL ? 'اختر خدمة/مصروف...' : 'Select Expense Item...'}</option>
+                                                            {products.map(p => (
+                                                                <option key={p.id} value={p.id}>{p.name || p.itemCode}</option>
+                                                            ))}
+                                                        </select>
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Freight, Duty, Clearance..."
+                                                            className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-xs text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                                            value={l.costType}
+                                                            onChange={e => updateExpenseLine(idx, 'costType', e.target.value)}
+                                                        />
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-right text-xs font-bold text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                                            value={l.amount}
+                                                            onChange={e => updateExpenseLine(idx, 'amount', e.target.value)}
+                                                        />
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <select
+                                                            className="w-full bg-white border border-[#D8E2F1] rounded px-1 py-1 text-xs text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                                            value={l.taxId}
+                                                            onChange={e => updateExpenseLine(idx, 'taxId', e.target.value)}
+                                                        >
+                                                            <option value="">0% VAT</option>
+                                                            {taxes.map(t => <option key={t.id} value={t.id}>{t.name} ({t.rate}%)</option>)}
+                                                        </select>
+                                                    </td>
+                                                    <td className="p-2 text-right font-bold text-[#102A5B]">
+                                                        AED {Number(l.totalAmount).toFixed(2)}
+                                                    </td>
+                                                    <td className="p-2 text-center">
+                                                        <button type="button" onClick={() => removeExpenseLine(idx)} className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors">
+                                                            <Trash2 size={15} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <div className="p-2 bg-[#F8FAFC] border-t border-[#DBE5F3]">
+                                        <button type="button" onClick={addExpenseLine} className="text-[var(--color-primary,#00A9A8)] text-xs font-bold flex items-center gap-1 hover:underline cursor-pointer">
+                                            <Plus size={14} /> {isRTL ? 'إضافة سطر مصروف' : 'Add Expense Line'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'inventory' && (
+                            <div className="space-y-3">
+                                <div className="overflow-x-auto border border-[#DBE5F3] rounded-[11.09px]">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-[#EEF5FF] border-b border-[#DBE5F3] text-[#102A5B] font-semibold text-[12px] h-[38.39px]">
+                                                <th className="py-2.5 px-3 min-w-[140px]">{isRTL ? 'نوع المستند' : 'Document Type'}</th>
+                                                <th className="py-2.5 px-3 min-w-[180px]">{isRTL ? 'المنتج / الصنف' : 'Product'}</th>
+                                                <th className="py-2.5 px-3 text-right min-w-[80px]">{isRTL ? 'الكمية' : 'Qty'}</th>
+                                                <th className="py-2.5 px-3 text-right min-w-[100px]">{isRTL ? 'السعر' : 'Price'}</th>
+                                                <th className="py-2.5 px-3 text-right min-w-[80px]">{isRTL ? 'معامل التوزيع' : 'Factor'}</th>
+                                                <th className="py-2.5 px-3 text-right min-w-[120px]">{isRTL ? 'المبلغ الموزع (AED)' : 'Allocated Expense'}</th>
+                                                <th className="py-2.5 px-3 text-center w-12">{isRTL ? 'حذف' : 'Delete'}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[#DBE5F3]">
+                                            {form.inventoryItems.map((item, idx) => (
+                                                <tr key={idx} className="hover:bg-slate-50/80 transition-colors text-xs">
+                                                    <td className="p-2">
+                                                        <select 
+                                                            value={item.documentType} 
+                                                            onChange={(e) => updateInventoryItem(idx, 'documentType', e.target.value)}
+                                                            className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-xs text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                                        >
+                                                            <option value="Purchase Invoice">Purchase Invoice</option>
+                                                            <option value="GRN">GRN</option>
+                                                            <option value="Purchase Order">Purchase Order</option>
+                                                        </select>
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <select 
+                                                            value={item.productId} 
+                                                            onChange={(e) => updateInventoryItem(idx, 'productId', e.target.value)}
+                                                            className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-xs text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]"
+                                                        >
+                                                            <option value="">Select Product</option>
+                                                            {products.map(p => (
+                                                                <option key={p.id} value={p.id}>{p.name || p.itemCode}</option>
+                                                            ))}
+                                                        </select>
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <input type="number" value={item.quantity} onChange={(e) => updateInventoryItem(idx, 'quantity', e.target.value)} className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-right text-xs font-bold text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]" />
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <input type="number" value={item.price} onChange={(e) => updateInventoryItem(idx, 'price', e.target.value)} className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-right text-xs text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]" />
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <input type="number" value={item.factor} onChange={(e) => updateInventoryItem(idx, 'factor', e.target.value)} className="w-full bg-white border border-[#D8E2F1] rounded px-2 py-1 text-right text-xs text-[#102A5B] outline-none focus:border-[var(--color-primary,#00A9A8)]" step="0.01" />
+                                                    </td>
+                                                    <td className="p-2 text-right font-bold text-[var(--color-primary,#00A9A8)]">
+                                                        AED {Number(item.expenseAmount).toFixed(2)}
+                                                    </td>
+                                                    <td className="p-2 text-center">
+                                                        <button type="button" onClick={() => removeInventoryItem(idx)} className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors">
+                                                            <Trash2 size={15} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <div className="p-2 bg-[#F8FAFC] border-t border-[#DBE5F3]">
+                                        <button type="button" onClick={addInventoryItem} className="text-[var(--color-primary,#00A9A8)] text-xs font-bold flex items-center gap-1 hover:underline cursor-pointer">
+                                            <Plus size={14} /> {isRTL ? 'إضافة صنف مخزون' : 'Add Inventory Line'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Financial Summary Card */}
+                        <div className="flex justify-end pt-2">
+                            <div className="w-full sm:w-80 bg-[#F8FAFC] border border-[#DFE7F4] rounded-xl p-3 space-y-2 text-xs">
+                                <div className="flex justify-between items-center text-[#5F6F91]">
+                                    <span>{isRTL ? 'إجمالي سطور المصروفات:' : 'Total Expense Lines:'}</span>
+                                    <span className="font-bold text-[#102A5B]">{form.expenseLines.length}</span>
+                                </div>
+                                <div className="border-t border-[#DFE7F4] pt-2 flex justify-between items-center font-bold text-sm text-[var(--color-primary,#00A9A8)]">
+                                    <span>{isRTL ? 'إجمالي المصاريف الموزعة:' : 'Total Additional Expense:'}</span>
+                                    <span>AED {totalExpenseAmount.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer Submit Buttons matching PurchaseOrderForm */}
+                    <div className="flex justify-end items-center gap-2 pt-2 border-t border-[#DCE5F3]">
+                        <Link
+                            to="/purchase-dashboard/additional-expenses"
+                            className="px-4 py-1.5 bg-white border border-[#DCE5F3] text-[#102A5B] hover:bg-slate-50 text-xs font-semibold rounded-[5.29px] transition-all"
+                        >
+                            {isRTL ? 'إلغاء' : 'Cancel'}
+                        </Link>
+                        <button
+                            type="button"
+                            onClick={() => handleSubmit('Draft')}
+                            disabled={submitting}
+                            className="px-4 py-1.5 bg-white border border-[var(--color-primary,#00A9A8)] text-[var(--color-primary,#00A9A8)] hover:bg-teal-50 text-xs font-semibold rounded-[5.29px] transition-all"
+                        >
+                            {isRTL ? 'حفظ كمسودة' : 'Save as Draft'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleSubmit('Posted')}
+                            disabled={submitting}
+                            className="px-5 py-1.5 bg-[var(--color-primary,#00A9A8)] text-[var(--color-primary-foreground,#ffffff)] text-xs font-bold rounded-[var(--theme-border-radius,11px)] shadow-xs flex items-center gap-1.5 transition-all hover:opacity-95 disabled:opacity-50 cursor-pointer"
+                        >
+                            <Save size={16} />
+                            <span>{isEditing ? (isRTL ? 'تحديث وتطبيق' : 'Update Expense') : (isRTL ? 'اعتماد المصروف' : 'Post & Save')}</span>
+                        </button>
+                    </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 };

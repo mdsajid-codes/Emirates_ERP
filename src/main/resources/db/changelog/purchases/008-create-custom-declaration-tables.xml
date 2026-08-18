@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="008-create-pur-custom-declaration-tables" author="emirates-erp">
+        <createTable tableName="pur_custom_declaration">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="declaration_number" type="VARCHAR(100)"/>
+            <column name="is_third_party_clearance" type="BOOLEAN"/>
+            <column name="company_name" type="VARCHAR(255)"/>
+            <column name="tax_is_due" type="VARCHAR(50)"/>
+            <column name="service_charge" type="DECIMAL(19, 2)"/>
+            <column name="is_apply_custom_penalty" type="BOOLEAN"/>
+            <column name="custom_penalty_amount" type="DECIMAL(19, 2)"/>
+            <column name="expense_account_id" type="BIGINT"/>
+            <column name="department_id" type="BIGINT"/>
+            <column name="expense_item_id" type="BIGINT"/>
+            <column name="business_activity" type="VARCHAR(255)"/>
+            <column name="entity_name" type="VARCHAR(255)"/>
+            <column name="is_group_by_hs_code" type="BOOLEAN"/>
+            <column name="is_include_service_charge" type="BOOLEAN"/>
+            <column name="responsible_person_id" type="BIGINT"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="cif_foreign_value_total" type="DECIMAL(19, 2)"/>
+            <column name="cif_national_value_total" type="DECIMAL(19, 2)"/>
+            <column name="vat_reverse_charge_total" type="DECIMAL(19, 2)"/>
+            <column name="total_due" type="DECIMAL(19, 2)"/>
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="created_by" type="BIGINT"/>
+        </createTable>
+
+        <createTable tableName="pur_custom_declaration_line">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="custom_declaration_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="item_id" type="BIGINT"/>
+            <column name="hs_code" type="VARCHAR(50)"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="cif_foreign" type="DECIMAL(19, 2)"/>
+            <column name="cif_national" type="DECIMAL(19, 2)"/>
+            <column name="duty_rate" type="DECIMAL(19, 2)"/>
+            <column name="duty_amount" type="DECIMAL(19, 2)"/>
+            <column name="vat_rate" type="DECIMAL(19, 2)"/>
+            <column name="vat_amount" type="DECIMAL(19, 2)"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="pur_custom_declaration_line"
+                                 baseColumnNames="custom_declaration_id"
+                                 constraintName="fk_pur_cust_decl_line_decl"
+                                 referencedTableName="pur_custom_declaration"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+</databaseChangeLog>

@@ -40,9 +40,9 @@ export default function PatternBackground({ cursorPosition, loginTheme }) {
     const ctx = canvas.getContext('2d')
     let animationFrameId
 
-    const primaryHex = loginTheme?.primary || '#184341'
-    const accentHex = loginTheme?.accent || '#97B3AE'
-    const secondaryHex = loginTheme?.secondary || '#2A4556'
+    const primaryHex = loginTheme?.primary || '#00A9A8'
+    const accentHex = loginTheme?.accent || '#02888D'
+    const secondaryHex = loginTheme?.surface || '#DBE5F3'
 
     // ── Resize ──────────────────────────────────────────────────────────────
     const setSize = () => {
@@ -74,7 +74,7 @@ export default function PatternBackground({ cursorPosition, loginTheme }) {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       // Subtle grid lines
-      ctx.strokeStyle = 'rgba(24, 67, 65, 0.05)'
+      ctx.strokeStyle = 'rgba(0, 169, 168, 0.06)'
       ctx.lineWidth = 1
       const gs = 58
       for (let x = 0; x < canvas.width; x += gs) {
@@ -129,7 +129,7 @@ export default function PatternBackground({ cursorPosition, loginTheme }) {
             ctx.beginPath()
             ctx.moveTo(node.x, node.y)
             ctx.lineTo(other.x, other.y)
-            ctx.strokeStyle = `rgba(24, 67, 65, ${0.18 * (1 - dist / 115)})`
+            ctx.strokeStyle = `rgba(0, 169, 168, ${0.16 * (1 - dist / 115)})`
             ctx.lineWidth = 0.9
             ctx.stroke()
           }

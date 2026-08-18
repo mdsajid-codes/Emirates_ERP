@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="007-add-product-columns-to-pur-order-item" author="emirateserp">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="pur_purchase_order_item" columnName="crm_product_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="pur_purchase_order_item">
+            <column name="crm_product_id" type="BIGINT">
+                <constraints foreignKeyName="fk_pur_po_item_crm_product" referencedTableName="crm_sales_products" referencedColumnNames="id"/>
+            </column>
+            <column name="raw_material_id" type="BIGINT">
+                <constraints foreignKeyName="fk_pur_po_item_raw_material" referencedTableName="pro_raw_materials" referencedColumnNames="id"/>
+            </column>
+            <column name="semifinished_id" type="BIGINT">
+                <constraints foreignKeyName="fk_pur_po_item_semifinished" referencedTableName="pro_semifinished" referencedColumnNames="id"/>
+            </column>
+            <column name="finished_good_id" type="BIGINT">
+                <constraints foreignKeyName="fk_pur_po_item_finished_good" referencedTableName="pro_finished_goods" referencedColumnNames="id"/>
+            </column>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

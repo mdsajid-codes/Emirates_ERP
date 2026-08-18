@@ -48,6 +48,10 @@ public class PurPurchaseOrderService {
     private final TenantRepository tenantRepo;
     private final PartyRepository supplierRepo;
     private final ProRawMaterialsRepository rawMaterialRepo;
+    private final ProSemiFinishedRepository semiFinishedRepo;
+    private final ProFinishedGoodRepository finishedGoodRepo;
+    private final com.example.multi_tanent.spersusers.repository.CrmSalesProductRepository crmProductRepo;
+
     private final ProUnitRepository unitRepo;
     private final ProTaxRepository taxRepo;
     private final ProCategoryRepository categoryRepo;
@@ -301,9 +305,22 @@ public class PurPurchaseOrderService {
         it.setTaxExempt(Optional.ofNullable(r.getTaxExempt()).orElse(Boolean.FALSE));
         it.setTaxPercent(r.getTaxPercent());
 
-        if (r.getItemId() != null) {
-            it.setItem(rawMaterialRepo.findById(r.getItemId())
-                    .orElseThrow(() -> new EntityNotFoundException("Item not found: " + r.getItemId())));
+        if (r.getCrmProductId() != null) {
+            crmProductRepo.findById(r.getCrmProductId()).ifPresent(it::setCrmProduct);
+        }
+        if (r.getRawMaterialId() != null) {
+            rawMaterialRepo.findById(r.getRawMaterialId()).ifPresent(it::setRawMaterial);
+        } else if (r.getItemId() != null) {
+            rawMaterialRepo.findById(r.getItemId()).ifPresent(rm -> {
+                it.setRawMaterial(rm);
+                it.setItem(rm);
+            });
+        }
+        if (r.getSemiFinishedId() != null) {
+            semiFinishedRepo.findById(r.getSemiFinishedId()).ifPresent(it::setSemiFinished);
+        }
+        if (r.getFinishedGoodId() != null) {
+            finishedGoodRepo.findById(r.getFinishedGoodId()).ifPresent(it::setFinishedGood);
         }
         if (r.getUnitId() != null) {
             it.setUnit(unitRepo.findById(r.getUnitId())
@@ -404,32 +421,49 @@ public class PurPurchaseOrderService {
         List<PurPurchaseOrderItemResponse> items = Optional.ofNullable(po.getItems()).orElse(Collections.emptyList())
                 .stream()
                 .map(it -> {
-                    var category = it.getCategory();
-                    var subCategory = it.getSubCategory();
-                    var item = it.getItem();
-                    var unit = it.getUnit();
-                    var tax = it.getTax();
+                    Long resolvedItemId = null;
+                    String resolvedItemName = null;
+
+                    if (it.getCrmProduct() != null) {
+                        resolvedItemId = it.getCrmProduct().getId();
+                        resolvedItemName = it.getCrmProduct().getName();
+                    } else if (it.getRawMaterial() != null) {
+                        resolvedItemId = it.getRawMaterial().getId();
+                        resolvedItemName = it.getRawMaterial().getName();
+                    } else if (it.getSemiFinished() != null) {
+                        resolvedItemId = it.getSemiFinished().getId();
+                        resolvedItemName = it.getSemiFinished().getName();
+                    } else if (it.getFinishedGood() != null) {
+                        resolvedItemId = it.getFinishedGood().getId();
+                        resolvedItemName = it.getFinishedGood().getName();
+                    } else if (it.getItem() != null) {
+                        resolvedItemId = it.getItem().getId();
+                        resolvedItemName = it.getItem().getName();
+                    }
 
                     return PurPurchaseOrderItemResponse.builder()
                             .id(it.getId())
                             .lineNumber(it.getLineNumber())
-                            .categoryId(category != null ? category.getId() : null)
-                            .categoryName(category != null ? category.getName() : null)
-                            .subCategoryId(subCategory != null ? subCategory.getId() : null)
-                            .subCategoryName(subCategory != null ? subCategory.getName() : null)
-                            .itemId(item != null ? item.getId() : null)
-                            .itemName(item != null ? item.getName() : null)
+                            .categoryId(it.getCategory() != null ? it.getCategory().getId() : null)
+                            .categoryName(it.getCategory() != null ? it.getCategory().getName() : null)
+                            .subCategoryId(it.getSubCategory() != null ? it.getSubCategory().getId() : null)
+                            .subCategoryName(it.getSubCategory() != null ? it.getSubCategory().getName() : null)
+                            .itemId(resolvedItemId)
+                            .itemName(resolvedItemName)
+                            .crmProductId(it.getCrmProduct() != null ? it.getCrmProduct().getId() : null)
+                            .rawMaterialId(it.getRawMaterial() != null ? it.getRawMaterial().getId() : (it.getItem() != null ? it.getItem().getId() : null))
+                            .semiFinishedId(it.getSemiFinished() != null ? it.getSemiFinished().getId() : null)
+                            .finishedGoodId(it.getFinishedGood() != null ? it.getFinishedGood().getId() : null)
                             .description(it.getDescription())
                             .quantity(it.getQuantity())
-                            .unitId(unit != null ? unit.getId() : null)
-                            .unitName(unit != null ? unit.getName() : null)
+                            .unitId(it.getUnit() != null ? it.getUnit().getId() : null)
+                            .unitName(it.getUnit() != null ? it.getUnit().getName() : null)
                             .rate(it.getRate())
                             .amount(it.getAmount())
-                            .taxId(tax != null ? tax.getId() : null)
-                            .taxName(tax != null ? tax.getCode() : null)
+                            .taxId(it.getTax() != null ? it.getTax().getId() : null)
+                            .taxName(it.getTax() != null ? it.getTax().getCode() : null)
                             .taxExempt(it.getTaxExempt())
                             .taxPercent(it.getTaxPercent())
-
                             .lineDiscount(it.getLineDiscount())
                             .discountPercent(it.getDiscountPercent())
                             .build();
