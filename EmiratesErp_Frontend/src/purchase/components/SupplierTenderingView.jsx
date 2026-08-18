@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Loader, ArrowLeft, Send, CheckCircle, Target, FileText, Plus, X } from 'lucide-react';
+import { Loader, ArrowLeft, ArrowRight, Send, CheckCircle, Target, FileText, Plus, X, Box, BadgeCheck, User, Calendar, ShieldCheck, Printer, Edit2 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const RfqResponseModal = ({ rfq, tendering, onClose, onSuccess }) => {
+    const { isRTL } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [prices, setPrices] = useState({});
     const [comments, setComments] = useState({});
@@ -30,7 +32,7 @@ const RfqResponseModal = ({ rfq, tendering, onClose, onSuccess }) => {
             }));
 
             const payload = {
-                validTill: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(), // 1 month validity default
+                validTill: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
                 items: itemsPayload,
                 answers: answersPayload
             };
@@ -41,84 +43,64 @@ const RfqResponseModal = ({ rfq, tendering, onClose, onSuccess }) => {
             onSuccess();
         } catch (err) {
             console.error(err);
-            setError(err.response?.data?.message || 'Failed to submit response');
+            setError(err.response?.data?.message || (isRTL ? 'فشل في إرسال استجابة عرض السعر' : 'Failed to submit response'));
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-                <div className="flex justify-between items-center p-4 border-b">
-                    <h2 className="text-xl font-bold">Enter Response for {rfq.supplierName}</h2>
-                    <button onClick={onClose} className="text-slate-500 hover:text-slate-800"><X size={20}/></button>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" dir={isRTL ? 'rtl' : 'ltr'}>
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-[#DFE7F4]">
+                <div className="flex justify-between items-center p-4 border-b border-[#DFE7F4] bg-[#F8FAFC]">
+                    <h2 className="text-base font-bold text-[#0A2551]">
+                        {isRTL ? `إدخال عرض السعر للمورد: ${rfq.supplierName}` : `Enter Response for ${rfq.supplierName}`}
+                    </h2>
+                    <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"><X size={18}/></button>
                 </div>
                 
-                <div className="p-4 overflow-y-auto flex-1">
-                    {error && <div className="bg-red-50 text-red-600 p-3 rounded mb-4">{error}</div>}
-                    <form id="responseForm" onSubmit={handleSubmit} className="space-y-6">
-                        
+                <div className="p-5 overflow-y-auto flex-1 space-y-4">
+                    {error && <div className="bg-rose-50 text-rose-700 p-3 rounded-xl text-xs font-semibold">{error}</div>}
+                    <form id="responseForm" onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <h3 className="font-semibold text-lg mb-3 border-b pb-2">Item Pricing</h3>
-                            <div className="space-y-4">
+                            <h3 className="font-bold text-xs text-[#0A2551] uppercase tracking-wider mb-3 border-b border-[#DFE7F4] pb-2">{isRTL ? 'تسعير أصناف المناقصة' : 'Item Pricing'}</h3>
+                            <div className="space-y-3">
                                 {rfq.items?.map(it => (
-                                    <div key={it.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-slate-50 p-3 rounded border">
-                                        <div className="md:col-span-1 border-r">
-                                            <div className="font-medium text-sm">{it.itemName}</div>
-                                            <div className="text-xs text-slate-500">Req Qty: {it.quantity} {it.uom}</div>
+                                    <div key={it.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-center bg-[#F8FAFC] p-3 rounded-xl border border-[#DFE7F4] text-xs">
+                                        <div className="md:col-span-1 border-r rtl:border-r-0 rtl:border-l border-[#DFE7F4] pr-2 rtl:pl-2">
+                                            <div className="font-bold text-[#0A2551]">{it.itemName}</div>
+                                            <div className="text-[10px] font-medium text-[#617191]">{isRTL ? `الكمية المطلوب: ${it.quantity} ${it.uom}` : `Req Qty: ${it.quantity} ${it.uom}`}</div>
                                         </div>
                                         <div className="md:col-span-1">
-                                            <label className="block text-xs text-slate-500 mb-1">Unit Price</label>
+                                            <label className="block text-[10px] font-bold text-[#617191] uppercase mb-1">{isRTL ? 'سعر الوحدة (AED)' : 'Unit Price (AED)'}</label>
                                             <input 
                                                 type="number" step="0.01" min="0" required
                                                 value={prices[it.tenderingItemId] || ''} 
                                                 onChange={e => setPrices(p => ({...p, [it.tenderingItemId]: e.target.value}))}
-                                                className="w-full p-2 border rounded text-sm" 
+                                                className="w-full px-3 py-1.5 bg-white border border-[#DFE7F4] rounded-lg font-bold text-[#0A2551]" 
                                             />
                                         </div>
                                         <div className="md:col-span-2">
-                                            <label className="block text-xs text-slate-500 mb-1">Comments/Specs</label>
+                                            <label className="block text-[10px] font-bold text-[#617191] uppercase mb-1">{isRTL ? 'ملاحظات / مواصفات المورد' : 'Comments / Specs'}</label>
                                             <input 
                                                 type="text" 
                                                 value={comments[it.tenderingItemId] || ''} 
                                                 onChange={e => setComments(c => ({...c, [it.tenderingItemId]: e.target.value}))}
-                                                className="w-full p-2 border rounded text-sm" 
+                                                className="w-full px-3 py-1.5 bg-white border border-[#DFE7F4] rounded-lg font-medium text-[#0A2551]" 
                                             />
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         </div>
-
-                        {tendering.questions?.length > 0 && (
-                            <div>
-                                <h3 className="font-semibold text-lg mb-3 border-b pb-2">Pre-Qualification Answers</h3>
-                                <div className="space-y-4">
-                                    {tendering.questions.map(q => (
-                                        <div key={q.id} className="bg-slate-50 p-3 rounded border">
-                                            <div className="font-medium text-sm mb-2">{q.questionText}</div>
-                                            <textarea 
-                                                required
-                                                rows="2"
-                                                value={answers[q.id] || ''}
-                                                onChange={e => setAnswers(a => ({...a, [q.id]: e.target.value}))}
-                                                className="w-full p-2 border rounded text-sm"
-                                            ></textarea>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
                     </form>
                 </div>
                 
-                <div className="p-4 border-t bg-slate-50 flex justify-end gap-3">
-                    <button type="button" onClick={onClose} className="px-4 py-2 border rounded hover:bg-slate-100">Cancel</button>
-                    <button type="submit" form="responseForm" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2">
-                        {loading ? <Loader size={16} className="animate-spin" /> : <CheckCircle size={16}/>}
-                        Submit Response
+                <div className="p-4 border-t border-[#DFE7F4] bg-[#F8FAFC] flex justify-end gap-3">
+                    <button type="button" onClick={onClose} className="px-4 py-2 border border-[#DFE7F4] rounded-lg text-xs font-semibold text-[#102A5B] bg-white hover:bg-slate-50 cursor-pointer">{isRTL ? 'إلغاء' : 'Cancel'}</button>
+                    <button type="submit" form="responseForm" disabled={loading} className="px-5 py-2 bg-[var(--color-primary,#00A9A8)] text-white rounded-lg text-xs font-bold hover:bg-[#008f8e] cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                        {loading ? <Loader size={14} className="animate-spin" /> : <CheckCircle size={14}/>}
+                        <span>{isRTL ? 'إرسال العرض' : 'Submit Response'}</span>
                     </button>
                 </div>
             </div>

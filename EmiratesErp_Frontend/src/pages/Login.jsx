@@ -64,9 +64,9 @@ const ERM_SLIDES = [
     description:
       'Streamline recruitment, payroll, and performance reviews. Build a high-performing workforce at scale.',
     stats: [
-      { label: 'Workforce', value: '12,450', color: '#1E3B37' },
-      { label: 'Payroll', value: '100.0%', color: '#1E3B37' },
-      { label: 'Retention', value: '98.4%', color: '#1E3B37' },
+      { label: 'Workforce', value: '12,450', color: '#00A9A8' },
+      { label: 'Payroll', value: '100.0%', color: '#00A9A8' },
+      { label: 'Retention', value: '98.4%', color: '#00A9A8' },
     ],
   },
   {
@@ -77,9 +77,9 @@ const ERM_SLIDES = [
     description:
       'Full-ledger accounting, VAT compliance, and real-time financial dashboards for data-driven decisions.',
     stats: [
-      { label: 'Revenue', value: 'AED 42.8M', color: '#1E3B37' },
-      { label: 'VAT Status', value: 'COMPLIANT', color: '#1E3B37' },
-      { label: 'Audit', value: '100%', color: '#1E3B37' },
+      { label: 'Revenue', value: 'AED 42.8M', color: '#00A9A8' },
+      { label: 'VAT Status', value: 'COMPLIANT', color: '#00A9A8' },
+      { label: 'Audit', value: '100%', color: '#00A9A8' },
     ],
   },
   {
@@ -90,9 +90,9 @@ const ERM_SLIDES = [
     description:
       'End-to-end visibility across procurement, warehousing, and delivery — optimised for speed and accuracy.',
     stats: [
-      { label: 'Fulfillment', value: '99.8%', color: '#1E3B37' },
-      { label: 'Warehouses', value: '48', color: '#1E3B37' },
-      { label: 'Lead Time', value: '-42.0%', color: '#1E3B37' },
+      { label: 'Fulfillment', value: '99.8%', color: '#00A9A8' },
+      { label: 'Warehouses', value: '48', color: '#00A9A8' },
+      { label: 'Lead Time', value: '-42.0%', color: '#00A9A8' },
     ],
   },
   {
@@ -103,9 +103,9 @@ const ERM_SLIDES = [
     description:
       'Manage leads, track deals, and deliver exceptional customer experiences with AI-powered insights.',
     stats: [
-      { label: 'Conversion', value: '+45.2%', color: '#1E3B37' },
-      { label: 'Deals', value: '1,820', color: '#1E3B37' },
-      { label: 'CSAT', value: '4.9 / 5', color: '#1E3B37' },
+      { label: 'Conversion', value: '+45.2%', color: '#00A9A8' },
+      { label: 'Deals', value: '1,820', color: '#00A9A8' },
+      { label: 'CSAT', value: '4.9 / 5', color: '#00A9A8' },
     ],
   },
 ];
@@ -283,7 +283,7 @@ const Login = () => {
         particleCount: 80,
         spread: 65,
         origin: { y: 0.6 },
-        colors: [loginTheme.primary, loginTheme.secondary, loginTheme.accent, '#B9D9D5', '#C4DADE'],
+        colors: [loginTheme.primary, loginTheme.accent, '#00A9A8', '#02888D', '#FFA713'],
       });
 
       // Re-sync sidebar modules

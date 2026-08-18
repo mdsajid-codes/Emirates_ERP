@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Loader, Printer, ArrowLeft, Mail, Paperclip, FileText, Edit, ChevronDown } from 'lucide-react';
+import { Loader, Printer, ArrowLeft, ArrowRight, FileText, Edit2, CheckCircle, Box, BadgeCheck, Paperclip, DollarSign, Calendar, User } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || '';
 
@@ -23,14 +24,12 @@ const numberToWords = (num) => {
 };
 
 const PurchaseInvoiceView = () => {
+  const { isRTL } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showMore, setShowMore] = useState(false);
-  const [tenantInfo, setTenantInfo] = useState({ name: 'Transcold Air conditioner spare parts trading llc', address: 'Abu Dhabi', logo: '/logo.png' }); // Placeholder
-
   const [supplierInfo, setSupplierInfo] = useState(null);
 
   useEffect(() => {
@@ -45,16 +44,6 @@ const PurchaseInvoiceView = () => {
         const data = res.data;
         setInvoice(data);
 
-        // Fetch Tenant Info
-        const tenantId = localStorage.getItem('tenantId');
-        if (tenantId) {
-             try {
-                const tRes = await axios.get(`${API_URL}/tenants/${tenantId}`, { headers });
-                setTenantInfo(tRes.data);
-             } catch (e) { console.warn(e); }
-        }
-
-        // Fetch Supplier Info
         if (data.supplierId) {
              try {
                 const sRes = await axios.get(`${API_URL}/parties/${data.supplierId}`, { headers });
@@ -64,22 +53,22 @@ const PurchaseInvoiceView = () => {
 
       } catch (err) {
         console.error('Failed to load Invoice', err);
-        setError('Unable to load purchase invoice.');
+        setError(isRTL ? 'تعذر تحميل بيانات الفاتورة.' : 'Unable to load purchase invoice.');
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [id]);
+  }, [id, isRTL]);
 
   const handlePrint = () => {
     window.print();
   };
 
   const handleConvertToPayment = async () => {
-    if(!window.confirm('Are you sure you want to convert this bill to a payment?')) return;
+    if(!window.confirm(isRTL ? 'تحويل هذه الفاتورة إلى سند دفع؟' : 'Are you sure you want to convert this bill to a payment?')) return;
     try {
-      setLoading(true); // temporary lock
+      setLoading(true);
       const token = localStorage.getItem('token');
       const res = await axios.post(`${API_URL}/purchases/invoices/${id}/convert-to-payment`, {}, {
          headers: { Authorization: `Bearer ${token}` }
@@ -87,279 +76,204 @@ const PurchaseInvoiceView = () => {
       navigate(`/purchase-dashboard/payments/edit/${res.data.id}`);
     } catch (err) {
       console.error(err);
-      alert('Failed to convert to payment: ' + (err.response?.data?.message || err.message));
+      alert(isRTL ? 'فشل التحويل إلى سند دفع: ' + (err.response?.data?.message || err.message) : 'Failed to convert to payment: ' + (err.response?.data?.message || err.message));
       setLoading(false); 
     }
   };
 
-  if (loading) return <div className="flex justify-center items-center h-screen"><Loader className="animate-spin text-blue-600" size={40} /></div>;
-  if (!invoice) return <div className="p-8 text-center text-red-500">{error || 'Invoice not found'}</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-[#F8FAFC]">
+        <div className="w-12 h-12 border-4 border-slate-200 border-t-[#00A9A8] rounded-full animate-spin mb-3" />
+        <p className="text-sm font-bold text-[#0A2551]">{isRTL ? 'جاري تحميل تفاصيل الفاتورة...' : 'Loading Invoice Details...'}</p>
+      </div>
+    );
+  }
+
+  if (error || !invoice) {
+    return <div className="p-12 text-center text-rose-600 font-bold">{error || (isRTL ? 'لم يتم العثور على الفاتورة.' : 'Invoice not found')}</div>;
+  }
 
   const totalAmountWords = numberToWords(Math.floor(invoice.netTotal || 0));
 
   return (
-    <div className="bg-slate-50 min-h-screen pb-12 print:bg-white print:pb-0 font-sans">
-      {/* Breadcrumb & Top Bar - Hidden in Print */}
-      <div className="print:hidden">
-          <div className="bg-white border-b px-6 py-3 flex justify-between items-center text-xs text-slate-600">
-             <div className="flex items-center gap-2">
-                <Link to="/" className="hover:text-blue-600">Home</Link> / 
-                <Link to="/purchase-dashboard/bills" className="hover:text-blue-600">Purchase Bills</Link> / 
-                <span className="text-slate-900 font-medium">View Bill</span>
-             </div>
-             <div className="flex gap-2">
-                 <Link to="/purchase-dashboard/bills" className="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition">All Bills</Link>
-                 <Link to="/purchase-dashboard/bills/new" className="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition">+ New Bill</Link>
-             </div>
-          </div>
+    <div className="bg-[#F7F9FD] min-h-screen text-[#0A2551] font-sans pb-10 -mt-3 lg:-mt-4 -mx-3 lg:-mx-4" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Top Action Header Bar */}
+      <div className="sticky top-0 z-50 bg-white border-b border-[#DFE7F4] px-6 py-2.5 flex items-center justify-between shadow-xs">
+        <button onClick={() => navigate('/purchase-dashboard/bills')} className="flex items-center gap-2 text-xs font-bold text-[#102A5B] hover:text-[#00A9A8] transition-colors cursor-pointer">
+          {isRTL ? <ArrowRight size={16} /> : <ArrowLeft size={16} />}
+          <span>{isRTL ? 'الرجوع للقائمة' : 'Back to Bills List'}</span>
+        </button>
 
-          <div className="bg-sky-500 px-6 py-4 text-white text-xl font-medium shadow-sm">
-             View Bill # {invoice.billNumber}
-          </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={handlePrint} className="px-3 py-1.5 border border-[#DFE7F4] rounded-lg text-xs font-semibold text-[#102A5B] hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer">
+            <Printer size={14} />
+            <span>{isRTL ? 'طباعة' : 'Print'}</span>
+          </button>
 
-          {/* Action Toolbar */}
-          <div className="px-6 py-4 flex flex-wrap gap-2 items-center border-b bg-white shadow-sm sticky top-0 z-10">
-             <Link to={`/purchase-dashboard/bills/edit/${invoice.id}`} className="p-2 bg-sky-500 text-white rounded hover:bg-sky-600 transition shadow-sm" title="Edit">
-                <Edit size={18} />
-             </Link>
-             <button className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition shadow-sm" title="PDF">
-                <FileText size={18} />
-             </button>
-             <button onClick={handlePrint} className="p-2 bg-sky-600 text-white rounded hover:bg-sky-700 transition shadow-sm" title="Print">
-                <Printer size={18} />
-             </button>
-             <button onClick={handlePrint} className="px-3 py-2 bg-white border border-slate-300 text-slate-700 rounded hover:bg-slate-50 text-xs font-medium flex items-center gap-2 shadow-sm">
-                <Printer size={16} /> Print On Letterhead
-             </button>
-             <button className="p-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition shadow-sm" title="Email">
-                <Mail size={18} />
-             </button>
-             
-             {/* Attachments Dropdown Logic or Modal could be here, simply linking to them for now */}
-             {invoice.attachments && invoice.attachments.length > 0 && (
-                <div className="relative group">
-                   <button className="p-2 bg-green-500 text-white rounded hover:bg-green-600 transition shadow-sm" title="Attachments">
-                      <Paperclip size={18} />
-                   </button>
-                   <div className="absolute top-full left-0 mt-1 w-48 bg-white border rounded shadow-lg py-1 z-20 hidden group-hover:block">
-                      {invoice.attachments.map(a => (
-                         <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="block px-4 py-2 hover:bg-slate-100 text-xs truncate">
-                            {a.fileName}
-                         </a>
-                      ))}
-                   </div>
-                </div>
-             )}
+          <button onClick={() => navigate(`/purchase-dashboard/bills/edit/${id}`)} className="px-3 py-1.5 border border-[#DFE7F4] rounded-lg text-xs font-semibold text-[#102A5B] hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer">
+            <Edit2 size={14} />
+            <span>{isRTL ? 'تعديل' : 'Edit'}</span>
+          </button>
 
-             <div className="relative">
-                 <button onClick={() => setShowMore(!showMore)} className="px-3 py-2 bg-slate-700 text-white rounded text-xs font-medium flex items-center gap-1 hover:bg-slate-800 transition shadow-sm">
-                    More <ChevronDown size={14} />
-                 </button>
-                 {showMore && (
-                     <div className="absolute top-full left-0 mt-1 w-48 bg-white border rounded shadow-lg py-1 z-20 text-xs text-slate-700" onMouseLeave={() => setShowMore(false)}>
-                         {/* <button onClick={() => navigate('/purchase-dashboard/payments/new', { state: { supplierId: invoice.supplierId, invoiceId: invoice.id } })} className="block w-full text-left px-4 py-2 hover:bg-slate-100">Make Payment</button> */}
-                         <button onClick={handleConvertToPayment} className="block w-full text-left px-4 py-2 hover:bg-slate-100 text-green-600 font-medium">Convert to Payment</button>
-                     </div>
-                 )}
-             </div>
-          </div>
-          
-          <div className="px-6 py-2 flex gap-4 text-xs text-slate-500 bg-white border-b">
-              <div>Created: {invoice.createdAt ? new Date(invoice.createdAt).toLocaleString() : ''} by {invoice.createdBy || 'System'}</div>
-          </div>
+          <button onClick={handleConvertToPayment} className="px-4 py-1.5 bg-[var(--color-primary,#00A9A8)] text-white rounded-lg text-xs font-bold hover:bg-[#008f8e] transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs">
+            <FileText size={14} />
+            <span>{isRTL ? 'تحويل إلى سند دفع' : 'Convert to Payment'}</span>
+          </button>
+        </div>
       </div>
 
-      {/* DOCUMENT PREVIEW AREA */}
-      <div className="max-w-[210mm] mx-auto mt-6 bg-white shadow-lg print:shadow-none print:mt-0 print:w-full print:max-w-none border p-8 min-h-[297mm] text-slate-800 relative">
-         
-         {/* Letterhead Header Section */}
-         <div className="flex justify-between items-start mb-8 pb-4 border-b-2 border-slate-800">
-             <div className="flex gap-4 items-center">
-                 {/* Logo */}
-                 {tenantInfo.logo && (
-                     <div className="w-16 h-16 bg-slate-100 flex items-center justify-center rounded">
-                        <img src={tenantInfo.logo.startsWith('/') ? tenantInfo.logo : `${API_URL}/uploads/${tenantInfo.logo}`} alt="Logo" className="max-w-full max-h-full" onError={(e) => e.target.style.display='none'} />
-                     </div>
-                 )}
-                 <div>
-                     <h1 className="text-xl font-bold uppercase tracking-wide">{tenantInfo.companyName || tenantInfo.name}</h1>
-                     <p className="text-sm font-medium text-slate-600">
-                         {tenantInfo.address || tenantInfo.location || ''}<br/>
-                         {tenantInfo.email && <span className='lowercase'>{tenantInfo.email}</span>}
-                     </p>
-                 </div>
-             </div>
-         </div>
-
-         {/* Title & Meta Grid */}
-         <div className="flex justify-between items-end mb-6">
-             <div className="border border-slate-300 rounded p-0 overflow-hidden text-sm w-1/2">
-                 <div className="grid grid-cols-[120px_1fr] border-b border-slate-200">
-                     <div className="bg-slate-50 px-3 py-1 font-semibold text-slate-700 border-r border-slate-200">Bill No.</div>
-                     <div className="px-3 py-1 font-bold text-slate-900">: {invoice.billNumber}</div>
-                 </div>
-                 {invoice.billLedger && (
-                   <div className="grid grid-cols-[120px_1fr] border-b border-slate-200">
-                       <div className="bg-slate-50 px-3 py-1 font-semibold text-slate-700 border-r border-slate-200">Bill Ledger</div>
-                       <div className="px-3 py-1">: {invoice.billLedger}</div>
-                   </div>
-                 )}
-                 {invoice.billType && (
-                   <div className="grid grid-cols-[120px_1fr] border-b border-slate-200">
-                       <div className="bg-slate-50 px-3 py-1 font-semibold text-slate-700 border-r border-slate-200">Bill Type</div>
-                       <div className="px-3 py-1">: {invoice.billType}</div>
-                   </div>
-                 )}
-                 <div className="grid grid-cols-[120px_1fr] border-b border-slate-200">
-                     <div className="bg-slate-50 px-3 py-1 font-semibold text-slate-700 border-r border-slate-200">Bill Date</div>
-                     <div className="px-3 py-1">: {invoice.billDate ? new Date(invoice.billDate).toLocaleDateString() : '-'}</div>
-                 </div>
-                 <div className="grid grid-cols-[120px_1fr] border-b border-slate-200">
-                     <div className="bg-slate-50 px-3 py-1 font-semibold text-slate-700 border-r border-slate-200">Due Date</div>
-                     <div className="px-3 py-1">: {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : '-'}</div>
-                 </div>
-                 {invoice.orderNumber && (
-                    <div className="grid grid-cols-[120px_1fr] border-b border-slate-200">
-                        <div className="bg-slate-50 px-3 py-1 font-semibold text-slate-700 border-r border-slate-200">Ref Order.</div>
-                        <div className="px-3 py-1">: {invoice.orderNumber}</div>
-                    </div>
-                 )}
-                 {invoice.template && (
-                    <div className="grid grid-cols-[120px_1fr]">
-                        <div className="bg-slate-50 px-3 py-1 font-semibold text-slate-700 border-r border-slate-200">Template</div>
-                        <div className="px-3 py-1">: {invoice.template}</div>
-                    </div>
-                 )}
-             </div>
-             
-             <div className="text-right">
-                 <h2 className="text-3xl font-bold text-slate-900 uppercase mb-1">Purchase Bill</h2>
-                 <p className="text-sm font-bold text-slate-600">TRN : {tenantInfo.trnNumber || tenantInfo.taxId || '-'}</p>
-             </div>
-         </div>
-
-         {/* Addresses */}
-         <div className="mb-8">
-             <div className="font-bold text-slate-800 border-b border-slate-300 mb-2 pb-1">Supplier Details</div>
-             <div className="bg-slate-50 p-3 border rounded text-sm">
-                 <div className="font-bold text-lg">{supplierInfo ? (supplierInfo.companyName || supplierInfo.name) : invoice.supplierName}</div>
-                 <div className="text-slate-600 whitespace-pre-wrap">
-                    {supplierInfo ? (
-                        <>
-                           {supplierInfo.addressLine1} {supplierInfo.addressLine2}<br/>
-                           {supplierInfo.city} {supplierInfo.state} {supplierInfo.country}<br/>
-                           {supplierInfo.phone && <>Ph: {supplierInfo.phone}<br/></>}
-                           {supplierInfo.email && <>{supplierInfo.email}</>}
-                        </>
-                    ) : 'Address information not loaded'}
-                 </div>
-                 <div className="mt-1 text-slate-500">TRN: {supplierInfo ? (supplierInfo.trnNumber || supplierInfo.taxId) : '-'}</div>
-             </div>
-         </div>
-
-         {/* Items Table */}
-         <table className="w-full border-collapse border border-slate-300 text-sm mb-6">
-             <thead className="bg-slate-100 text-slate-800 font-bold">
-                 <tr>
-                     <th className="border border-slate-300 px-2 py-2 w-12 text-center">S.N</th>
-                     <th className="border border-slate-300 px-3 py-2 text-left">Item & Description</th>
-                     <th className="border border-slate-300 px-2 py-2 text-center w-24">Qty</th>
-                     <th className="border border-slate-300 px-2 py-2 text-right w-24">Rate</th>
-                     <th className="border border-slate-300 px-2 py-2 text-right w-20">Discount</th>
-                     <th className="border border-slate-300 px-2 py-2 text-center w-20">Tax (%)</th>
-                     <th className="border border-slate-300 px-2 py-2 text-right w-28">Amount</th>
-                 </tr>
-             </thead>
-             <tbody>
-                 {(invoice.lines || []).map((it, i) => {
-                     // Deciding qty display
-                     const qty = invoice.grossNetEnabled && it.quantityNet > 0 ? it.quantityNet : it.quantityGross;
-                     
-                     return (
-                         <tr key={i}>
-                             <td className="border border-slate-300 px-2 py-2 text-center">{it.lineNumber || i + 1}</td>
-                             <td className="border border-slate-300 px-3 py-2">
-                                 <div className="font-semibold">{it.itemName || '-'}</div>
-                                 <div className="text-xs text-slate-500">{it.description}</div>
-                             </td>
-                             <td className="border border-slate-300 px-2 py-2 text-center">{Number(qty).toFixed(2)} {it.unitName}</td>
-                             <td className="border border-slate-300 px-2 py-2 text-right">{Number(it.rate).toFixed(2)}</td>
-                             <td className="border border-slate-300 px-2 py-2 text-right">{Number(it.lineDiscount || 0).toFixed(2)}</td>
-                             <td className="border border-slate-300 px-2 py-2 text-center">{Number(it.taxPercent || 0)}%</td>
-                             <td className="border border-slate-300 px-2 py-2 text-right">{Number(it.amount).toFixed(2)}</td>
-                         </tr>
-                     );
-                 })}
-             </tbody>
-         </table>
-
-         {/* Footer / Totals Section */}
-         <div className="flex gap-8 items-stretch h-full min-h-[200px]">
-             {/* Left Column: Words, Notes */}
-             <div className="flex-1 flex flex-col justify-between border border-slate-300 p-0">
-                  <div className="p-3 border-b border-slate-300">
-                      <div className="font-bold text-sm mb-1">Amount in Words :</div>
-                      <div className="text-sm italic text-slate-700 capitalize">
-                          {totalAmountWords} AED Only
-                      </div>
-                  </div>
-                  
-                  <div className="p-3 flex-1">
-                      {invoice.notes && (
-                          <div className="mb-4">
-                              <div className="font-bold text-sm mb-1">Notes :</div>
-                              <div className="text-xs text-slate-600 whitespace-pre-wrap">{invoice.notes}</div>
-                          </div>
-                      )}
-                  </div>
-             </div>
-
-             {/* Right Column: Totals */}
-             <div className="w-[300px] flex flex-col border border-slate-300 p-0">
-                  <div className="text-sm">
-                      <div className="flex justify-between p-2 border-b border-slate-200">
-                          <span className="font-semibold text-slate-700">Sub Total</span>
-                          <span>{Number(invoice.subTotal || 0).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between p-2 border-b border-slate-200">
-                          <span className="font-semibold text-slate-700">Total Discount</span>
-                          <span>{Number(invoice.totalDiscount || 0).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between p-2 border-b border-slate-200 bg-slate-50">
-                          <span className="font-semibold text-slate-700">Gross Total</span>
-                          <span>{Number(invoice.grossTotal || 0).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between p-2 border-b border-slate-200">
-                          <span className="font-semibold text-slate-700">Total Tax</span>
-                          <span>{Number(invoice.totalTax || 0).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between p-2 border-b border-slate-200">
-                          <span className="font-semibold text-slate-700">Other Charges</span>
-                          <span>{Number(invoice.otherCharges || 0).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between p-3 bg-slate-100 font-bold text-lg text-slate-900">
-                          <span>Net Total</span>
-                          <span>AAD {Number(invoice.netTotal || 0).toFixed(2)}</span>
-                      </div>
-                  </div>
-             </div>
-         </div>
-
-         {/* Signature Block */}
-         <div className="mt-12 pt-8 flex justify-end">
-              <div className="text-center w-48">
-                  <div className="mb-4 h-16">
-                      {/* Authorized Signature Image Placeholder */}
-                  </div>
-                  <div className="border-t border-slate-400 pt-2 font-bold text-slate-700 text-sm">Authorized Signature</div>
+      <div className="w-full px-4 lg:px-6 space-y-4">
+        {/* Hero Header Banner */}
+        <div className="bg-white border border-[#DFE7F4] rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-[#00A9A8] rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs">
+              <Box size={30} strokeWidth={2.2} />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-[#617191] uppercase tracking-wider block">{isRTL ? 'فاتورة مشتريات' : 'PURCHASE BILL INVOICE'}</span>
+              <h1 className="text-2xl font-black text-[#0A2551] tracking-tight leading-none mt-0.5">{invoice.billNumber || `BILL-${invoice.id}`}</h1>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="px-3 py-0.5 bg-[#DCFAEE] text-[#138764] rounded-md text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
+                  <BadgeCheck size={12} /> {isRTL ? 'فاتورة شراء معتمدة' : 'AUTHENTICATED BILL'}
+                </span>
               </div>
-         </div>
+            </div>
+          </div>
 
-         {/* Footer Line */}
-         <div className="absolute bottom-0 left-0 w-full text-center text-[10px] text-slate-400 p-4 border-t print:block hidden">
-             Computer generated document.
-         </div>
+          <div className="flex items-center gap-6 text-xs border-l rtl:border-l-0 rtl:border-r border-[#DFE7F4] pl-6 rtl:pr-6">
+            <div>
+              <span className="text-[#617191] font-medium block">{isRTL ? 'المورد' : 'Supplier'}</span>
+              <span className="font-bold text-[#0A2551]">{invoice.supplierName || '-'}</span>
+            </div>
+            <div>
+              <span className="text-[#617191] font-medium block">{isRTL ? 'تاريخ الفاتورة' : 'Bill Date'}</span>
+              <span className="font-bold text-[#0A2551]">{invoice.billDate ? new Date(invoice.billDate).toLocaleDateString() : '-'}</span>
+            </div>
+            <div>
+              <span className="text-[#617191] font-medium block">{isRTL ? 'إجمالي الفاتورة (AED)' : 'Net Total (AED)'}</span>
+              <span className="font-black text-[#00A9A8] text-base font-mono">{(invoice.netTotal ?? 0).toFixed(2)} AED</span>
+            </div>
+          </div>
+        </div>
 
+        {/* Details Meta Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="bg-white border border-[#DFE7F4] rounded-xl p-3.5 shadow-xs">
+            <span className="text-[10px] font-bold text-[#617191] uppercase block mb-1">{isRTL ? 'رقم أمر الشراء' : 'Order Number'}</span>
+            <span className="text-xs font-bold text-[#0A2551]">{invoice.orderNumber || '-'}</span>
+          </div>
+          <div className="bg-white border border-[#DFE7F4] rounded-xl p-3.5 shadow-xs">
+            <span className="text-[10px] font-bold text-[#617191] uppercase block mb-1">{isRTL ? 'تاريخ الاستحقاق' : 'Due Date'}</span>
+            <span className="text-xs font-bold text-[#0A2551]">{invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : '-'}</span>
+          </div>
+          <div className="bg-white border border-[#DFE7F4] rounded-xl p-3.5 shadow-xs">
+            <span className="text-[10px] font-bold text-[#617191] uppercase block mb-1">{isRTL ? 'نوع الفاتورة' : 'Bill Type'}</span>
+            <span className="text-xs font-bold text-[#0A2551]">{invoice.billType || 'Standard'}</span>
+          </div>
+          <div className="bg-white border border-[#DFE7F4] rounded-xl p-3.5 shadow-xs">
+            <span className="text-[10px] font-bold text-[#617191] uppercase block mb-1">{isRTL ? 'دفتر الفاتورة' : 'Bill Ledger'}</span>
+            <span className="text-xs font-bold text-[#00A9A8]">{invoice.billLedger || 'Purchase'}</span>
+          </div>
+        </div>
+
+        {/* Items Specification Table Card */}
+        <div className="bg-white border border-[#DFE7F4] rounded-2xl shadow-xs overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-[#DFE7F4] bg-[#F8FAFC] flex justify-between items-center">
+            <h3 className="text-xs font-bold text-[#0A2551] uppercase tracking-wider">{isRTL ? 'جدول أصناف الفاتورة' : 'Invoice Line Items Specification'}</h3>
+            <span className="text-[11px] font-semibold text-[#617191]">{isRTL ? `${invoice.lines?.length || 0} أصناف` : `${invoice.lines?.length || 0} Lines`}</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-xs">
+              <thead>
+                <tr className="bg-[#F2F6FC] border-b border-[#DFE7F4] text-[#617191] uppercase text-[10.5px] font-bold">
+                  <th className="p-3 text-left rtl:text-right">#</th>
+                  <th className="p-3 text-left rtl:text-right">{isRTL ? 'تفاصيل الصنف والبيان' : 'Item & Description'}</th>
+                  <th className="p-3 text-center">{isRTL ? 'الكمية' : 'Qty'}</th>
+                  <th className="p-3 text-center">{isRTL ? 'السعر (AED)' : 'Rate (AED)'}</th>
+                  <th className="p-3 text-center">{isRTL ? 'الخصم' : 'Discount'}</th>
+                  <th className="p-3 text-center">{isRTL ? 'الضريبة %' : 'Tax %'}</th>
+                  <th className="p-3 text-right rtl:text-left">{isRTL ? 'المبلغ (AED)' : 'Amount (AED)'}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#DFE7F4]">
+                {(invoice.lines || []).map((line, idx) => (
+                  <tr key={line.id || idx} className="hover:bg-slate-50/60">
+                    <td className="p-3 font-bold text-[#0A2551]">{idx + 1}</td>
+                    <td className="p-3">
+                      <div className="font-bold text-[#0A2551]">{line.description || line.itemName || '-'}</div>
+                    </td>
+                    <td className="p-3 text-center font-bold text-[#0A2551]">
+                      {invoice.grossNetEnabled && line.quantityNet > 0 ? line.quantityNet : line.quantityGross}
+                    </td>
+                    <td className="p-3 text-center font-bold text-[#0A2551] font-mono">{(line.rate || 0).toFixed(2)}</td>
+                    <td className="p-3 text-center font-semibold text-rose-600 font-mono">{(line.lineDiscount || 0).toFixed(2)}</td>
+                    <td className="p-3 text-center font-semibold text-[#617191]">{line.taxPercent || 0}%</td>
+                    <td className="p-3 text-right rtl:text-left font-bold text-[#0A2551] font-mono">{(line.amount || 0).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Financial Totals Summary Bar */}
+          <div className="p-5 bg-[#F8FAFC] border-t border-[#DFE7F4] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-[#617191] uppercase block">{isRTL ? 'المبلغ بالأحرف (درهم إماراتي)' : 'Amount in Words (AED)'}</span>
+              <p className="text-xs font-bold text-[#0A2551] italic">{totalAmountWords} Dirhams Only</p>
+            </div>
+
+            <div className="w-full md:w-80 space-y-1.5 text-xs">
+              <div className="flex justify-between text-[#617191]">
+                <span>{isRTL ? 'المجموع الفرعي' : 'Subtotal'}</span>
+                <span className="font-bold text-[#0A2551] font-mono">{(invoice.subTotal || 0).toFixed(2)} AED</span>
+              </div>
+              <div className="flex justify-between text-[#617191]">
+                <span>{isRTL ? 'إجمالي الخصم' : 'Total Discount'}</span>
+                <span className="font-bold text-rose-600 font-mono">-{(invoice.totalDiscount || 0).toFixed(2)} AED</span>
+              </div>
+              <div className="flex justify-between text-[#617191]">
+                <span>{isRTL ? 'إجمالي الضريبة' : 'Total Tax'}</span>
+                <span className="font-bold text-[#0A2551] font-mono">+{(invoice.totalTax || 0).toFixed(2)} AED</span>
+              </div>
+              <div className="flex justify-between text-[#617191]">
+                <span>{isRTL ? 'رسوم إضافية' : 'Other Charges'}</span>
+                <span className="font-bold text-[#0A2551] font-mono">+{(invoice.otherCharges || 0).toFixed(2)} AED</span>
+              </div>
+              <div className="flex justify-between text-sm font-black text-[#0A2551] pt-2 border-t border-[#DFE7F4]">
+                <span>{isRTL ? 'صافي الفاتورة النهائي' : 'Net Total (AED)'}</span>
+                <span className="text-[#00A9A8] font-mono">{(invoice.netTotal || 0).toFixed(2)} AED</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Remarks & Attachments */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white border border-[#DFE7F4] rounded-2xl p-4 shadow-xs space-y-2">
+            <h4 className="text-xs font-bold text-[#0A2551] uppercase tracking-wider">{isRTL ? 'ملاحظات وتعليقات الفاتورة' : 'Operational Remarks & Notes'}</h4>
+            <p className="text-xs text-[#617191] bg-[#F8FAFC] p-3 rounded-xl border border-[#DFE7F4] font-medium">
+              {invoice.notes || (isRTL ? 'لا توجد ملاحظات إضافية مسجلة.' : 'No operational remarks recorded.')}
+            </p>
+          </div>
+
+          {invoice.attachments && invoice.attachments.length > 0 && (
+            <div className="bg-white border border-[#DFE7F4] rounded-2xl p-4 shadow-xs space-y-2">
+              <h4 className="text-xs font-bold text-[#0A2551] uppercase tracking-wider">{isRTL ? 'المرفقات المسجلة' : 'Attached Documents'}</h4>
+              <div className="space-y-1.5">
+                {invoice.attachments.map(att => (
+                  <div key={att.id} className="flex items-center justify-between bg-[#F8FAFC] p-2 rounded-xl border border-[#DFE7F4] text-xs">
+                    <span className="font-semibold text-[#0A2551] truncate">{att.fileName}</span>
+                    <a href={`${API_URL}/${att.filePath}`} target="_blank" rel="noreferrer" className="text-[#00A9A8] font-bold hover:underline">
+                      {isRTL ? 'عرض' : 'View'}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

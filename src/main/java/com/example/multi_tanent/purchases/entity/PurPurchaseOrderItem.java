@@ -21,6 +21,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.util.Objects;
 
+import com.example.multi_tanent.spersusers.enitity.CrmSalesProduct;
 import com.example.multi_tanent.production.entity.ProCategory;
 import com.example.multi_tanent.production.entity.ProRawMaterials;
 import com.example.multi_tanent.production.entity.ProSubCategory;
@@ -63,7 +64,24 @@ public class PurPurchaseOrderItem {
     @JoinColumn(name = "sub_category_id")
     private ProSubCategory subCategory;
 
-    /** The actual item (raw material, semi-finished good, etc.) */
+    /** Item references across all 4 product types like Sales Order */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "crm_product_id")
+    private CrmSalesProduct crmProduct;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "raw_material_id")
+    private ProRawMaterials rawMaterial;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "semifinished_id")
+    private com.example.multi_tanent.production.entity.ProSemifinished semiFinished;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "finished_good_id")
+    private com.example.multi_tanent.production.entity.ProFinishedGood finishedGood;
+
+    /** Legacy raw material reference */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id")
     private ProRawMaterials item;
