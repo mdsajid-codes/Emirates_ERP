@@ -109,115 +109,116 @@ export default function DispatchAssignModal({ isOpen, onClose, onSave, job, trip
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-card w-full max-w-lg rounded-theme shadow-2xl border border-border overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
-          <div className="flex items-center gap-2">
-            <div className="bg-primary/10 p-2 rounded-theme text-primary">
-              <Truck size={20} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs select-none">
+      <div className="bg-[var(--color-card,#ffffff)] w-full max-w-md rounded-xl shadow-2xl border border-[var(--color-border,#D7E3EE)] overflow-hidden animate-in zoom-in-95 duration-150">
+        
+        {/* Modal Header */}
+        <div className="p-3.5 border-b border-[var(--color-border,#E4EAF4)] flex items-center justify-between bg-slate-50/50">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-sky-50 text-[var(--color-primary,#0178BC)] flex items-center justify-center">
+              <Truck size={18} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-foreground">Assign Resources</h2>
-              <p className="text-xs text-foreground-muted">Dispatch Job: <span className="font-bold text-primary">{job?.jobNo}</span></p>
+              <h2 className="text-sm font-bold text-[var(--color-foreground,#102A43)] leading-tight">Assign Resources</h2>
+              <p className="text-[11px] text-[var(--color-foreground-muted,#60738E)] font-mono">
+                Dispatch Job: <span className="font-bold text-[var(--color-primary,#0178BC)]">{job?.jobNo}</span>
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-muted rounded-theme transition-colors">
-            <X size={20} />
+          <button 
+            onClick={onClose} 
+            className="w-7 h-7 rounded-lg border border-[var(--color-border,#D7E3EE)] flex items-center justify-center text-[var(--color-foreground-muted,#60738E)] hover:bg-slate-100 transition-colors cursor-pointer"
+          >
+            <X size={15} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <div className="space-y-4">
-            {/* Vehicle Selection */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-foreground-muted uppercase ml-1 flex items-center gap-1">
-                <Truck size={12} /> Available Vehicle
-              </label>
-              <select
-                value={formData.vehicleId}
-                onChange={(e) => setFormData(prev => ({ ...prev, vehicleId: e.target.value }))}
-                required
-                className="w-full px-4 py-2.5 bg-background border border-border rounded-theme focus:ring-2 focus:ring-primary/20 outline-none"
-              >
-                <option value="">Select Vehicle</option>
-                {vehicles.map(v => (
-                  <option key={v.id} value={v.id}>{v.plateNumber} ({v.makeModel})</option>
-                ))}
-              </select>
-              {vehicles.length === 0 && (
-                <p className="text-[10px] text-red-500 font-medium ml-1 flex items-center gap-1">
-                  <AlertCircle size={10} /> No active vehicles available
-                </p>
-              )}
-            </div>
-
-            {/* Driver Selection */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-foreground-muted uppercase ml-1 flex items-center gap-1">
-                <User size={12} /> Available Driver
-              </label>
-              <select
-                value={formData.driverId}
-                onChange={(e) => setFormData(prev => ({ ...prev, driverId: e.target.value }))}
-                required
-                className="w-full px-4 py-2.5 bg-background border border-border rounded-theme focus:ring-2 focus:ring-primary/20 outline-none"
-              >
-                <option value="">Select Driver</option>
-                {drivers.map(d => (
-                  <option key={d.id} value={d.id}>{d.name} ({d.employeeCode})</option>
-                ))}
-              </select>
-              {drivers.length === 0 && (
-                <p className="text-[10px] text-red-500 font-medium ml-1 flex items-center gap-1">
-                  <AlertCircle size={10} /> No available drivers found
-                </p>
-              )}
-            </div>
-
-            {/* Trip Linking (Optional) */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-foreground-muted uppercase ml-1 flex items-center gap-1">
-                <Calendar size={12} /> Link to Existing Trip (Optional)
-              </label>
-              <select
-                value={formData.tripId}
-                onChange={(e) => setFormData(prev => ({ ...prev, tripId: e.target.value }))}
-                className="w-full px-4 py-2.5 bg-background border border-border rounded-theme focus:ring-2 focus:ring-primary/20 outline-none text-sm"
-              >
-                <option value="">Select Trip (Optional)</option>
-                {trips.map(t => (
-                  <option key={t.id} value={t.id}>{t.tripNo} - {t.date}</option>
-                ))}
-              </select>
-            </div>
+        {/* Modal Body */}
+        <form onSubmit={handleSubmit} className="p-4 space-y-3">
+          {/* Vehicle Selection */}
+          <div>
+            <label className="block text-[11px] font-bold text-[var(--color-foreground,#102A43)] mb-1 flex items-center gap-1">
+              <Truck size={12} className="text-[var(--color-primary,#0178BC)]" /> Available Vehicle *
+            </label>
+            <select
+              value={formData.vehicleId}
+              onChange={(e) => setFormData(prev => ({ ...prev, vehicleId: e.target.value }))}
+              required
+              className="w-full px-2.5 py-1.5 bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#C9D8E5)] rounded-lg text-xs text-[var(--color-foreground,#102A43)] outline-none cursor-pointer"
+            >
+              <option value="">Select Vehicle</option>
+              {vehicles.map(v => (
+                <option key={v.id} value={v.id}>{v.plateNumber} ({v.makeModel || v.make || ''})</option>
+              ))}
+            </select>
+            {vehicles.length === 0 && (
+              <p className="text-[10px] text-rose-500 font-medium mt-1 flex items-center gap-1">
+                <AlertCircle size={10} /> No active vehicles available
+              </p>
+            )}
           </div>
 
-          <div className="bg-primary/5 border border-primary/10 p-3 rounded-theme flex gap-3 text-primary">
-            <Check size={18} className="flex-shrink-0 mt-0.5" />
-            <p className="text-[11px] leading-relaxed">
-              Assigning resources will move this job to <span className="font-bold">DISPATCHED</span> status and lock the vehicle/driver for this duration.
-            </p>
+          {/* Driver Selection */}
+          <div>
+            <label className="block text-[11px] font-bold text-[var(--color-foreground,#102A43)] mb-1 flex items-center gap-1">
+              <User size={12} className="text-[var(--color-primary,#0178BC)]" /> Available Driver *
+            </label>
+            <select
+              value={formData.driverId}
+              onChange={(e) => setFormData(prev => ({ ...prev, driverId: e.target.value }))}
+              required
+              className="w-full px-2.5 py-1.5 bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#C9D8E5)] rounded-lg text-xs text-[var(--color-foreground,#102A43)] outline-none cursor-pointer"
+            >
+              <option value="">Select Driver</option>
+              {drivers.map(d => (
+                <option key={d.id} value={d.id}>{d.name} ({d.employeeId || 'EM-01'})</option>
+              ))}
+            </select>
+            {drivers.length === 0 && (
+              <p className="text-[10px] text-rose-500 font-medium mt-1 flex items-center gap-1">
+                <AlertCircle size={10} /> No available drivers found
+              </p>
+            )}
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-2">
+          {/* Trip Link Selection */}
+          <div>
+            <label className="block text-[11px] font-bold text-[var(--color-foreground,#102A43)] mb-1 flex items-center gap-1">
+              <Calendar size={12} className="text-slate-500" /> Link to Existing Trip (Optional)
+            </label>
+            <select
+              value={formData.tripId}
+              onChange={(e) => setFormData(prev => ({ ...prev, tripId: e.target.value }))}
+              className="w-full px-2.5 py-1.5 bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#C9D8E5)] rounded-lg text-xs text-[var(--color-foreground,#102A43)] outline-none cursor-pointer"
+            >
+              <option value="">No Linked Trip (Standalone Dispatch)</option>
+              {trips.map(t => (
+                <option key={t.id} value={t.id}>TRIP #{t.tripNo} - {t.fromLocation} → {t.toLocation}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="bg-sky-50 p-2.5 rounded-lg border border-sky-100 text-[11px] text-[var(--color-primary,#0178BC)] font-medium flex items-center gap-2">
+            <Check size={14} className="shrink-0" />
+            <span>Assigning resources will move this job to <strong className="font-bold">DISPATCHED</strong> status and lock the vehicle/driver.</span>
+          </div>
+
+          {/* Modal Footer */}
+          <div className="pt-2 flex items-center justify-end gap-2 border-t border-[var(--color-border,#E4EAF4)]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-theme transition-colors"
+              className="px-4 py-1.5 text-xs font-bold text-[var(--color-foreground,#102A43)] border border-[var(--color-border,#D7E3EE)] bg-white hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading || vehicles.length === 0 || drivers.length === 0}
-              className="flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-theme font-bold hover:opacity-90 transition-all shadow-md shadow-primary/20 disabled:opacity-50 disabled:shadow-none"
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 px-5 py-1.5 bg-[#00A9A8] hover:bg-[#009190] text-white rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
             >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Check size={18} />
-              )}
-              Confirm Assignment
+              <Check size={14} />
+              {loading ? 'Assigning...' : 'Confirm Assignment'}
             </button>
           </div>
         </form>

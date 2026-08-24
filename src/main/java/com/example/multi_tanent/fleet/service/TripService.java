@@ -184,7 +184,9 @@ public class TripService {
 
     @Transactional(readOnly = true)
     public TripResponse getTripById(Long id) {
-        return tripRepository.findById(id).map(this::mapToResponse).orElseThrow();
+        return tripRepository.findByTenantAndId(getCurrentTenant(), id)
+                .map(this::mapToResponse)
+                .orElseThrow(() -> new EntityNotFoundException("Trip not found with id: " + id));
     }
 
     @Transactional

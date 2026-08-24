@@ -231,7 +231,7 @@ const Vendors = lazy(() => import('./fleet/tripManagement/pages/Vendors.jsx'));
 const Invoices = lazy(() => import('./fleet/tripManagement/pages/invoice/Invoices.jsx'));
 const CreateInvoice = lazy(() => import('./fleet/tripManagement/pages/invoice/CreateInvoice.jsx'));
 const InvoiceDetailView = lazy(() => import('./fleet/tripManagement/pages/invoice/InvoiceDetailView.jsx'));
-const Reports = lazy(() => import('./fleet/pages/ReportsDashboard.jsx'));
+const ReportsDashboard = lazy(() => import('./fleet/pages/ReportsDashboard.jsx'));
 const TripForm = lazy(() => import('./fleet/tripManagement/pages/TripForm.jsx'));
 const TripDetails = lazy(() => import('./fleet/tripManagement/pages/tripDetails/TripDetails.jsx'));
 const TripDispatchPage = lazy(() => import('./fleet/tripManagement/pages/TripDispatchPage.jsx'));
@@ -241,6 +241,29 @@ const TripTracker = lazy(() => import('./fleet/tripManagement/pages/TripTracker.
 const FleetLayout = lazy(() => import('./fleet/fleetLayouts/FleetLayout.jsx'));
 const FleetDashboard = lazy(() => import('./fleet/pages/FleetDashboard.jsx'));
 const Vehicles = lazy(() => import('./fleet/pages/Vehicles.jsx'));
+const VehicleFormPage = lazy(() => import('./fleet/pages/VehicleFormPage.jsx'));
+const DriverFormPage = lazy(() => import('./fleet/pages/DriverFormPage.jsx'));
+const CustomerFormPage = lazy(() => import('./fleet/pages/CustomerFormPage.jsx'));
+const VendorFormPage = lazy(() => import('./fleet/pages/VendorFormPage.jsx'));
+const VendorDetails = lazy(() => import('./fleet/pages/VendorDetails.jsx'));
+const TripFormPage = lazy(() => import('./fleet/pages/TripFormPage.jsx'));
+const TripDetailsPage = lazy(() => import('./fleet/pages/TripDetailsPage.jsx'));
+const DispatchFormPage = lazy(() => import('./fleet/pages/DispatchFormPage.jsx'));
+const DispatchDetailsPage = lazy(() => import('./fleet/pages/DispatchDetailsPage.jsx'));
+const RouteFormPage = lazy(() => import('./fleet/pages/RouteFormPage.jsx'));
+const RouteDetailsPage = lazy(() => import('./fleet/pages/RouteDetailsPage.jsx'));
+const MaintenanceFormPage = lazy(() => import('./fleet/pages/MaintenanceFormPage.jsx'));
+const MaintenanceDetailsPage = lazy(() => import('./fleet/pages/MaintenanceDetailsPage.jsx'));
+const FuelFormPage = lazy(() => import('./fleet/pages/FuelFormPage.jsx'));
+const FuelDetailsPage = lazy(() => import('./fleet/pages/FuelDetailsPage.jsx'));
+const InvoiceFormPage = lazy(() => import('./fleet/tripManagement/pages/invoice/InvoiceFormPage.jsx'));
+const InvoiceDetailsPage = lazy(() => import('./fleet/tripManagement/pages/invoice/InvoiceDetailsPage.jsx'));
+const ReportFormPage = lazy(() => import('./fleet/pages/ReportFormPage.jsx'));
+const ReportDetailsPage = lazy(() => import('./fleet/pages/ReportDetailsPage.jsx'));
+const ComplaintFormPage = lazy(() => import('./fleet/pages/ComplaintFormPage.jsx'));
+const ComplaintDetailsPage = lazy(() => import('./fleet/pages/ComplaintDetailsPage.jsx'));
+const DriverPerformanceFormPage = lazy(() => import('./fleet/pages/DriverPerformanceFormPage.jsx'));
+const DriverPerformanceDetailsPage = lazy(() => import('./fleet/pages/DriverPerformanceDetailsPage.jsx'));
 const Drivers = lazy(() => import('./fleet/pages/Drivers.jsx'));
 const RoutesPage = lazy(() => import('./fleet/pages/Routes.jsx'));
 const VehicleMaintenance = lazy(() => import('./fleet/pages/VehicleMaintenance.jsx'));
@@ -711,29 +734,64 @@ function App() {
               <Route path="vehicle-details/:id" element={<VehicleDetails />} />
               <Route path="driver-details/:id" element={<DriverDetails />} />
               <Route path="customer-details/:id" element={<CustomerDetails />} />
+              <Route path="vendor-details/:id" element={<VendorDetails />} />
+              <Route path="vendors/vendor-form" element={<VendorFormPage />} />
+              <Route path="vendors/vendor-form/:id" element={<VendorFormPage />} />
+              <Route path="customers/customer-form" element={<CustomerFormPage />} />
+              <Route path="customers/customer-form/:id" element={<CustomerFormPage />} />
               <Route path="vehicles" element={<Vehicles />} />
+              <Route path="vehicles/vehicle-form" element={<VehicleFormPage />} />
+              <Route path="vehicles/vehicle-form/:id" element={<VehicleFormPage />} />
               <Route path="drivers" element={<Drivers />} />
+              <Route path="drivers/driver-form" element={<DriverFormPage />} />
+              <Route path="drivers/driver-form/:id" element={<DriverFormPage />} />
               <Route path="routes" element={<RoutesPage />} />
+              <Route path="routes/route-form" element={<RouteFormPage />} />
+              <Route path="routes/route-form/:id" element={<RouteFormPage />} />
+              <Route path="routes/route-details/:id" element={<RouteDetailsPage />} />
               <Route path="maintenance" element={<VehicleMaintenance />} />
+              <Route path="maintenance/maintenance-form" element={<MaintenanceFormPage />} />
+              <Route path="maintenance/maintenance-form/:id" element={<MaintenanceFormPage />} />
               <Route path="fuel" element={<FuelLog />} />
+              <Route path="fuel/fuel-form" element={<FuelFormPage />} />
+              <Route path="fuel/fuel-form/:id" element={<FuelFormPage />} />
+              <Route path="fuel/fuel-details/:id" element={<FuelDetailsPage />} />
               <Route path="dispatch" element={<DispatchJobs />} />
+              <Route path="dispatch/job-form" element={<DispatchFormPage />} />
+              <Route path="dispatch/job-form/:id" element={<DispatchFormPage />} />
+              <Route path="dispatch/job-details/:id" element={<DispatchDetailsPage />} />
                <Route path="complaints" element={<Complaints />} />
-              <Route path="performance" element={<DriverPerformances />} />
+               <Route path="complaints/complaint-form" element={<ComplaintFormPage />} />
+               <Route path="complaints/complaint-form/:id" element={<ComplaintFormPage />} />
+               <Route path="complaints/complaint-details/:id" element={<ComplaintDetailsPage />} />
+               <Route path="performance" element={<DriverPerformances />} />
+               <Route path="performance/performance-form" element={<DriverPerformanceFormPage />} />
+               <Route path="performance/performance-form/:id" element={<DriverPerformanceFormPage />} />
+               <Route path="performance/performance-details/:id" element={<DriverPerformanceDetailsPage />} />
               <Route path="compliance" element={<DocumentTrackingDashboard />} />
               <Route path="alerts" element={<FleetAlerts />} />
 
               {/* Merged Trip Routes */}
               <Route path="trips" element={<Trips />} />
-              <Route path="trips/trip-form" element={<TripForm />} />
+              <Route path="trips/trip-form" element={<TripFormPage />} />
+              <Route path="trips/trip-form/:id" element={<TripFormPage />} />
               <Route path="trips/trip-details/:id" element={<TripDetails />} />
               <Route path="trips/dispatch/:id" element={<TripDispatchPage />} />
               <Route path="trips/trip-tracker/:id" element={<TripTracker />} />
+              <Route path="customers" element={<Customers />} />
               <Route path="trip-customers" element={<Customers />} />
+              <Route path="vendors" element={<Vendors />} />
               <Route path="trip-vendors" element={<Vendors />} />
               <Route path="invoices" element={<Invoices />} />
-              <Route path="invoices/new" element={<CreateInvoice />} />
-              <Route path="invoices/:id" element={<InvoiceDetailView />} />
-              <Route path="trip-reports" element={<Reports />} />
+              <Route path="invoices/invoice-form" element={<InvoiceFormPage />} />
+              <Route path="invoices/invoice-form/:id" element={<InvoiceFormPage />} />
+              <Route path="invoices/invoice-details/:id" element={<InvoiceDetailsPage />} />
+              <Route path="invoices/new" element={<InvoiceFormPage />} />
+              <Route path="invoices/:id" element={<InvoiceDetailsPage />} />
+              <Route path="trip-reports" element={<ReportsDashboard />} />
+              <Route path="trip-reports/report-form" element={<ReportFormPage />} />
+              <Route path="trip-reports/report-form/:id" element={<ReportFormPage />} />
+              <Route path="trip-reports/report-details/:id" element={<ReportDetailsPage />} />
             </Route>
 
             {/* ── NOTIFICATION ──────────────────────────────────────── */}

@@ -292,58 +292,58 @@ const TripTracker = () => {
   if (!trip) return <div className="p-10 text-center font-bold">Trip not found</div>;
 
   return (
-    <div className="animate-fade-in space-y-8 pb-20">
+    <div className="w-full space-y-3 p-3 sm:p-4 font-sans select-none pb-8 animate-fade-in">
       
       {/* HEADER BANNER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card border border-border rounded-theme p-6 shadow-sm">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D7E3EE)] rounded-xl p-3.5 shadow-2xs">
+        <div className="flex items-center gap-3">
           <button 
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-background-muted rounded-full transition-colors"
+            className="w-8 h-8 rounded-lg border border-[var(--color-border,#D7E3EE)] flex items-center justify-center text-[var(--color-foreground,#102A43)] hover:bg-slate-50 transition-colors cursor-pointer"
           >
-            <ChevronLeft size={24} />
+            <ChevronLeft size={16} />
           </button>
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">Trip Tracking</h1>
-              <span className={`px-3 py-1 rounded-full text-[10px] font-black border uppercase ${STATUS_COLORS[trip.tripStatus]}`}>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-foreground,#102A43)] tracking-tight uppercase">Trip Tracking</h1>
+              <span className={`px-2.5 py-0.5 rounded-md text-xs font-bold border uppercase ${STATUS_COLORS[trip.tripStatus]}`}>
                 {trip.tripStatus}
               </span>
             </div>
-            <p className="text-xs font-bold text-foreground-muted mt-1">TRIP #{trip.tripNo} • {trip.tripDate}</p>
+            <p className="text-xs text-[var(--color-foreground-muted,#60738E)] mt-0.5 font-mono">TRIP #{trip.tripNo} • {trip.tripDate}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary/10 p-2 rounded-theme text-primary">
-              <Truck size={18} />
+        <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-sky-50 text-[var(--color-primary,#0178BC)] flex items-center justify-center shrink-0">
+              <Truck size={16} />
             </div>
             <div>
-              <p className="text-[9px] font-black text-foreground-muted uppercase">Vehicle</p>
-              <p className="text-sm font-black text-foreground">{trip.vehiclePlateNumber || 'N/A'}</p>
+              <p className="text-[10px] font-bold text-[var(--color-foreground-muted,#60738E)] uppercase">Vehicle</p>
+              <p className="text-xs font-bold text-[var(--color-foreground,#102A43)]">{trip.vehiclePlateNumber || 'N/A'}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="bg-primary/10 p-2 rounded-theme text-primary">
-              <User size={18} />
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-sky-50 text-[var(--color-primary,#0178BC)] flex items-center justify-center shrink-0">
+              <User size={16} />
             </div>
             <div>
-              <p className="text-[9px] font-black text-foreground-muted uppercase">Driver</p>
-              <p className="text-sm font-black text-foreground">{trip.driverName || 'N/A'}</p>
+              <p className="text-[10px] font-bold text-[var(--color-foreground-muted,#60738E)] uppercase">Driver</p>
+              <p className="text-xs font-bold text-[var(--color-foreground,#102A43)]">{trip.driverName || 'N/A'}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         
         {/* LEFT COLUMN: VERTICAL TIMELINE */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-card border border-border rounded-theme p-8 shadow-sm h-full">
-            <div className="flex items-center gap-3 mb-10">
-              <MapPin size={20} className="text-primary" />
-              <h2 className="text-lg font-black text-foreground uppercase tracking-tight">Route Progress</h2>
+        <div className="lg:col-span-2 space-y-3">
+          <div className="bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D7E3EE)] rounded-xl p-4 shadow-2xs h-full">
+            <div className="flex items-center gap-2 mb-6 border-b border-[var(--color-border,#E4EAF4)] pb-2.5">
+              <MapPin size={16} className="text-[var(--color-primary,#0178BC)]" />
+              <h2 className="text-xs font-bold text-[var(--color-foreground,#102A43)] uppercase tracking-wider">Route Progress</h2>
             </div>
 
             <div className="relative pl-8 space-y-12">
@@ -423,30 +423,30 @@ const TripTracker = () => {
         </div>
 
         {/* RIGHT COLUMN: ACTIONS */}
-        <div className="space-y-6">
+        <div className="space-y-3">
           
           {/* STATUS UPDATE CARD */}
-          <div className="bg-card border border-border rounded-theme p-6 shadow-sm overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-3 bg-primary/5 rounded-bl-3xl">
-              <Activity size={24} className="text-primary/20" />
+          <div className="bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D7E3EE)] rounded-xl p-4 shadow-2xs overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-2.5 bg-sky-50 rounded-bl-2xl">
+              <Activity size={20} className="text-[var(--color-primary,#0178BC)]" />
             </div>
-            <h3 className="text-sm font-black text-foreground uppercase tracking-wider mb-6">Trip Controls</h3>
+            <h3 className="text-xs font-bold text-[var(--color-foreground,#102A43)] uppercase tracking-wider mb-4 border-b border-[var(--color-border,#E4EAF4)] pb-2">Trip Controls</h3>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
               {trip.tripStatus === 'CREATED' && (
                 <>
                   <button 
                     onClick={() => handleStatusUpdate('IN_PROGRESS')}
                     disabled={updatingStatus}
-                    className="w-full py-3 bg-primary text-white rounded-theme text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-md shadow-primary/20 flex items-center justify-center gap-2"
+                    className="w-full py-2 bg-[#00A9A8] hover:bg-[#009190] text-white rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <Activity size={16} />
+                    <Activity size={14} />
                     Start Trip
                   </button>
                   <button 
                     onClick={() => handleStatusUpdate('CANCELLED')}
                     disabled={updatingStatus}
-                    className="w-full py-3 bg-error/10 text-error border border-error/20 rounded-theme text-xs font-black uppercase tracking-widest hover:bg-error hover:text-white transition-all"
+                    className="w-full py-2 bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold hover:bg-rose-100 transition-all cursor-pointer"
                   >
                     Cancel Trip
                   </button>

@@ -27,8 +27,53 @@ public class TripVendor {
     @Column(name = "contact_person")
     private String contactPerson;
 
+    @Column(name = "contact_person_name")
+    private String contactPersonName;
+
     @Column(name = "phone")
     private String phone;
+
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "vendor_type")
+    private String vendorType;
+
+    @Column(name = "service_category")
+    private String serviceCategory;
+
+    @Column(name = "trn_number")
+    private String trnNumber;
+
+    @Column(name = "trade_license_number")
+    private String tradeLicenseNumber;
+
+    @Column(name = "designation")
+    private String designation;
+
+    @Column(name = "payment_terms_days")
+    private Integer paymentTermsDays;
+
+    @Column(name = "bank_name")
+    private String bankName;
+
+    @Column(name = "iban_number")
+    private String ibanNumber;
+
+    @Column(name = "billing_address", length = 1000)
+    private String billingAddress;
+
+    @Column(name = "emirate")
+    private String emirate;
+
+    @Column(name = "country")
+    private String country;
+
+    @Column(name = "notes", length = 1000)
+    private String notes;
+
+    @Column(name = "status")
+    private String status;
 
     @Builder.Default
     @Column(name = "active")

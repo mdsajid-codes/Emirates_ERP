@@ -17,6 +17,11 @@ public class TripCustomerResponse {
     private String phone;
     private String email;
     private String trnNumber;
+    private String tradeLicenseNumber;
+    private String contactPersonName;
+    private String designation;
+    private String status;
+    private String emirate;
     private String address;
     private java.math.BigDecimal creditLimit;
     private Integer paymentTermsDays;
@@ -32,9 +37,14 @@ public class TripCustomerResponse {
                 .customerCode(customer.getCustomerCode())
                 .companyName(customer.getCompanyName())
                 .contactPerson(customer.getContactPerson())
+                .contactPersonName(customer.getContactPersonName())
                 .phone(customer.getPhone())
                 .email(customer.getEmail())
                 .trnNumber(customer.getTrnNumber())
+                .tradeLicenseNumber(customer.getTradeLicenseNumber())
+                .designation(customer.getDesignation())
+                .status(customer.getStatus())
+                .emirate(customer.getEmirate())
                 .address(customer.getAddress())
                 .creditLimit(customer.getCreditLimit())
                 .paymentTermsDays(customer.getPaymentTermsDays())

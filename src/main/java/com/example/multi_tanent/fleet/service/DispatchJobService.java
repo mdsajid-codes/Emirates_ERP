@@ -76,7 +76,8 @@ public class DispatchJobService {
             job.setLinkedTrip(trip);
         }
 
-        return mapToResponse(dispatchJobRepository.save(job));
+        DispatchJob savedJob = dispatchJobRepository.saveAndFlush(job);
+        return mapToResponse(savedJob);
     }
 
     @Transactional
@@ -120,7 +121,8 @@ public class DispatchJobService {
             tripRepository.save(trip);
         }
 
-        return mapToResponse(dispatchJobRepository.save(job));
+        DispatchJob savedJob = dispatchJobRepository.saveAndFlush(job);
+        return mapToResponse(savedJob);
     }
 
     @Transactional
@@ -187,6 +189,7 @@ public class DispatchJobService {
         }
     }
 
+    @Transactional(readOnly = true)
     public Page<DispatchJobResponse> listJobs(DeliveryStatus status, Long tripId, String search, Pageable pageable) {
         Tenant tenant = getCurrentTenant();
         if (tripId != null) {
@@ -201,6 +204,7 @@ public class DispatchJobService {
                 .map(this::mapToResponse);
     }
 
+    @Transactional(readOnly = true)
     public DispatchJobResponse getJob(Long id) {
         Tenant tenant = getCurrentTenant();
         return dispatchJobRepository.findByIdAndTenantId(id, tenant.getId())
@@ -229,8 +233,8 @@ public class DispatchJobService {
                 .id(job.getId())
                 .jobNo(job.getJobNo())
                 .jobDate(job.getJobDate())
-                .customerId(job.getCustomer().getId())
-                .customerName(job.getCustomer().getCompanyName())
+                .customerId(job.getCustomer() != null ? job.getCustomer().getId() : null)
+                .customerName(job.getCustomer() != null ? job.getCustomer().getCompanyName() : null)
                 .pickupLocation(job.getPickupLocation())
                 .dropLocation(job.getDropLocation())
                 .cargoDetails(job.getCargoDetails())
