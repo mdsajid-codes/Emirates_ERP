@@ -1,65 +1,89 @@
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import FleetSidebar from "./FleetSidebar";
-import FleetHeader from "./FleetHeader";
-import { Outlet } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Outlet } from 'react-router-dom';
+import axios from 'axios';
+import FleetSidebar from './FleetSidebar';
+import FleetHeader from './FleetHeader';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function FleetLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
-  const [isHovered, setIsHovered] = useState(false);
+  const { isRTL } = useLanguage();
 
-  const isExpanded = !isDesktopCollapsed || isHovered;
+  const [companyInfo, setCompanyInfo] = useState({ name: 'Company Hub', logoPath: null, logoBlob: null });
+  const API_URL = import.meta.env.VITE_API_BASE_URL;
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const cachedName = sessionStorage.getItem('company_name');
+    const cachedLogo = sessionStorage.getItem('company_logo');
+
+    if (cachedName) {
+      setCompanyInfo({ name: cachedName, logoPath: null, logoBlob: cachedLogo || null });
+      return;
+    }
+
+    const fetchCompanyInfo = async () => {
+      try {
+        const headers = { Authorization: `Bearer ${token}` };
+        const res = await axios.get(`${API_URL}/company-info`, { headers });
+        const realName = res.data.companyName || 'Company Hub';
+        sessionStorage.setItem('company_name', realName);
+
+        if (res.data.logoPath) {
+          setCompanyInfo({ name: realName, logoPath: res.data.logoPath, logoBlob: cachedLogo || null });
+        }
+      } catch (err) {
+        console.error('Failed to fetch company info', err);
+      }
+    };
+    fetchCompanyInfo();
+  }, [API_URL]);
+
+  const displayLogo = companyInfo.logoBlob || '/icon.svg';
 
   return (
-    <div className="flex flex-col h-screen bg-background font-sans">
-      <FleetHeader onMenuClick={() => setSidebarOpen(true)} />
+    <div className="h-screen bg-[#F7FAFF] flex flex-col font-sans overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Top Header */}
+      <FleetHeader onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
-      <div className="flex flex-1 overflow-hidden relative">
+      {/* Sidebar and Main Content Area */}
+      <div className="flex pt-[64px] h-screen overflow-hidden">
         {/* Desktop Sidebar */}
-        <aside
-          className={`hidden lg:flex flex-col bg-sidebar-bg text-sidebar-text border-r border-border overflow-y-auto no-scrollbar transition-all duration-300 ${isExpanded ? 'w-[220px]' : 'w-[68px]'}`}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          <FleetSidebar
-            isCollapsedMode={!isExpanded}
-            isDesktopCollapsed={isDesktopCollapsed}
-            setIsDesktopCollapsed={setIsDesktopCollapsed}
-          />
+        <aside className={`hidden lg:block fixed ${isRTL ? 'right-0' : 'left-0'} top-0 bottom-0 z-40 w-[80px]`}>
+          <FleetSidebar companyLogo={displayLogo} />
         </aside>
 
-        {/* Mobile Sidebar */}
+        {/* Main Content Area */}
+        <main className={`flex-1 ${isRTL ? 'lg:mr-[80px]' : 'lg:ml-[80px]'} h-[calc(100vh-64px)] overflow-y-auto no-scrollbar`}>
+          <Outlet />
+        </main>
+
+        {/* Mobile sidebar drawer */}
         <AnimatePresence>
           {sidebarOpen && (
             <>
-              {/* Overlay */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
+                className="fixed inset-0 bg-black/50 z-40 lg:hidden"
                 onClick={() => setSidebarOpen(false)}
               />
-
-              {/* Drawer */}
               <motion.div
-                initial={{ x: "-100%" }}
+                initial={{ x: isRTL ? '100%' : '-100%' }}
                 animate={{ x: 0 }}
-                exit={{ x: "-100%" }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="fixed top-0 left-0 h-full w-64 z-50 bg-sidebar-bg lg:hidden overflow-y-auto no-scrollbar"
+                exit={{ x: isRTL ? '100%' : '-100%' }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className={`fixed top-0 ${isRTL ? 'right-0' : 'left-0'} h-full w-[80px] z-50 bg-[#003E5B] shadow-2xl lg:hidden`}
               >
-                <FleetSidebar onClose={() => setSidebarOpen(false)} />
+                <FleetSidebar companyLogo={displayLogo} onLinkClick={() => setSidebarOpen(false)} />
               </motion.div>
             </>
           )}
         </AnimatePresence>
-
-        {/* Main Area */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-background-muted/20 no-scrollbar">
-          <Outlet />
-        </main>
       </div>
     </div>
   );

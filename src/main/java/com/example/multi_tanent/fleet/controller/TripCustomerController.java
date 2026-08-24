@@ -30,6 +30,12 @@ public class TripCustomerController {
         return ResponseEntity.ok(TripCustomerResponse.fromEntity(saved));
     }
 
+    @PostMapping(consumes = {"application/json"})
+    public ResponseEntity<TripCustomerResponse> createJson(@RequestBody TripCustomer customer) {
+        TripCustomer saved = service.createCustomer(customer, null);
+        return ResponseEntity.ok(TripCustomerResponse.fromEntity(saved));
+    }
+
     @GetMapping
     public ResponseEntity<List<TripCustomerResponse>> getAllActive() {
         return ResponseEntity.ok(service.getAllActive().stream()
@@ -62,6 +68,14 @@ public class TripCustomerController {
             @RequestPart("customer") TripCustomer customer,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         TripCustomer updated = service.updateCustomer(id, customer, file);
+        return ResponseEntity.ok(TripCustomerResponse.fromEntity(updated));
+    }
+
+    @PutMapping(value = "/{id}", consumes = {"application/json"})
+    public ResponseEntity<TripCustomerResponse> updateJson(
+            @PathVariable Long id,
+            @RequestBody TripCustomer customer) {
+        TripCustomer updated = service.updateCustomer(id, customer, null);
         return ResponseEntity.ok(TripCustomerResponse.fromEntity(updated));
     }
 

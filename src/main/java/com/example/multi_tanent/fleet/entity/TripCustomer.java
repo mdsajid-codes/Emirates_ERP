@@ -43,6 +43,21 @@ public class TripCustomer {
     @Column(name = "trn_number")         // UAE Tax Registration Number
     private String trnNumber;
 
+    @Column(name = "trade_license_number")
+    private String tradeLicenseNumber;
+
+    @Column(name = "contact_person_name")
+    private String contactPersonName;
+
+    @Column(name = "designation")
+    private String designation;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "emirate")
+    private String emirate;
+
     @Column(nullable = false)
     private String address;
 

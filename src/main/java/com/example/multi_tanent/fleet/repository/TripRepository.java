@@ -47,7 +47,6 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
     List<Trip> findAllByTenantAndCustomerAndTripStatusAndInvoiceIsNull(
         Tenant tenant, TripCustomer customer, TripStatus status);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT COALESCE(MAX(t.tripNo), 0) FROM Trip t WHERE t.tenant = :tenant")
     Integer findMaxTripNoByTenant(@Param("tenant") Tenant tenant);
 

@@ -16,14 +16,14 @@ const TripDetailsHeader = ({ trip }) => {
   );
 
   return (
-    <div className="bg-card rounded-theme shadow-sm border border-border p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-6 animate-slide-down">
+    <div className="bg-[var(--color-card,#ffffff)] rounded-xl shadow-2xs border border-[var(--color-border,#D7E3EE)] p-3 sm:p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 select-none">
       
       {/* LEFT SIDE */}
-      <div className="space-y-3">
+      <div className="space-y-1.5">
         
         {/* Trip Number + Status */}
-        <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-black text-primary tracking-tight uppercase">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-foreground,#102A43)] tracking-tight uppercase font-mono leading-none">
             TRP-{trip.tripNo}
           </h1>
 
@@ -31,19 +31,19 @@ const TripDetailsHeader = ({ trip }) => {
         </div>
 
         {/* Date + Created By */}
-        <div className="flex flex-wrap items-center gap-8 text-[10px] font-black text-foreground-muted uppercase tracking-widest">
+        <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-[var(--color-foreground-muted,#60738E)]">
           
-          <div className="flex items-center gap-2">
-            <FiCalendar size={16} className="text-primary" />
+          <div className="flex items-center gap-1.5">
+            <FiCalendar size={14} className="text-[var(--color-primary,#0178BC)]" />
             <span>{trip.tripDate}</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <FiUser size={16} className="text-primary" />
+          <div className="flex items-center gap-1.5">
+            <FiUser size={14} className="text-[var(--color-primary,#0178BC)]" />
             <span>
               Created by{" "}
-              <span className="text-foreground">
-                {trip.createdBy}
+              <span className="text-[var(--color-foreground,#102A43)] font-bold">
+                {trip.createdBy || 'System Admin'}
               </span>
             </span>
           </div>
@@ -52,23 +52,14 @@ const TripDetailsHeader = ({ trip }) => {
       </div>
 
       {/* RIGHT SIDE BUTTONS */}
-      <div className="flex items-center gap-4">
-        
+      <div className="flex items-center gap-2">
         <button
           onClick={() => navigate(`/fleet-dashboard/trips/trip-form?id=${trip.id}`)}
-          className="flex items-center gap-3 bg-primary text-primary-foreground px-6 py-2.5 rounded-theme text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-md shadow-primary/20 active:scale-95"
+          className="inline-flex items-center gap-2 bg-[#00A9A8] hover:bg-[#009190] text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
         >
-          <FiEdit2 size={14} />
+          <FiEdit2 size={13} />
           Edit Trip
         </button>
-
-        {/* <button
-          className="flex items-center gap-2 border border-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm hover:bg-gray-50 transition"
-        >
-          <FiPrinter size={14} />
-          Print BOL
-        </button> */}
-
       </div>
     </div>
   );

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="088-enhanced-vendor-schema" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <addColumn tableName="trip_vendors">
+            <column name="contact_person_name" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="vendor_type" type="VARCHAR(100)"/>
+            <column name="service_category" type="VARCHAR(100)"/>
+            <column name="trn_number" type="VARCHAR(100)"/>
+            <column name="trade_license_number" type="VARCHAR(100)"/>
+            <column name="designation" type="VARCHAR(100)"/>
+            <column name="payment_terms_days" type="INT"/>
+            <column name="bank_name" type="VARCHAR(100)"/>
+            <column name="iban_number" type="VARCHAR(100)"/>
+            <column name="billing_address" type="VARCHAR(1000)"/>
+            <column name="emirate" type="VARCHAR(100)"/>
+            <column name="country" type="VARCHAR(100)"/>
+            <column name="notes" type="VARCHAR(1000)"/>
+            <column name="status" type="VARCHAR(50)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

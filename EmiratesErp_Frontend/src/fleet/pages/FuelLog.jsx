@@ -10,19 +10,30 @@ import {
   Calendar,
   FileText,
   Navigation,
-  Download
+  Download,
+  Eye,
+  CircleDollarSign,
+  Droplet,
+  TrendingUp,
+  Truck,
+  User,
+  LayoutGrid,
+  List,
+  Columns
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import FuelEntryForm from './FuelEntryForm';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function FuelLog() {
+  const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_BASE_URL;
+  const { t, isRTL } = useLanguage();
+
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [vehicleFilter, setVehicleFilter] = useState('');
   const [vehicles, setVehicles] = useState([]);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState(null);
 
   // Pagination & Debouncing states
   const [page, setPage] = useState(1);
@@ -67,23 +78,27 @@ export default function FuelLog() {
 
   const fetchVehicles = async () => {
     try {
-      const response = await axios.get(`${API_URL}/fleet/vehicles`, {
+      const response = await axios.get(`${API_URL}/fleet/vehicles/all`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
-      setVehicles(response.data.content || []);
+      setVehicles(response.data.content || response.data || []);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
     }
   };
 
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
+
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this entry?')) return;
+    if (!window.confirm('Are you sure you want to delete this fuel entry?')) return;
     try {
       await axios.delete(`${API_URL}/fleet/fuel/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
       toast.success('Entry deleted');
-      fetchEntries();
+      fetchEntries(page, size);
     } catch (error) {
       console.error('Error deleting entry:', error);
       toast.error('Failed to delete entry');
@@ -99,212 +114,258 @@ export default function FuelLog() {
     fetchEntries(page, size, debouncedSearch, vehicleFilter);
   }, [page, size]);
 
-  useEffect(() => {
-    fetchVehicles();
-  }, []);
+  const totalQuantitySum = entries.reduce((acc, curr) => acc + (curr.quantityLiters || 0), 0);
+  const totalSpendSum = entries.reduce((acc, curr) => acc + (curr.amountAed || 0), 0);
+  const avgPricePerLiter = totalQuantitySum > 0 ? (totalSpendSum / totalQuantitySum).toFixed(2) : '0.00';
 
   return (
-    <>
-      <div className="p-6 space-y-6 animate-in fade-in duration-500">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Fuel Management</h1>
-            <p className="text-sm text-foreground-muted">Track fuel consumption, costs, and efficiency across the fleet</p>
+    <div className="w-full space-y-3 p-3 sm:p-4 font-sans select-none pb-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 rounded-xl bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center justify-center text-[var(--color-primary,#0178BC)]">
+            <Fuel className="w-5 h-5 stroke-[2]" />
           </div>
-          <button
-            onClick={() => {
-              setSelectedEntry(null);
-              setIsFormOpen(true);
-            }}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-theme font-medium hover:opacity-90 transition-all shadow-md shadow-primary/20"
-          >
-            <Plus size={18} />
-            New Fuel Entry
-          </button>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-foreground,#0F172A)] tracking-tight leading-tight">
+              {t('fleet.fuel.title') || 'Fuel Management'}
+            </h1>
+            <p className="text-xs text-[var(--color-foreground-muted,#656873)] mt-0.5">
+              {t('fleet.fuel.subtitle') || 'Track fuel consumption, costs, and efficiency across the fleet'}
+            </p>
+          </div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-card border border-border rounded-theme p-4 flex flex-wrap items-center gap-4 shadow-sm">
-          <div className="flex-1 min-w-[200px] relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-muted" size={18} />
-            <input
-              type="text"
-              placeholder="Search by fuel station or notes..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-theme text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 transition-all text-foreground"
-            />
-          </div>
+        <button
+          onClick={() => navigate('/fleet-dashboard/fuel/fuel-form')}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#00A9A8] text-white text-xs font-semibold hover:opacity-90 shadow-xs transition-all cursor-pointer"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>{t('fleet.fuel.newEntry') || 'New Fuel Entry'}</span>
+        </button>
+      </div>
 
-          <div className="flex items-center gap-2">
-            <Filter size={18} className="text-foreground-muted" />
+      {/* 4 KPI Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        
+        {/* Total Fuel Logs */}
+        <div className="bg-[var(--color-card,#ffffff)] rounded-xl p-3 border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center gap-3 h-[80px]">
+          <div className="w-10 h-10 rounded-full bg-sky-50 text-[var(--color-primary,#0178BC)] flex items-center justify-center shrink-0">
+            <Fuel className="w-5 h-5 stroke-[2]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-[var(--color-foreground,#0F172A)] truncate">{t('fleet.fuel.totalLogs') || 'Total Fuel Logs'}</p>
+            <p className="text-xl font-extrabold text-[var(--color-foreground,#0F172A)] leading-none my-0.5">{totalElements}</p>
+            <p className="text-[10px] text-[var(--color-foreground-muted,#656873)] truncate">Refueling Records</p>
+          </div>
+        </div>
+
+        {/* Total Quantity (Liters) */}
+        <div className="bg-[var(--color-card,#ffffff)] rounded-xl p-3 border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center gap-3 h-[80px]">
+          <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <Droplet className="w-5 h-5 stroke-[2]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-[var(--color-foreground,#0F172A)] truncate">{t('fleet.fuel.totalQuantity') || 'Total Quantity (L)'}</p>
+            <p className="text-xl font-extrabold text-amber-600 leading-none my-0.5 font-mono">{totalQuantitySum.toFixed(1)} L</p>
+            <p className="text-[10px] text-amber-600 font-semibold truncate">Page Volume Sum</p>
+          </div>
+        </div>
+
+        {/* Total Spend (AED) */}
+        <div className="bg-[var(--color-card,#ffffff)] rounded-xl p-3 border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center gap-3 h-[80px]">
+          <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+            <CircleDollarSign className="w-5 h-5 stroke-[2]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-[var(--color-foreground,#0F172A)] truncate">{t('fleet.fuel.totalSpend') || 'Total Spend (AED)'}</p>
+            <p className="text-xl font-extrabold text-[var(--color-foreground,#0F172A)] leading-none my-0.5 font-mono">{totalSpendSum.toFixed(2)} AED</p>
+            <p className="text-[10px] text-[var(--color-foreground-muted,#656873)] truncate">Page Total Cost</p>
+          </div>
+        </div>
+
+        {/* Avg Price / Liter */}
+        <div className="bg-[var(--color-card,#ffffff)] rounded-xl p-3 border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center gap-3 h-[80px]">
+          <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <TrendingUp className="w-5 h-5 stroke-[2]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-[var(--color-foreground,#0F172A)] truncate">{t('fleet.fuel.avgPrice') || 'Avg Price / Liter'}</p>
+            <p className="text-xl font-extrabold text-emerald-600 leading-none my-0.5 font-mono">{avgPricePerLiter} AED/L</p>
+            <p className="text-[10px] text-emerald-600 font-semibold truncate">Calculated Rate</p>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Main Table Section Card */}
+      <div className="bg-[var(--color-card,#ffffff)] rounded-xl border border-[var(--color-border,#D9DADD)] shadow-xs overflow-hidden">
+        
+        {/* Table Controls Top Bar */}
+        <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-[var(--color-border,#D9DADD)]">
+          
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-foreground-muted,#656873)] w-4 h-4" />
+              <input
+                type="text"
+                placeholder={t('fleet.fuel.searchPlaceholder') || "Search by fuel station or notes..."}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D9DADD)] rounded-xl text-xs text-[var(--color-foreground,#0F172A)] outline-none focus:border-[var(--color-primary,#0178BC)] transition-colors"
+              />
+            </div>
+
+            {/* Vehicle Filter */}
             <select
-              className="bg-background border border-border rounded-theme px-3 py-2 text-sm focus:outline-none text-foreground"
               value={vehicleFilter}
               onChange={(e) => setVehicleFilter(e.target.value)}
+              className="px-3 py-2 border border-[var(--color-border,#D9DADD)] rounded-xl text-xs font-semibold text-[var(--color-foreground,#0F172A)] bg-[var(--color-card,#ffffff)] outline-none cursor-pointer"
             >
-              <option value="">All Vehicles</option>
+              <option value="">{t('fleet.vehicles.allVehicles') || 'All Vehicles'}</option>
               {vehicles.map(v => (
                 <option key={v.id} value={v.id}>{v.plateNumber}</option>
               ))}
             </select>
           </div>
+
+          <div className="flex items-center gap-1.5 justify-end w-full sm:w-auto">
+            <button className="w-9 h-9 bg-[var(--color-primary,#0178BC)] text-white rounded-xl flex items-center justify-center shadow-xs cursor-pointer">
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button className="w-9 h-9 border border-[var(--color-border,#D9DADD)] text-[var(--color-foreground,#0F172A)] rounded-xl flex items-center justify-center hover:bg-slate-50 transition-colors cursor-pointer">
+              <List className="w-4 h-4" />
+            </button>
+            <button className="w-9 h-9 border border-[var(--color-border,#D9DADD)] text-[var(--color-border,#D9DADD)] rounded-xl flex items-center justify-center hover:bg-slate-50 transition-colors cursor-pointer">
+              <Columns className="w-4 h-4" />
+            </button>
+          </div>
+
         </div>
 
-        {/* Table */}
-        <div className="bg-card border border-border rounded-theme shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-muted/50 border-b border-border">
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Vehicle</th>
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Driver</th>
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Type / Station</th>
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider text-right">Quantity</th>
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider text-right">Cost</th>
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider text-right">Odometer</th>
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider text-right">Actions</th>
+        {/* Data Table Container */}
+        <div className="overflow-x-auto">
+          {loading ? (
+            <div className="p-8 text-center text-xs text-[var(--color-foreground-muted,#656873)]">
+              {isRTL ? 'جاري تحميل سجلات الوقود...' : 'Loading fuel entries...'}
+            </div>
+          ) : entries.length === 0 ? (
+            <div className="p-8 text-center text-xs text-[var(--color-foreground-muted,#656873)]">
+              {isRTL ? 'لا توجد سجلات وقود متاحة' : 'No fuel logs found'}
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse min-w-[950px]">
+              <thead className="bg-slate-50 border-b border-[var(--color-border,#D9DADD)]">
+                <tr>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">VEHICLE</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">DRIVER</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">DATE</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">TYPE / STATION</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">QUANTITY</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">COST (AED)</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">ODOMETER</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)] text-center">ACTIONS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
-                {loading ? (
-                  <tr>
-                    <td colSpan="8" className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                        <p className="text-sm text-foreground-muted">Loading logs...</p>
+              <tbody className="divide-y divide-[var(--color-border,#D9DADD)] text-xs text-[var(--color-foreground,#0F172A)]">
+                {entries.map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td 
+                      onClick={() => navigate(`/fleet-dashboard/fuel/fuel-details/${row.id}`)}
+                      className="p-3.5 cursor-pointer font-bold text-[var(--color-primary,#0178BC)] hover:underline font-mono"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Truck size={13} className="text-[var(--color-primary,#0178BC)]" />
+                        {row.vehiclePlateNumber || row.vehicle?.plateNumber || 'N/A'}
+                      </span>
+                    </td>
+
+                    <td className="p-3.5 font-semibold">
+                      <span className="flex items-center gap-1.5">
+                        <User size={13} className="text-slate-400" />
+                        {row.driverName || row.driver?.name || 'Unassigned'}
+                      </span>
+                    </td>
+
+                    <td className="p-3.5 font-semibold text-[var(--color-foreground-muted,#656873)]">{row.fuelDate}</td>
+
+                    <td className="p-3.5">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-bold text-[var(--color-foreground,#0F172A)]">{row.fuelType || 'DIESEL'}</span>
+                        <span className="text-[10px] text-[var(--color-foreground-muted,#656873)]">{row.fuelStation || 'ADNOC Station'}</span>
+                      </div>
+                    </td>
+
+                    <td className="p-3.5 font-bold font-mono text-amber-700">{row.quantityLiters} L</td>
+
+                    <td className="p-3.5 font-bold font-mono text-emerald-600">{row.amountAed} AED</td>
+
+                    <td className="p-3.5 font-bold font-mono text-slate-600">{row.odometerReading ? `${row.odometerReading} KM` : '–'}</td>
+
+                    <td className="p-3.5">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => navigate(`/fleet-dashboard/fuel/fuel-details/${row.id}`)}
+                          className="w-8 h-8 rounded-lg bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D9DADD)] text-[var(--color-primary,#0178BC)] hover:bg-blue-50 transition-colors flex items-center justify-center shadow-xs cursor-pointer"
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4 stroke-[1.8]" />
+                        </button>
+
+                        <button
+                          onClick={() => navigate(`/fleet-dashboard/fuel/fuel-form/${row.id}`)}
+                          className="w-8 h-8 rounded-lg bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D9DADD)] text-[var(--color-primary,#0178BC)] hover:bg-blue-50 transition-colors flex items-center justify-center shadow-xs cursor-pointer"
+                          title="Edit Entry"
+                        >
+                          <Edit2 className="w-4 h-4 stroke-[1.8]" />
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(row.id)}
+                          className="w-8 h-8 rounded-lg bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D9DADD)] text-[#D6282F] hover:bg-rose-50 transition-colors flex items-center justify-center shadow-xs cursor-pointer"
+                          title="Delete Entry"
+                        >
+                          <Trash2 className="w-4 h-4 stroke-[1.8]" />
+                        </button>
                       </div>
                     </td>
                   </tr>
-                ) : entries.length === 0 ? (
-                  <tr>
-                    <td colSpan="8" className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center gap-2 opacity-40">
-                        <Fuel size={48} />
-                        <p className="text-lg font-medium">No fuel logs found</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  entries.map((entry) => (
-                    <tr key={entry.id} className="hover:bg-muted/30 transition-colors group">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-foreground">{entry.vehiclePlateNumber}</span>
-                          <span className="text-xs text-foreground-muted">{entry.vehicleMakeModel}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {entry.driverName}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {entry.fuelDate}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">{entry.fuelType}</span>
-                          <span className="text-xs text-foreground-muted flex items-center gap-1">
-                            <Navigation size={10} />
-                            {entry.fuelStation || 'N/A'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-foreground">
-                        {entry.quantityLiters} L
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-primary">
-                        AED {entry.amountAed}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-foreground-muted">
-                        {entry.odometerReading?.toLocaleString()} km
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {entry.receiptPath && (
-                            <button
-                              onClick={() => window.open(`${API_URL}/files/${entry.receiptPath}`, '_blank')}
-                              className="p-1.5 hover:bg-blue-50 text-blue-500 rounded-theme transition-colors"
-                              title="View Receipt"
-                            >
-                              <FileText size={16} />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => {
-                              setSelectedEntry(entry);
-                              setIsFormOpen(true);
-                            }}
-                            className="p-1.5 hover:bg-primary/10 text-foreground-muted hover:text-primary rounded-theme transition-colors"
-                            title="Edit Entry"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(entry.id)}
-                            className="p-1.5 hover:bg-red-50 text-foreground-muted hover:text-red-500 rounded-theme transition-colors"
-                            title="Delete Entry"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
-          </div>
+          )}
+        </div>
 
-          {/* Premium Pagination Footer */}
-          <div className="px-6 py-4 border-t border-border flex items-center justify-between bg-muted/20">
-            <div className="text-sm text-foreground-muted font-bold">
-              Showing page <span className="text-foreground">{page}</span> of{' '}
-              <span className="text-foreground">{totalPages || 1}</span> ({totalElements} records)
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-foreground-muted font-bold">Rows per page:</span>
-                <select
-                  value={size}
-                  onChange={(e) => {
-                    setSize(Number(e.target.value));
-                    setPage(1);
-                  }}
-                  className="bg-background border border-border rounded-theme text-xs px-2 py-1 outline-none focus:ring-1 focus:ring-primary text-foreground font-semibold"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-              <div className="flex gap-1.5">
-                <button
-                  disabled={page <= 1 || loading}
-                  onClick={() => setPage(page - 1)}
-                  className="px-3 py-1 bg-background border border-border hover:bg-muted text-foreground rounded-theme text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  Previous
-                </button>
-                <button
-                  disabled={page >= totalPages || loading}
-                  onClick={() => setPage(page + 1)}
-                  className="px-3 py-1 bg-background border border-border hover:bg-muted text-foreground rounded-theme text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
+        {/* Footer Pagination Bar */}
+        <div className="p-4 flex items-center justify-between border-t border-[var(--color-border,#D9DADD)] text-xs text-[var(--color-foreground-muted,#656873)]">
+          <div>
+            Showing page <span className="font-bold text-[var(--color-foreground,#0F172A)]">{page}</span> of <span className="font-bold text-[var(--color-foreground,#0F172A)]">{totalPages || 1}</span> ({totalElements} records)
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button 
+              disabled={page <= 1}
+              onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+              className="px-2.5 py-1.5 border border-[var(--color-border,#D9DADD)] rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              &lt;
+            </button>
+            <button className="px-3 py-1.5 bg-[var(--color-primary,#0178BC)] text-white font-bold rounded-lg cursor-pointer">
+              {page}
+            </button>
+            <button 
+              disabled={page >= totalPages}
+              onClick={() => setPage(prev => prev + 1)}
+              className="px-2.5 py-1.5 border border-[var(--color-border,#D9DADD)] rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              &gt;
+            </button>
           </div>
         </div>
+
       </div>
-      <FuelEntryForm
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onSave={fetchEntries}
-        initialData={selectedEntry}
-      />
-    </>
+
+    </div>
   );
 }

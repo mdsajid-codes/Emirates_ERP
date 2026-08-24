@@ -29,6 +29,9 @@ public class TripCustomerService {
         if (customer.getCustomerCode() == null || customer.getCustomerCode().isEmpty()) {
             customer.setCustomerCode(generateCustomerCode());
         }
+        if (customer.getContactPersonName() != null && customer.getContactPerson() == null) {
+            customer.setContactPerson(customer.getContactPersonName());
+        }
         if (file != null && !file.isEmpty()) {
             try {
                 String path = storageService.storeFile(file, "customers/contracts", getCurrentTenant().getTenantId());
@@ -59,10 +62,15 @@ public class TripCustomerService {
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
         
         existing.setCompanyName(update.getCompanyName());
-        existing.setContactPerson(update.getContactPerson());
+        existing.setContactPerson(update.getContactPersonName() != null ? update.getContactPersonName() : update.getContactPerson());
+        existing.setContactPersonName(update.getContactPersonName());
         existing.setPhone(update.getPhone());
         existing.setEmail(update.getEmail());
         existing.setTrnNumber(update.getTrnNumber());
+        existing.setTradeLicenseNumber(update.getTradeLicenseNumber());
+        existing.setDesignation(update.getDesignation());
+        existing.setStatus(update.getStatus());
+        existing.setEmirate(update.getEmirate());
         existing.setAddress(update.getAddress());
         existing.setCreditLimit(update.getCreditLimit());
         existing.setPaymentTermsDays(update.getPaymentTermsDays());
