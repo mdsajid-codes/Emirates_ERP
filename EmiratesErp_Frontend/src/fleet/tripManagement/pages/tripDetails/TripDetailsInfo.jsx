@@ -41,47 +41,47 @@ const TripDetailsInfo = ({ trip }) => {
   )
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
 
       {/* ───────── Route & Driver ───────── */}
-      <div className="bg-card rounded-theme shadow-sm border border-border p-6 space-y-6">
-        <h3 className="text-xs font-black text-foreground-muted uppercase tracking-widest flex items-center gap-2 border-b border-border pb-4">
-          <FiTruck size={16} className="text-primary" />
+      <div className="bg-[var(--color-card,#ffffff)] rounded-xl shadow-2xs border border-[var(--color-border,#D7E3EE)] p-3.5 space-y-3">
+        <h3 className="text-xs font-bold text-[var(--color-foreground-muted,#60738E)] uppercase tracking-wider flex items-center gap-1.5 border-b border-[var(--color-border,#E4EAF4)] pb-2.5">
+          <FiTruck size={14} className="text-[var(--color-primary,#0178BC)]" />
           Route & Driver
         </h3>
 
         <div>
-          <p className="text-[10px] font-black text-foreground-muted uppercase tracking-widest opacity-60">Driver</p>
-          <p className="text-lg font-black text-foreground tracking-tight">{trip.driverName}</p>
+          <p className="text-[10px] font-bold text-[var(--color-foreground-muted,#60738E)] uppercase">Driver</p>
+          <p className="text-sm font-bold text-[var(--color-foreground,#102A43)] mt-0.5">{trip.driverName || 'Unassigned'}</p>
         </div>
 
         <div>
-          <p className="text-[10px] font-black text-foreground-muted uppercase tracking-widest opacity-60">Container No</p>
-          <p className="text-base font-bold text-foreground">
-            {trip.containerNumber}
+          <p className="text-[10px] font-bold text-[var(--color-foreground-muted,#60738E)] uppercase">Container No</p>
+          <p className="text-xs font-bold text-[var(--color-foreground,#102A43)] font-mono mt-0.5">
+            {trip.containerNumber || 'N/A'}
           </p>
         </div>
 
         <div>
-          <p className="text-[10px] font-black text-foreground-muted uppercase tracking-widest mb-4 opacity-60">Route Timeline</p>
+          <p className="text-[10px] font-bold text-[var(--color-foreground-muted,#60738E)] uppercase mb-2">Route Timeline</p>
 
-          <div className="space-y-4 text-sm relative before:absolute before:left-1 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
-            <div className="flex items-start gap-4 relative">
-              <span className="w-2.5 h-2.5 mt-1.5 rounded-full bg-primary ring-4 ring-primary/10 z-10"></span>
+          <div className="space-y-2.5 text-xs relative before:absolute before:left-1 before:top-2 before:bottom-2 before:w-0.5 before:bg-[var(--color-border,#D7E3EE)] pl-3.5">
+            <div className="relative">
+              <span className="w-2.5 h-2.5 absolute -left-3.5 top-1 rounded-full bg-[var(--color-primary,#0178BC)]"></span>
               <div>
-                <p className="text-[10px] font-black text-foreground-muted uppercase tracking-widest opacity-60">Pickup</p>
-                <p className="font-bold text-foreground">
-                  {trip.fromLocation}
+                <p className="text-[10px] font-bold text-[var(--color-foreground-muted,#60738E)] uppercase">Pickup</p>
+                <p className="font-bold text-[var(--color-foreground,#102A43)] mt-0.5 text-xs">
+                  {trip.fromLocation || 'N/A'}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-4 relative">
-              <span className="w-2.5 h-2.5 mt-1.5 rounded-full bg-foreground/20 z-10"></span>
+            <div className="relative pt-0.5">
+              <span className="w-2.5 h-2.5 absolute -left-3.5 top-1.5 rounded-full bg-slate-400"></span>
               <div>
-                <p className="text-[10px] font-black text-foreground-muted uppercase tracking-widest opacity-60">Drop-off</p>
-                <p className="font-bold text-foreground">
-                  {trip.toLocation}
+                <p className="text-[10px] font-bold text-[var(--color-foreground-muted,#60738E)] uppercase">Drop-off</p>
+                <p className="font-bold text-[var(--color-foreground,#102A43)] mt-0.5 text-xs">
+                  {trip.toLocation || 'N/A'}
                 </p>
               </div>
             </div>
@@ -90,90 +90,93 @@ const TripDetailsInfo = ({ trip }) => {
       </div>
 
       {/* ───────── Customer ───────── */}
-      <div className="bg-card rounded-theme shadow-sm border border-border p-6 space-y-6">
-        <h3 className="text-xs font-black text-foreground-muted uppercase tracking-widest flex items-center gap-2 border-b border-border pb-4">
-          <FiUser size={16} className="text-primary" />
+      <div className="bg-[var(--color-card,#ffffff)] rounded-xl shadow-2xs border border-[var(--color-border,#D7E3EE)] p-3.5 space-y-3">
+        <h3 className="text-xs font-bold text-[var(--color-foreground-muted,#60738E)] uppercase tracking-wider flex items-center gap-1.5 border-b border-[var(--color-border,#E4EAF4)] pb-2.5">
+          <FiUser size={14} className="text-[var(--color-primary,#0178BC)]" />
           Customer
         </h3>
 
         <div>
-          <p className="text-[10px] font-black text-foreground-muted uppercase tracking-widest opacity-60">Company</p>
-          <div className="flex items-center gap-3">
-            <p className="text-lg font-black text-foreground tracking-tight">
-              {trip.customerName}
+          <p className="text-[10px] font-bold text-[var(--color-foreground-muted,#60738E)] uppercase">Company</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="text-sm font-bold text-[var(--color-foreground,#102A43)]">
+              {trip.customerName || 'N/A'}
             </p>
-            <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-widest">
-              {trip.customerType}
-            </span>
+            {trip.customerType && (
+              <span className="text-[10px] font-bold bg-sky-50 text-[var(--color-primary,#0178BC)] px-2 py-0.5 rounded-md uppercase">
+                {trip.customerType}
+              </span>
+            )}
           </div>
         </div>
 
         <div>
-          <p className="text-[10px] font-black text-foreground-muted uppercase tracking-widest opacity-60">Contact Person</p>
-          <p className="text-base font-bold text-foreground">
+          <p className="text-[10px] font-bold text-[var(--color-foreground-muted,#60738E)] uppercase">Contact Person</p>
+          <p className="text-xs font-bold text-[var(--color-foreground,#102A43)] mt-0.5">
             {trip.contactPerson || "Not Specified"}
           </p>
         </div>
 
         <div>
-          <p className="text-[10px] font-black text-foreground-muted uppercase tracking-widest opacity-60">Ref / Job No</p>
-          <p className="text-base font-bold text-foreground">
+          <p className="text-[10px] font-bold text-[var(--color-foreground-muted,#60738E)] uppercase">Ref / Job No</p>
+          <p className="text-xs font-bold text-[var(--color-foreground,#102A43)] font-mono mt-0.5">
             {trip.customerRefJobNo || "N/A"}
           </p>
         </div>
 
         {trip.remarks && (
-          <div className="bg-background-muted p-4 rounded-theme border border-border/50 text-xs font-bold text-foreground-muted leading-relaxed">
-             <span className="block text-[10px] uppercase tracking-widest mb-2 opacity-50">Remarks</span>
+          <div className="bg-slate-50 p-2.5 rounded-lg border border-[var(--color-border,#D7E3EE)] text-xs font-medium text-[var(--color-foreground,#102A43)]">
+             <span className="block text-[10px] font-bold uppercase text-[var(--color-foreground-muted,#60738E)] mb-1">Remarks</span>
              {trip.remarks}
           </div>
         )}
       </div>
 
       {/* ───────── Financial Summary ───────── */}
-      <div className="bg-primary rounded-theme shadow-xl text-primary-foreground p-8 space-y-8 relative overflow-hidden group">
-        
-        {/* Decorative background element */}
-        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl transition-transform group-hover:scale-110" />
-
-        <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 border-b border-white/20 pb-4">
-            <IoMdWallet size={20} className="text-warning" />
+      <div className="bg-[#00A9A8] rounded-xl shadow-2xs text-white p-4 space-y-3 relative overflow-hidden flex flex-col justify-between">
+        <div>
+          <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 border-b border-white/20 pb-2.5">
+            <IoMdWallet size={16} className="text-amber-300" />
             Financial Summary
-        </h3>
+          </h3>
 
-        <div className="space-y-4 text-xs font-bold">
+          <div className="space-y-2 text-xs font-bold pt-2">
 
-          <div className="flex justify-between items-center opacity-80">
-            <span className="uppercase tracking-widest">Base Amount</span>
-            <span className="text-sm">{formatCurrency(trip.amount)} AED</span>
+            <div className="flex justify-between items-center opacity-90">
+              <span className="uppercase text-[11px]">Base Amount</span>
+              <span className="text-xs font-mono">{formatCurrency(trip.amount)} AED</span>
+            </div>
+
+            <div className="flex justify-between items-center opacity-90">
+              <span className="uppercase text-[11px]">Token Advance</span>
+              <span className="text-xs font-mono">{formatCurrency(trip.tokenAmount)} AED</span>
+            </div>
+
+            <div className="flex justify-between items-center opacity-90">
+              <span className="uppercase text-[11px]">Other Charges</span>
+              <span className="text-xs font-mono">{formatCurrency(trip.otherCharges)} AED</span>
+            </div>
+
+            <div className="flex justify-between items-center opacity-90">
+              <span className="uppercase text-[11px]">VAT (5%)</span>
+              <span className="text-xs font-mono">{formatCurrency(trip.vatAmount)} AED</span>
+            </div>
+
           </div>
+        </div>
 
-          <div className="flex justify-between items-center opacity-80">
-            <span className="uppercase tracking-widest">Token Advance</span>
-            <span className="text-sm">{formatCurrency(trip.tokenAmount)} AED</span>
-          </div>
-
-          <div className="flex justify-between items-center opacity-80">
-            <span className="uppercase tracking-widest">Other Charges</span>
-            <span className="text-sm">{formatCurrency(trip.otherCharges)} AED</span>
-          </div>
-
-          <div className="flex justify-between items-center opacity-80">
-            <span className="uppercase tracking-widest">VAT (5%)</span>
-            <span className="text-sm">{formatCurrency(trip.vatAmount)} AED</span>
-          </div>
-
-          <div className="border-t border-white/30 pt-6 flex flex-col items-end gap-1">
-            <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Total Amount</span>
-            <div className="flex items-baseline gap-2">
-               <span className="text-4xl font-black tracking-tight">{formatCurrency(trip.totalAmount)}</span>
-               <span className="text-sm opacity-60 font-black">AED</span>
+        <div className="border-t border-white/20 pt-2">
+          <div className="flex justify-between items-baseline">
+            <span className="text-[10px] font-bold uppercase text-white/80">Total Amount</span>
+            <div className="flex items-baseline gap-1">
+               <span className="text-xl font-black tracking-tight">{formatCurrency(trip.totalAmount)}</span>
+               <span className="text-xs font-bold opacity-80">AED</span>
             </div>
           </div>
 
-          <div className="pt-4 flex justify-between items-center text-[10px] font-black uppercase tracking-widest bg-white/10 p-3 rounded-theme">
-            <span className="opacity-70">Driver Commission</span>
-            <span className="text-warning">{formatCurrency(trip.driverCommission)} AED</span>
+          <div className="mt-2 flex justify-between items-center text-[10px] font-bold uppercase bg-white/10 p-2 rounded-lg">
+            <span className="opacity-80">Driver Commission</span>
+            <span className="text-amber-300 font-mono">{formatCurrency(trip.driverCommission)} AED</span>
           </div>
 
         </div>

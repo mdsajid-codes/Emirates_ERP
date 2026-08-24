@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
   Plus,
   Filter,
   Search,
-  Edit2,
-  Trash2,
   Calendar,
   FileText,
   User,
@@ -13,33 +12,24 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  MoreVertical
+  Eye,
+  Trash2,
+  LayoutGrid,
+  List,
+  Columns
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { complaintApi } from '../services/complaintApi';
-import ComplaintForm from './ComplaintForm';
-
-const STATUS_COLORS = {
-  OPEN: 'bg-blue-100 text-blue-700',
-  IN_PROGRESS: 'bg-yellow-100 text-yellow-700',
-  RESOLVED: 'bg-green-100 text-green-700',
-  ESCALATED: 'bg-red-100 text-red-700'
-};
-
-const RISK_COLORS = {
-  LOW: 'bg-gray-100 text-gray-700',
-  MEDIUM: 'bg-orange-100 text-orange-700',
-  HIGH: 'bg-red-100 text-red-700',
-  CRITICAL: 'bg-purple-100 text-purple-700 shadow-sm animate-pulse'
-};
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function Complaints() {
+  const navigate = useNavigate();
+  const { t, isRTL } = useLanguage();
+
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [riskFilter, setRiskFilter] = useState('');
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedComplaint, setSelectedComplaint] = useState(null);
 
   // Pagination & Debouncing states
   const [page, setPage] = useState(1);
@@ -101,246 +91,299 @@ export default function Complaints() {
     fetchComplaints(page, size, debouncedSearch, statusFilter, riskFilter);
   }, [page, size]);
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'RESOLVED': return 'bg-[#E3F8EE] text-[#01A958] border-[#A3EBC7]';
+      case 'ESCALATED': return 'bg-rose-50 text-rose-600 border-rose-200';
+      case 'IN_PROGRESS': return 'bg-amber-50 text-amber-600 border-amber-200';
+      default: return 'bg-sky-50 text-[var(--color-primary,#0178BC)] border-sky-200';
+    }
+  };
+
+  const getRiskColor = (risk) => {
+    switch (risk) {
+      case 'CRITICAL': return 'bg-purple-100 text-purple-700 animate-pulse font-extrabold';
+      case 'HIGH': return 'bg-rose-100 text-rose-700 font-extrabold';
+      case 'MEDIUM': return 'bg-amber-100 text-amber-700 font-extrabold';
+      default: return 'bg-slate-100 text-slate-700 font-extrabold';
+    }
+  };
+
+  const openCount = complaints.filter(c => c.status === 'OPEN' || c.status === 'IN_PROGRESS').length;
+  const criticalCount = complaints.filter(c => c.riskLevel === 'CRITICAL' || c.riskLevel === 'HIGH').length;
+  const resolvedCount = complaints.filter(c => c.status === 'RESOLVED').length;
+
   return (
-    <div className="p-6 space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <AlertTriangle className="text-primary" />
-            Complaint & Incident Management
-          </h1>
-          <p className="text-sm text-foreground-muted">Track and resolve fleet-related issues, accidents, and driver behavior</p>
+    <div className="w-full space-y-3 p-3 sm:p-4 font-sans select-none pb-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 rounded-xl bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center justify-center text-amber-600">
+            <AlertTriangle className="w-5 h-5 stroke-[2]" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-foreground,#0F172A)] tracking-tight leading-tight">
+              {t('fleet.complaints.title') || 'Complaint & Incident Management'}
+            </h1>
+            <p className="text-xs text-[var(--color-foreground-muted,#656873)] mt-0.5">
+              {t('fleet.complaints.subtitle') || 'Track and resolve fleet-related issues, accidents, and driver behavior'}
+            </p>
+          </div>
         </div>
+
         <button
-          onClick={() => {
-            setSelectedComplaint(null);
-            setIsFormOpen(true);
-          }}
-          className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-theme font-medium hover:opacity-90 transition-all shadow-md shadow-primary/20"
+          onClick={() => navigate('/fleet-dashboard/complaints/complaint-form')}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#00A9A8] text-white text-xs font-semibold hover:opacity-90 shadow-xs transition-all cursor-pointer"
         >
-          <Plus size={18} />
-          Report Incident
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>{t('fleet.complaints.reportIncident') || 'Report Incident'}</span>
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-card border border-border rounded-theme p-4 flex flex-wrap items-center gap-4 shadow-sm">
-        <div className="flex-1 min-w-[200px] relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-muted" size={18} />
-          <input
-            type="text"
-            placeholder="Search complaints..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-theme text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 transition-all text-foreground"
-          />
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Filter size={18} className="text-foreground-muted" />
-            <select
-              className="bg-background border border-border rounded-theme px-3 py-2 text-sm focus:outline-none text-foreground"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="">All Statuses</option>
-              <option value="OPEN">Open</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="RESOLVED">Resolved</option>
-              <option value="ESCALATED">Escalated</option>
-            </select>
+      {/* 4 KPI Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        
+        {/* Total Complaints */}
+        <div className="bg-[var(--color-card,#ffffff)] rounded-xl p-3 border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center gap-3 h-[80px]">
+          <div className="w-10 h-10 rounded-full bg-sky-50 text-[var(--color-primary,#0178BC)] flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-5 h-5 stroke-[2]" />
           </div>
-
-          <div className="flex items-center gap-2">
-            <AlertCircle size={18} className="text-foreground-muted" />
-            <select
-              className="bg-background border border-border rounded-theme px-3 py-2 text-sm focus:outline-none text-foreground"
-              value={riskFilter}
-              onChange={(e) => setRiskFilter(e.target.value)}
-            >
-              <option value="">All Risks</option>
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
-              <option value="CRITICAL">Critical</option>
-            </select>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-[var(--color-foreground,#0F172A)] truncate">{t('fleet.complaints.totalComplaints') || 'Total Complaints'}</p>
+            <p className="text-xl font-extrabold text-[var(--color-foreground,#0F172A)] leading-none my-0.5">{totalElements}</p>
+            <p className="text-[10px] text-[var(--color-foreground-muted,#656873)] truncate">Logged Fleet Incidents</p>
           </div>
         </div>
+
+        {/* Open / Pending */}
+        <div className="bg-[var(--color-card,#ffffff)] rounded-xl p-3 border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center gap-3 h-[80px]">
+          <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <Clock className="w-5 h-5 stroke-[2]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-[var(--color-foreground,#0F172A)] truncate">{t('fleet.complaints.openPending') || 'Open / Pending'}</p>
+            <p className="text-xl font-extrabold text-amber-600 leading-none my-0.5">{openCount}</p>
+            <p className="text-[10px] text-amber-600 font-semibold truncate">Active Resolution Queue</p>
+          </div>
+        </div>
+
+        {/* Critical / High Risk */}
+        <div className="bg-[var(--color-card,#ffffff)] rounded-xl p-3 border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center gap-3 h-[80px]">
+          <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+            <AlertCircle className="w-5 h-5 stroke-[2]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-[var(--color-foreground,#0F172A)] truncate">{t('fleet.complaints.criticalHigh') || 'Critical / High Risk'}</p>
+            <p className="text-xl font-extrabold text-rose-600 leading-none my-0.5 font-mono">{criticalCount}</p>
+            <p className="text-[10px] text-rose-600 font-semibold truncate">Urgent Escalations</p>
+          </div>
+        </div>
+
+        {/* Resolved Incidents */}
+        <div className="bg-[var(--color-card,#ffffff)] rounded-xl p-3 border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center gap-3 h-[80px]">
+          <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <CheckCircle className="w-5 h-5 stroke-[2]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-[var(--color-foreground,#0F172A)] truncate">{t('fleet.complaints.resolvedIncidents') || 'Resolved Incidents'}</p>
+            <p className="text-xl font-extrabold text-emerald-600 leading-none my-0.5 font-mono">{resolvedCount}</p>
+            <p className="text-[10px] text-emerald-600 font-semibold truncate">Closed Case Log</p>
+          </div>
+        </div>
+
       </div>
 
-      {/* Table */}
-      <div className="bg-card border border-border rounded-theme shadow-sm overflow-hidden">
+      {/* Main Table Section Card */}
+      <div className="bg-[var(--color-card,#ffffff)] rounded-xl border border-[var(--color-border,#D9DADD)] shadow-xs overflow-hidden">
+        
+        {/* Table Controls Top Bar */}
+        <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-[var(--color-border,#D9DADD)]">
+          
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-foreground-muted,#656873)] w-4 h-4" />
+              <input
+                type="text"
+                placeholder={t('fleet.complaints.searchPlaceholder') || "Search complaints by ID, description or reporter..."}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D9DADD)] rounded-xl text-xs text-[var(--color-foreground,#0F172A)] outline-none focus:border-[var(--color-primary,#0178BC)] transition-colors"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 border border-[var(--color-border,#D9DADD)] rounded-xl text-xs font-semibold text-[var(--color-foreground,#0F172A)] bg-[var(--color-card,#ffffff)] outline-none cursor-pointer"
+            >
+              <option value="">All Statuses</option>
+              <option value="OPEN">OPEN</option>
+              <option value="IN_PROGRESS">IN PROGRESS</option>
+              <option value="RESOLVED">RESOLVED</option>
+              <option value="ESCALATED">ESCALATED</option>
+            </select>
+
+            {/* Risk Filter */}
+            <select
+              value={riskFilter}
+              onChange={(e) => setRiskFilter(e.target.value)}
+              className="px-3 py-2 border border-[var(--color-border,#D9DADD)] rounded-xl text-xs font-semibold text-[var(--color-foreground,#0F172A)] bg-[var(--color-card,#ffffff)] outline-none cursor-pointer"
+            >
+              <option value="">All Risks</option>
+              <option value="LOW">LOW</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="HIGH">HIGH</option>
+              <option value="CRITICAL">CRITICAL</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5 justify-end w-full sm:w-auto">
+            <button className="w-9 h-9 bg-[var(--color-primary,#0178BC)] text-white rounded-xl flex items-center justify-center shadow-xs cursor-pointer">
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button className="w-9 h-9 border border-[var(--color-border,#D9DADD)] text-[var(--color-foreground,#0F172A)] rounded-xl flex items-center justify-center hover:bg-slate-50 transition-colors cursor-pointer">
+              <List className="w-4 h-4" />
+            </button>
+            <button className="w-9 h-9 border border-[var(--color-border,#D9DADD)] text-[var(--color-border,#D9DADD)] rounded-xl flex items-center justify-center hover:bg-slate-50 transition-colors cursor-pointer">
+              <Columns className="w-4 h-4" />
+            </button>
+          </div>
+
+        </div>
+
+        {/* Data Table Container */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-muted/50 border-b border-border">
-                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Complaint ID</th>
-                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Issue & Date</th>
-                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Related To</th>
-                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Risk Level</th>
-                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Assigned To</th>
-                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {loading ? (
+          {loading ? (
+            <div className="p-8 text-center text-xs text-[var(--color-foreground-muted,#656873)]">
+              {isRTL ? 'جاري تحميل الشكاوى...' : 'Loading complaints log...'}
+            </div>
+          ) : complaints.length === 0 ? (
+            <div className="p-8 text-center text-xs text-[var(--color-foreground-muted,#656873)]">
+              {isRTL ? 'لا توجد شكاوى مسجلة' : 'No complaints found'}
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse min-w-[950px]">
+              <thead className="bg-slate-50 border-b border-[var(--color-border,#D9DADD)]">
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                      <p className="text-sm text-foreground-muted">Loading complaints...</p>
-                    </div>
-                  </td>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">COMPLAINT ID</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">ISSUE & DATE</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">RELATED TO</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">RISK LEVEL</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">STATUS</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">ASSIGNED TO</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)] text-center">ACTIONS</th>
                 </tr>
-              ) : complaints.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center gap-2 opacity-40">
-                      <AlertCircle size={48} />
-                      <p className="text-lg font-medium">No complaints found</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                complaints.map((complaint) => (
-                  <tr key={complaint.id} className="hover:bg-muted/30 transition-colors group">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="font-mono text-xs font-black text-primary bg-primary/5 px-2 py-1 rounded border border-primary/10">
-                        {complaint.complaintCode || 'Draft'}
-                      </span>
+              </thead>
+              <tbody className="divide-y divide-[var(--color-border,#D9DADD)] text-xs text-[var(--color-foreground,#0F172A)]">
+                {complaints.map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td 
+                      onClick={() => navigate(`/fleet-dashboard/complaints/complaint-details/${row.id}`)}
+                      className="p-3.5 cursor-pointer font-bold text-[var(--color-primary,#0178BC)] hover:underline font-mono"
+                    >
+                      CMP-{row.id}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-foreground line-clamp-1">{complaint.type}: {complaint.category}</span>
-                        <span className="text-xs text-foreground-muted flex items-center gap-1">
-                          <Calendar size={12} />
-                          {new Date(complaint.reportedDate).toLocaleString()}
-                        </span>
+
+                    <td className="p-3.5">
+                      <div className="space-y-0.5">
+                        <p className="font-bold text-[var(--color-foreground,#0F172A)] line-clamp-1">{row.description}</p>
+                        <p className="text-[10px] text-[var(--color-foreground-muted,#656873)] font-mono">
+                          {row.type} ({row.category || 'General'}) • {row.reportedDate ? new Date(row.reportedDate).toLocaleDateString() : 'N/A'}
+                        </p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-1">
-                        {complaint.tripNo && (
-                          <span className="text-xs font-medium flex items-center gap-1 text-primary">
-                            <FileText size={12} />
-                            Trip #{complaint.tripNo}
-                          </span>
+
+                    <td className="p-3.5">
+                      <div className="space-y-0.5 text-[11px]">
+                        {row.vehiclePlateNumber && (
+                          <p className="font-bold text-[var(--color-foreground,#0F172A)] font-mono flex items-center gap-1">
+                            <Truck size={12} className="text-[var(--color-primary,#0178BC)]" /> {row.vehiclePlateNumber}
+                          </p>
                         )}
-                        {complaint.vehiclePlateNumber && (
-                          <span className="text-xs flex items-center gap-1 text-foreground-muted">
-                            <Truck size={12} />
-                            {complaint.vehiclePlateNumber}
-                          </span>
+                        {row.driverName && (
+                          <p className="text-[var(--color-foreground-muted,#656873)] font-semibold flex items-center gap-1">
+                            <User size={12} /> {row.driverName}
+                          </p>
                         )}
-                        {complaint.driverName && (
-                          <span className="text-xs flex items-center gap-1 text-foreground-muted">
-                            <User size={12} />
-                            {complaint.driverName}
-                          </span>
+                        {!row.vehiclePlateNumber && !row.driverName && (
+                          <span className="text-slate-400 italic">General Incident</span>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${RISK_COLORS[complaint.riskLevel]}`}>
-                        {complaint.riskLevel}
+
+                    <td className="p-3.5">
+                      <span className={`px-2 py-0.5 rounded text-[10px] uppercase ${getRiskColor(row.riskLevel)}`}>
+                        {row.riskLevel || 'LOW'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_COLORS[complaint.status]}`}>
-                        {complaint.status.replace('_', ' ')}
+
+                    <td className="p-3.5">
+                      <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold border ${getStatusColor(row.status)}`}>
+                        {row.status || 'OPEN'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground-muted">
-                      {complaint.assignedToName || 'Unassigned'}
+
+                    <td className="p-3.5 font-semibold text-[var(--color-foreground-muted,#656873)]">
+                      {row.assignedToName || 'Unassigned'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {complaint.attachmentPath && (
-                          <button
-                            onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL}/files/${complaint.attachmentPath}`, '_blank')}
-                            className="p-1.5 hover:bg-blue-50 text-blue-500 rounded-theme transition-colors"
-                            title="View Evidence"
-                          >
-                            <FileText size={16} />
-                          </button>
-                        )}
+
+                    <td className="p-3.5">
+                      <div className="flex items-center justify-center gap-1.5">
                         <button
-                          onClick={() => {
-                            setSelectedComplaint(complaint);
-                            setIsFormOpen(true);
-                          }}
-                          className="p-1.5 hover:bg-primary/10 text-foreground-muted hover:text-primary rounded-theme transition-colors"
-                          title="Edit Complaint"
+                          onClick={() => navigate(`/fleet-dashboard/complaints/complaint-details/${row.id}`)}
+                          className="w-8 h-8 rounded-lg bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D9DADD)] text-[var(--color-primary,#0178BC)] hover:bg-blue-50 transition-colors flex items-center justify-center shadow-xs cursor-pointer"
+                          title="View Details"
                         >
-                          <Edit2 size={16} />
+                          <Eye className="w-4 h-4 stroke-[1.8]" />
                         </button>
+
                         <button
-                          onClick={() => handleDelete(complaint.id)}
-                          className="p-1.5 hover:bg-red-50 text-foreground-muted hover:text-red-500 rounded-theme transition-colors"
-                          title="Delete"
+                          onClick={() => handleDelete(row.id)}
+                          className="w-8 h-8 rounded-lg bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D9DADD)] text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center shadow-xs cursor-pointer"
+                          title="Delete Complaint"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 className="w-4 h-4 stroke-[1.8]" />
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
-        {/* Premium Pagination Footer */}
-        <div className="px-6 py-4 border-t border-border flex items-center justify-between bg-muted/20">
-          <div className="text-sm text-foreground-muted font-bold">
-            Showing page <span className="text-foreground">{page}</span> of{' '}
-            <span className="text-foreground">{totalPages || 1}</span> ({totalElements} records)
+        {/* Footer Pagination Bar */}
+        <div className="p-4 flex items-center justify-between border-t border-[var(--color-border,#D9DADD)] text-xs text-[var(--color-foreground-muted,#656873)]">
+          <div>
+            Showing page <span className="font-bold text-[var(--color-foreground,#0F172A)]">{page}</span> of <span className="font-bold text-[var(--color-foreground,#0F172A)]">{totalPages || 1}</span> ({totalElements} records)
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-foreground-muted font-bold">Rows per page:</span>
-              <select
-                value={size}
-                onChange={(e) => {
-                  setSize(Number(e.target.value));
-                  setPage(1);
-                }}
-                className="bg-background border border-border rounded-theme text-xs px-2 py-1 outline-none focus:ring-1 focus:ring-primary text-foreground font-semibold"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-            <div className="flex gap-1.5">
-              <button
-                disabled={page <= 1 || loading}
-                onClick={() => setPage(page - 1)}
-                className="px-3 py-1 bg-background border border-border hover:bg-muted text-foreground rounded-theme text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                Previous
-              </button>
-              <button
-                disabled={page >= totalPages || loading}
-                onClick={() => setPage(page + 1)}
-                className="px-3 py-1 bg-background border border-border hover:bg-muted text-foreground rounded-theme text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                Next
-              </button>
-            </div>
+          <div className="flex items-center gap-1.5">
+            <button 
+              disabled={page <= 1}
+              onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+              className="px-2.5 py-1.5 border border-[var(--color-border,#D9DADD)] rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              &lt;
+            </button>
+            <button className="px-3 py-1.5 bg-[var(--color-primary,#0178BC)] text-white font-bold rounded-lg cursor-pointer">
+              {page}
+            </button>
+            <button 
+              disabled={page >= totalPages}
+              onClick={() => setPage(prev => prev + 1)}
+              className="px-2.5 py-1.5 border border-[var(--color-border,#D9DADD)] rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              &gt;
+            </button>
           </div>
         </div>
+
       </div>
 
-      <ComplaintForm
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onSave={fetchComplaints}
-        initialData={selectedComplaint}
-      />
     </div>
   );
 }

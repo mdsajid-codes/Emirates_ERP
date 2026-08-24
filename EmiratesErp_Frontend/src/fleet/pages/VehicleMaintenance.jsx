@@ -12,18 +12,27 @@ import {
   Search,
   Edit2,
   Trash2,
-  CheckCircle
+  CheckCircle,
+  Eye,
+  CircleDollarSign,
+  Truck,
+  LayoutGrid,
+  List,
+  Columns
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import VehicleMaintenanceForm from './VehicleMaintenanceForm';
+import { useLanguage } from '../../context/LanguageContext';
 import CompleteMaintenanceModal from './CompleteMaintenanceModal';
 
 export default function VehicleMaintenance() {
+  const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_BASE_URL;
+  const { t, isRTL } = useLanguage();
+
   const [maintenance, setMaintenance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
 
@@ -67,19 +76,6 @@ export default function VehicleMaintenance() {
     }
   };
 
-  const handleStatusUpdate = async (id, status) => {
-    try {
-      await axios.patch(`${API_URL}/fleet/maintenance/${id}/status?status=${status}`, {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-      });
-      toast.success(`Status updated to ${status}`);
-      fetchMaintenance();
-    } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Failed to update status');
-    }
-  };
-
   useEffect(() => {
     setPage(1);
     fetchMaintenance(1, size, debouncedSearch, statusFilter);
@@ -89,263 +85,303 @@ export default function VehicleMaintenance() {
     fetchMaintenance(page, size, debouncedSearch, statusFilter);
   }, [page, size]);
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this maintenance record?")) return;
+    try {
+      await axios.delete(`${API_URL}/fleet/maintenance/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      toast.success("Maintenance record deleted successfully");
+      fetchMaintenance(page, size);
+    } catch (error) {
+      console.error("Error deleting maintenance record:", error);
+      toast.error("Failed to delete maintenance record");
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'REQUESTED': return 'bg-gray-100 text-gray-700 border-gray-200';
       case 'SCHEDULED': return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'IN_PROGRESS': return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'COMPLETED': return 'bg-green-100 text-green-700 border-green-200';
+      case 'COMPLETED': return 'bg-[#E3F8EE] text-[#01A958] border-[#A3EBC7]';
       case 'CANCELLED': return 'bg-red-100 text-red-700 border-red-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'REQUESTED': return <Clock size={14} />;
-      case 'SCHEDULED': return <Calendar size={14} />;
-      case 'IN_PROGRESS': return <Wrench size={14} />;
-      case 'COMPLETED': return <CheckCircle2 size={14} />;
-      case 'CANCELLED': return <AlertCircle size={14} />;
-      default: return null;
-    }
-  };
+  const totalCostSum = maintenance.reduce((acc, curr) => acc + (curr.actualCost || curr.estimatedCost || 0), 0);
 
   return (
-    <>
-      <div className="p-6 space-y-6 animate-in fade-in duration-500">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Vehicle Maintenance</h1>
-            <p className="text-sm text-foreground-muted">Track and manage fleet service schedules and costs</p>
+    <div className="w-full space-y-3 p-3 sm:p-4 font-sans select-none pb-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 rounded-xl bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center justify-center text-[var(--color-primary,#0178BC)]">
+            <Wrench className="w-5 h-5 stroke-[2]" />
           </div>
-          <button
-            onClick={() => {
-              setSelectedRecord(null);
-              setIsFormOpen(true);
-            }}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-theme font-medium hover:opacity-90 transition-all shadow-md shadow-primary/20"
-          >
-            <Plus size={18} />
-            New Request
-          </button>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-foreground,#0F172A)] tracking-tight leading-tight">
+              {t('fleet.maintenance.title') || 'Vehicle Maintenance'}
+            </h1>
+            <p className="text-xs text-[var(--color-foreground-muted,#656873)] mt-0.5">
+              {t('fleet.maintenance.subtitle') || 'Track and manage fleet service schedules and costs'}
+            </p>
+          </div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-card border border-border rounded-theme p-4 flex flex-wrap items-center gap-4 shadow-sm">
-          <div className="flex-1 min-w-[200px] relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-muted" size={18} />
-            <input
-              type="text"
-              placeholder="Search by plate number or garage..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-theme text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 transition-all text-foreground"
-            />
-          </div>
+        <button
+          onClick={() => navigate('/fleet-dashboard/maintenance/maintenance-form')}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#00A9A8] text-white text-xs font-semibold hover:opacity-90 shadow-xs transition-all cursor-pointer"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>{t('fleet.maintenance.newRequest') || 'New Request'}</span>
+        </button>
+      </div>
 
-          <div className="flex items-center gap-2">
-            <Filter size={18} className="text-foreground-muted" />
+      {/* 4 KPI Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        
+        {/* Total Maintenance */}
+        <div className="bg-[var(--color-card,#ffffff)] rounded-xl p-3 border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center gap-3 h-[80px]">
+          <div className="w-10 h-10 rounded-full bg-sky-50 text-[var(--color-primary,#0178BC)] flex items-center justify-center shrink-0">
+            <Wrench className="w-5 h-5 stroke-[2]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-[var(--color-foreground,#0F172A)] truncate">{t('fleet.maintenance.totalMaintenance') || 'Total Maintenance'}</p>
+            <p className="text-xl font-extrabold text-[var(--color-foreground,#0F172A)] leading-none my-0.5">{totalElements}</p>
+            <p className="text-[10px] text-[var(--color-foreground-muted,#656873)] truncate">Service Tickets</p>
+          </div>
+        </div>
+
+        {/* In Service / Progress */}
+        <div className="bg-[var(--color-card,#ffffff)] rounded-xl p-3 border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center gap-3 h-[80px]">
+          <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <Clock className="w-5 h-5 stroke-[2]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-[var(--color-foreground,#0F172A)] truncate">{t('fleet.maintenance.inService') || 'In Service / Progress'}</p>
+            <p className="text-xl font-extrabold text-amber-600 leading-none my-0.5">{maintenance.filter(m => m.status === 'IN_PROGRESS').length}</p>
+            <p className="text-[10px] text-amber-600 font-semibold truncate">Active Workshop Jobs</p>
+          </div>
+        </div>
+
+        {/* Scheduled Requests */}
+        <div className="bg-[var(--color-card,#ffffff)] rounded-xl p-3 border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center gap-3 h-[80px]">
+          <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+            <Calendar className="w-5 h-5 stroke-[2]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-[var(--color-foreground,#0F172A)] truncate">{t('fleet.maintenance.scheduledRequests') || 'Scheduled Requests'}</p>
+            <p className="text-xl font-extrabold text-[var(--color-foreground,#0F172A)] leading-none my-0.5">{maintenance.filter(m => m.status === 'SCHEDULED' || m.status === 'REQUESTED').length}</p>
+            <p className="text-[10px] text-[var(--color-foreground-muted,#656873)] truncate">Upcoming Maintenance</p>
+          </div>
+        </div>
+
+        {/* Total Cost (AED) */}
+        <div className="bg-[var(--color-card,#ffffff)] rounded-xl p-3 border border-[var(--color-border,#D9DADD)] shadow-xs flex items-center gap-3 h-[80px]">
+          <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <CircleDollarSign className="w-5 h-5 stroke-[2]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-[var(--color-foreground,#0F172A)] truncate">{t('fleet.maintenance.totalCost') || 'Total Cost (AED)'}</p>
+            <p className="text-xl font-extrabold text-emerald-600 leading-none my-0.5 font-mono">{totalCostSum} AED</p>
+            <p className="text-[10px] text-emerald-600 font-semibold truncate">Page Total Expense</p>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Main Table Section Card */}
+      <div className="bg-[var(--color-card,#ffffff)] rounded-xl border border-[var(--color-border,#D9DADD)] shadow-xs overflow-hidden">
+        
+        {/* Table Controls Top Bar */}
+        <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-[var(--color-border,#D9DADD)]">
+          
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-foreground-muted,#656873)] w-4 h-4" />
+              <input
+                type="text"
+                placeholder={t('fleet.maintenance.searchPlaceholder') || "Search by plate number or garage..."}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D9DADD)] rounded-xl text-xs text-[var(--color-foreground,#0F172A)] outline-none focus:border-[var(--color-primary,#0178BC)] transition-colors"
+              />
+            </div>
+
+            {/* Status Filter */}
             <select
-              className="bg-background border border-border rounded-theme px-3 py-2 text-sm focus:outline-none text-foreground"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 border border-[var(--color-border,#D9DADD)] rounded-xl text-xs font-semibold text-[var(--color-foreground,#0F172A)] bg-[var(--color-card,#ffffff)] outline-none cursor-pointer"
             >
-              <option value="">All Statuses</option>
-              <option value="REQUESTED">Requested</option>
-              <option value="SCHEDULED">Scheduled</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CANCELLED">Cancelled</option>
+              <option value="">{t('fleet.drivers.allStatuses') || 'All Statuses'}</option>
+              <option value="REQUESTED">REQUESTED</option>
+              <option value="SCHEDULED">SCHEDULED</option>
+              <option value="IN_PROGRESS">IN PROGRESS</option>
+              <option value="COMPLETED">COMPLETED</option>
+              <option value="CANCELLED">CANCELLED</option>
             </select>
           </div>
+
+          <div className="flex items-center gap-1.5 justify-end w-full sm:w-auto">
+            <button className="w-9 h-9 bg-[var(--color-primary,#0178BC)] text-white rounded-xl flex items-center justify-center shadow-xs cursor-pointer">
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button className="w-9 h-9 border border-[var(--color-border,#D9DADD)] text-[var(--color-foreground,#0F172A)] rounded-xl flex items-center justify-center hover:bg-slate-50 transition-colors cursor-pointer">
+              <List className="w-4 h-4" />
+            </button>
+            <button className="w-9 h-9 border border-[var(--color-border,#D9DADD)] text-[var(--color-border,#D9DADD)] rounded-xl flex items-center justify-center hover:bg-slate-50 transition-colors cursor-pointer">
+              <Columns className="w-4 h-4" />
+            </button>
+          </div>
+
         </div>
 
-        {/* Table */}
-        <div className="bg-card border border-border rounded-theme shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-muted/50 border-b border-border">
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Vehicle</th>
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Type / Category</th>
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Scheduled Date</th>
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Garage</th>
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Cost</th>
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider text-right">Actions</th>
+        {/* Data Table Container */}
+        <div className="overflow-x-auto">
+          {loading ? (
+            <div className="p-8 text-center text-xs text-[var(--color-foreground-muted,#656873)]">
+              {isRTL ? 'جاري تحميل سجلات الصيانة...' : 'Loading maintenance records...'}
+            </div>
+          ) : maintenance.length === 0 ? (
+            <div className="p-8 text-center text-xs text-[var(--color-foreground-muted,#656873)]">
+              {isRTL ? 'لا توجد سجلات صيانة متاحة' : 'No maintenance records found'}
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse min-w-[950px]">
+              <thead className="bg-slate-50 border-b border-[var(--color-border,#D9DADD)]">
+                <tr>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">VEHICLE</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">TYPE / CATEGORY</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">SCHEDULED DATE</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">GARAGE</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">COST (AED)</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)]">STATUS</th>
+                  <th className="p-3.5 text-xs font-bold text-[var(--color-foreground,#0F172A)] text-center">ACTIONS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
-                {loading ? (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                        <p className="text-sm text-foreground-muted">Loading records...</p>
+              <tbody className="divide-y divide-[var(--color-border,#D9DADD)] text-xs text-[var(--color-foreground,#0F172A)]">
+                {maintenance.map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td 
+                      onClick={() => navigate(`/fleet-dashboard/maintenance/maintenance-details/${row.id}`)}
+                      className="p-3.5 cursor-pointer font-bold text-[var(--color-primary,#0178BC)] hover:underline font-mono"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Truck size={13} className="text-[var(--color-primary,#0178BC)]" />
+                        {row.vehiclePlateNumber || row.vehicle?.plateNumber || 'N/A'}
+                      </span>
+                    </td>
+
+                    <td className="p-3.5">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-bold text-[var(--color-foreground,#0F172A)]">{row.serviceCategory || 'OIL_CHANGE'}</span>
+                        <span className="text-[10px] text-[var(--color-foreground-muted,#656873)]">{row.maintenanceType || 'PREVENTIVE'}</span>
                       </div>
                     </td>
-                  </tr>
-                ) : maintenance.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center gap-2 opacity-40">
-                        <Wrench size={48} />
-                        <p className="text-lg font-medium">No maintenance records found</p>
-                      </div>
+
+                    <td className="p-3.5 font-semibold text-[var(--color-foreground-muted,#656873)]">
+                      {row.scheduledDate || row.requestedDate || '–'}
                     </td>
-                  </tr>
-                ) : (
-                  maintenance.map((record) => (
-                    <tr key={record.id} className="hover:bg-muted/30 transition-colors group">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-foreground">{record.vehiclePlateNumber}</span>
-                          <span className="text-xs text-foreground-muted">{record.vehicleMakeModel}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">{record.maintenanceType}</span>
-                          <span className="text-xs text-foreground-muted">{record.serviceCategory}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {record.scheduledDate || record.requestedDate}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {record.garage || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
-                        {record.actualCost ? `AED ${record.actualCost}` : record.estimatedCost ? `AED ${record.estimatedCost}` : '—'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${getStatusColor(record.status)}`}>
-                          {getStatusIcon(record.status)}
-                          {record.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-2">
+
+                    <td className="p-3.5 font-bold text-[var(--color-foreground,#0F172A)]">{row.garage || 'Central Workshop'}</td>
+
+                    <td className="p-3.5 font-bold font-mono text-emerald-600">
+                      {row.actualCost ? `${row.actualCost} AED` : (row.estimatedCost ? `${row.estimatedCost} AED (Est.)` : '0 AED')}
+                    </td>
+
+                    <td className="p-3.5">
+                      <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold border ${getStatusColor(row.status)}`}>
+                        {row.status || 'REQUESTED'}
+                      </span>
+                    </td>
+
+                    <td className="p-3.5">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => navigate(`/fleet-dashboard/maintenance/maintenance-details/${row.id}`)}
+                          className="w-8 h-8 rounded-lg bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D9DADD)] text-[var(--color-primary,#0178BC)] hover:bg-blue-50 transition-colors flex items-center justify-center shadow-xs cursor-pointer"
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4 stroke-[1.8]" />
+                        </button>
+
+                        {row.status !== 'COMPLETED' && (
                           <button
                             onClick={() => {
-                              setSelectedRecord(record);
-                              setIsFormOpen(true);
+                              setSelectedRecord(row);
+                              setIsCompleteModalOpen(true);
                             }}
-                            className="p-1.5 hover:bg-primary/10 text-foreground-muted hover:text-primary rounded-theme transition-colors"
-                            title="Edit Record"
+                            className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-bold hover:bg-emerald-600 hover:text-white transition-all cursor-pointer inline-flex items-center gap-1"
                           >
-                            <Edit2 size={16} />
+                            <CheckCircle size={12} /> Complete
                           </button>
-                          
-                          {record.status === 'REQUESTED' && (
-                            <button
-                              onClick={() => handleStatusUpdate(record.id, 'SCHEDULED')}
-                              className="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-theme font-bold hover:bg-blue-600 hover:text-white transition-all border border-blue-100 flex items-center gap-1"
-                            >
-                              <Calendar size={12} />
-                              Schedule
-                            </button>
-                          )}
+                        )}
 
-                          {record.status === 'SCHEDULED' && (
-                            <button
-                              onClick={() => handleStatusUpdate(record.id, 'IN_PROGRESS')}
-                              className="text-[10px] bg-amber-50 text-amber-600 px-2 py-1 rounded-theme font-bold hover:bg-amber-600 hover:text-white transition-all border border-amber-100 flex items-center gap-1"
-                            >
-                              <Clock size={12} />
-                              Start
-                            </button>
-                          )}
+                        <button
+                          onClick={() => navigate(`/fleet-dashboard/maintenance/maintenance-form/${row.id}`)}
+                          className="w-8 h-8 rounded-lg bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D9DADD)] text-[var(--color-primary,#0178BC)] hover:bg-blue-50 transition-colors flex items-center justify-center shadow-xs cursor-pointer"
+                          title="Edit Record"
+                        >
+                          <Edit2 className="w-4 h-4 stroke-[1.8]" />
+                        </button>
 
-                          {(record.status === 'IN_PROGRESS' || record.status === 'SCHEDULED') && (
-                            <button
-                              onClick={() => {
-                                setSelectedRecord(record);
-                                setIsCompleteModalOpen(true);
-                              }}
-                              className="text-[10px] bg-green-50 text-green-600 px-2 py-1 rounded-theme font-bold hover:bg-green-600 hover:text-white transition-all border border-green-100 flex items-center gap-1"
-                            >
-                              <CheckCircle size={12} />
-                              Complete
-                            </button>
-                          )}
-
-                          <button 
-                            className="p-1.5 hover:bg-red-50 text-foreground-muted hover:text-red-500 rounded-theme transition-colors"
-                            title="Cancel Request"
-                            onClick={() => {
-                              if(window.confirm('Are you sure you want to cancel this request?')) {
-                                handleStatusUpdate(record.id, 'CANCELLED');
-                              }
-                            }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                        <button
+                          onClick={() => handleDelete(row.id)}
+                          className="w-8 h-8 rounded-lg bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D9DADD)] text-[#D6282F] hover:bg-rose-50 transition-colors flex items-center justify-center shadow-xs cursor-pointer"
+                          title="Delete Record"
+                        >
+                          <Trash2 className="w-4 h-4 stroke-[1.8]" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
-          </div>
+          )}
+        </div>
 
-          {/* Premium Pagination Footer */}
-          <div className="px-6 py-4 border-t border-border flex items-center justify-between bg-muted/20">
-            <div className="text-sm text-foreground-muted font-bold">
-              Showing page <span className="text-foreground">{page}</span> of{' '}
-              <span className="text-foreground">{totalPages || 1}</span> ({totalElements} records)
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-foreground-muted font-bold">Rows per page:</span>
-                <select
-                  value={size}
-                  onChange={(e) => {
-                    setSize(Number(e.target.value));
-                    setPage(1);
-                  }}
-                  className="bg-background border border-border rounded-theme text-xs px-2 py-1 outline-none focus:ring-1 focus:ring-primary text-foreground font-semibold"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-              <div className="flex gap-1.5">
-                <button
-                  disabled={page <= 1 || loading}
-                  onClick={() => setPage(page - 1)}
-                  className="px-3 py-1 bg-background border border-border hover:bg-muted text-foreground rounded-theme text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  Previous
-                </button>
-                <button
-                  disabled={page >= totalPages || loading}
-                  onClick={() => setPage(page + 1)}
-                  className="px-3 py-1 bg-background border border-border hover:bg-muted text-foreground rounded-theme text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
+        {/* Footer Pagination Bar */}
+        <div className="p-4 flex items-center justify-between border-t border-[var(--color-border,#D9DADD)] text-xs text-[var(--color-foreground-muted,#656873)]">
+          <div>
+            Showing page <span className="font-bold text-[var(--color-foreground,#0F172A)]">{page}</span> of <span className="font-bold text-[var(--color-foreground,#0F172A)]">{totalPages || 1}</span> ({totalElements} records)
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button 
+              disabled={page <= 1}
+              onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+              className="px-2.5 py-1.5 border border-[var(--color-border,#D9DADD)] rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              &lt;
+            </button>
+            <button className="px-3 py-1.5 bg-[var(--color-primary,#0178BC)] text-white font-bold rounded-lg cursor-pointer">
+              {page}
+            </button>
+            <button 
+              disabled={page >= totalPages}
+              onClick={() => setPage(prev => prev + 1)}
+              className="px-2.5 py-1.5 border border-[var(--color-border,#D9DADD)] rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              &gt;
+            </button>
           </div>
         </div>
+
       </div>
-      <VehicleMaintenanceForm
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onSave={fetchMaintenance}
-        initialData={selectedRecord}
-      />
+
+      {/* Complete Maintenance Modal */}
       <CompleteMaintenanceModal
         isOpen={isCompleteModalOpen}
         onClose={() => setIsCompleteModalOpen(false)}
-        onComplete={fetchMaintenance}
-        recordId={selectedRecord?.id}
+        record={selectedRecord}
+        onSuccess={() => { fetchMaintenance(page, size); setIsCompleteModalOpen(false); }}
       />
-    </>
+
+    </div>
   );
 }

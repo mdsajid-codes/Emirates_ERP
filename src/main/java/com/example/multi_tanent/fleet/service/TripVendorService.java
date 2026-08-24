@@ -19,7 +19,44 @@ public class TripVendorService {
     @Transactional
     public TripVendor createVendor(TripVendor vendor) {
         vendor.setTenant(getCurrentTenant());
+        if (vendor.getContactPersonName() != null && vendor.getContactPerson() == null) {
+            vendor.setContactPerson(vendor.getContactPersonName());
+        }
         return repository.save(vendor);
+    }
+
+    @Transactional
+    public TripVendor updateVendor(Long id, TripVendor updated) {
+        TripVendor existing = repository.findById(id).orElseThrow();
+        existing.setCompanyName(updated.getCompanyName());
+        existing.setContactPerson(updated.getContactPersonName() != null ? updated.getContactPersonName() : updated.getContactPerson());
+        existing.setContactPersonName(updated.getContactPersonName());
+        existing.setPhone(updated.getPhone());
+        existing.setEmail(updated.getEmail());
+        existing.setVendorType(updated.getVendorType());
+        existing.setServiceCategory(updated.getServiceCategory());
+        existing.setTrnNumber(updated.getTrnNumber());
+        existing.setTradeLicenseNumber(updated.getTradeLicenseNumber());
+        existing.setDesignation(updated.getDesignation());
+        existing.setPaymentTermsDays(updated.getPaymentTermsDays());
+        existing.setBankName(updated.getBankName());
+        existing.setIbanNumber(updated.getIbanNumber());
+        existing.setBillingAddress(updated.getBillingAddress());
+        existing.setEmirate(updated.getEmirate());
+        existing.setCountry(updated.getCountry());
+        existing.setNotes(updated.getNotes());
+        existing.setStatus(updated.getStatus());
+        return repository.save(existing);
+    }
+
+    @Transactional(readOnly = true)
+    public TripVendor getVendorById(Long id) {
+        return repository.findById(id).orElse(null);
+    }
+
+    @Transactional
+    public void deleteVendor(Long id) {
+        repository.deleteById(id);
     }
 
     @Transactional(readOnly = true)

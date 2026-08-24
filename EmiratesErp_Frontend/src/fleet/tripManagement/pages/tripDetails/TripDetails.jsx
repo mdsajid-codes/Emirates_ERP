@@ -37,47 +37,47 @@ const TripDetails = () => {
     }, []);
 
   return (
-    <div className="p-6 space-y-8 bg-background min-h-screen animate-fade-in">
+    <div className="w-full space-y-3 p-3 sm:p-4 font-sans select-none pb-8 animate-fade-in">
       <TripDetailsHeader trip={trip} />
       <TripDetailsInfo trip={trip} />
       <TripStatusTimeline status={trip?.tripStatus} createdAt={trip?.createdAt} />
       
-      <div className="bg-card border border-border rounded-theme p-6 shadow-sm">
+      <div className="bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D7E3EE)] rounded-xl p-3.5 shadow-2xs">
         <TripComplaintsPanel trip={trip} />
       </div>
 
       {/* ACTIONS BAR */}
-      <div className="flex items-center justify-between pt-6 border-t border-border">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[var(--color-border,#D7E3EE)]">
+        <div className="flex items-center gap-2 flex-wrap">
           <button 
-            className="flex items-center gap-3 bg-primary text-primary-foreground px-6 py-2.5 rounded-theme text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-md shadow-primary/20 active:scale-95"
+            className="inline-flex items-center gap-2 bg-[var(--color-primary,#0178BC)] text-white px-4 py-2 rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-2xs cursor-pointer"
             onClick={() => setIsModalOpen(true)}
           >
-            <FiRefreshCw size={16} />
+            <FiRefreshCw size={14} />
             Change Status
           </button>
           
           {trip?.vendorId && trip?.tripStatus !== 'CLOSED' && (
             <button 
-              className="flex items-center gap-3 bg-warning text-white px-6 py-2.5 rounded-theme text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-md shadow-warning/20 active:scale-95"
+              className="inline-flex items-center gap-2 bg-amber-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-amber-600 transition-all shadow-2xs cursor-pointer"
               onClick={() => setIsVendorModalOpen(true)}
             >
-              <FiCheckCircle size={16} />
+              <FiCheckCircle size={14} />
               Vendor Payment
             </button>
           )}
 
           <button 
-            className="flex items-center gap-3 bg-card border border-border text-foreground px-6 py-2.5 rounded-theme text-xs font-black uppercase tracking-widest hover:bg-background-muted transition-all active:scale-95 shadow-sm"
+            className="inline-flex items-center gap-2 bg-[var(--color-card,#ffffff)] border border-[var(--color-border,#D7E3EE)] text-[var(--color-foreground,#102A43)] px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all shadow-2xs cursor-pointer"
             onClick={()=>navigate('/fleet-dashboard/invoices/new') }
           >
-            <FiFileText size={16} className="text-primary" />
+            <FiFileText size={14} className="text-[var(--color-primary,#0178BC)]" />
             Go to Invoice
           </button>
         </div>
 
-        <button className="flex items-center gap-3 bg-error/10 text-error border border-error/20 px-6 py-2.5 rounded-theme text-xs font-black uppercase tracking-widest hover:bg-error/20 transition-all active:scale-95 shadow-sm">
-          <FiTrash2 size={16} />
+        <button className="inline-flex items-center gap-2 bg-rose-50 text-rose-600 border border-rose-200 px-4 py-2 rounded-xl text-xs font-bold hover:bg-rose-100 transition-all cursor-pointer">
+          <FiTrash2 size={14} />
           Delete Trip
         </button>
       </div>

@@ -1,23 +1,30 @@
-import { Menu, Bell, User, LogOut, Sparkles } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { logout } from "../../utils/logout";
-import { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import { Menu, Search, ChevronDown, Bell, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import axios from 'axios';
+import { logout } from '../../utils/logout';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function FleetHeader({ onMenuClick }) {
   const navigate = useNavigate();
-  const tenantId = localStorage.getItem('tenantId');
   const username = localStorage.getItem('username') || 'Admin';
   const API_URL = import.meta.env.VITE_API_BASE_URL;
+
   const [alertsCount, setAlertsCount] = useState(0);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const { language, setLanguage, t, isRTL } = useLanguage();
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
     const fetchAlertsCount = async () => {
       try {
         const response = await axios.get(`${API_URL}/fleet/compliance/expiring-documents`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+          headers: { Authorization: `Bearer ${token}` }
         });
-        const activeAlerts = (response.data || []).filter(doc => 
+        const activeAlerts = (response.data || []).filter(doc =>
           doc.status === 'EXPIRED' || doc.status === 'EXPIRING_SOON'
         );
         setAlertsCount(activeAlerts.length);
@@ -28,61 +35,108 @@ export default function FleetHeader({ onMenuClick }) {
     fetchAlertsCount();
   }, [API_URL]);
 
+  const handleLogout = () => logout(navigate);
+
   return (
-    <header className="flex-shrink-0 h-16 bg-header-bg text-header-text border-b border-border shadow-sm flex items-center justify-between px-4 lg:px-6 z-30 relative">
-      <div className="flex items-center gap-4">
+    <header className={`h-[64px] bg-white border-b border-[#DBE5F3] fixed top-0 ${isRTL ? 'right-0 lg:right-[80px] left-0' : 'left-0 lg:left-[80px] right-0'} z-30 flex items-center justify-between px-4 lg:px-6`}>
+      {/* Left: Mobile menu button & Search input */}
+      <div className="flex items-center gap-3 flex-1 max-w-xl">
         <button
-          type="button"
-          className="opacity-70 hover:opacity-100 hover:bg-black/5 p-2 rounded-theme lg:hidden"
           onClick={onMenuClick}
+          className="lg:hidden p-2 rounded-lg text-[#18233B] hover:bg-slate-100 transition-colors"
+          aria-label="Toggle menu"
         >
-          <Menu className="h-6 w-6" />
+          <Menu className="h-5 w-5" />
         </button>
 
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-primary/10 rounded-theme flex items-center justify-center text-primary font-bold border border-primary/20">
-            <Sparkles className="h-6 w-6" />
+        <div className="relative w-full max-w-[260px]">
+          <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none text-[#607089]`}>
+            <Search className="h-4 w-4" />
           </div>
-          <div className="hidden md:block">
-            <span className="font-bold text-lg text-header-text">Company Hub</span>
-            <span className="ml-2 px-2 py-0.5 text-[10px] bg-black/10 rounded-full font-bold uppercase tracking-wide opacity-70">Fleet</span>
-          </div>
+          <input
+            type="text"
+            placeholder={t('search.placeholder') || "Search anything..."}
+            className={`w-full h-[38px] ${isRTL ? 'pr-9 pl-3' : 'pl-9 pr-3'} text-xs bg-white border border-[#E2E8F0] rounded-[8px] text-[#18233B] placeholder-[#94A3B8] focus:outline-none focus:border-[#00A9A8] transition-colors`}
+          />
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <button 
+      {/* Right tools: Language dropdown, Notification bell, User avatar & text, Logout */}
+      <div className="flex items-center gap-3 shrink-0">
+        {/* Language Switcher Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] bg-white text-xs font-semibold text-[#18233B] hover:bg-slate-50 transition-colors cursor-pointer"
+          >
+            <span>{language === 'ar' ? 'العربية' : 'English'}</span>
+            <ChevronDown className="h-3.5 w-3.5 text-[#607089]" />
+          </button>
+
+          <AnimatePresence>
+            {langDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className={`absolute ${isRTL ? 'left-0' : 'right-0'} mt-1 w-32 bg-white rounded-lg shadow-lg border border-[#E2E8F0] py-1 z-50`}
+              >
+                <button
+                  onClick={() => {
+                    setLanguage('en');
+                    setLangDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 ${language === 'en' ? 'font-bold text-[#00A9A8]' : 'text-[#18233B]'}`}
+                >
+                  English
+                </button>
+                <button
+                  onClick={() => {
+                    setLanguage('ar');
+                    setLangDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 text-xs hover:bg-slate-50 ${language === 'ar' ? 'font-bold text-[#00A9A8]' : 'text-[#18233B]'}`}
+                >
+                  العربية
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Notification Bell */}
+        <button
           onClick={() => navigate('/fleet-dashboard/alerts')}
-          className="p-2 text-header-text/50 hover:text-primary transition-colors relative"
+          className="p-2 text-[#607089] hover:text-[#18233B] hover:bg-slate-100 rounded-lg transition-colors relative"
           title="Notifications & Alerts"
         >
-          <Bell size={20} />
+          <Bell className="h-4.5 w-4.5" />
           {alertsCount > 0 && (
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-header-bg"></span>
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
           )}
         </button>
 
-        <div className="w-px h-8 bg-black/10 mx-2"></div>
+        <div className="w-px h-6 bg-[#E2E8F0] mx-1"></div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex flex-col items-end">
-              <span className="text-sm font-bold text-header-text">{username}</span>
-              <span className="text-[10px] opacity-50 font-bold uppercase tracking-tighter">Fleet Administrator</span>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary flex-shrink-0 border border-primary/10 shadow-sm">
-              {username.charAt(0).toUpperCase()}
-            </div>
+        {/* User Info */}
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-[#EAF8FF] text-[#00A9A8] font-bold flex items-center justify-center text-xs border border-[#B3E5F4]">
+            {username.charAt(0).toUpperCase()}
           </div>
-          <div className="w-px h-8 bg-black/10 hidden sm:block"></div>
-          <button
-            onClick={() => logout(navigate)}
-            className="opacity-70 hover:opacity-100 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-black/5"
-            title="Logout"
-          >
-            <LogOut className="h-5 w-5" />
-          </button>
+          <div className="hidden sm:flex flex-col items-start leading-tight">
+            <span className="text-xs font-bold text-[#18233B]">{username}</span>
+            <span className="text-[10px] text-[#607089]">Fleet Administrator</span>
+          </div>
         </div>
+
+        {/* Logout */}
+        <button
+          onClick={handleLogout}
+          className="text-[#607089] hover:text-red-600 transition-colors p-1.5 rounded-lg hover:bg-slate-100 ml-1"
+          title="Logout"
+        >
+          <LogOut className="h-4.5 w-4.5" />
+        </button>
       </div>
     </header>
   );

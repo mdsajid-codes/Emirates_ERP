@@ -100,6 +100,8 @@
     <include file="db/changelog/fleet/085-create-trip-stops-table.xml"/>
     <include file="db/changelog/fleet/086-create-driver-documents-table.xml"/>
     <include file="db/changelog/fleet/087-enhanced-customer-schema.xml"/>
+    <include file="db/changelog/fleet/088-enhanced-vendor-schema.xml"/>
+    <include file="db/changelog/fleet/089-add-customer-fields.xml"/>
 
     <!-- Trip Extensions (Post-Fleet due to circular FKs) -->
     <include file="db/changelog/trip/002-trip-add-missing-fields.xml"/>
