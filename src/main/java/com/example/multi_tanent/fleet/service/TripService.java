@@ -198,27 +198,34 @@ public class TripService {
 
         // Auto-update Driver status
         if (trip.getDriver() != null) {
-            Driver driver = trip.getDriver();
-            if (newStatus == TripStatus.IN_PROGRESS) {
-                driver.setStatus(DriverStatus.ON_TRIP);
-            } else if (newStatus == TripStatus.COMPLETED || newStatus == TripStatus.CANCELLED) {
-                driver.setStatus(DriverStatus.AVAILABLE);
+            Driver driver = driverRepository.findById(trip.getDriver().getId()).orElse(null);
+            if (driver != null) {
+                if (newStatus == TripStatus.IN_PROGRESS) {
+                    driver.setStatus(DriverStatus.ON_TRIP);
+                } else if (newStatus == TripStatus.COMPLETED || newStatus == TripStatus.CANCELLED) {
+                    driver.setStatus(DriverStatus.AVAILABLE);
+                }
+                driverRepository.save(driver);
             }
-            driverRepository.save(driver);
         }
 
         // Auto-update Vehicle status
         if (trip.getVehicle() != null) {
-            Vehicle vehicle = trip.getVehicle();
-            if (newStatus == TripStatus.IN_PROGRESS) {
-                vehicle.setVehicleStatus(VehicleStatus.IN_USE);
-            } else if (newStatus == TripStatus.COMPLETED || newStatus == TripStatus.CANCELLED) {
-                vehicle.setVehicleStatus(VehicleStatus.ACTIVE);
+            Vehicle vehicle = vehicleRepository.findById(trip.getVehicle().getId()).orElse(null);
+            if (vehicle != null) {
+                if (newStatus == TripStatus.IN_PROGRESS) {
+                    vehicle.setVehicleStatus(VehicleStatus.IN_USE);
+                } else if (newStatus == TripStatus.COMPLETED || newStatus == TripStatus.CANCELLED) {
+                    vehicle.setVehicleStatus(VehicleStatus.ACTIVE);
+                }
+                vehicleRepository.save(vehicle);
             }
-            vehicleRepository.save(vehicle);
         }
 
-        return mapToResponse(tripRepository.save(trip));
+        Trip updatedTrip = tripRepository.save(trip);
+        return tripRepository.findByTenantAndId(getCurrentTenant(), id)
+                .map(this::mapToResponse)
+                .orElseGet(() -> mapToResponse(updatedTrip));
     }
 
     @Transactional

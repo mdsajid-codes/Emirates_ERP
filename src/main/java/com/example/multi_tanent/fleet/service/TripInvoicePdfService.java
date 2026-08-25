@@ -20,8 +20,11 @@ import com.itextpdf.layout.properties.UnitValue;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.example.multi_tanent.fleet.repository.TripInvoiceRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,7 +38,13 @@ public class TripInvoicePdfService {
     private PdfFont font;
     private PdfFont boldFont;
 
-    public byte[] generateInvoicePdf(TripInvoice invoice) {
+    @Autowired
+    private TripInvoiceRepository invoiceRepository;
+
+    @Transactional(readOnly = true)
+    public byte[] generateInvoicePdf(Long invoiceId) {
+        TripInvoice invoice = invoiceRepository.findByIdWithDetails(invoiceId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found with ID: " + invoiceId));
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (
                 PdfWriter writer = new PdfWriter(baos);

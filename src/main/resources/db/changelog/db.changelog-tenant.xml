@@ -102,6 +102,7 @@
     <include file="db/changelog/fleet/087-enhanced-customer-schema.xml"/>
     <include file="db/changelog/fleet/088-enhanced-vendor-schema.xml"/>
     <include file="db/changelog/fleet/089-add-customer-fields.xml"/>
+    <include file="db/changelog/fleet/090-seed-fuel-transport-gl-account.xml"/>
 
     <!-- Trip Extensions (Post-Fleet due to circular FKs) -->
     <include file="db/changelog/trip/002-trip-add-missing-fields.xml"/>
