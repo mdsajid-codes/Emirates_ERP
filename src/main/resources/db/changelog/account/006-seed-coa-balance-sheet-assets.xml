@@ -2940,6 +2940,18 @@
       <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
       <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS temp WHERE account_code = '7010600' LIMIT 1)"/>
     </insert>
+    <insert tableName="chart_of_accounts">
+      <column name="account_code" value="7010701"/>
+      <column name="description" value="Fleet Fuel &amp; Transport Expense"/>
+      <column name="account_type" value="DEBIT"/>
+      <column name="section" value="PL_FUEL_TRANSPORT"/>
+      <column name="is_quantitative" valueBoolean="false"/>
+      <column name="is_off_balance" valueBoolean="false"/>
+      <column name="level" valueNumeric="4"/>
+      <column name="is_active" valueBoolean="true"/>
+      <column name="currency" value="AED"/>
+      <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+    </insert>
     <sql>SET FOREIGN_KEY_CHECKS = 1;</sql>
   </changeSet>
 </databaseChangeLog>

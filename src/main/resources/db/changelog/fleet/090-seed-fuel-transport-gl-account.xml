@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="090-seed-fuel-transport-gl-account" author="dev">
+        <insert tableName="chart_of_accounts">
+            <column name="account_code" value="7010701"/>
+            <column name="description" value="Fleet Fuel &amp; Transport Expense"/>
+            <column name="account_type" value="DEBIT"/>
+            <column name="section" value="PL_FUEL_TRANSPORT"/>
+            <column name="is_quantitative" valueBoolean="false"/>
+            <column name="is_off_balance" valueBoolean="false"/>
+            <column name="level" valueNumeric="4"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="currency" value="AED"/>
+            <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

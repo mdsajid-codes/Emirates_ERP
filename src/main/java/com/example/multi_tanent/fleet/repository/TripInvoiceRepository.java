@@ -12,8 +12,9 @@ import java.util.Optional;
 
 public interface TripInvoiceRepository extends JpaRepository<TripInvoice, Long> {
     List<TripInvoice> findAllByTenantOrderByCreatedAtDesc(Tenant tenant);
-    Optional<TripInvoice> findByTenantAndInvoiceNumber(Tenant tenant, String invoiceNumber);
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT i FROM TripInvoice i JOIN FETCH i.tenant JOIN FETCH i.customer LEFT JOIN FETCH i.trips WHERE i.id = :id")
+    Optional<TripInvoice> findByIdWithDetails(@Param("id") Long id);
+
     @Query("SELECT COUNT(i) FROM TripInvoice i WHERE i.tenant = :tenant")
     Long countByTenant(@Param("tenant") Tenant tenant);
 

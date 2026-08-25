@@ -114,7 +114,7 @@ public class TripInvoiceService {
 
     @Transactional
     public TripInvoiceResponse updateInvoicePayment(Long invoiceId, InvoicePaymentUpdateRequest req) {
-        TripInvoice invoice = invoiceRepository.findById(invoiceId)
+        TripInvoice invoice = invoiceRepository.findByIdWithDetails(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
 
         invoice.setStatus(req.getStatus());
@@ -130,12 +130,15 @@ public class TripInvoiceService {
             });
         }
 
-        return mapToResponse(invoiceRepository.save(invoice), true);
+        TripInvoice savedInvoice = invoiceRepository.save(invoice);
+        TripInvoice detailedInvoice = invoiceRepository.findByIdWithDetails(savedInvoice.getId())
+                .orElse(savedInvoice);
+        return mapToResponse(detailedInvoice, true);
     }
 
     @Transactional
     public TripInvoiceResponse cancelInvoice(Long invoiceId) {
-        TripInvoice invoice = invoiceRepository.findById(invoiceId)
+        TripInvoice invoice = invoiceRepository.findByIdWithDetails(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
 
         invoice.setStatus(InvoiceStatus.CANCELLED);
@@ -145,11 +148,15 @@ public class TripInvoiceService {
         });
         invoice.getTrips().clear();
 
-        return mapToResponse(invoiceRepository.save(invoice), false);
+        TripInvoice savedInvoice = invoiceRepository.save(invoice);
+        TripInvoice detailedInvoice = invoiceRepository.findByIdWithDetails(savedInvoice.getId())
+                .orElse(savedInvoice);
+        return mapToResponse(detailedInvoice, false);
     }
 
+    @Transactional(readOnly = true)
     public TripInvoiceResponse getInvoiceById(Long id) {
-        return invoiceRepository.findById(id)
+        return invoiceRepository.findByIdWithDetails(id)
                 .map(i -> mapToResponse(i, true))
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
     }
