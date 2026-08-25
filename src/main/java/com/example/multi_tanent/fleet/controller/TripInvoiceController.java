@@ -68,7 +68,7 @@ public class TripInvoiceController {
         TripInvoice invoice = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
         
-        byte[] pdfContent = pdfService.generateInvoicePdf(invoice);
+        byte[] pdfContent = pdfService.generateInvoicePdf(id);
         
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=invoice-" + invoice.getInvoiceNumber() + ".pdf")

@@ -9,6 +9,7 @@ import com.example.multi_tanent.fleet.entity.VehicleMaintenance;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -21,7 +22,7 @@ public class FleetAccountingIntegrationService {
 
     private final GLPostingEngine glPostingEngine;
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Long postFuelEntry(FuelEntry fuelEntry) {
         try {
             log.info("Posting fuel entry to ledger for vehicle: {}", fuelEntry.getVehicle().getPlateNumber());
@@ -51,7 +52,7 @@ public class FleetAccountingIntegrationService {
         }
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Long postVehicleMaintenance(VehicleMaintenance maintenance) {
         try {
             log.info("Posting completed vehicle maintenance to ledger for vehicle: {}", maintenance.getVehicle().getPlateNumber());

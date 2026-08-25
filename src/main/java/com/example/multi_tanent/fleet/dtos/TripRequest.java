@@ -14,15 +14,20 @@ import java.time.LocalDateTime;
 @Builder
 public class TripRequest {
     // Core
-    @NotNull  private LocalDate tripDate;
-    private Long driverId;           // Driver ID from Fleet module
-    @NotBlank private String containerNumber;
-    @NotNull  private Long customerId;
+    @NotNull
+    private LocalDate tripDate;
+    private Long driverId; // Driver ID from Fleet module
+    @NotBlank
+    private String containerNumber;
+    @NotNull
+    private Long customerId;
     private String customerRefJobNo;
     private String contactPerson;
-    private String customerType;             // COMPANY or INDIVIDUAL
-    @NotBlank private String fromLocation;
-    @NotBlank private String toLocation;
+    private String customerType; // COMPANY or INDIVIDUAL
+    @NotBlank
+    private String fromLocation;
+    @NotBlank
+    private String toLocation;
     private Long routeId;
     private String remarks;
     private LocalDateTime startTime;
@@ -32,7 +37,8 @@ public class TripRequest {
     private Long vehicleId;
 
     // Charges (goes to trip_charges table)
-    @NotNull  private BigDecimal amount;
+    @NotNull
+    private BigDecimal amount;
     private BigDecimal tokenAmount;
     private BigDecimal otherCharges;
     private OtherChargeType otherChargeType;
@@ -43,7 +49,7 @@ public class TripRequest {
 
     // Payment info (optional — creates trip_payment row if provided)
     private String receivedBy;
-    private String tokenPaymentMethod;      // CASH, CARD, BANK_TRANSFER
+    private String tokenPaymentMethod; // CASH, CARD, BANK_TRANSFER
     private String chequeNumber;
     private String otherReference;
 }
