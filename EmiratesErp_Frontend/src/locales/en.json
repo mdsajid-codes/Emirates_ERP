@@ -429,7 +429,6 @@
   "bill.update": "Update Bill",
   "bill.cancel": "Cancel",
   "bill.convertToPayment": "Convert to Payment",
-
   "payment.title": "Purchase Payments",
   "payment.subtitle": "Manage and track outgoing payments to suppliers & bill settlements",
   "payment.newPayment": "New Payment",
@@ -451,7 +450,6 @@
   "payment.totalPaid": "Total Payments",
   "payment.totalExcess": "Total Excess",
   "payment.searchPlaceholder": "Search by supplier, reference, mode...",
-
   "debitNote.title": "Debit Notes",
   "debitNote.newDebitNote": "New Debit Note",
   "debitNote.editDebitNote": "Edit Debit Note",
@@ -471,7 +469,6 @@
   "debitNote.balanceDue": "Balance Due (AED)",
   "debitNote.status": "Status",
   "debitNote.searchPlaceholder": "Search by debit note #, bill #, supplier...",
-
   "additionalExpense.title": "Additional Expenses",
   "additionalExpense.subtitle": "Track and allocate additional costs & expenses to your purchases",
   "additionalExpense.newExpense": "New Expense",
@@ -487,7 +484,6 @@
   "additionalExpense.currency": "Currency",
   "additionalExpense.comment": "Comment / Notes",
   "additionalExpense.searchPlaceholder": "Search by Number / Company...",
-
   "customDeclaration.title": "Custom Declarations",
   "customDeclaration.subtitle": "Record and manage custom declarations for imported goods",
   "customDeclaration.newDeclaration": "New Custom Declaration",
@@ -501,7 +497,6 @@
   "customDeclaration.department": "Department",
   "customDeclaration.expenseItem": "Expense Item",
   "customDeclaration.searchPlaceholder": "Search by Number / Company...",
-
   "fleet.vehicles.title": "Fleet Inventory",
   "fleet.vehicles.subtitle": "Manage and track all company vehicles and assets",
   "fleet.vehicles.addVehicle": "Add Vehicle",
@@ -529,7 +524,6 @@
   "fleet.vehicles.showing": "Showing",
   "fleet.vehicles.of": "of",
   "fleet.vehicles.records": "records",
-
   "fleet.form.addTitle": "Add New Vehicle",
   "fleet.form.editTitle": "Edit Vehicle",
   "fleet.form.subtitle": "Enter vehicle details to add to your fleet.",
@@ -577,7 +571,6 @@
   "fleet.form.noDocs": "No documents attached yet.",
   "fleet.form.additionalRemarks": "Additional Remarks",
   "fleet.form.notes": "Notes",
-
   "fleet.details.editAsset": "Edit Asset",
   "fleet.details.scheduleMaintenance": "Schedule Maintenance",
   "fleet.details.totalFuel": "TOTAL FUEL",
@@ -613,7 +606,6 @@
   "fleet.details.actionHeader": "ACTION",
   "fleet.details.view": "View",
   "fleet.details.valid": "VALID",
-
   "fleet.drivers.title": "Drivers Directory",
   "fleet.drivers.subtitle": "Manage transport personnel, licenses and availability",
   "fleet.drivers.addDriver": "Add Driver",
@@ -635,7 +627,6 @@
   "fleet.drivers.status": "STATUS",
   "fleet.drivers.assignedVehicle": "ASSIGNED VEHICLE",
   "fleet.drivers.actions": "ACTIONS",
-
   "fleet.driverForm.addTitle": "Add New Driver",
   "fleet.driverForm.editTitle": "Edit Driver",
   "fleet.driverForm.subtitle": "Enter driver details to add to transport personnel.",
@@ -653,7 +644,6 @@
   "fleet.driverForm.licenseType": "License Type",
   "fleet.driverForm.licenseExpiry": "License Expiry",
   "fleet.driverForm.status": "Status",
-
   "fleet.driverDetails.editDriver": "Edit Driver",
   "fleet.driverDetails.logPerformance": "Log Performance",
   "fleet.driverDetails.totalTrips": "TOTAL TRIPS",
@@ -665,7 +655,6 @@
   "fleet.driverDetails.tripHistory": "TRIP HISTORY",
   "fleet.driverDetails.performance": "PERFORMANCE",
   "fleet.driverDetails.specifications": "DRIVER SPECIFICATIONS",
-
   "fleet.customers.title": "Our Customers",
   "fleet.customers.subtitle": "Manage corporate partners and individual clients in the GCC network",
   "fleet.customers.createCustomer": "Create New Customer",
@@ -688,7 +677,6 @@
   "fleet.customers.type": "TYPE",
   "fleet.customers.status": "STATUS",
   "fleet.customers.actions": "ACTIONS",
-
   "fleet.customerForm.addTitle": "Create New Customer",
   "fleet.customerForm.editTitle": "Edit Customer",
   "fleet.customerForm.subtitle": "Enter corporate client information and financial terms.",
@@ -702,7 +690,6 @@
   "fleet.customerForm.financialTerms": "Financial Terms & Credit",
   "fleet.customerForm.creditLimit": "Credit Limit (AED)",
   "fleet.customerForm.paymentTerms": "Payment Terms (Days)",
-
   "fleet.customerDetails.editClient": "Edit Client",
   "fleet.customerDetails.addFollowUp": "+ Add Follow Up",
   "fleet.customerDetails.totalSpend": "TOTAL SPEND",
@@ -714,7 +701,6 @@
   "fleet.customerDetails.tripHistory": "TRIP HISTORY",
   "fleet.customerDetails.invoices": "INVOICES & REVENUE",
   "fleet.customerDetails.followUps": "FOLLOW UP LOGS",
-
   "fleet.vendors.title": "Our Vendors",
   "fleet.vendors.subtitle": "Manage corporate partners and service vendors in the GCC network",
   "fleet.vendors.createVendor": "Create New Vendor",
@@ -726,13 +712,11 @@
   "fleet.vendors.ytdExpenses": "YTD Transport Expenses",
   "fleet.vendors.approvedAccounts": "Approved Accounts",
   "fleet.vendors.searchPlaceholder": "Search by vendor name, contact, email or phone...",
-
   "fleet.vendorForm.addTitle": "Create New Vendor",
   "fleet.vendorForm.editTitle": "Edit Vendor",
   "fleet.vendorForm.subtitle": "Enter vendor supplier information and financial terms.",
   "fleet.vendorForm.corporateSpecs": "Vendor Specifications",
   "fleet.vendorForm.serviceCategory": "Service Category",
-
   "fleet.vendorDetails.editVendor": "Edit Vendor",
   "fleet.vendorDetails.totalExpenses": "TOTAL EXPENSES",
   "fleet.vendorDetails.serviceCategory": "SERVICE CATEGORY",
@@ -742,7 +726,6 @@
   "fleet.vendorDetails.contractDocs": "CONTRACT DOCUMENTS",
   "fleet.vendorDetails.maintenanceSupplied": "MAINTENANCE SUPPLIED",
   "fleet.vendorDetails.invoices": "PURCHASE INVOICES",
-
   "fleet.trips.title": "Trips Management",
   "fleet.trips.subtitle": "Manage and monitor active cargo movements across the UAE",
   "fleet.trips.createTrip": "Create New Trip",
@@ -752,11 +735,9 @@
   "fleet.trips.totalRevenue": "Total Revenue",
   "fleet.trips.completedTrips": "Completed Trips",
   "fleet.trips.searchPlaceholder": "Search by trip number, customer or driver...",
-
   "fleet.tripForm.addTitle": "Create New Trip",
   "fleet.tripForm.editTitle": "Edit Trip Manifest",
   "fleet.tripForm.subtitle": "Enter logistics, cargo, driver asset, and route specifications.",
-
   "fleet.tripDetails.editTrip": "Edit Trip",
   "fleet.tripDetails.trackTrip": "Track Trip",
   "fleet.tripDetails.dispatch": "Dispatch",
@@ -768,7 +749,6 @@
   "fleet.tripDetails.waybillDocs": "WAYBILL & DOCUMENTS",
   "fleet.tripDetails.invoicesPayments": "INVOICE & PAYMENTS",
   "fleet.tripDetails.stopLogs": "STOP OVER LOGS",
-
   "fleet.dispatch.title": "Dispatch & Scheduling",
   "fleet.dispatch.subtitle": "Manage active jobs, assign resources, and track deliveries",
   "fleet.dispatch.createJob": "Create Dispatch Job",
@@ -777,15 +757,12 @@
   "fleet.dispatch.urgentCritical": "Urgent/Critical",
   "fleet.dispatch.deliveredToday": "Delivered Today",
   "fleet.dispatch.searchPlaceholder": "Search Job #, Customer, or Location...",
-
   "fleet.dispatchForm.addTitle": "Create Dispatch Job",
   "fleet.dispatchForm.editTitle": "Edit Dispatch Job",
   "fleet.dispatchForm.subtitle": "Register and schedule transport requirements across UAE",
-
   "fleet.dispatchDetails.assign": "Assign Resources",
   "fleet.dispatchDetails.pod": "Upload POD",
   "fleet.dispatchDetails.editJob": "Edit Job",
-
   "fleet.routes.title": "Operational Routes",
   "fleet.routes.subtitle": "Plan and monitor multi-stop logistics journeys",
   "fleet.routes.planRoute": "Plan New Route",
@@ -794,14 +771,11 @@
   "fleet.routes.scheduled": "Scheduled",
   "fleet.routes.totalDistance": "Total Distance (KM)",
   "fleet.routes.searchPlaceholder": "Search by route name, driver, or vehicle...",
-
   "fleet.routeForm.addTitle": "Plan New Operational Route",
   "fleet.routeForm.editTitle": "Edit Operational Route",
   "fleet.routeForm.subtitle": "Define multi-stop waypoints, driver assignment, and route schedules",
-
   "fleet.routeDetails.optimize": "Optimize Route",
   "fleet.routeDetails.editRoute": "Edit Route",
-
   "fleet.maintenance.title": "Vehicle Maintenance",
   "fleet.maintenance.subtitle": "Track and manage fleet service schedules and costs",
   "fleet.maintenance.newRequest": "New Request",
@@ -810,14 +784,11 @@
   "fleet.maintenance.scheduledRequests": "Scheduled Requests",
   "fleet.maintenance.totalCost": "Total Cost (AED)",
   "fleet.maintenance.searchPlaceholder": "Search by plate number or garage...",
-
   "fleet.maintenanceForm.addTitle": "New Maintenance Request",
   "fleet.maintenanceForm.editTitle": "Edit Maintenance Record",
   "fleet.maintenanceForm.subtitle": "Log vehicle service requirements, garage specs, and estimated costs",
-
   "fleet.maintenanceDetails.complete": "Complete Service",
   "fleet.maintenanceDetails.editRecord": "Edit Record",
-
   "fleet.fuel.title": "Fuel Management",
   "fleet.fuel.subtitle": "Track fuel consumption, costs, and efficiency across the fleet",
   "fleet.fuel.newEntry": "New Fuel Entry",
@@ -826,14 +797,11 @@
   "fleet.fuel.totalSpend": "Total Spend (AED)",
   "fleet.fuel.avgPrice": "Avg Price / Liter",
   "fleet.fuel.searchPlaceholder": "Search by fuel station or notes...",
-
   "fleet.fuelForm.addTitle": "New Fuel Entry",
   "fleet.fuelForm.editTitle": "Edit Fuel Entry",
   "fleet.fuelForm.subtitle": "Record fuel fills, station specs, odometer readings, and costs across UAE",
-
   "fleet.fuelDetails.uploadReceipt": "Upload Receipt",
   "fleet.fuelDetails.editEntry": "Edit Entry",
-
   "fleet.invoices.title": "Invoices Management",
   "fleet.invoices.subtitle": "Manage and monitor customer billing and payment statuses",
   "fleet.invoices.createInvoice": "Create Invoice",
@@ -842,15 +810,12 @@
   "fleet.invoices.pendingDue": "Pending / Due",
   "fleet.invoices.totalInvoiced": "Total Invoiced (AED)",
   "fleet.invoices.searchPlaceholder": "Search by invoice # or customer...",
-
   "fleet.invoiceForm.addTitle": "Create Customer Invoice",
   "fleet.invoiceForm.editTitle": "Edit Customer Invoice",
   "fleet.invoiceForm.subtitle": "Select customer completed trips, calculate 5% VAT, and generate tax invoice",
-
   "fleet.invoiceDetails.downloadPdf": "Download PDF",
   "fleet.invoiceDetails.updatePayment": "Update Payment",
   "fleet.invoiceDetails.cancelInvoice": "Cancel Invoice",
-
   "fleet.reports.title": "Fleet Analytics & Reports",
   "fleet.reports.subtitle": "Financial performance and operational efficiency metrics",
   "fleet.reports.customReport": "Custom Report",
@@ -859,14 +824,11 @@
   "fleet.reports.netProfit": "Net Profit",
   "fleet.reports.fleetUtilization": "Fleet Utilization",
   "fleet.reports.export": "Export CSV",
-
   "fleet.reportForm.addTitle": "Generate Custom Report",
   "fleet.reportForm.editTitle": "Edit Report Configuration",
   "fleet.reportForm.subtitle": "Configure module scope, timeframe filters, and analytical metrics across UAE",
-
   "fleet.reportDetails.exportCsv": "Export CSV",
   "fleet.reportDetails.print": "Print Report",
-
   "fleet.docTrack.title": "Document Tracking",
   "fleet.docTrack.subtitle": "Unified document tracker for fleet vehicles and drivers",
   "fleet.docTrack.totalDocs": "Total Documents",
@@ -874,7 +836,6 @@
   "fleet.docTrack.expiringSoon": "Expiring Soon",
   "fleet.docTrack.valid": "Valid Documents",
   "fleet.docTrack.searchPlaceholder": "Search by plate, name or document type...",
-
   "fleet.complaints.title": "Complaint & Incident Management",
   "fleet.complaints.subtitle": "Track and resolve fleet-related issues, accidents, and driver behavior",
   "fleet.complaints.reportIncident": "Report Incident",
@@ -883,14 +844,11 @@
   "fleet.complaints.criticalHigh": "Critical / High Risk",
   "fleet.complaints.resolvedIncidents": "Resolved Incidents",
   "fleet.complaints.searchPlaceholder": "Search complaints by ID, description or reporter...",
-
   "fleet.complaintForm.addTitle": "Report Incident / Add Complaint",
   "fleet.complaintForm.editTitle": "Edit Incident Record",
   "fleet.complaintForm.subtitle": "Log fleet incidents, driver behavior complaints, risk levels, and resolution notes across UAE",
-
   "fleet.complaintDetails.markResolved": "Mark Resolved",
   "fleet.complaintDetails.editRecord": "Edit Incident",
-
   "fleet.performance.title": "Driver Performance & Incentives",
   "fleet.performance.subtitle": "Monthly performance evaluation, metrics calculation, and bonus management",
   "fleet.performance.evaluatePerformance": "Evaluate Performance",
@@ -899,11 +857,23 @@
   "fleet.performance.topPerformer": "Top Performer",
   "fleet.performance.incidentsLogged": "Incidents Logged",
   "fleet.performance.searchPlaceholder": "Search driver performance...",
-
   "fleet.performanceForm.addTitle": "Evaluate Driver Performance",
   "fleet.performanceForm.editTitle": "Edit Performance Evaluation",
   "fleet.performanceForm.subtitle": "Calculate trip delivery metrics, fuel efficiency scores, and monthly incentives",
-
   "fleet.performanceDetails.calculateMetrics": "Recalculate Metrics",
-  "fleet.performanceDetails.editEvaluation": "Edit Assessment"
+  "fleet.performanceDetails.editEvaluation": "Edit Assessment",
+  "crm.hub": "CRM Hub",
+  "crm.nav.dashboard": "Dashboard",
+  "crm.nav.home": "Home",
+  "crm.nav.callingData": "Calling Data",
+  "crm.nav.leads": "Leads",
+  "crm.nav.companies": "Companies",
+  "crm.nav.contacts": "Contacts",
+  "crm.nav.products": "Products",
+  "crm.nav.deals": "Deals",
+  "crm.nav.tasks": "Tasks",
+  "crm.nav.calendar": "Calendar",
+  "crm.nav.operations": "Operations",
+  "crm.nav.settings": "Settings",
+  "crm.nav.backToHub": "Back to Hub"
 }

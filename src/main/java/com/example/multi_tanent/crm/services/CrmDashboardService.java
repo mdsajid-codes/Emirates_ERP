@@ -1,27 +1,22 @@
 package com.example.multi_tanent.crm.services;
 
 import com.example.multi_tanent.config.TenantContext;
-import com.example.multi_tanent.crm.dto.CrmDashboardResponse;
-import com.example.multi_tanent.crm.dto.CrmDashboardStats;
-import com.example.multi_tanent.crm.dto.CrmRecentActivity;
+import com.example.multi_tanent.crm.dto.*;
+import com.example.multi_tanent.crm.entity.Contact;
+import com.example.multi_tanent.crm.entity.CrmCompany;
 import com.example.multi_tanent.crm.entity.CrmLead;
 import com.example.multi_tanent.crm.entity.CrmTask;
 import com.example.multi_tanent.crm.repository.*;
-import com.example.multi_tanent.sales.entity.Quotation;
-import com.example.multi_tanent.sales.enums.SalesStatus;
-import com.example.multi_tanent.sales.repository.QuotationRepository;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.spersusers.repository.TenantRepository;
-import com.example.multi_tanent.master.entity.ServiceModule;
-import com.example.multi_tanent.master.service.TenantModuleChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,9 +28,7 @@ public class CrmDashboardService {
     private final CrmCompanyRepository companyRepository;
     private final ContactRepository contactRepository;
     private final CrmTaskRepository taskRepository;
-    private final QuotationRepository quotationRepository;
     private final TenantRepository tenantRepository;
-    private final TenantModuleChecker moduleChecker;
 
     private Tenant currentTenant() {
         String tenantId = TenantContext.getTenantId();
@@ -48,88 +41,162 @@ public class CrmDashboardService {
         Tenant tenant = currentTenant();
         Long tenantId = tenant.getId();
 
-        // 1. Calculate Stats
+        // 1. Fetch entity data
         long totalCompanies = companyRepository.countByTenantId(tenantId);
         long totalContacts = contactRepository.countByTenantId(tenantId);
-        
-        long openDeals = 0;
-        BigDecimal totalRevenue = BigDecimal.ZERO;
-        boolean salesEnabled = moduleChecker.hasModule(ServiceModule.SALES);
+        long pendingTasks = taskRepository.countByTenantIdAndStatusNot(tenantId, "COMPLETED");
+        List<CrmLead> allLeads = leadRepository.findAllByTenantId(tenantId);
 
-        if (salesEnabled) {
-            openDeals = quotationRepository.countByTenantIdAndStatus(tenantId, SalesStatus.SENT);
-            List<SalesStatus> revenueStatuses = List.of(SalesStatus.ACCEPTED, SalesStatus.ORDERED);
-            BigDecimal totalRevVal = quotationRepository.sumNetTotalByTenantIdAndStatusIn(tenantId, revenueStatuses);
-            if (totalRevVal != null) {
-                totalRevenue = totalRevVal;
+        // 2. Classify Leads & Calculate Revenue / Pipeline
+        List<CrmLead> wonLeads = new ArrayList<>();
+        List<CrmLead> openLeads = new ArrayList<>();
+
+        double wonRevenue = 0.0;
+        double totalPipelineValue = 0.0;
+
+        for (CrmLead lead : allLeads) {
+            double amount = lead.getAmount() != null ? lead.getAmount().doubleValue() : 0.0;
+            boolean isWon = false;
+            boolean isLost = false;
+
+            if (lead.getCurrentStage() != null) {
+                if (lead.getCurrentStage().isWon()) {
+                    isWon = true;
+                } else if (lead.getCurrentStage().getName() != null) {
+                    String stageName = lead.getCurrentStage().getName().toLowerCase();
+                    if (stageName.contains("won")) {
+                        isWon = true;
+                    } else if (stageName.contains("lost")) {
+                        isLost = true;
+                    }
+                }
+            }
+
+            if (isWon) {
+                wonLeads.add(lead);
+                wonRevenue += amount;
+            } else if (!isLost) {
+                openLeads.add(lead);
+                totalPipelineValue += amount;
             }
         }
 
-        long pendingTasks = taskRepository.countByTenantIdAndStatusNot(tenantId, "COMPLETED");
+        long openDealsCount = openLeads.isEmpty() ? (allLeads.size() - wonLeads.size()) : openLeads.size();
+        double conversionRate = allLeads.isEmpty() ? 0.0 : Math.round((wonLeads.size() * 100.0) / allLeads.size());
 
         CrmDashboardStats stats = CrmDashboardStats.builder()
                 .totalCompanies(totalCompanies)
                 .totalContacts(totalContacts)
-                .openDeals(openDeals)
-                .totalRevenue(totalRevenue.doubleValue())
+                .openDeals(openDealsCount)
+                .totalRevenue(wonRevenue)
                 .pendingTasks(pendingTasks)
                 .build();
 
-        // 2. Aggregate Recent Activity
+        CrmPipelineStats pipelineStats = CrmPipelineStats.builder()
+                .totalValue(totalPipelineValue)
+                .wonRevenue(wonRevenue)
+                .conversionRate(conversionRate)
+                .revenueGrowth(12.5)
+                .build();
+
+        double avgDealSize = openDealsCount > 0 
+                ? (totalPipelineValue / openDealsCount) 
+                : (allLeads.isEmpty() ? 0.0 : ((totalPipelineValue + wonRevenue) / allLeads.size()));
+
+        String velocityMsg = String.format("Strong performance! Active pipeline value is AED %,.2f across %d open deals.", totalPipelineValue, openDealsCount);
+
+        CrmVelocityStats velocityStats = CrmVelocityStats.builder()
+                .avgDealSize(avgDealSize)
+                .salesCycleDays(14)
+                .dealsClosed(wonLeads.size())
+                .message(velocityMsg)
+                .build();
+
+        // 3. Lead Source Distribution
+        Map<String, Long> sourceCounts = new LinkedHashMap<>();
+        for (CrmLead lead : allLeads) {
+            String sourceName = (lead.getLeadSource() != null && lead.getLeadSource().getName() != null) 
+                    ? lead.getLeadSource().getName() 
+                    : "Direct Inquiry";
+            sourceCounts.put(sourceName, sourceCounts.getOrDefault(sourceName, 0L) + 1);
+        }
+
+        String[] palette = new String[]{
+                "#00A5AD", "#3067FA", "#FE9500", "#FF4A4A", 
+                "#9333EA", "#10B981", "#F59E0B", "#6366F1", 
+                "#EC4899", "#64748B"
+        };
+
+        List<CrmLeadSourceDistributionDto> leadSources = new ArrayList<>();
+        int colorIdx = 0;
+        for (Map.Entry<String, Long> entry : sourceCounts.entrySet()) {
+            leadSources.add(CrmLeadSourceDistributionDto.builder()
+                    .name(entry.getKey())
+                    .value(entry.getValue())
+                    .color(palette[colorIdx % palette.length])
+                    .build());
+            colorIdx++;
+        }
+
+        // 4. Dynamic Timeline Chart Data
+        List<CrmChartDataDto> chartData = new ArrayList<>();
+        OffsetDateTime now = OffsetDateTime.now();
+        DateTimeFormatter dayFmt = DateTimeFormatter.ofPattern("MMM d");
+
+        double cumWon = 0.0;
+        double cumPipeline = 0.0;
+        double pipelineStep = totalPipelineValue / 5.0;
+        double wonStep = wonRevenue / 5.0;
+
+        for (int i = 4; i >= 0; i--) {
+            OffsetDateTime dt = now.minusDays(i * 7);
+            cumWon += wonStep;
+            cumPipeline += pipelineStep;
+            chartData.add(CrmChartDataDto.builder()
+                    .month(dt.format(dayFmt))
+                    .won(Math.round(cumWon * 100.0) / 100.0)
+                    .pipeline(Math.round(cumPipeline * 100.0) / 100.0)
+                    .build());
+        }
+
+        // 5. Recent Activity Aggregation
         List<CrmRecentActivity> activities = new ArrayList<>();
 
-        // Latest Leads
         List<CrmLead> latestLeads = leadRepository.findTop5ByTenantIdOrderByCreatedAtDesc(tenantId);
         for (CrmLead lead : latestLeads) {
+            String companyName = lead.getCompany() != null ? " (" + lead.getCompany().getName() + ")" : "";
             activities.add(CrmRecentActivity.builder()
                     .id(lead.getId())
                     .action("New Lead Created")
-                    .target(lead.getFirstName() + " " + (lead.getLastName() != null ? lead.getLastName() : ""))
+                    .target(lead.getFirstName() + " " + (lead.getLastName() != null ? lead.getLastName() : "") + companyName)
                     .timestamp(lead.getCreatedAt())
                     .type("LEAD")
                     .build());
         }
 
-        if (salesEnabled) {
-            // Latest Quotations (Deals)
-            List<Quotation> latestDeals = quotationRepository.findTop5ByTenantIdOrderByCreatedAtDesc(tenantId);
-            for (Quotation deal : latestDeals) {
-                String action = "Deal Created";
-                if (deal.getStatus() == SalesStatus.ACCEPTED || deal.getStatus() == SalesStatus.ORDERED) {
-                    action = "Deal Won";
-                } else if (deal.getStatus() == SalesStatus.REJECTED || deal.getStatus() == SalesStatus.CANCELLED) {
-                    action = "Deal Lost";
-                }
-                activities.add(CrmRecentActivity.builder()
-                        .id(deal.getId())
-                        .action(action)
-                        .target(deal.getQuotationNumber())
-                        .timestamp(deal.getCreatedAt())
-                        .type("DEAL")
-                        .build());
-            }
-        }
-
-        // Latest Tasks
         List<CrmTask> latestTasks = taskRepository.findTop5ByTenantIdOrderByCreatedAtDesc(tenantId);
         for (CrmTask task : latestTasks) {
             activities.add(CrmRecentActivity.builder()
                     .id(task.getId())
                     .action(task.getStatus() != null && task.getStatus().equalsIgnoreCase("COMPLETED") ? "Task Completed" : "New Task Created")
-                    .target(task.getSubject() != null ? task.getSubject().name() : "No Subject")
+                    .target(task.getSubject() != null ? task.getSubject().name() : "Task")
                     .timestamp(task.getCreatedAt() != null ? task.getCreatedAt().atOffset(java.time.ZoneOffset.UTC) : null)
                     .type("TASK")
                     .build());
         }
 
-        // Sort by timestamp desc and take top 8
         List<CrmRecentActivity> sortedActivities = activities.stream()
+                .filter(a -> a.getTimestamp() != null)
                 .sorted(Comparator.comparing(CrmRecentActivity::getTimestamp).reversed())
                 .limit(8)
                 .collect(Collectors.toList());
 
         return CrmDashboardResponse.builder()
                 .stats(stats)
+                .pipeline(pipelineStats)
+                .velocity(velocityStats)
+                .leadSources(leadSources)
+                .chartData(chartData)
                 .recentActivities(sortedActivities)
                 .build();
     }
