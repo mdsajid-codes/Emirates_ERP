@@ -3,6 +3,8 @@ package com.example.multi_tanent.crm.controller;
 import com.example.multi_tanent.crm.dto.CrmActivitySummaryDto;
 import com.example.multi_tanent.crm.dto.CrmAuditLogDto;
 import com.example.multi_tanent.crm.dto.CrmGroupedCountDto;
+import com.example.multi_tanent.crm.dto.CrmLeadTrendDto;
+import com.example.multi_tanent.crm.dto.CrmTopPerformerDto;
 import com.example.multi_tanent.crm.services.CrmReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,6 +41,42 @@ public class CrmReportController {
     @PreAuthorize("@crmAccess.canView('REPORT')")
     public ResponseEntity<List<CrmGroupedCountDto>> leadsByStatus() {
         return ResponseEntity.ok(reportService.getLeadsByStatus());
+    }
+
+    @GetMapping("/leads-by-source")
+    @PreAuthorize("@crmAccess.canView('REPORT')")
+    public ResponseEntity<List<CrmGroupedCountDto>> leadsBySource() {
+        return ResponseEntity.ok(reportService.getLeadsBySource());
+    }
+
+    @GetMapping("/leads-by-industry")
+    @PreAuthorize("@crmAccess.canView('REPORT')")
+    public ResponseEntity<List<CrmGroupedCountDto>> leadsByIndustry() {
+        return ResponseEntity.ok(reportService.getLeadsByIndustry());
+    }
+
+    @GetMapping("/lost-by-stage")
+    @PreAuthorize("@crmAccess.canView('REPORT')")
+    public ResponseEntity<List<CrmGroupedCountDto>> lostByStage() {
+        return ResponseEntity.ok(reportService.getLostByStage());
+    }
+
+    @GetMapping("/lost-by-reason")
+    @PreAuthorize("@crmAccess.canView('REPORT')")
+    public ResponseEntity<List<CrmGroupedCountDto>> lostByReason() {
+        return ResponseEntity.ok(reportService.getLostByReason());
+    }
+
+    @GetMapping("/lead-trend")
+    @PreAuthorize("@crmAccess.canView('REPORT')")
+    public ResponseEntity<List<CrmLeadTrendDto>> leadTrend(@RequestParam(defaultValue = "YEARLY") String period) {
+        return ResponseEntity.ok(reportService.getLeadTrend(period));
+    }
+
+    @GetMapping("/top-performers")
+    @PreAuthorize("@crmAccess.canView('REPORT')")
+    public ResponseEntity<List<CrmTopPerformerDto>> topPerformers() {
+        return ResponseEntity.ok(reportService.getTopPerformers());
     }
 
     @GetMapping("/activity-summary")

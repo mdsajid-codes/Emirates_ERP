@@ -134,6 +134,13 @@ const CrmHome = lazy(() => import('./crm/pages/CrmHome.jsx'));
 const CrmTasks = lazy(() => import('./crm/pages/CrmTasks.jsx'));
 const LeadInfo = lazy(() => import('./crm/pages/Leadinfo.jsx'));
 const LeadDetails = lazy(() => import('./crm/pages/LeadDetails.jsx'));
+const CrmLeadFormPage = lazy(() => import('./crm/pages/CrmLeadFormPage.jsx'));
+const CrmCallLogFormPage = lazy(() => import('./crm/pages/CrmCallLogFormPage.jsx'));
+const CrmCompanyFormPage = lazy(() => import('./crm/pages/CrmCompanyFormPage.jsx'));
+const CrmContactFormPage = lazy(() => import('./crm/pages/CrmContactFormPage.jsx'));
+const CrmDealFormPage = lazy(() => import('./crm/pages/CrmDealFormPage.jsx'));
+const CrmTaskFormPage = lazy(() => import('./crm/pages/CrmTaskFormPage.jsx'));
+const CrmEventFormPage = lazy(() => import('./crm/pages/CrmEventFormPage.jsx'));
 const CrmContacts = lazy(() => import('./crm/pages/CrmContacts.jsx'));
 const CrmSalesProduct = lazy(() => import('./crm/components/CrmSalesProduct.jsx'));
 const CrmSalesProductForm = lazy(() => import('./crm/components/CrmSalesProductForm.jsx'));
@@ -507,22 +514,38 @@ function App() {
               <Route path="dashboard" element={<PermissionRoute module="DASHBOARD"><CrmDashboard /></PermissionRoute>} />
               <Route path="home" element={<CrmHome />} />
               <Route path="calling-data" element={<PermissionRoute module="CALL_LOG"><CrmCallingData /></PermissionRoute>} />
+              <Route path="calling-data/new" element={<PermissionRoute module="CALL_LOG"><CrmCallLogFormPage /></PermissionRoute>} />
+              <Route path="calling-data/edit/:id" element={<PermissionRoute module="CALL_LOG"><CrmCallLogFormPage /></PermissionRoute>} />
               <Route path="leads" element={<PermissionRoute module="LEAD"><CrmLead pageName="Leads" /></PermissionRoute>} />
               <Route path="leads/all" element={<PermissionRoute module="LEAD"><LeadDetails /></PermissionRoute>} />
+              <Route path="leads/new" element={<PermissionRoute module="LEAD"><CrmLeadFormPage /></PermissionRoute>} />
+              <Route path="leads/edit/:id" element={<PermissionRoute module="LEAD"><CrmLeadFormPage /></PermissionRoute>} />
               <Route path="lead-info" element={<PermissionRoute module="LEAD"><LeadInfo /></PermissionRoute>} />
               <Route path="leads/:leadId" element={<PermissionRoute module="LEAD"><LeadInfo /></PermissionRoute>} />
               <Route path="companies" element={<PermissionRoute module="COMPANY"><CrmCompanies pageName="Companies" /></PermissionRoute>} />
+              <Route path="companies/new" element={<PermissionRoute module="COMPANY"><CrmCompanyFormPage /></PermissionRoute>} />
+              <Route path="companies/edit/:id" element={<PermissionRoute module="COMPANY"><CrmCompanyFormPage /></PermissionRoute>} />
               <Route path="contacts" element={<PermissionRoute module="CONTACT"><CrmContacts pageName="Contacts" /></PermissionRoute>} />
+              <Route path="contacts/new" element={<PermissionRoute module="CONTACT"><CrmContactFormPage /></PermissionRoute>} />
+              <Route path="contacts/edit/:id" element={<PermissionRoute module="CONTACT"><CrmContactFormPage /></PermissionRoute>} />
               <Route path='products'>
                 <Route index element={<PermissionRoute module="PRODUCT"><CrmSalesProduct pageName="Products" /></PermissionRoute>} />
                 <Route path="new" element={<PermissionRoute module="PRODUCT"><CrmSalesProductForm /></PermissionRoute>} />
                 <Route path="edit/:id" element={<PermissionRoute module="PRODUCT"><CrmSalesProductForm /></PermissionRoute>} />
               </Route>
               <Route path="deals" element={<PermissionRoute module="DEAL"><CrmDeals /></PermissionRoute>} />
+              <Route path="deals/new" element={<PermissionRoute module="DEAL"><CrmDealFormPage /></PermissionRoute>} />
+              <Route path="deals/edit/:id" element={<PermissionRoute module="DEAL"><CrmDealFormPage /></PermissionRoute>} />
               <Route path="tasks" element={<PermissionRoute module="TASK"><CrmTasks /></PermissionRoute>} />
+              <Route path="tasks/new" element={<PermissionRoute module="TASK"><CrmTaskFormPage /></PermissionRoute>} />
+              <Route path="tasks/edit/:id" element={<PermissionRoute module="TASK"><CrmTaskFormPage /></PermissionRoute>} />
               <Route path="calendar" element={<PermissionRoute module="EVENT"><CrmCalendarPage /></PermissionRoute>} />
+              <Route path="calendar/events/new" element={<PermissionRoute module="EVENT"><CrmEventFormPage /></PermissionRoute>} />
+              <Route path="calendar/events/edit/:id" element={<PermissionRoute module="EVENT"><CrmEventFormPage /></PermissionRoute>} />
               <Route path="roles" element={<PermissionRoute module="SETTINGS"><CrmRolesPage /></PermissionRoute>} />
               <Route path="operations" element={<PermissionRoute module="TODO"><CrmOperations /></PermissionRoute>} />
+              <Route path="operations/events/new" element={<PermissionRoute module="TODO"><CrmEventFormPage /></PermissionRoute>} />
+              <Route path="operations/events/edit/:id" element={<PermissionRoute module="TODO"><CrmEventFormPage /></PermissionRoute>} />
             </Route>
 
             {/* ── SALES ─────────────────────────────────────────────── */}

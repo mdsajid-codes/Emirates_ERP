@@ -28,6 +28,7 @@ import java.util.Optional;
 
 public interface CrmLeadRepository extends JpaRepository<CrmLead, Long>, JpaSpecificationExecutor<CrmLead> {
 
+    List<CrmLead> findAllByTenantId(Long tenantId);
     Page<CrmLead> findByTenantId(Long tenantId, Pageable pageable);
     Optional<CrmLead> findByIdAndTenantId(Long id, Long tenantId);
 
@@ -43,6 +44,7 @@ public interface CrmLeadRepository extends JpaRepository<CrmLead, Long>, JpaSpec
     @Query("SELECT count(l) FROM CrmLead l WHERE l.tenant.id = :tenantId AND l.status NOT IN :excludedStatuses")
     long countByTenantIdAndStatusNotIn(Long tenantId, List<CrmLeadStatus> excludedStatuses);
     boolean existsByTenantIdAndLeadNo(Long tenantId, String leadNo);
+    Optional<CrmLead> findByTenantIdAndLeadNo(Long tenantId, String leadNo);
     List<CrmLead> findTop5ByTenantIdOrderByCreatedAtDesc(Long tenantId);
 
     @Query("SELECT COALESCE(l.currentStage.name, 'Unassigned') AS label, COUNT(l) AS count FROM CrmLead l WHERE l.tenant.id = :tenantId GROUP BY l.currentStage.name")
@@ -53,4 +55,13 @@ public interface CrmLeadRepository extends JpaRepository<CrmLead, Long>, JpaSpec
 
     @Query("SELECT CASE WHEN l.status IS NULL THEN 'Unknown' ELSE CAST(l.status as string) END AS label, COUNT(l) AS count FROM CrmLead l WHERE l.tenant.id = :tenantId GROUP BY l.status")
     List<Object[]> countByStatus(@org.springframework.data.repository.query.Param("tenantId") Long tenantId);
+
+    @Query("SELECT COALESCE(l.leadSource.name, 'Direct / Organic') AS label, COUNT(l) AS count FROM CrmLead l WHERE l.tenant.id = :tenantId GROUP BY l.leadSource.name")
+    List<Object[]> countBySource(@org.springframework.data.repository.query.Param("tenantId") Long tenantId);
+
+    @Query("SELECT COALESCE(l.industry.name, 'Unassigned') AS label, COUNT(l) AS count FROM CrmLead l WHERE l.tenant.id = :tenantId GROUP BY l.industry.name")
+    List<Object[]> countByIndustry(@org.springframework.data.repository.query.Param("tenantId") Long tenantId);
+
+    @Query("SELECT COALESCE(l.currentStage.name, 'Closed / Disqualified') AS label, COUNT(l) AS count FROM CrmLead l WHERE l.tenant.id = :tenantId AND l.status = com.example.multi_tanent.crm.enums.CrmLeadStatus.LOST GROUP BY l.currentStage.name")
+    List<Object[]> countLostByStage(@org.springframework.data.repository.query.Param("tenantId") Long tenantId);
 }

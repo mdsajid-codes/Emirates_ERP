@@ -484,7 +484,6 @@
   "bill.update": "تحديث الفاتورة",
   "bill.cancel": "إلغاء",
   "bill.convertToPayment": "تحويل إلى سند دفع",
-
   "payment.title": "سندات الدفع للمشتريات",
   "payment.subtitle": "إدارة وتتبع المدفوعات الصادرة للموردين وتسوية الفواتير",
   "payment.newPayment": "سند دفع جديد",
@@ -506,7 +505,6 @@
   "payment.totalPaid": "إجمالي المدفوعات",
   "payment.totalExcess": "إجمالي الفائض",
   "payment.searchPlaceholder": "البحث حسب المورد، المرجع، طريقة الدفع...",
-
   "debitNote.title": "إشعارات الخصم (إشعار مدين)",
   "debitNote.newDebitNote": "إشعار مدين جديد",
   "debitNote.editDebitNote": "تعديل الإشعار المدين",
@@ -526,7 +524,6 @@
   "debitNote.balanceDue": "المبلغ المستحق (درهم)",
   "debitNote.status": "الحالة",
   "debitNote.searchPlaceholder": "البحث برقم الإشعار، الفاتورة، المورد...",
-
   "additionalExpense.title": "المصاريف الإضافية",
   "additionalExpense.subtitle": "تتبع وتخصيص التكاليف والمصاريف الإضافية على المشتريات",
   "additionalExpense.newExpense": "مصروف جديد",
@@ -542,7 +539,6 @@
   "additionalExpense.currency": "العملة",
   "additionalExpense.comment": "ملاحظات وتعليقات",
   "additionalExpense.searchPlaceholder": "البحث برقم المصروف أو الشركة...",
-
   "customDeclaration.title": "البيانات الجمركية",
   "customDeclaration.subtitle": "تسجيل وإدارة البيانات الجمركية للبضائع المستوردة",
   "customDeclaration.newDeclaration": "بيان جمركي جديد",
@@ -556,7 +552,6 @@
   "customDeclaration.department": "القسم",
   "customDeclaration.expenseItem": "بند المصروف",
   "customDeclaration.searchPlaceholder": "البحث برقم البيان أو الشركة...",
-
   "fleet.vehicles.title": "مخزون الأسطول",
   "fleet.vehicles.subtitle": "إدارة وتتبع جميع مركبات وأصول الشركة",
   "fleet.vehicles.addVehicle": "إضافة مركبة",
@@ -584,7 +579,6 @@
   "fleet.vehicles.showing": "عرض",
   "fleet.vehicles.of": "من",
   "fleet.vehicles.records": "سجلات",
-
   "fleet.form.addTitle": "إضافة مركبة جديدة",
   "fleet.form.editTitle": "تعديل بيانات المركبة",
   "fleet.form.subtitle": "أدخل تفاصيل المركبة لإضافتها إلى أسطول الشركة.",
@@ -632,7 +626,6 @@
   "fleet.form.noDocs": "لم يتم إرفاق أي مستندات بعد.",
   "fleet.form.additionalRemarks": "ملاحظات إضافية",
   "fleet.form.notes": "الملاحظات",
-
   "fleet.details.editAsset": "تعديل المركبة",
   "fleet.details.scheduleMaintenance": "+ جدولة صيانة",
   "fleet.details.totalFuel": "إجمالي الوقود",
@@ -668,7 +661,6 @@
   "fleet.details.actionHeader": "الإجراء",
   "fleet.details.view": "عرض",
   "fleet.details.valid": "ساري",
-
   "fleet.drivers.title": "دليل السائقين",
   "fleet.drivers.subtitle": "إدارة سائقي النقل والترخيص والجاهزية",
   "fleet.drivers.addDriver": "إضافة سائق",
@@ -690,7 +682,6 @@
   "fleet.drivers.status": "الحالة",
   "fleet.drivers.assignedVehicle": "المركبة المخصصة",
   "fleet.drivers.actions": "الإجراءات",
-
   "fleet.driverForm.addTitle": "إضافة سائق جديد",
   "fleet.driverForm.editTitle": "تعديل بيانات السائق",
   "fleet.driverForm.subtitle": "أدخل تفاصيل السائق لإضافته إلى فريق النقل.",
@@ -708,7 +699,6 @@
   "fleet.driverForm.licenseType": "نوع الرخصة",
   "fleet.driverForm.licenseExpiry": "تاريخ انتهاء الرخصة",
   "fleet.driverForm.status": "الحالة",
-
   "fleet.driverDetails.editDriver": "تعديل السائق",
   "fleet.driverDetails.logPerformance": "تسجيل الأداء",
   "fleet.driverDetails.totalTrips": "إجمالي الرحلات",
@@ -720,7 +710,6 @@
   "fleet.driverDetails.tripHistory": "سجل الرحلات",
   "fleet.driverDetails.performance": "تقييم الأداء",
   "fleet.driverDetails.specifications": "بيانات السائق التفصيلية",
-
   "fleet.customers.title": "عملاؤنا",
   "fleet.customers.subtitle": "إدارة شركاء الشركات والعملاء في شبكة دول مجلس التعاون الخليجي",
   "fleet.customers.createCustomer": "إنشاء عميل جديد",
@@ -743,7 +732,6 @@
   "fleet.customers.type": "النوع",
   "fleet.customers.status": "الحالة",
   "fleet.customers.actions": "الإجراءات",
-
   "fleet.customerForm.addTitle": "إنشاء عميل جديد",
   "fleet.customerForm.editTitle": "تعديل بيانات العميل",
   "fleet.customerForm.subtitle": "أدخل معلومات شركة العميل والشروط المالية.",
@@ -757,7 +745,6 @@
   "fleet.customerForm.financialTerms": "الشروط المالية والائتمان",
   "fleet.customerForm.creditLimit": "الحد الائتماني (AED)",
   "fleet.customerForm.paymentTerms": "شروط الدفع (أيام)",
-
   "fleet.customerDetails.editClient": "تعديل العميل",
   "fleet.customerDetails.addFollowUp": "+ إضافة متابعة",
   "fleet.customerDetails.totalSpend": "إجمالي الإنفاق",
@@ -769,7 +756,6 @@
   "fleet.customerDetails.tripHistory": "سجل الرحلات",
   "fleet.customerDetails.invoices": "الفواتير والإيرادات",
   "fleet.customerDetails.followUps": "سجل المتابعات",
-
   "fleet.vendors.title": "موردونا",
   "fleet.vendors.subtitle": "إدارة شركاء الخدمات والموردين في شبكة دول مجلس التعاون الخليجي",
   "fleet.vendors.createVendor": "إنشاء مورد جديد",
@@ -781,13 +767,11 @@
   "fleet.vendors.ytdExpenses": "مصروفات النقل السنوية",
   "fleet.vendors.approvedAccounts": "الحسابات المعتمدة",
   "fleet.vendors.searchPlaceholder": "البحث باسم المورد، شخص الاتصال، البريد أو الهاتف...",
-
   "fleet.vendorForm.addTitle": "إنشاء مورد جديد",
   "fleet.vendorForm.editTitle": "تعديل بيانات المورد",
   "fleet.vendorForm.subtitle": "أدخل معلومات مورد الخدمات والشروط المالية.",
   "fleet.vendorForm.corporateSpecs": "مواصفات المورد",
   "fleet.vendorForm.serviceCategory": "فئة الخدمة",
-
   "fleet.vendorDetails.editVendor": "تعديل المورد",
   "fleet.vendorDetails.totalExpenses": "إجمالي المصروفات",
   "fleet.vendorDetails.serviceCategory": "فئة الخدمة",
@@ -797,7 +781,6 @@
   "fleet.vendorDetails.contractDocs": "وثائق العقد",
   "fleet.vendorDetails.maintenanceSupplied": "الصيانة المقدمة",
   "fleet.vendorDetails.invoices": "فواتير الشراء",
-
   "fleet.trips.title": "إدارة الرحلات",
   "fleet.trips.subtitle": "إدارة ومراقبة حركة البضائع النشطة عبر دولة الإمارات",
   "fleet.trips.createTrip": "إنشاء رحلة جديدة",
@@ -807,11 +790,9 @@
   "fleet.trips.totalRevenue": "إجمالي الإيرادات",
   "fleet.trips.completedTrips": "الرحلات المكتملة",
   "fleet.trips.searchPlaceholder": "البحث برقم الرحلة، العميل، أو السائق...",
-
   "fleet.tripForm.addTitle": "إنشاء رحلة جديدة",
   "fleet.tripForm.editTitle": "تعديل بيان الرحلة",
   "fleet.tripForm.subtitle": "أدخل مواصفات اللوجستيات، البضائع، السائق، والمسار.",
-
   "fleet.tripDetails.editTrip": "تعديل الرحلة",
   "fleet.tripDetails.trackTrip": "تتبع الرحلة",
   "fleet.tripDetails.dispatch": "إرسال الرحلة",
@@ -823,7 +804,6 @@
   "fleet.tripDetails.waybillDocs": "بوليصة الشحن والوثائق",
   "fleet.tripDetails.invoicesPayments": "الفواتير والدفعات",
   "fleet.tripDetails.stopLogs": "سجل التوقفات",
-
   "fleet.dispatch.title": "الإرسال والجدولة",
   "fleet.dispatch.subtitle": "إدارة المهام النشطة وتخصيص الموارد وتتبع التسليم",
   "fleet.dispatch.createJob": "إنشاء مهمة إرسال",
@@ -832,15 +812,12 @@
   "fleet.dispatch.urgentCritical": "عاجل / حرج",
   "fleet.dispatch.deliveredToday": "تم التسليم اليوم",
   "fleet.dispatch.searchPlaceholder": "البحث برقم المهمة، العميل، أو الموقع...",
-
   "fleet.dispatchForm.addTitle": "إنشاء مهمة إرسال",
   "fleet.dispatchForm.editTitle": "تعديل مهمة الإرسال",
   "fleet.dispatchForm.subtitle": "تسجيل وجدولة متطلبات النقل عبر الإمارات",
-
   "fleet.dispatchDetails.assign": "تخصيص الموارد",
   "fleet.dispatchDetails.pod": "رفع إثبات التسليم",
   "fleet.dispatchDetails.editJob": "تعديل المهمة",
-
   "fleet.routes.title": "المسارات التشغيلية",
   "fleet.routes.subtitle": "تخطيط ومراقبة رحلات اللوجستيات متعددة محطات التوقف",
   "fleet.routes.planRoute": "تخطيط مسار جديد",
@@ -849,14 +826,11 @@
   "fleet.routes.scheduled": "مجدول",
   "fleet.routes.totalDistance": "إجمالي المسافة (كم)",
   "fleet.routes.searchPlaceholder": "البحث باسم المسار، السائق، أو المركبة...",
-
   "fleet.routeForm.addTitle": "تخطيط مسار تشغيلي جديد",
   "fleet.routeForm.editTitle": "تعديل المسار التشغيلي",
   "fleet.routeForm.subtitle": "تحديد محطات التوقف، تعيين السائقين، وجدول الرحلة",
-
   "fleet.routeDetails.optimize": "تحسين المسار",
   "fleet.routeDetails.editRoute": "تعديل المسار",
-
   "fleet.maintenance.title": "صيانة المركبات",
   "fleet.maintenance.subtitle": "تتبع وإدارة جداول وتكاليف صيانة أسطول المركبات",
   "fleet.maintenance.newRequest": "طلب جديد",
@@ -865,14 +839,11 @@
   "fleet.maintenance.scheduledRequests": "الطلبات المجدولة",
   "fleet.maintenance.totalCost": "إجمالي التكلفة (درهم)",
   "fleet.maintenance.searchPlaceholder": "البحث برقم اللوحة أو الورشة...",
-
   "fleet.maintenanceForm.addTitle": "طلب صيانة جديد",
   "fleet.maintenanceForm.editTitle": "تعديل سجل الصيانة",
   "fleet.maintenanceForm.subtitle": "تسجيل متطلبات خدمة المركبة ومواصفات الورشة والتكاليف المقدرة",
-
   "fleet.maintenanceDetails.complete": "إكمال الخدمة",
   "fleet.maintenanceDetails.editRecord": "تعديل السجل",
-
   "fleet.fuel.title": "إدارة الوقود",
   "fleet.fuel.subtitle": "تتبع استهلاك الوقود والتكاليف والكفاءة عبر الأسطول",
   "fleet.fuel.newEntry": "إدخال وقود جديد",
@@ -881,14 +852,11 @@
   "fleet.fuel.totalSpend": "إجمالي الإنفاق (درهم)",
   "fleet.fuel.avgPrice": "متوسط السعر / لتر",
   "fleet.fuel.searchPlaceholder": "البحث بمحطة الوقود أو الملاحظات...",
-
   "fleet.fuelForm.addTitle": "إدخال وقود جديد",
   "fleet.fuelForm.editTitle": "تعديل إدخال الوقود",
   "fleet.fuelForm.subtitle": "تسجيل تعبئة الوقود ومواصفات المحطة وقراءات العداد والتكاليف",
-
   "fleet.fuelDetails.uploadReceipt": "رفع الإيصال",
   "fleet.fuelDetails.editEntry": "تعديل الإدخال",
-
   "fleet.invoices.title": "إدارة الفواتير",
   "fleet.invoices.subtitle": "إدارة ومراقبة فواتير العملاء وحالات الدفع",
   "fleet.invoices.createInvoice": "إنشاء فاتورة",
@@ -897,15 +865,12 @@
   "fleet.invoices.pendingDue": "المعلقة / المستحقة",
   "fleet.invoices.totalInvoiced": "إجمالي المفلتر (درهم)",
   "fleet.invoices.searchPlaceholder": "البحث برقم الفاتورة أو العميل...",
-
   "fleet.invoiceForm.addTitle": "إنشاء فاتورة عميل",
   "fleet.invoiceForm.editTitle": "تعديل فاتورة العميل",
   "fleet.invoiceForm.subtitle": "تحديد الرحلات المكتملة للعميل، حساب ضريبة القيمة المضافة 5٪، وإصدار الفاتورة الضريبية",
-
   "fleet.invoiceDetails.downloadPdf": "تحميل PDF",
   "fleet.invoiceDetails.updatePayment": "تحديث الدفعة",
   "fleet.invoiceDetails.cancelInvoice": "إلغاء الفاتورة",
-
   "fleet.reports.title": "تحليلات وتقارير الأسطول",
   "fleet.reports.subtitle": "مقاييس الأداء المالي والكفاءة التشغيلية",
   "fleet.reports.customReport": "تقرير مخصص",
@@ -914,14 +879,11 @@
   "fleet.reports.netProfit": "صافي الربح",
   "fleet.reports.fleetUtilization": "معدل استغلال الأسطول",
   "fleet.reports.export": "تصدير CSV",
-
   "fleet.reportForm.addTitle": "إنشاء تقرير مخصص",
   "fleet.reportForm.editTitle": "تعديل إعدادات التقرير",
   "fleet.reportForm.subtitle": "تحديد نطاق الوحدة، تصفية الفترة الزمنية، والمقاييس التحليلية عبر الإمارات",
-
   "fleet.reportDetails.exportCsv": "تصدير CSV",
   "fleet.reportDetails.print": "طباعة التقرير",
-
   "fleet.docTrack.title": "تتبع الوثائق",
   "fleet.docTrack.subtitle": "نظام موحد لتتبع وثائق المركبات والسائقين",
   "fleet.docTrack.totalDocs": "إجمالي الوثائق",
@@ -929,7 +891,6 @@
   "fleet.docTrack.expiringSoon": "تنتهي قريباً",
   "fleet.docTrack.valid": "وثائق سارية",
   "fleet.docTrack.searchPlaceholder": "البحث برقم اللوحة، الاسم أو نوع الوثيقة...",
-
   "fleet.complaints.title": "إدارة الشكاوى والحوادث",
   "fleet.complaints.subtitle": "تتبع وحل المشكلات المتعلقة بالأسطول والحوادث وسلوك السائقين",
   "fleet.complaints.reportIncident": "الإبلاغ عن حادث",
@@ -938,14 +899,11 @@
   "fleet.complaints.criticalHigh": "حرجة / عالية الخطورة",
   "fleet.complaints.resolvedIncidents": "الحوادث المحلولة",
   "fleet.complaints.searchPlaceholder": "البحث في الشكاوى حسب المعرف أو الوصف أو المبلّغ...",
-
   "fleet.complaintForm.addTitle": "الإبلاغ عن حادث / إضافة شكوى",
   "fleet.complaintForm.editTitle": "تعديل سجل الحادث",
   "fleet.complaintForm.subtitle": "تسجيل حوادث الأسطول وشكاوى سلوك السائقين ومستويات الخطورة وملاحظات الحل",
-
   "fleet.complaintDetails.markResolved": "تعليم كمحلولة",
   "fleet.complaintDetails.editRecord": "تعديل الحادث",
-
   "fleet.performance.title": "أداء السائقين والحوافز",
   "fleet.performance.subtitle": "تقييم الأداء الشهري، حساب المقاييس، وإدارة المكافآت",
   "fleet.performance.evaluatePerformance": "تقييم الأداء",
@@ -954,11 +912,23 @@
   "fleet.performance.topPerformer": "الأفضل أداءً",
   "fleet.performance.incidentsLogged": "الحوادث المسجلة",
   "fleet.performance.searchPlaceholder": "البحث في أداء السائقين...",
-
   "fleet.performanceForm.addTitle": "تقييم أداء السائق",
   "fleet.performanceForm.editTitle": "تعديل تقييم الأداء",
   "fleet.performanceForm.subtitle": "حساب مقاييس تسليم الرحلات ونقاط كفاءة الوقود والحوافز الشهرية",
-
   "fleet.performanceDetails.calculateMetrics": "إعادة حساب المقاييس",
-  "fleet.performanceDetails.editEvaluation": "تعديل التقييم"
+  "fleet.performanceDetails.editEvaluation": "تعديل التقييم",
+  "crm.hub": "مركز إدارة العملاء",
+  "crm.nav.dashboard": "لوحة التحكم",
+  "crm.nav.home": "الرئيسية",
+  "crm.nav.callingData": "بيانات المكالمات",
+  "crm.nav.leads": "العملاء المحتملون",
+  "crm.nav.companies": "الشركات",
+  "crm.nav.contacts": "جهات الاتصال",
+  "crm.nav.products": "المنتجات",
+  "crm.nav.deals": "الصفقات",
+  "crm.nav.tasks": "المهام",
+  "crm.nav.calendar": "التقويم",
+  "crm.nav.operations": "العمليات",
+  "crm.nav.settings": "الإعدادات",
+  "crm.nav.backToHub": "العودة للرئيسية"
 }

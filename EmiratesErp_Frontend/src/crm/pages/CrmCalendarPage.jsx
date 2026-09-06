@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
     ChevronLeft, 
@@ -11,24 +12,25 @@ import {
     Users,
     Tag,
     X,
-    Loader
+    Loader,
+    PhoneCall,
+    Mail,
+    Edit3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import CrmTaskForm from '../components/CrmTaskForm';
-import CrmEventForm from '../components/CrmEventForm';
 import { useCrmPermissions } from '../context/CrmPermissionsContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const CrmCalendarPage = () => {
+    const navigate = useNavigate();
     const { hasPermission } = useCrmPermissions();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState(null);
-    const [isTaskDrawerOpen, setIsTaskDrawerOpen] = useState(false);
-    const [isEventDrawerOpen, setIsEventDrawerOpen] = useState(false);
-    const [itemToEdit, setItemToEdit] = useState(null);
+    const [selectedCellDate, setSelectedCellDate] = useState('');
+    const [isCellModalOpen, setIsCellModalOpen] = useState(false);
     const [reminderTime, setReminderTime] = useState('');
     const [settingReminder, setSettingReminder] = useState(false);
     const [isRescheduling, setIsRescheduling] = useState(false);
@@ -40,8 +42,32 @@ const CrmCalendarPage = () => {
             setLoading(true);
             const token = localStorage.getItem('token');
             const headers = { Authorization: `Bearer ${token}` };
-            const res = await axios.get(`${API_URL}/crm/calendar/events`, { headers });
-            setItems(res.data || []);
+            
+            // Fetch calendar events AND raw tasks to ensure tasks display accurately
+            const [eventsRes, tasksRes] = await Promise.all([
+                axios.get(`${API_URL}/crm/calendar/events`, { headers }).catch(() => ({ data: [] })),
+                axios.get(`${API_URL}/crm/tasks`, { headers }).catch(() => ({ data: [] }))
+            ]);
+
+            const calendarEvents = eventsRes.data || [];
+            const rawTasks = tasksRes.data || [];
+
+            // Map raw tasks into calendar item format if not already in calendar response
+            const existingTaskIds = new Set(calendarEvents.filter(i => i.type === 'TASK').map(i => i.id));
+
+            const compiledTasks = rawTasks.filter(t => !existingTaskIds.has(t.id)).map(t => ({
+                id: t.id,
+                type: 'TASK',
+                title: t.comments || `${t.subject || 'Task'} Follow-up`,
+                date: t.dueDate || new Date().toISOString().split('T')[0],
+                startTime: t.callTime || '09:00:00',
+                status: t.status || 'PENDING',
+                subject: t.subject,
+                leadId: t.leadId,
+                leadName: t.leadName
+            }));
+
+            setItems([...calendarEvents, ...compiledTasks]);
         } catch (err) {
             console.error("Failed to fetch calendar items", err);
         } finally {
@@ -104,7 +130,6 @@ const CrmCalendarPage = () => {
             const token = localStorage.getItem('token');
             const headers = { Authorization: `Bearer ${token}` };
             
-            // selectedItem.date is "YYYY-MM-DD", reminderTime is "HH:mm"
             const remindAt = `${selectedItem.date}T${reminderTime}:00`;
             
             await axios.post(`${API_URL}/crm/calendar/reminders`, {
@@ -140,130 +165,126 @@ const CrmCalendarPage = () => {
         }
     };
 
-    const handleSaveTask = async (taskData) => {
-        try {
-            const token = localStorage.getItem('token');
-            const headers = { Authorization: `Bearer ${token}` };
-            if (itemToEdit) {
-                await axios.put(`${API_URL}/crm/tasks/${itemToEdit.id}`, taskData, { headers });
-            } else {
-                await axios.post(`${API_URL}/crm/tasks`, taskData, { headers });
-            }
-            setIsTaskDrawerOpen(false);
-            fetchCalendarItems();
-        } catch (err) {
-            console.error("Failed to save task", err);
+    const getItemBadgeStyle = (item) => {
+        if (item.type === 'TASK') {
+            return 'bg-blue-50 text-blue-700 border-l-2 border-blue-500 hover:bg-blue-100';
         }
-    };
-
-    const handleSaveEvent = async (eventData) => {
-        try {
-            const token = localStorage.getItem('token');
-            const headers = { Authorization: `Bearer ${token}` };
-            if (itemToEdit) {
-                await axios.put(`${API_URL}/crm/events/${itemToEdit.id}`, eventData, { headers });
-            } else {
-                await axios.post(`${API_URL}/crm/events`, eventData, { headers });
-            }
-            setIsEventDrawerOpen(false);
-            fetchCalendarItems();
-        } catch (err) {
-            console.error("Failed to save event", err);
-        }
+        return 'bg-teal-50 text-teal-700 border-l-2 border-teal-500 hover:bg-teal-100';
     };
 
     return (
-        <div className="space-y-6 h-full flex flex-col">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-foreground">CRM Strategic Calendar</h1>
-                    <p className="text-sm text-foreground-muted uppercase tracking-widest font-bold opacity-70">Timeline & Engagement Intelligence</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    {hasPermission('TASK', 'create') && (
-                        <button 
-                            onClick={() => { setItemToEdit(null); setIsTaskDrawerOpen(true); }}
-                            className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground rounded-theme transition-all font-bold text-xs uppercase tracking-widest"
-                        >
-                            <Plus className="h-4 w-4" />
-                            <span>Add Task</span>
-                        </button>
-                    )}
-                    {hasPermission('EVENT', 'create') && (
-                        <button 
-                            onClick={() => { setItemToEdit(null); setIsEventDrawerOpen(true); }}
-                            className="flex items-center gap-2 px-4 py-2 bg-accent/10 text-accent hover:bg-accent hover:text-accent-foreground rounded-theme transition-all font-bold text-xs uppercase tracking-widest"
-                        >
-                            <Plus className="h-4 w-4" />
-                            <span>Add Event</span>
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            <div className="bg-card border border-border rounded-theme shadow-sm overflow-hidden flex flex-col flex-1">
-                {/* Header */}
-                <div className="p-4 border-b border-border flex items-center justify-between bg-white">
-                    <div className="flex items-center gap-4">
-                        <h2 className="text-xl font-bold text-foreground min-w-[200px]">
-                            {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
-                        </h2>
-                        <div className="flex items-center bg-background rounded-theme border border-border p-1">
-                            <button onClick={handlePrevMonth} className="p-1.5 hover:bg-white rounded-theme transition-colors"><ChevronLeft className="h-4 w-4" /></button>
-                            <button onClick={handleToday} className="px-3 text-xs font-bold uppercase tracking-widest hover:bg-white rounded-theme transition-colors">Today</button>
-                            <button onClick={handleNextMonth} className="p-1.5 hover:bg-white rounded-theme transition-colors"><ChevronRight className="h-4 w-4" /></button>
+        <div className="flex flex-col h-full w-full bg-[#F8FAFC] text-[#102A43] p-0 overflow-hidden font-sans">
+            <div className="p-3 sm:p-4 bg-[#F8FAFC] flex flex-col gap-3 flex-1 overflow-y-auto">
+                {/* Standard Top Header Bar */}
+                <div className="bg-white p-2.5 sm:p-3 border border-[#D7E3EE] rounded-lg shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="flex bg-[#F8FAFC] p-1 rounded-lg border border-[#D7E3EE]">
+                            <button
+                                className="px-3 py-1 text-xs font-bold text-[#00A3A6] bg-white rounded shadow-xs"
+                            >
+                                STRATEGIC CALENDAR
+                            </button>
                         </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                        {hasPermission('TASK', 'create') && (
+                            <button 
+                                onClick={() => navigate('/crm-dashboard/tasks/new')}
+                                className="px-3 py-1.5 text-xs font-bold text-[#0178BC] bg-[#0178BC]/10 rounded-md hover:bg-[#0178BC] hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                            >
+                                <Plus size={14} /> Add Task
+                            </button>
+                        )}
+                        {hasPermission('EVENT', 'create') && (
+                            <button 
+                                onClick={() => navigate('/crm-dashboard/calendar/events/new')}
+                                className="px-3.5 py-1.5 text-xs font-bold text-white bg-[#00A3A6] rounded-md hover:bg-[#008B8E] transition-all flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
+                            >
+                                <Plus size={14} /> Add Event
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                {/* Grid Header */}
-                <div className="grid grid-cols-7 border-b border-border bg-slate-50/50">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                        <div key={day} className="py-2 text-center text-[10px] font-bold text-foreground-muted uppercase tracking-widest border-r border-border last:border-r-0">
-                            {day}
-                        </div>
-                    ))}
-                </div>
-
-                {/* Grid Body */}
-                <div className="grid grid-cols-7 flex-1 overflow-y-auto">
-                    {calendarGrid.map((cell, idx) => {
-                        const dateItems = getItemsForDate(cell.day, cell.month, cell.year);
-                        const isToday = new Date().toDateString() === new Date(cell.year, cell.month, cell.day).toDateString();
-                        
-                        return (
-                            <div 
-                                key={idx} 
-                                className={`min-h-[120px] p-2 border-r border-b border-border flex flex-col gap-1 transition-all hover:bg-slate-50/30 group ${!cell.currentMonth ? 'opacity-30' : ''}`}
-                            >
-                                <div className="flex justify-between items-start mb-1">
-                                    <span className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'bg-primary text-white' : 'text-foreground-muted'}`}>
-                                        {cell.day}
-                                    </span>
-                                </div>
-                                <div className="flex flex-col gap-1 overflow-y-auto max-h-[80px] custom-scrollbar">
-                                    {dateItems.map(item => (
-                                        <button 
-                                            key={`${item.type}-${item.id}`}
-                                            onClick={() => setSelectedItem(item)}
-                                            className={`text-[9px] font-bold px-1.5 py-1 rounded-theme text-left truncate transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                                                item.type === 'TASK' 
-                                                ? 'bg-primary/10 text-primary border-l-2 border-primary' 
-                                                : 'bg-accent/10 text-accent border-l-2 border-accent'
-                                            }`}
-                                        >
-                                            {item.startTime && <span className="opacity-70 mr-1">{item.startTime.substring(0,5)}</span>}
-                                            {item.title}
-                                        </button>
-                                    ))}
-                                </div>
+                {/* Calendar Board Container */}
+                <div className="bg-white border border-[#D7E3EE] rounded-lg shadow-2xs overflow-hidden flex flex-col flex-1 min-h-[580px]">
+                    {/* Month Navigator Header */}
+                    <div className="p-3 border-b border-[#D7E3EE] flex items-center justify-between bg-white">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-base font-bold text-[#102A43] min-w-[180px]">
+                                {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                            </h2>
+                            <div className="flex items-center bg-[#F8FAFC] rounded-md border border-[#D7E3EE] p-0.5">
+                                <button onClick={handlePrevMonth} className="p-1 text-[#60738E] hover:bg-white rounded transition-colors"><ChevronLeft size={16} /></button>
+                                <button onClick={handleToday} className="px-2.5 text-xs font-bold text-[#102A43] hover:bg-white rounded transition-colors">Today</button>
+                                <button onClick={handleNextMonth} className="p-1 text-[#60738E] hover:bg-white rounded transition-colors"><ChevronRight size={16} /></button>
                             </div>
-                        );
-                    })}
+                        </div>
+                        <div className="flex items-center gap-4 text-xs font-bold text-[#60738E]">
+                            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Tasks</span>
+                            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-teal-500"></span> Events / Meetings</span>
+                        </div>
+                    </div>
+
+                    {/* Grid Days Header */}
+                    <div className="grid grid-cols-7 border-b border-[#D7E3EE] bg-[#F8FAFC]">
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                            <div key={day} className="py-2 text-center text-[11px] font-bold text-[#60738E] uppercase tracking-wider border-r border-[#D7E3EE] last:border-r-0">
+                                {day}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Grid Month Cells */}
+                    <div className="grid grid-cols-7 flex-1 overflow-y-auto custom-scrollbar">
+                        {calendarGrid.map((cell, idx) => {
+                            const dateItems = getItemsForDate(cell.day, cell.month, cell.year);
+                            const isToday = new Date().toDateString() === new Date(cell.year, cell.month, cell.day).toDateString();
+                            
+                            return (
+                                <div 
+                                    key={idx} 
+                                    onClick={() => {
+                                        const dateStr = `${cell.year}-${String(cell.month + 1).padStart(2, '0')}-${String(cell.day).padStart(2, '0')}`;
+                                        setSelectedCellDate(dateStr);
+                                        setIsCellModalOpen(true);
+                                    }}
+                                    className={`min-h-[145px] p-1.5 border-r border-b border-[#D7E3EE] flex flex-col gap-1 transition-all hover:bg-blue-50/40 cursor-pointer group ${!cell.currentMonth ? 'bg-slate-50/40 opacity-40' : 'bg-white'}`}
+                                >
+                                    <div className="flex justify-between items-start mb-0.5 shrink-0">
+                                        <span className={`text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full ${isToday ? 'bg-[#00A3A6] text-white shadow-xs' : 'text-[#60738E]'}`}>
+                                            {cell.day}
+                                        </span>
+                                        {dateItems.length > 0 && (
+                                            <span className="text-[10px] font-bold text-[#60738E] bg-[#F8FAFC] border border-[#D7E3EE] px-1.5 py-0.2 rounded-full">
+                                                {dateItems.length}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col gap-1 overflow-y-auto max-h-[110px] custom-scrollbar pr-0.5">
+                                        {dateItems.map(item => (
+                                            <button 
+                                                key={`${item.type}-${item.id}`}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedItem(item);
+                                                }}
+                                                className={`text-[10px] font-semibold px-2 py-0.5 rounded text-left truncate transition-all cursor-pointer shadow-2xs shrink-0 ${getItemBadgeStyle(item)}`}
+                                            >
+                                                {item.startTime && <span className="font-bold mr-1 opacity-80">{item.startTime.substring(0,5)}</span>}
+                                                <span>{item.type === 'TASK' ? `[Task] ${item.title}` : item.title}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 
-            {/* Item Details Sidebar */}
+            {/* Item Details Sidebar Drawer */}
             <AnimatePresence>
                 {selectedItem && (
                     <div className="fixed inset-0 z-50 flex justify-end">
@@ -271,114 +292,106 @@ const CrmCalendarPage = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+                            className="fixed inset-0 bg-black/40 backdrop-blur-xs"
                             onClick={() => setSelectedItem(null)}
                         />
                         <motion.div 
                             initial={{ x: '100%' }}
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
-                            className="relative w-full max-w-md bg-card h-full shadow-2xl border-l border-border flex flex-col"
+                            className="relative w-full max-w-md bg-white h-full shadow-2xl border-l border-[#D7E3EE] flex flex-col z-50"
                         >
-                            <header className="p-6 border-b border-border flex items-center justify-between">
+                            <header className="p-4 border-b border-[#D7E3EE] flex items-center justify-between bg-[#F8FAFC]">
                                 <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-theme ${selectedItem.type === 'TASK' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'}`}>
-                                        <CalendarIcon size={20} />
+                                    <div className={`p-2 rounded-lg ${selectedItem.type === 'TASK' ? 'bg-blue-100 text-blue-700' : 'bg-teal-100 text-teal-700'}`}>
+                                        <CalendarIcon size={18} />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-foreground">{selectedItem.title}</h3>
-                                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">{selectedItem.type} Details</span>
+                                        <h3 className="text-sm font-bold text-[#102A43]">{selectedItem.title}</h3>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#60738E]">{selectedItem.type} Details</span>
                                     </div>
                                 </div>
-                                <button onClick={() => setSelectedItem(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
+                                <button onClick={() => setSelectedItem(null)} className="p-1.5 hover:bg-slate-200 rounded-full text-[#60738E] transition-colors"><X size={18} /></button>
                             </header>
 
-                            <div className="flex-1 p-6 space-y-6 overflow-y-auto">
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3 text-sm text-foreground-muted">
-                                        <Clock size={16} />
-                                        <span className="font-medium">{selectedItem.date} {selectedItem.startTime ? `@ ${selectedItem.startTime.substring(0,5)}` : ''}</span>
+                            <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+                                <div className="flex items-center justify-between bg-[#F8FAFC] p-3 border border-[#D7E3EE] rounded-lg">
+                                    <div className="flex items-center gap-2 text-xs font-bold text-[#102A43]">
+                                        <Clock size={14} className="text-[#0178BC]" />
+                                        <span>{selectedItem.date} {selectedItem.startTime ? `@ ${selectedItem.startTime.substring(0,5)}` : ''}</span>
                                     </div>
-                                    {selectedItem.leadName && (
-                                        <div className="flex items-center gap-3 text-sm text-foreground-muted">
-                                            <Users size={16} />
-                                            <span className="font-medium">Lead: {selectedItem.leadName}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex items-center gap-3 text-sm text-foreground-muted">
-                                        <Tag size={16} />
-                                        <div className="flex gap-2">
-                                            {selectedItem.status && <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-bold uppercase">{selectedItem.status}</span>}
-                                            {selectedItem.priority && <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-bold uppercase">{selectedItem.priority}</span>}
-                                        </div>
-                                    </div>
+
+                                    <button
+                                        onClick={() => {
+                                            if (selectedItem.type === 'TASK') {
+                                                navigate(`/crm-dashboard/tasks/edit/${selectedItem.id}`);
+                                            } else {
+                                                navigate(`/crm-dashboard/calendar/events/edit/${selectedItem.id}`);
+                                            }
+                                        }}
+                                        className="px-2.5 py-1 bg-white border border-[#C9D8E5] text-[#0178BC] rounded text-xs font-bold hover:bg-blue-50 flex items-center gap-1 cursor-pointer"
+                                    >
+                                        <Edit3 size={12} /> Edit {selectedItem.type === 'TASK' ? 'Task' : 'Event'}
+                                    </button>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-foreground-muted">Description / Intelligence</h4>
-                                    <p className="text-sm text-foreground leading-relaxed italic border-l-4 border-border pl-4">
-                                        {selectedItem.description || "No strategic brief provided for this engagement."}
+                                {selectedItem.leadName && (
+                                    <div className="flex items-center gap-2 text-xs text-[#102A43] font-medium">
+                                        <Users size={14} className="text-[#60738E]" />
+                                        <span>Related Lead: <strong>{selectedItem.leadName}</strong></span>
+                                    </div>
+                                )}
+
+                                <div className="space-y-1.5">
+                                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#60738E]">Description / Remarks</h4>
+                                    <p className="text-xs text-[#102A43] leading-relaxed bg-[#F8FAFC] p-3 rounded-md border border-[#D7E3EE] italic">
+                                        {selectedItem.description || selectedItem.comments || "No strategic brief provided for this engagement."}
                                     </p>
                                 </div>
 
                                 {/* Reminder Section */}
-                                <div className="pt-6 border-t border-border mt-6">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <Bell className="h-4 w-4 text-primary" />
-                                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary">Strategic Reminder Matrix</h4>
+                                <div className="pt-4 border-t border-[#D7E3EE]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Bell size={15} className="text-[#0178BC]" />
+                                        <h4 className="text-xs font-bold uppercase text-[#102A43]">Reminder Settings</h4>
                                     </div>
                                     
                                     {selectedItem.reminderId && !isRescheduling ? (
-                                        <div className="bg-primary/5 border border-primary/10 rounded-theme p-4">
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                                             <div className="flex justify-between items-start">
                                                 <div>
-                                                    <p className="text-xs font-medium text-primary">
+                                                    <p className="text-xs font-medium text-blue-900">
                                                         Active alert scheduled for:
                                                     </p>
-                                                    <p className="text-lg font-bold text-primary mt-1">
+                                                    <p className="text-sm font-bold text-blue-900 mt-0.5">
                                                         {new Date(selectedItem.remindAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}
                                                     </p>
-                                                    {selectedItem.channels && selectedItem.channels.length > 0 && (
-                                                        <div className="flex gap-1 mt-2">
-                                                            {selectedItem.channels.map(ch => (
-                                                                <span key={ch} className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter ${
-                                                                    ch === 'WHATSAPP' ? 'bg-green-500 text-white' : 
-                                                                    ch === 'EMAIL' ? 'bg-blue-500 text-white' : 
-                                                                    'bg-orange-500 text-white'
-                                                                }`}>
-                                                                    {ch}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                    )}
                                                 </div>
-                                                <div className="flex flex-col gap-2">
+                                                <div className="flex flex-col gap-1.5">
                                                     <button 
                                                         onClick={() => setIsRescheduling(true)}
-                                                        className="text-[9px] font-bold uppercase tracking-widest bg-primary text-primary-foreground px-3 py-1.5 rounded-theme shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+                                                        className="text-[10px] font-bold bg-[#0178BC] text-white px-2.5 py-1 rounded hover:bg-[#005A8C] transition-all"
                                                     >
                                                         Reschedule
                                                     </button>
                                                     <button 
                                                         onClick={handleDeleteReminder}
-                                                        className="text-[9px] font-bold uppercase tracking-widest bg-white border border-border text-error px-3 py-1.5 rounded-theme hover:bg-error/5 transition-all"
+                                                        className="text-[10px] font-bold bg-white border border-red-200 text-red-600 px-2.5 py-1 rounded hover:bg-red-50 transition-all"
                                                     >
-                                                        Cancel Alert
+                                                        Cancel
                                                     </button>
                                                 </div>
                                             </div>
-                                            {selectedItem.reminderDismissed && <span className="inline-block mt-3 px-2 py-0.5 bg-success/10 text-success text-[8px] font-bold rounded uppercase tracking-widest">Protocol Executed</span>}
                                         </div>
                                     ) : (
-                                        <div className="space-y-4">
-                                            {/* Channel Selector */}
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-bold text-foreground-muted uppercase pl-1">Delivery Channels</label>
-                                                <div className="flex flex-wrap gap-2">
+                                        <div className="space-y-3">
+                                            <div className="space-y-1.5">
+                                                <label className="text-[11px] font-bold text-[#60738E] uppercase">Delivery Channels</label>
+                                                <div className="flex flex-wrap gap-1.5">
                                                     {[
-                                                        { id: 'SYSTEM', label: 'Pop-up', color: 'bg-primary' },
-                                                        { id: 'WHATSAPP', label: 'WhatsApp', color: 'bg-green-500' },
-                                                        { id: 'EMAIL', label: 'Email', color: 'bg-blue-500' },
+                                                        { id: 'SYSTEM', label: 'Pop-up', color: 'bg-[#0178BC]' },
+                                                        { id: 'WHATSAPP', label: 'WhatsApp', color: 'bg-emerald-600' },
+                                                        { id: 'EMAIL', label: 'Email', color: 'bg-blue-600' },
                                                         { id: 'SMS', label: 'SMS', color: 'bg-orange-500' }
                                                     ].map(ch => {
                                                         const active = selectedChannels.includes(ch.id);
@@ -388,10 +401,10 @@ const CrmCalendarPage = () => {
                                                                 onClick={() => setSelectedChannels(prev => 
                                                                     active ? prev.filter(p => p !== ch.id) : [...prev, ch.id]
                                                                 )}
-                                                                className={`px-4 py-2 rounded-theme text-[9px] font-bold uppercase tracking-widest transition-all border ${
+                                                                className={`px-3 py-1 rounded text-[10px] font-bold transition-all border ${
                                                                     active 
-                                                                    ? `${ch.color} text-white border-transparent shadow-md` 
-                                                                    : 'bg-white text-foreground-muted border-border'
+                                                                    ? `${ch.color} text-white border-transparent shadow-xs` 
+                                                                    : 'bg-white text-[#60738E] border-[#C9D8E5]'
                                                                 }`}
                                                             >
                                                                 {ch.label}
@@ -401,56 +414,37 @@ const CrmCalendarPage = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Recipient Input - Only show if external channels are selected */}
                                             {(selectedChannels.includes('WHATSAPP') || selectedChannels.includes('EMAIL') || selectedChannels.includes('SMS')) && (
-                                                <div className="space-y-1.5">
-                                                    <label className="text-[10px] font-bold text-foreground-muted uppercase pl-1">Recipient (Phone or Email)</label>
+                                                <div className="space-y-1">
+                                                    <label className="text-[11px] font-bold text-[#60738E] uppercase">Recipient (Phone or Email)</label>
                                                     <input 
                                                         type="text" 
                                                         placeholder={selectedChannels.includes('EMAIL') ? 'email@example.com' : '+971...'}
                                                         value={recipient}
                                                         onChange={(e) => setRecipient(e.target.value)}
-                                                        className="w-full h-11 px-4 bg-background border border-border rounded-theme text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                        className="w-full px-3 py-1.5 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-8"
                                                     />
                                                 </div>
                                             )}
 
-                                            {/* Time Picker */}
-                                            <div className="space-y-1.5">
-                                                <label className="text-[10px] font-bold text-foreground-muted uppercase pl-1">
-                                                    {isRescheduling ? 'New Alert Time' : 'Target Alert Time'}
-                                                </label>
+                                            <div className="space-y-1">
+                                                <label className="text-[11px] font-bold text-[#60738E] uppercase">Target Alert Time</label>
                                                 <input 
                                                     type="time" 
                                                     value={reminderTime}
                                                     onChange={(e) => setReminderTime(e.target.value)}
-                                                    className="w-full h-11 px-4 bg-background border border-border rounded-theme text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                                                    className="w-full px-3 py-1.5 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-8"
                                                 />
                                             </div>
 
-                                            <div className="flex gap-2">
-                                                {isRescheduling && (
-                                                    <button 
-                                                        onClick={() => setIsRescheduling(false)}
-                                                        className="flex-1 h-11 bg-white border border-border text-foreground-muted rounded-theme font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-all"
-                                                    >
-                                                        Abort
-                                                    </button>
-                                                )}
-                                                <button 
-                                                    onClick={handleSetReminder}
-                                                    disabled={
-                                                        !reminderTime || 
-                                                        selectedChannels.length === 0 || 
-                                                        ((selectedChannels.includes('WHATSAPP') || selectedChannels.includes('EMAIL') || selectedChannels.includes('SMS')) && !recipient) ||
-                                                        settingReminder
-                                                    }
-                                                    className="flex-[2] h-11 bg-primary text-primary-foreground rounded-theme font-bold text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                                >
-                                                    {settingReminder ? <Loader className="animate-spin h-4 w-4" /> : <Bell className="h-4 w-4" />}
-                                                    {isRescheduling ? 'Confirm Reschedule' : 'Configure Alert Protocol'}
-                                                </button>
-                                            </div>
+                                            <button 
+                                                onClick={handleSetReminder}
+                                                disabled={!reminderTime || selectedChannels.length === 0 || settingReminder}
+                                                className="w-full py-1.5 bg-[#0178BC] text-white rounded-md font-bold text-xs hover:bg-[#005A8C] transition-all disabled:opacity-40 cursor-pointer flex items-center justify-center gap-1.5"
+                                            >
+                                                {settingReminder ? <Loader size={14} className="animate-spin" /> : <Bell size={14} />}
+                                                Configure Reminder
+                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -460,37 +454,117 @@ const CrmCalendarPage = () => {
                 )}
             </AnimatePresence>
 
-            {/* Task Drawer */}
+            {/* Grid Date Cell Schedule Summary Modal */}
             <AnimatePresence>
-                {isTaskDrawerOpen && (
-                    <div className="fixed inset-0 z-50 flex justify-end">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsTaskDrawerOpen(false)} />
-                        <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="relative w-full max-w-lg bg-card h-full shadow-2xl border-l border-border flex flex-col">
-                            <CrmTaskForm 
-                                item={itemToEdit} 
-                                onSave={handleSaveTask} 
-                                onCancel={() => setIsTaskDrawerOpen(false)} 
-                            />
+                {isCellModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/50 backdrop-blur-xs"
+                            onClick={() => setIsCellModalOpen(false)}
+                        />
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="relative w-full max-w-md bg-white rounded-lg shadow-2xl border border-[#D7E3EE] z-50 overflow-hidden flex flex-col max-h-[85vh]"
+                        >
+                            <div className="p-4 border-b border-[#D7E3EE] flex justify-between items-center bg-[#F8FAFC]">
+                                <div>
+                                    <h3 className="text-sm font-bold text-[#102A43]">Assigned Schedule Summary</h3>
+                                    <p className="text-xs text-[#60738E] mt-0.5">Date: <strong>{selectedCellDate}</strong></p>
+                                </div>
+                                <button onClick={() => setIsCellModalOpen(false)} className="p-1 rounded-full text-[#60738E] hover:bg-slate-200 transition-colors"><X size={18} /></button>
+                            </div>
+                            
+                            <div className="p-4 flex flex-col gap-3 overflow-y-auto custom-scrollbar flex-1">
+                                {(() => {
+                                    const cellItems = items.filter(i => i.date === selectedCellDate);
+                                    const taskCount = cellItems.filter(i => i.type === 'TASK').length;
+                                    const eventCount = cellItems.filter(i => i.type === 'EVENT' || i.type !== 'TASK').length;
+
+                                    if (cellItems.length === 0) {
+                                        return (
+                                            <div className="py-8 text-center text-xs text-[#60738E]">
+                                                No tasks or events assigned on <strong>{selectedCellDate}</strong>.
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <>
+                                            <div className="grid grid-cols-2 gap-2 bg-[#F8FAFC] p-2.5 border border-[#D7E3EE] rounded-lg text-xs">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-bold text-[#60738E] uppercase">Total Tasks</span>
+                                                    <span className="text-sm font-bold text-blue-600">{taskCount}</span>
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-bold text-[#60738E] uppercase">Total Events / Meetings</span>
+                                                    <span className="text-sm font-bold text-teal-600">{eventCount}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2 mt-1">
+                                                <h4 className="text-xs font-bold text-[#102A43]">Schedule List ({cellItems.length})</h4>
+                                                <div className="flex flex-col gap-2">
+                                                    {cellItems.map(item => (
+                                                        <div 
+                                                            key={`${item.type}-${item.id}`}
+                                                            onClick={() => {
+                                                                setIsCellModalOpen(false);
+                                                                setSelectedItem(item);
+                                                            }}
+                                                            className={`p-3 rounded-lg border text-xs cursor-pointer transition-all hover:shadow-xs flex items-start justify-between gap-2 ${
+                                                                item.type === 'TASK' 
+                                                                ? 'bg-blue-50/50 border-blue-200 hover:bg-blue-100/50' 
+                                                                : 'bg-teal-50/50 border-teal-200 hover:bg-teal-100/50'
+                                                            }`}
+                                                        >
+                                                            <div className="flex flex-col gap-1 min-w-0">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase ${
+                                                                        item.type === 'TASK' ? 'bg-blue-600 text-white' : 'bg-[#00A3A6] text-white'
+                                                                    }`}>
+                                                                        {item.type}
+                                                                    </span>
+                                                                    {item.startTime && (
+                                                                        <span className="text-[11px] font-bold text-[#60738E]">
+                                                                            {item.startTime.substring(0, 5)}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <h5 className="font-bold text-[#102A43] truncate">{item.title}</h5>
+                                                                {item.leadName && (
+                                                                    <p className="text-[11px] text-[#60738E]">Lead: {item.leadName}</p>
+                                                                )}
+                                                            </div>
+
+                                                            <span className="text-[10px] font-bold text-[#0178BC] shrink-0 hover:underline">
+                                                                View Details →
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </>
+                                    );
+                                })()}
+                            </div>
                         </motion.div>
                     </div>
                 )}
             </AnimatePresence>
 
-            {/* Event Drawer */}
-            <AnimatePresence>
-                {isEventDrawerOpen && (
-                    <div className="fixed inset-0 z-50 flex justify-end">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsEventDrawerOpen(false)} />
-                        <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="relative w-full max-w-lg bg-card h-full shadow-2xl border-l border-border flex flex-col">
-                            <CrmEventForm 
-                                item={itemToEdit} 
-                                onSave={handleSaveEvent} 
-                                onCancel={() => setIsEventDrawerOpen(false)} 
-                            />
-                        </motion.div>
+            {loading && (
+                <div className="fixed inset-0 bg-white/50 backdrop-blur-xs z-50 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-2">
+                        <div className="w-8 h-8 border-3 border-[#00A3A6] border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-xs font-bold text-[#00A3A6]">Loading strategic calendar...</p>
                     </div>
-                )}
-            </AnimatePresence>
+                </div>
+            )}
         </div>
     );
 };
