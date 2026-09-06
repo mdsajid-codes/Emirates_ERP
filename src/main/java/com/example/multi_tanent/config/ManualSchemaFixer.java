@@ -61,6 +61,34 @@ public class ManualSchemaFixer implements CommandLineRunner {
                     """;
                     jdbcTemplate.execute(createNotificationsSql);
                     logger.info("Ensured notifications table exists for tenant: {}", tenant.getTenantId());
+
+                    try {
+                        jdbcTemplate.execute("ALTER TABLE crm_kpi_ranges ADD COLUMN from_percent DOUBLE");
+                    } catch (Exception ignored) {}
+                    try {
+                        jdbcTemplate.execute("ALTER TABLE crm_kpi_ranges ADD COLUMN to_percent DOUBLE");
+                    } catch (Exception ignored) {}
+                    try {
+                        jdbcTemplate.execute("ALTER TABLE crm_kpi_ranges ADD COLUMN color VARCHAR(50)");
+                    } catch (Exception ignored) {}
+                    try {
+                        jdbcTemplate.execute("ALTER TABLE crm_kpi_ranges ADD COLUMN location_id BIGINT NULL");
+                    } catch (Exception ignored) {}
+                    try {
+                        jdbcTemplate.execute("ALTER TABLE crm_kpi_ranges MODIFY COLUMN min_value DECIMAL(19,2) NULL");
+                    } catch (Exception ignored) {}
+                    try {
+                        jdbcTemplate.execute("ALTER TABLE crm_kpi_ranges MODIFY COLUMN max_value DECIMAL(19,2) NULL");
+                    } catch (Exception ignored) {}
+                    try {
+                        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS crm_todo_labels_link (todo_id BIGINT NOT NULL, label_id BIGINT NOT NULL, PRIMARY KEY (todo_id, label_id))");
+                    } catch (Exception ignored) {}
+                    try {
+                        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS crm_todo_employees (todo_id BIGINT NOT NULL, employee_id BIGINT NOT NULL, PRIMARY KEY (todo_id, employee_id))");
+                    } catch (Exception ignored) {}
+                    try {
+                        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS crm_todo_contacts (todo_id BIGINT NOT NULL, contact_id BIGINT NOT NULL, PRIMARY KEY (todo_id, contact_id))");
+                    } catch (Exception ignored) {}
                 } catch (Exception e) {
                     boolean tableMissing = false;
                     Throwable cause = e;

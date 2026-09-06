@@ -239,76 +239,114 @@ const CrmLeadStage = ({ locationId }) => {
     }, [stages, searchTerm, locationId]);
 
     return (
-        <div className="p-6 bg-card rounded-xl shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-foreground">Manage Lead Stages</h3>
-                <div className="flex items-center gap-2">
-                    <div className="relative">
-                        <input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="input w-full sm:w-64 pr-10 bg-background-muted border-border" />
-                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground-muted" />
+        <div className="p-4 sm:p-5 bg-white text-[#102A43]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <h3 className="text-lg font-bold text-[#102A43]">Manage Lead Stages</h3>
+                <div className="flex items-center gap-2.5">
+                    <div className="relative flex-1 sm:w-64">
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full pl-3 pr-9 py-1.5 bg-[#F8FAFC] border border-[#D7E3EE] rounded-lg text-xs text-[#102A43] placeholder-[#60738E] focus:outline-none focus:border-[#0178BC] focus:bg-white transition-all h-9"
+                        />
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#60738E]" />
                     </div>
-                    <button onClick={handleAdd} className="flex items-center gap-2 btn-secondary">
-                        <PlusCircle size={16} /> Add Stage
+                    <button
+                        onClick={handleAdd}
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white border border-[#D7E3EE] hover:bg-slate-50 text-[#102A43] rounded-lg text-xs font-semibold shadow-2xs transition-colors shrink-0 h-9 cursor-pointer"
+                    >
+                        <PlusCircle size={15} className="text-[#0178BC]" /> Add Stage
                     </button>
                 </div>
             </div>
 
-            {error && <p className="text-red-500 mb-4">{error}</p>}
+            {error && <p className="text-xs text-red-500 mb-3 bg-red-50 p-2.5 rounded border border-red-200">{error}</p>}
 
-            <div className="overflow-x-auto border border-border rounded-lg">
-                <table className="min-w-full divide-y divide-border">
-                    <thead className="bg-background-muted">
-                        <tr>
-                            <th className="th-cell w-12 text-center">S.No.</th>
-                            <th className="th-cell min-w-[150px]">Status Name</th>
-                            <th className="th-cell text-center w-20">Default</th>
-                            <th className="th-cell text-center w-20">Converted</th>
-                            <th className="th-cell text-center w-20">Won</th>
-                            <th className="th-cell text-center w-20">MQL</th>
-                            <th className="th-cell text-center w-20">SQL</th>
-                            <th className="th-cell min-w-[140px]">Move To</th>
-                            <th className="th-cell w-24">Probability</th>
-                            <th className="th-cell text-center w-20">Assign To</th>
-                            <th className="th-cell w-32 text-center">Action</th>
+            <div className="overflow-x-auto border border-[#E1E9F0] rounded-xl shadow-2xs bg-white">
+                <table className="w-full text-left border-collapse min-w-full">
+                    <thead>
+                        <tr className="bg-[#F4F8FB] border-b border-[#E1E9F0] text-[10px] font-bold text-[#486581] uppercase tracking-tight">
+                            <th className="py-2.5 px-2 text-center font-bold">S.NO.</th>
+                            <th className="py-2.5 px-2 font-bold min-w-[140px]">STATUS NAME</th>
+                            <th className="py-2.5 px-1.5 text-center font-bold">DEFAULT</th>
+                            <th className="py-2.5 px-1.5 text-center font-bold">CONVERTED</th>
+                            <th className="py-2.5 px-1.5 text-center font-bold">WON</th>
+                            <th className="py-2.5 px-1.5 text-center font-bold">MQL</th>
+                            <th className="py-2.5 px-1.5 text-center font-bold">SQL</th>
+                            <th className="py-2.5 px-2 font-bold min-w-[120px]">MOVE TO</th>
+                            <th className="py-2.5 px-2 font-bold text-center">PROBABILITY</th>
+                            <th className="py-2.5 px-1.5 text-center font-bold">ASSIGN TO</th>
+                            <th className="py-2.5 px-2 text-center font-bold">ACTION</th>
                         </tr>
                     </thead>
-                    <tbody className="bg-card divide-y divide-border text-foreground-muted">
+                    <tbody className="divide-y divide-[#E1E9F0] text-xs text-[#102A43]">
                         {loading ? (
-                            <tr><td colSpan="11" className="text-center py-10"><Loader className="animate-spin h-8 w-8 text-primary mx-auto" /></td></tr>
+                            <tr>
+                                <td colSpan="11" className="text-center py-12">
+                                    <Loader className="animate-spin h-7 w-7 text-[#0178BC] mx-auto" />
+                                </td>
+                            </tr>
                         ) : filteredData.length > 0 ? (
                             filteredData.map((item, index, arr) => (
-                                <tr key={item.id} className="hover:bg-background-muted transition-colors">
-                                    <td className="td-cell text-center">{index + 1}</td>
-                                    <td className="td-cell p-2">
+                                <tr key={item.id} className="hover:bg-[#F8FAFC] transition-colors">
+                                    <td className="py-2.5 px-3 text-center font-semibold text-[#486581]">{index + 1}</td>
+                                    <td className="py-2.5 px-3">
                                         <input
                                             type="text"
                                             onBlur={(e) => {
                                                 if (e.target.value !== item.name) handleUpdateField(item.id, 'name', e.target.value);
                                             }}
                                             defaultValue={item.name}
-                                            className="input w-full bg-background border-border h-8 text-sm"
+                                            className="w-full px-2.5 py-1 bg-white border border-[#C9D8E5] rounded-md text-xs font-medium text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none h-8"
                                         />
                                     </td>
-                                    <td className="td-cell text-center">
-                                        <input type="radio" checked={item.isDefault} onChange={() => handleUpdateField(item.id, 'isDefault', true)} className="h-4 w-4 text-primary focus:ring-primary cursor-pointer" />
+                                    <td className="py-2.5 px-3 text-center">
+                                        <input
+                                            type="radio"
+                                            checked={item.isDefault}
+                                            onChange={() => handleUpdateField(item.id, 'isDefault', true)}
+                                            className="w-4 h-4 text-[#0178BC] accent-[#0178BC] cursor-pointer"
+                                        />
                                     </td>
-                                    <td className="td-cell text-center">
-                                        <input type="radio" checked={item.isConverted} onChange={() => handleUpdateField(item.id, 'isConverted', true)} className="h-4 w-4 text-primary focus:ring-primary cursor-pointer" />
+                                    <td className="py-2.5 px-3 text-center">
+                                        <input
+                                            type="radio"
+                                            checked={item.isConverted}
+                                            onChange={() => handleUpdateField(item.id, 'isConverted', true)}
+                                            className="w-4 h-4 text-[#0178BC] accent-[#0178BC] cursor-pointer"
+                                        />
                                     </td>
-                                    <td className="td-cell text-center">
-                                        <input type="radio" checked={item.isWon} onChange={() => handleUpdateField(item.id, 'isWon', true)} className="h-4 w-4 text-primary focus:ring-primary cursor-pointer" />
+                                    <td className="py-2.5 px-3 text-center">
+                                        <input
+                                            type="radio"
+                                            checked={item.isWon}
+                                            onChange={() => handleUpdateField(item.id, 'isWon', true)}
+                                            className="w-4 h-4 text-[#0178BC] accent-[#0178BC] cursor-pointer"
+                                        />
                                     </td>
-                                    <td className="td-cell text-center">
-                                        <input type="radio" checked={item.isMql} onChange={() => handleUpdateField(item.id, 'isMql', true)} className="h-4 w-4 text-primary focus:ring-primary cursor-pointer" />
+                                    <td className="py-2.5 px-3 text-center">
+                                        <input
+                                            type="radio"
+                                            checked={item.isMql}
+                                            onChange={() => handleUpdateField(item.id, 'isMql', true)}
+                                            className="w-4 h-4 text-[#0178BC] accent-[#0178BC] cursor-pointer"
+                                        />
                                     </td>
-                                    <td className="td-cell text-center">
-                                        <input type="radio" checked={item.isSql} onChange={() => handleUpdateField(item.id, 'isSql', true)} className="h-4 w-4 text-primary focus:ring-primary cursor-pointer" />
+                                    <td className="py-2.5 px-3 text-center">
+                                        <input
+                                            type="radio"
+                                            checked={item.isSql}
+                                            onChange={() => handleUpdateField(item.id, 'isSql', true)}
+                                            className="w-4 h-4 text-[#0178BC] accent-[#0178BC] cursor-pointer"
+                                        />
                                     </td>
-                                    <td className="td-cell p-2">
+                                    <td className="py-2.5 px-3">
                                         <select
                                             value={item.moveTo || ''}
                                             onChange={(e) => handleUpdateField(item.id, 'moveTo', e.target.value)}
-                                            className="input w-full bg-background border-border h-8 text-xs p-1"
+                                            className="w-full px-2.5 py-1 bg-white border border-[#C9D8E5] rounded-md text-xs font-medium text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none h-8 cursor-pointer"
                                         >
                                             <option value="">Select</option>
                                             <option value="QUOTATION">Quotation</option>
@@ -316,7 +354,7 @@ const CrmLeadStage = ({ locationId }) => {
                                             <option value="INVOICE">Invoice</option>
                                         </select>
                                     </td>
-                                    <td className="td-cell p-2">
+                                    <td className="py-2.5 px-3">
                                         <div className="relative">
                                             <input
                                                 type="number"
@@ -325,26 +363,57 @@ const CrmLeadStage = ({ locationId }) => {
                                                     const val = parseFloat(e.target.value);
                                                     if (!isNaN(val) && val !== item.probability) handleUpdateField(item.id, 'probability', val);
                                                 }}
-                                                className="input w-full bg-background border-border h-8 text-sm pr-6"
+                                                className="w-full px-2.5 py-1 bg-white border border-[#C9D8E5] rounded-md text-xs font-medium text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none h-8 pr-5"
                                                 min="0" max="100"
                                             />
-                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-foreground-muted">%</span>
+                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[#60738E]">%</span>
                                         </div>
                                     </td>
-                                    <td className="td-cell text-center">
-                                        <input type="checkbox" checked={item.assignTo} onChange={(e) => handleUpdateField(item.id, 'assignTo', e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer" />
+                                    <td className="py-2.5 px-3 text-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={item.assignTo}
+                                            onChange={(e) => handleUpdateField(item.id, 'assignTo', e.target.checked)}
+                                            className="w-4 h-4 rounded border-[#C9D8E5] text-[#0178BC] accent-[#0178BC] cursor-pointer"
+                                        />
                                     </td>
-                                    <td className="td-cell">
+                                    <td className="py-2.5 px-3">
                                         <div className="flex items-center justify-center gap-1">
-                                            <button onClick={() => handleMove(item.id, 'up')} disabled={index === 0} className="p-1 disabled:opacity-30 hover:bg-background-muted rounded text-blue-500"><ArrowUp size={16} /></button>
-                                            <button onClick={() => handleMove(item.id, 'down')} disabled={index === arr.length - 1} className="p-1 disabled:opacity-30 hover:bg-background-muted rounded text-blue-500"><ArrowDown size={16} /></button>
-                                            <button onClick={() => handleDelete(item.id)} className="p-1 bg-red-500 text-white rounded hover:bg-red-600 ml-2" title="Delete"><Trash2 size={16} /></button>
+                                            <button
+                                                onClick={() => handleMove(item.id, 'up')}
+                                                disabled={index === 0}
+                                                className="p-1 text-[#0178BC] hover:bg-[#E6F0F8] rounded transition-colors disabled:opacity-20 cursor-pointer"
+                                                title="Move Up"
+                                            >
+                                                <ArrowUp size={15} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleMove(item.id, 'down')}
+                                                disabled={index === arr.length - 1}
+                                                className="p-1 text-[#0178BC] hover:bg-[#E6F0F8] rounded transition-colors disabled:opacity-20 cursor-pointer"
+                                                title="Move Down"
+                                            >
+                                                <ArrowDown size={15} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(item.id)}
+                                                className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors ml-1 cursor-pointer"
+                                                title="Delete"
+                                            >
+                                                <Trash2 size={15} />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
                             ))
                         ) : (
-                            <tr><td colSpan="11" className="text-center py-10"><AlertCircle className="mx-auto h-12 w-12 text-foreground-muted/50" /><h3 className="mt-2 text-sm font-medium text-foreground">No lead stages found</h3><p className="mt-1 text-sm">Get started by adding a new lead stage.</p></td></tr>
+                            <tr>
+                                <td colSpan="11" className="text-center py-10">
+                                    <AlertCircle className="mx-auto h-10 w-10 text-[#60738E]/40" />
+                                    <h3 className="mt-2 text-xs font-bold text-[#102A43]">No lead stages found</h3>
+                                    <p className="mt-0.5 text-xs text-[#60738E]">Get started by adding a new lead stage.</p>
+                                </td>
+                            </tr>
                         )}
                     </tbody>
                 </table>

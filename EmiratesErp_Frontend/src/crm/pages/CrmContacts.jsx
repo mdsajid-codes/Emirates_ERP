@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { 
-    Edit, Trash2, PlusCircle, Loader, Search, X, 
+    Edit, Trash2, Plus, Loader, Search, X, 
     AlertCircle, Contact as ContactIcon, Eye, 
     ChevronLeft, ChevronRight, User, Mail, Phone,
     Briefcase, Shield, Calendar
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useCrmPermissions } from '../context/CrmPermissionsContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || '';
@@ -176,29 +177,13 @@ const CrmContacts = () => {
         fetchData();
     }, [fetchData]);
 
-    const handleAdd = () => { setEditingItem(null); setIsModalOpen(true); };
-    const handleEdit = (item) => { setEditingItem(item); setIsModalOpen(true); };
-    const handleCloseModal = () => { setIsModalOpen(false); setEditingItem(null); };
+    const navigate = useNavigate();
+
+    const handleAdd = () => { navigate('/crm-dashboard/contacts/new'); };
+    const handleEdit = (item) => { navigate(`/crm-dashboard/contacts/edit/${item.id}`); };
 
     const handleViewDetails = (item) => { setViewingItem(item); setIsViewModalOpen(true); };
     const handleCloseViewModal = () => { setIsViewModalOpen(false); setViewingItem(null); };
-
-    const handleSave = async (itemData) => {
-        setModalLoading(true);
-        const isUpdating = Boolean(itemData.id);
-        const url = isUpdating ? `${API_URL}/contacts/${itemData.id}` : `${API_URL}/contacts`;
-        const method = isUpdating ? 'put' : 'post';
-
-        try {
-            await axios[method](url, itemData, { headers: authHeaders });
-            await fetchData();
-            handleCloseModal();
-        } catch (err) {
-            alert(`Error: ${err.response?.data?.message || 'Failed to sync record.'}`);
-        } finally {
-            setModalLoading(false);
-        }
-    };
 
     const handleDelete = async (id) => {
         if (window.confirm('Erase this professional connection record?')) {
@@ -215,159 +200,175 @@ const CrmContacts = () => {
         const q = searchTerm.trim().toLowerCase();
         if (!q) return contacts;
         return contacts.filter(item =>
-            item.firstName.toLowerCase().includes(q) ||
+            item.firstName?.toLowerCase().includes(q) ||
             item.lastName?.toLowerCase().includes(q) ||
             item.email?.toLowerCase().includes(q)
         );
     }, [contacts, searchTerm]);
 
     return (
-        <div className="p-6 bg-card rounded-theme border border-border shadow-sm h-full flex flex-col min-h-[600px] animate-in fade-in duration-500">
-            {/* Header Section */}
-            <div className="flex flex-wrap justify-between items-center gap-6 mb-8">
-                <div className="flex items-center gap-3">
-                    <div className="h-8 w-1 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.4)]"></div>
-                    <h3 className="text-2xl font-bold text-foreground tracking-tighter uppercase">Contacts</h3>
+        <div className="w-full px-3 py-2 space-y-2 bg-slate-50/50 min-h-screen">
+            {/* Header & Actions Bar */}
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 bg-white p-2.5 rounded-lg border border-[#E8EEF7] shadow-2xs">
+                <div className="flex items-center gap-2.5">
+                    <div className="h-6 w-1 bg-[#00A3A6] rounded-full"></div>
+                    <h3 className="text-base font-extrabold text-[#0F2342] uppercase tracking-wide">CONTACTS</h3>
                 </div>
-                
-                <div className="flex items-center gap-3 flex-grow sm:flex-grow-0 justify-end">
-                    <div className="relative group">
+
+                <div className="flex flex-wrap items-center gap-2">
+                    {/* Search Input */}
+                    <div className="relative flex-1 sm:w-64">
+                        <Search className="w-4 h-4 text-[#62708A] absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
                             placeholder="Search records..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full sm:w-64 pl-4 pr-10 py-2.5 bg-background-muted/50 border border-border rounded-theme outline-none focus:ring-2 focus:ring-primary/20 transition-all text-xs font-bold"
+                            className="w-full pl-9 pr-3 py-1.5 bg-[#F8FAFC] rounded-lg text-xs text-[#111111] placeholder-[#62708A] outline-none border border-[#E8EEF7] focus:border-[#00A3A6] focus:bg-white transition-all"
                         />
-                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted group-focus-within:text-primary transition-colors" />
                     </div>
+
                     {hasPermission('CONTACT', 'create') && (
-                        <button 
-                            onClick={handleAdd} 
-                            className="bg-primary text-primary-foreground px-6 py-2.5 rounded-theme font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all flex items-center gap-2 active:scale-95"
+                        <button
+                            onClick={handleAdd}
+                            className="bg-[#00A3A6] hover:bg-[#008286] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer ml-auto sm:ml-0"
                         >
-                            <PlusCircle size={14} /> Add Contact
+                            <Plus className="h-4 w-4" /> Add Contact
                         </button>
                     )}
                 </div>
             </div>
 
             {error && (
-                <div className="bg-error/10 border border-error/20 text-error px-4 py-3 rounded-theme text-xs font-bold uppercase tracking-widest mb-6 flex items-center gap-3">
-                    <AlertCircle size={16} /> {error}
+                <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2">
+                    <AlertCircle size={15} /> {error}
                 </div>
             )}
 
-            {/* Table Area */}
-            <div className="flex-grow overflow-x-auto custom-scrollbar">
-                <table className="min-w-full border-collapse">
-                    <thead>
-                        <tr className="bg-background-muted/50 text-[10px] font-black text-foreground-muted uppercase tracking-[0.2em] text-left">
-                            <th className="px-6 py-4 border-b border-border w-16">S.No.</th>
-                            <th className="px-6 py-4 border-b border-border">Identity</th>
-                            <th className="px-6 py-4 border-b border-border">Email Terminal</th>
-                            <th className="px-6 py-4 border-b border-border">Secure Line</th>
-                            <th className="px-6 py-4 border-b border-border">Registration</th>
-                            <th className="px-6 py-4 border-b border-border w-32 text-center">Protocol</th>
-                        </tr>
-                    </thead>
-                    <tbody className="text-sm font-bold text-foreground">
-                        {loading ? (
-                            <tr>
-                                <td colSpan="6" className="py-20 text-center">
-                                    <div className="flex flex-col items-center gap-3">
-                                        <Loader className="animate-spin h-8 w-8 text-primary" />
-                                        <p className="text-[10px] font-black text-foreground-muted uppercase tracking-widest animate-pulse">Syncing Directory...</p>
-                                    </div>
-                                </td>
+            {/* Main Content Table Section */}
+            <div className="bg-white border border-[#E8EEF7] rounded-xl shadow-2xs overflow-hidden flex flex-col justify-between">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse min-w-[800px]">
+                        <thead>
+                            <tr className="bg-[#F8FAFC] border-b border-[#E8EEF7] text-[11px] font-bold text-[#486581] uppercase tracking-wider">
+                                <th className="py-3.5 px-5 w-16">S.NO.</th>
+                                <th className="py-3.5 px-5">IDENTITY</th>
+                                <th className="py-3.5 px-5">EMAIL TERMINAL</th>
+                                <th className="py-3.5 px-5">SECURE LINE</th>
+                                <th className="py-3.5 px-5">REGISTRATION</th>
+                                <th className="py-3.5 px-5 text-center">PROTOCOL</th>
                             </tr>
-                        ) : filteredData.length > 0 ? (
-                            filteredData.map((item, index) => (
-                                <tr key={item.id} className="hover:bg-background-muted/50 transition-colors group">
-                                    <td className="px-6 py-4 border-b border-border text-[10px] text-foreground-muted font-black">{currentPage * pageSize + index + 1}</td>
-                                    <td className="px-6 py-4 border-b border-border">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 rounded-theme bg-primary/5 text-primary flex items-center justify-center text-xs font-black border border-primary/10">
-                                                {item.firstName.charAt(0)}
-                                            </div>
-                                            <span className="group-hover:text-primary transition-colors italic">{item.firstName} {item.lastName}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 border-b border-border text-foreground-muted font-medium lowercase tracking-tight">{item.email || 'N/A'}</td>
-                                    <td className="px-6 py-4 border-b border-border text-foreground-muted font-medium">{item.phone || 'N/A'}</td>
-                                    <td className="px-6 py-4 border-b border-border text-[10px] text-foreground-muted uppercase tracking-tighter">{new Date(item.createdAt).toLocaleDateString()}</td>
-                                    <td className="px-6 py-4 border-b border-border">
-                                        <div className="flex items-center justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => handleViewDetails(item)} className="p-2 hover:bg-primary/10 text-primary rounded-theme transition-all" title="View Dossier"><Eye size={16} /></button>
-                                            {hasPermission('CONTACT', 'update') && (
-                                                <button onClick={() => handleEdit(item)} className="p-2 hover:bg-foreground/5 text-foreground rounded-theme transition-all" title="Edit Record"><Edit size={16} /></button>
-                                            )}
-                                            {hasPermission('CONTACT', 'delete') && (
-                                                <button onClick={() => handleDelete(item.id)} className="p-2 hover:bg-error/10 text-error rounded-theme transition-all" title="Erase Record"><Trash2 size={16} /></button>
-                                            )}
-                                        </div>
+                        </thead>
+                        <tbody className="divide-y divide-[#E8EEF7] text-xs text-[#102A43]">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="6" className="text-center py-16">
+                                        <Loader className="animate-spin h-7 w-7 text-[#00A3A6] mx-auto" />
                                     </td>
                                 </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="6" className="py-20 text-center">
-                                    <div className="flex flex-col items-center gap-4">
-                                        <div className="h-16 w-16 bg-background-muted rounded-full flex items-center justify-center ring-4 ring-background">
-                                            <ContactIcon className="h-8 w-8 text-foreground-muted/30" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <h3 className="text-sm font-black text-foreground uppercase tracking-widest italic">No connections detected</h3>
-                                            <p className="text-[10px] text-foreground-muted font-bold uppercase tracking-tighter">Initiate a new connection record to populate this matrix.</p>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+                            ) : filteredData.length > 0 ? (
+                                filteredData.map((item, index) => {
+                                    const initialsStr = item.firstName ? item.firstName.substring(0, 1).toUpperCase() : 'A';
+                                    return (
+                                        <tr key={item.id} className="hover:bg-[#F8FAFC] transition-colors group">
+                                            {/* S.No. */}
+                                            <td className="py-3 px-5 text-[#62708A] font-semibold">
+                                                {currentPage * pageSize + index + 1}
+                                            </td>
+
+                                            {/* Identity */}
+                                            <td className="py-3 px-5">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-7 h-7 rounded-full bg-[#E6F0F8] text-[#0178BC] font-bold text-xs flex items-center justify-center shrink-0">
+                                                        {initialsStr}
+                                                    </div>
+                                                    <span className="font-bold text-[#111111] group-hover:text-[#00A3A6] transition-colors">
+                                                        {item.firstName} {item.lastName}
+                                                    </span>
+                                                </div>
+                                            </td>
+
+                                            {/* Email */}
+                                            <td className="py-3 px-5 text-[#62708A] font-medium">
+                                                {item.email || 'N/A'}
+                                            </td>
+
+                                            {/* Phone */}
+                                            <td className="py-3 px-5 font-mono text-[#62708A]">
+                                                {item.phone || 'N/A'}
+                                            </td>
+
+                                            {/* Registration Date */}
+                                            <td className="py-3 px-5 text-[#62708A] font-medium">
+                                                {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}
+                                            </td>
+
+                                            {/* Protocol Actions */}
+                                            <td className="py-3 px-5">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button onClick={() => handleViewDetails(item)} className="p-1.5 text-[#62708A] hover:text-[#00A3A6] hover:bg-slate-100 rounded-md transition-colors" title="View Dossier">
+                                                        <Eye size={15} />
+                                                    </button>
+                                                    {hasPermission('CONTACT', 'update') && (
+                                                        <button onClick={() => handleEdit(item)} className="p-1.5 text-[#62708A] hover:text-[#0178BC] hover:bg-slate-100 rounded-md transition-colors" title="Edit Record">
+                                                            <Edit size={15} />
+                                                        </button>
+                                                    )}
+                                                    {hasPermission('CONTACT', 'delete') && (
+                                                        <button onClick={() => handleDelete(item.id)} className="p-1.5 text-[#62708A] hover:text-red-500 hover:bg-red-50 rounded-md transition-colors" title="Erase Record">
+                                                            <Trash2 size={15} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            ) : (
+                                <tr>
+                                    <td colSpan="6" className="py-16 text-center text-[#62708A]">No connections detected in current directory.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Table Bottom Pagination Bar */}
+                <div className="p-4 bg-white border-t border-[#E8EEF7] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#62708A]">
+                    <div>
+                        Showing {filteredData.length > 0 ? currentPage * pageSize + 1 : 0} to {Math.min((currentPage + 1) * pageSize, filteredData.length)} of {filteredData.length} results
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                            disabled={currentPage === 0}
+                            className="px-2.5 py-1.5 bg-white border border-[#E8EEF7] rounded-lg hover:bg-slate-50 font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                            ‹
+                        </button>
+                        {Array.from({ length: totalPages }, (_, i) => i).map(pageIdx => (
+                            <button
+                                key={pageIdx}
+                                onClick={() => setCurrentPage(pageIdx)}
+                                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                                    currentPage === pageIdx
+                                        ? 'bg-[#00A3A6] text-white shadow-xs'
+                                        : 'bg-white border border-[#E8EEF7] text-[#111111] hover:bg-slate-50'
+                                }`}
+                            >
+                                {pageIdx + 1}
+                            </button>
+                        ))}
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                            disabled={currentPage >= totalPages - 1}
+                            className="px-2.5 py-1.5 bg-white border border-[#E8EEF7] rounded-lg hover:bg-slate-50 font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                            ›
+                        </button>
+                    </div>
+                </div>
             </div>
-
-            {/* Pagination Footer */}
-            {!loading && totalPages > 1 && (
-                <footer className="flex flex-col sm:flex-row justify-between items-center pt-6 mt-4 border-t border-border">
-                    <div className="flex items-center gap-3 text-[10px] font-black text-foreground-muted uppercase tracking-widest mb-4 sm:mb-0">
-                        <span>Matrix Density:</span>
-                        <select 
-                            value={pageSize} 
-                            onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(0); }} 
-                            className="bg-background-muted border border-border rounded-theme px-2 py-1 outline-none focus:ring-1 focus:ring-primary/20"
-                        >
-                            {[10, 20, 50, 100].map(size => <option key={size} value={size}>{size}</option>)}
-                        </select>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <span className="text-[10px] font-black text-foreground-muted uppercase tracking-[0.2em]">
-                            Sector {currentPage + 1} / {totalPages}
-                        </span>
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 0} className="p-2.5 rounded-theme border border-border bg-background hover:bg-background-muted disabled:opacity-30 transition-all"><ChevronLeft className="h-4 w-4" /></button>
-                            <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage >= totalPages - 1} className="p-2.5 rounded-theme border border-border bg-background hover:bg-background-muted disabled:opacity-30 transition-all"><ChevronRight className="h-4 w-4" /></button>
-                        </div>
-                    </div>
-                </footer>
-            )}
-
-            {/* Side Panel for Add/Edit */}
-            <AnimatePresence>
-                {isModalOpen && (
-                    <>
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998]" onClick={handleCloseModal} />
-                        <motion.div
-                            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed top-0 right-0 h-full w-full max-w-md bg-card shadow-2xl z-[9999] border-l border-border flex flex-col"
-                        >
-                            <CrmContactForm item={editingItem} onSave={handleSave} onCancel={handleCloseModal} loading={modalLoading} />
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
 
             <ContactDetailsModal isOpen={isViewModalOpen} onClose={handleCloseViewModal} contact={viewingItem} />
         </div>
