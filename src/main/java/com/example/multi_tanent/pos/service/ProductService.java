@@ -404,10 +404,15 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductDto> getAllProductsForCurrentTenant() {
+    public List<ProductDto> getAllProductsForCurrentTenant(Long storeId) {
         Tenant currentTenant = getCurrentTenant();
         List<Product> products = productRepository.findByTenantId(currentTenant.getId());
-        return products.stream().map(this::toDto).collect(Collectors.toList());
+        return products.stream().map(p -> toDto(p, storeId)).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductDto> getAllProductsForCurrentTenant() {
+        return getAllProductsForCurrentTenant(null);
     }
 
     @Transactional(readOnly = true)
@@ -631,6 +636,10 @@ public class ProductService {
     }
 
     private ProductDto toDto(Product product) {
+        return toDto(product, null);
+    }
+
+    private ProductDto toDto(Product product, Long storeId) {
         ProductDto dto = new ProductDto();
         dto.setId(product.getId());
         dto.setName(product.getName());
@@ -641,7 +650,7 @@ public class ProductService {
             dto.setCategoryId(product.getCategory().getId());
             dto.setCategoryName(product.getCategory().getName());
         }
-        dto.setVariants(product.getVariants().stream().map(variant -> productVariantService.toDto(variant))
+        dto.setVariants(product.getVariants().stream().map(variant -> productVariantService.toDto(variant, storeId))
                 .collect(Collectors.toList()));
         return dto;
     }

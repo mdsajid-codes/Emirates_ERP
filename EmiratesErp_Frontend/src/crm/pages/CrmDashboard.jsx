@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
     DollarSign, Building2, Users, Briefcase, ClipboardList,
@@ -30,21 +31,32 @@ const formatTimeAgo = (ts) => {
     return d.toLocaleDateString();
 };
 
-/* ── Filter button ────────────────────────────── */
-const FilterBtn = ({ label }) => (
-    <button className="flex items-center gap-1 px-2.5 py-1 border border-[#E4EBF3] rounded-lg text-[11px] text-[#0F2342] bg-white hover:bg-slate-50 transition-colors">
-        {label} <ChevronDown className="w-3 h-3" />
-    </button>
+/* ── Filter select dropdown ──────────────────── */
+const PeriodFilterSelect = ({ value, onChange }) => (
+    <select 
+        value={value} 
+        onChange={(e) => onChange(e.target.value)}
+        className="px-2.5 py-1 border border-[#E4EBF3] rounded-lg text-[11px] font-medium text-[#0F2342] bg-white hover:bg-slate-50 transition-colors outline-none cursor-pointer"
+    >
+        <option value="THIS_WEEK">This Week</option>
+        <option value="THIS_MONTH">This Month</option>
+        <option value="THIS_QUARTER">This Quarter</option>
+        <option value="THIS_YEAR">This Year</option>
+        <option value="ALL_TIME">All Time</option>
+    </select>
 );
 
 /* ── KPI Card — HRMS compact style ───────────── */
-const KpiCard = ({ title, value, iconBg, icon, trend, trendColor }) => (
-    <div className="bg-white border border-[#E4EBF3] rounded-[12px] p-2.5 shadow-[0px_1px_3px_rgba(0,0,0,0.06)] flex items-center gap-2.5">
-        <div className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: iconBg }}>
+const KpiCard = ({ title, value, iconBg, icon, trend, trendColor, onClick }) => (
+    <div 
+        onClick={onClick}
+        className="bg-white border border-[#E4EBF3] hover:border-[#00828B]/40 rounded-[12px] p-2.5 shadow-[0px_1px_3px_rgba(0,0,0,0.06)] hover:shadow-md flex items-center gap-2.5 transition-all cursor-pointer group"
+    >
+        <div className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform" style={{ background: iconBg }}>
             {icon}
         </div>
         <div className="flex flex-col min-w-0">
-            <span className="text-[10.5px] font-semibold text-[#0F2342] truncate leading-tight">{title}</span>
+            <span className="text-[10.5px] font-semibold text-[#0F2342] truncate leading-tight group-hover:text-[#00828B] transition-colors">{title}</span>
             <span className="text-[18px] font-bold text-[#0F2342] leading-tight">{value}</span>
             <span className="text-[9.5px] leading-[14px] truncate" style={{ color: trendColor || '#5E7090' }}>{trend}</span>
         </div>
@@ -52,8 +64,11 @@ const KpiCard = ({ title, value, iconBg, icon, trend, trendColor }) => (
 );
 
 /* ── Activity row ─────────────────────────────── */
-const ActivityRow = ({ action, target, timestamp }) => (
-    <div className="flex items-start gap-2 py-2 border-b border-[#F0F4FA] last:border-0">
+const ActivityRow = ({ action, target, timestamp, onClick }) => (
+    <div 
+        onClick={onClick}
+        className="flex items-start gap-2 py-2 border-b border-[#F0F4FA] last:border-0 hover:bg-[#F7F9FC] px-1 rounded transition-colors cursor-pointer"
+    >
         <div className="flex-shrink-0 w-5 h-5 rounded-full bg-[#DCF7F5] flex items-center justify-center mt-0.5">
             <div className="w-2 h-2 rounded-full bg-[#00828B]" />
         </div>
@@ -93,6 +108,8 @@ const LegendRow = ({ color, label, count, pct }) => (
 
 /* ── Main dashboard ───────────────────────────── */
 const CrmDashboard = () => {
+    const navigate = useNavigate();
+    const [selectedPeriod, setSelectedPeriod] = useState('THIS_MONTH');
     const [data, setData] = useState({
         stats: { totalCompanies: 0, totalContacts: 0, openDeals: 0, totalRevenue: 0, pendingTasks: 0 },
         recentActivities: [],
@@ -112,7 +129,7 @@ const CrmDashboard = () => {
         const fetch = async () => {
             setLoading(true);
             try {
-                const res = await axios.get(`${API_URL}/crm/dashboard/summary`, { headers: authHeaders });
+                const res = await axios.get(`${API_URL}/crm/dashboard/summary?period=${selectedPeriod}`, { headers: authHeaders });
                 setData(prev => ({ ...prev, ...res.data }));
                 setError(null);
             } catch {
@@ -122,7 +139,27 @@ const CrmDashboard = () => {
             }
         };
         fetch();
-    }, [authHeaders]);
+    }, [authHeaders, selectedPeriod]);
+
+    const { stats, recentActivities, pipeline = {}, velocity = {}, leadSources = [], chartData = [] } = data;
+
+    /* Dynamic chart fallback generator - MUST BE DECLARED BEFORE EARLY RETURNS TO OBEY RULES OF HOOKS */
+    const dynamicLineData = useMemo(() => {
+        if (chartData && chartData.length > 0) return chartData;
+        const now = new Date();
+        const items = [];
+        for (let i = 4; i >= 0; i--) {
+            const d = new Date(now);
+            d.setDate(now.getDate() - (i * 7));
+            const monthStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            items.push({
+                month: monthStr,
+                won: i === 0 ? (Number(stats?.totalRevenue) || 0) : 0,
+                pipeline: i === 0 ? (Number(pipeline?.totalValue) || 0) : 0
+            });
+        }
+        return items;
+    }, [chartData, stats?.totalRevenue, pipeline?.totalValue]);
 
     if (loading) {
         return (
@@ -138,21 +175,12 @@ const CrmDashboard = () => {
             <div className="flex flex-col items-center justify-center h-full gap-3 text-red-500">
                 <XCircle className="h-10 w-10" />
                 <p className="font-bold text-sm">{error}</p>
-                <button onClick={() => window.location.reload()} className="px-3 py-1.5 bg-[#00828B] text-white rounded-lg text-xs font-bold">Retry</button>
+                <button onClick={() => window.location.reload()} className="px-3 py-1.5 bg-[#00828B] text-white rounded-lg text-xs font-bold cursor-pointer">Retry</button>
             </div>
         );
     }
 
-    const { stats, recentActivities, pipeline = {}, velocity = {}, leadSources = [], chartData = [] } = data;
-
-    /* chart fallback */
-    const lineData = chartData.length ? chartData : [
-        { month: 'May 1',  won: 0,   pipeline: 0 },
-        { month: 'May 8',  won: 0,   pipeline: 0 },
-        { month: 'May 15', won: 500, pipeline: 800 },
-        { month: 'May 22', won: 2000, pipeline: 3500 },
-        { month: 'May 29', won: Number(stats.totalRevenue) || 9500, pipeline: Number(pipeline.totalValue) || 0 },
-    ];
+    const lineData = dynamicLineData;
 
     const donutData = leadSources.length ? leadSources : [
         { name: 'Website',  value: 0, color: '#00A5AD' },
@@ -165,11 +193,51 @@ const CrmDashboard = () => {
     const donutDisplay = totalLeads === 0 ? [{ name: 'Empty', value: 1, color: '#E4EBF3' }] : donutData;
 
     const kpiCards = [
-        { title: 'Revenue (Won)',  value: formatRevenue(stats.totalRevenue), iconBg: '#DCF7F5', icon: <span className="font-bold text-[11px] text-[#00828B]">AED</span>, trend: `▲ ${pipeline.revenueGrowth ?? 12.5}% vs last 30 days`, trendColor: '#00828B' },
-        { title: 'Companies',     value: stats.totalCompanies,              iconBg: 'rgba(48,103,250,0.15)', icon: <Building2   className="w-4.5 h-4.5" style={{ color: '#3067FA' }} />, trend: '— 0% vs last 30 days', trendColor: '#5E7090' },
-        { title: 'Contacts',      value: stats.totalContacts,               iconBg: '#DCF7F5', icon: <Users       className="w-4.5 h-4.5" style={{ color: '#00828B' }} />, trend: '▲ 100% vs last 30 days', trendColor: '#00828B' },
-        { title: 'Open Deals',    value: stats.openDeals,                   iconBg: 'rgba(254,149,0,0.15)', icon: <Briefcase   className="w-4.5 h-4.5" style={{ color: '#FE9500' }} />, trend: '— 0% vs last 30 days', trendColor: '#5E7090' },
-        { title: 'Pending Tasks', value: stats.pendingTasks,                iconBg: 'rgba(255,74,74,0.16)', icon: <ClipboardList className="w-4.5 h-4.5" style={{ color: '#FF4A4A' }} />, trend: '— 0% vs last 30 days', trendColor: '#5E7090' },
+        { 
+            title: 'Revenue (Won)',  
+            value: formatRevenue(stats.totalRevenue), 
+            iconBg: '#DCF7F5', 
+            icon: <span className="font-bold text-[11px] text-[#00828B]">AED</span>, 
+            trend: `▲ ${pipeline.revenueGrowth ?? 12.5}% vs last period`, 
+            trendColor: '#00828B',
+            onClick: () => navigate('/crm-dashboard/deals')
+        },
+        { 
+            title: 'Companies',     
+            value: stats.totalCompanies,              
+            iconBg: 'rgba(48,103,250,0.15)', 
+            icon: <Building2 className="w-4.5 h-4.5" style={{ color: '#3067FA' }} />, 
+            trend: '— 0% vs last period', 
+            trendColor: '#5E7090',
+            onClick: () => navigate('/crm-dashboard/companies')
+        },
+        { 
+            title: 'Contacts',      
+            value: stats.totalContacts,               
+            iconBg: '#DCF7F5', 
+            icon: <Users className="w-4.5 h-4.5" style={{ color: '#00828B' }} />, 
+            trend: '▲ 100% vs last period', 
+            trendColor: '#00828B',
+            onClick: () => navigate('/crm-dashboard/contacts')
+        },
+        { 
+            title: 'Open Deals',    
+            value: stats.openDeals,                   
+            iconBg: 'rgba(254,149,0,0.15)', 
+            icon: <Briefcase className="w-4.5 h-4.5" style={{ color: '#FE9500' }} />, 
+            trend: '— 0% vs last period', 
+            trendColor: '#5E7090',
+            onClick: () => navigate('/crm-dashboard/deals')
+        },
+        { 
+            title: 'Pending Tasks', 
+            value: stats.pendingTasks,                
+            iconBg: 'rgba(255,74,74,0.16)', 
+            icon: <ClipboardList className="w-4.5 h-4.5" style={{ color: '#FF4A4A' }} />, 
+            trend: '— 0% vs last period', 
+            trendColor: '#5E7090',
+            onClick: () => navigate('/crm-dashboard/tasks')
+        },
     ];
 
     return (
@@ -205,17 +273,16 @@ const CrmDashboard = () => {
                         <div className="flex items-center justify-between mb-2">
                             <h2 className="text-[14px] font-semibold text-[#0F2342]">Pipeline Performance</h2>
                             <div className="flex gap-2">
-                                <FilterBtn label="This Month" />
-                                <FilterBtn label="Revenue" />
+                                <PeriodFilterSelect value={selectedPeriod} onChange={setSelectedPeriod} />
                             </div>
                         </div>
 
                         <div className="flex gap-3">
                             {/* Stats sidebar */}
                             <div className="flex flex-col gap-3 bg-[#F7F9FC] rounded-xl p-3 flex-shrink-0 w-[160px]">
-                                <PipelineStat label="Total Pipeline Value" value={formatRevenue(pipeline.totalValue ?? 0)} trend="— 0% vs last month" trendColor="#5E7090" />
-                                <PipelineStat label="Won Revenue" value={formatRevenue(stats.totalRevenue)} trend={`▲ ${pipeline.revenueGrowth ?? 12.5}% vs last month`} trendColor="#00853A" />
-                                <PipelineStat label="Conversion Rate" value={`${pipeline.conversionRate ?? 0}%`} trend="— 0% vs last month" trendColor="#5E7090" />
+                                <PipelineStat label="Total Pipeline Value" value={formatRevenue(pipeline.totalValue ?? 0)} trend="— 0% vs last period" trendColor="#5E7090" />
+                                <PipelineStat label="Won Revenue" value={formatRevenue(stats.totalRevenue)} trend={`▲ ${pipeline.revenueGrowth ?? 12.5}% vs last period`} trendColor="#00853A" />
+                                <PipelineStat label="Conversion Rate" value={`${pipeline.conversionRate ?? 0}%`} trend="— 0% vs last period" trendColor="#5E7090" />
                             </div>
 
                             {/* Chart */}
@@ -253,7 +320,7 @@ const CrmDashboard = () => {
                         <div className="bg-white border border-[#E4EBF3] rounded-[12px] p-3 shadow-[0px_1px_3px_rgba(0,0,0,0.06)]">
                             <div className="flex items-center justify-between mb-2">
                                 <h3 className="text-[13px] font-semibold text-[#0F2342]">Lead Source Distribution</h3>
-                                <FilterBtn label="This Month" />
+                                <PeriodFilterSelect value={selectedPeriod} onChange={setSelectedPeriod} />
                             </div>
                             <div className="flex items-center gap-4">
                                 <div className="relative flex-shrink-0">
@@ -282,12 +349,12 @@ const CrmDashboard = () => {
                         <div className="bg-white border border-[#E4EBF3] rounded-[12px] p-3 shadow-[0px_1px_3px_rgba(0,0,0,0.06)]">
                             <div className="flex items-center justify-between mb-2">
                                 <h3 className="text-[13px] font-semibold text-[#0F2342]">Sales Velocity</h3>
-                                <FilterBtn label="This Month" />
+                                <PeriodFilterSelect value={selectedPeriod} onChange={setSelectedPeriod} />
                             </div>
                             <div className="flex gap-3 mb-3">
-                                <VelocityStat label="Avg. Deal Size" value={formatRevenue(velocity.avgDealSize ?? 0)} trend="— 0% vs last month" trendColor="#5E7090" />
-                                <VelocityStat label="Sales Cycle" value={`${velocity.salesCycleDays ?? 0} days`} trend="— 0% vs last month" trendColor="#5E7090" />
-                                <VelocityStat label="Deals Closed" value={velocity.dealsClosed ?? 1} trend="▲ 100% vs last month" trendColor="#00828B" />
+                                <VelocityStat label="Avg. Deal Size" value={formatRevenue(velocity.avgDealSize ?? 0)} trend="— 0% vs last period" trendColor="#5E7090" />
+                                <VelocityStat label="Sales Cycle" value={`${velocity.salesCycleDays ?? 0} days`} trend="— 0% vs last period" trendColor="#5E7090" />
+                                <VelocityStat label="Deals Closed" value={velocity.dealsClosed ?? 1} trend="▲ 100% vs last period" trendColor="#00828B" />
                             </div>
                             <div className="flex items-start gap-1.5 bg-[#F7F9FC] rounded-lg p-2">
                                 <span className="text-sm">🌟</span>
@@ -306,13 +373,30 @@ const CrmDashboard = () => {
                     <div className="bg-white border border-[#E4EBF3] rounded-[12px] p-3 shadow-[0px_1px_3px_rgba(0,0,0,0.06)] flex flex-col gap-2 flex-1">
                         <div className="flex items-center justify-between">
                             <h3 className="text-[13px] font-semibold text-[#0F2342]">Recent Activity</h3>
-                            <button className="text-[10px] text-[#00828B] font-semibold hover:underline flex items-center gap-0.5">
+                            <button 
+                                onClick={() => navigate('/crm-dashboard/recent-activities')}
+                                className="text-[10px] text-[#00828B] font-semibold hover:underline flex items-center gap-0.5 cursor-pointer"
+                            >
                                 View All <ArrowUpRight className="w-2.5 h-2.5" />
                             </button>
                         </div>
                         <div className="flex-1 overflow-y-auto no-scrollbar">
                             {recentActivities && recentActivities.length > 0
-                                ? recentActivities.map((a, i) => <ActivityRow key={i} action={a.action} target={a.target} timestamp={a.timestamp} />)
+                                ? recentActivities.map((a, i) => (
+                                    <ActivityRow 
+                                        key={i} 
+                                        action={a.action} 
+                                        target={a.target} 
+                                        timestamp={a.timestamp} 
+                                        onClick={() => {
+                                            if (a.type === 'LEAD' && a.id) {
+                                                navigate(`/crm-dashboard/leads/${a.id}`);
+                                            } else {
+                                                navigate('/crm-dashboard/tasks');
+                                            }
+                                        }}
+                                    />
+                                ))
                                 : (
                                     <div className="flex flex-col items-center justify-center py-6 text-[#5E7090] gap-1.5">
                                         <TrendingUp className="w-6 h-6 opacity-30" />
@@ -321,7 +405,10 @@ const CrmDashboard = () => {
                                 )
                             }
                         </div>
-                        <button className="w-full py-2 border border-[#E4EBF3] rounded-lg text-[10px] font-semibold text-[#0F2342] hover:bg-[#F7F9FC] transition-colors flex items-center justify-center gap-1">
+                        <button 
+                            onClick={() => navigate('/crm-dashboard/recent-activities')}
+                            className="w-full py-2 border border-[#E4EBF3] rounded-lg text-[10px] font-semibold text-[#0F2342] hover:bg-[#F7F9FC] transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                        >
                             View Full Audit Log <ArrowUpRight className="w-2.5 h-2.5" />
                         </button>
                     </div>
@@ -335,7 +422,10 @@ const CrmDashboard = () => {
                         <p className="text-[10px] text-[#5E7090] leading-relaxed">
                             AI-powered insights to help you identify deals that need attention and close faster.
                         </p>
-                        <button className="w-full py-2.5 bg-[#00828B] text-white rounded-lg text-[11px] font-semibold hover:bg-[#006E77] transition-colors flex items-center justify-center gap-1">
+                        <button 
+                            onClick={() => navigate('/crm-dashboard/calling-data')}
+                            className="w-full py-2.5 bg-[#00828B] text-white rounded-lg text-[11px] font-semibold hover:bg-[#006E77] transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                        >
                             Launch Follow-up Campaign <ArrowUpRight className="w-3.5 h-3.5" />
                         </button>
                     </div>

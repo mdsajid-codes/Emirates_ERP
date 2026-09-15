@@ -40,6 +40,15 @@ public class InvoiceService {
 
         long totalPaid = sale.getPayments().stream().mapToLong(Payment::getAmountCents).sum();
 
+        String orderType = sale.getOrderType() != null ? sale.getOrderType().name().replace("_", " ") : "DINE IN";
+        String cashierName = sale.getUser() != null && sale.getUser().getName() != null ? sale.getUser().getName() : "Admin";
+        String paymentMethod = (sale.getPayments() != null && !sale.getPayments().isEmpty())
+                ? sale.getPayments().stream()
+                        .map(p -> p.getMethod() != null ? p.getMethod().toUpperCase() : "CASH")
+                        .distinct()
+                        .collect(Collectors.joining(", "))
+                : "CASH";
+
         return InvoiceDto.builder()
                 .saleId(sale.getId())
                 .orderId(sale.getOrderId())
@@ -55,6 +64,9 @@ public class InvoiceService {
                 .totalPaidCents(totalPaid)
                 .amountDueCents(sale.getTotalCents() - totalPaid)
                 .paymentStatus(sale.getPaymentStatus())
+                .orderType(orderType)
+                .cashierName(cashierName)
+                .paymentMethod(paymentMethod)
                 .build();
     }
 

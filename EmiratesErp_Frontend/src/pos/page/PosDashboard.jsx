@@ -6,7 +6,7 @@ import {
     LayoutDashboard,
     ShoppingCart,
     Package,
-    ClipboardList,
+    Warehouse,
     Users,
     BarChart3,
     Settings,
@@ -31,10 +31,9 @@ import NotificationBell from '../../components/notifications/NotificationBell';
 const NAV_ITEMS = [
     { name: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard, Component: PosDashboardView },
     { name: 'Sales',     label: 'Sales',     icon: ShoppingCart,    Component: SalesView },
-    { name: 'Customers', label: 'Customers', icon: Users,           Component: CustomersView },
-    { name: 'Orders',    label: 'Orders',    icon: Package,         Component: null },
-    { name: 'Invoices',  label: 'Invoices',  icon: ClipboardList,   Component: null },
     { name: 'Products',  label: 'Products',  icon: Package,         Component: ProductsView },
+    { name: 'Inventory', label: 'Inventory', icon: Warehouse,       Component: InventoryView },
+    { name: 'Customers', label: 'Customers', icon: Users,           Component: CustomersView },
     { name: 'Reports',   label: 'Reports',   icon: BarChart3,       Component: ReportsView },
     { name: 'Settings',  label: 'Settings',  icon: Settings,        Component: PosSettingsView },
 ];
@@ -312,8 +311,8 @@ const PosDashboard = () => {
             </header>
 
             {/* ── Main Content ──────────────────────────────────────────────────── */}
-            <div className="flex flex-col lg:ml-[80px] pt-[64px] min-h-screen">
-                <main className="flex-1 overflow-y-auto">
+            <div className="flex flex-col lg:ml-[80px] pt-[64px] h-screen overflow-hidden">
+                <main className="flex-1 overflow-y-auto h-full">
                     {renderContent()}
                 </main>
             </div>

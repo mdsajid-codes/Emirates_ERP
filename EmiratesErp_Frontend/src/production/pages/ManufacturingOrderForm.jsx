@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import {
     ArrowLeft, Save, FileText, ChevronDown, ChevronRight,
-    Calculator, Loader, X, Layers, Info, Clipboard, Settings2, Clock
+    Calculator, Loader, X, Layers, Info, Clipboard, Settings2, Clock, Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTenant } from '../../context/TenantContext';
@@ -465,313 +465,473 @@ const ManufacturingOrderForm = () => {
     const selectedBom = (formData.finishedGoodId ? fgBoms : boms).find(b => b.id === parseInt(selectedBomId));
 
     return (
-        <div className="flex flex-col h-screen bg-gray-50">
+        <div className="flex flex-col gap-3 p-3 sm:p-4 lg:p-5 bg-[#F8FAFC] w-full min-h-full text-[#041938] font-sans">
 
             {/* ── Top Header ── */}
-            <header className="bg-[#112255] border-b border-[#1a307a] px-6 py-3.5 flex items-center justify-between z-10 shadow-md">
-                <div className="flex items-center gap-3">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2">
                     <button
+                        type="button"
                         onClick={() => navigate('/production-dashboard/manage-manufacturing-order')}
-                        className="p-2 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-slate-100 text-[#041938] transition-colors"
+                        title="Back"
                     >
-                        <ArrowLeft size={18} />
+                        <ArrowLeft className="w-5 h-5" />
                     </button>
                     <div>
-                        <h1 className="text-base font-bold text-white">{isEditing ? 'Edit Manufacturing Order' : 'Add Manufacturing Order'}</h1>
-                        <p className="text-[11px] text-blue-300">Production → Manufacturing Orders</p>
+                        <h1 className="text-xl sm:text-2xl font-bold text-[#041938] tracking-tight">
+                            {isEditing ? 'Edit Manufacturing Order' : 'Add Manufacturing Order'}
+                        </h1>
                     </div>
                 </div>
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
                     {!isEditing && (
-                        <button type="button" onClick={handleAddFromSalesOrder}
-                            className="px-4 py-2 text-sm font-semibold text-white bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition-colors flex items-center gap-1.5">
-                            + Add from Sales Order
+                        <button
+                            type="button"
+                            onClick={handleAddFromSalesOrder}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#01A8AC] text-[#008287] rounded-lg text-xs font-semibold hover:bg-[#01A8AC]/5 transition-colors shadow-xs"
+                        >
+                            <Plus className="w-3.5 h-3.5 text-[#008287]" />
+                            <span>Add from Sales Order</span>
                         </button>
                     )}
-                    <button type="button" onClick={() => navigate('/production-dashboard/manage-manufacturing-order')}
-                        className="px-4 py-2 text-sm font-medium text-white/80 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition-colors">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/production-dashboard/manage-manufacturing-order')}
+                        className="px-3.5 py-1.5 bg-white border border-[#DDE3EC] text-[#041938] rounded-lg text-xs font-semibold hover:bg-slate-50 transition-colors"
+                    >
                         Cancel
                     </button>
-                    <button type="submit" form="mo-form" disabled={submitting}
-                        className="px-5 py-2 text-sm font-bold bg-white text-[#112255] rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2 shadow-sm disabled:opacity-60">
-                        {submitting ? <Loader className="animate-spin h-4 w-4" /> : <Save size={15} />}
-                        {isEditing ? 'Update Order' : 'Create Order'}
+                    <button
+                        type="submit"
+                        form="mo-form"
+                        disabled={submitting}
+                        className="flex items-center gap-1.5 px-4 py-1.5 bg-[#01A8AC] text-white rounded-lg text-xs font-semibold hover:bg-[#008d92] transition-colors shadow-xs disabled:opacity-60"
+                    >
+                        {submitting ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                        <span>{isEditing ? 'Update Order' : 'Create Order'}</span>
                     </button>
                 </div>
-            </header>
+            </div>
 
-            <main className="flex-grow overflow-y-auto">
-                <form id="mo-form" onSubmit={handleSubmit} className="p-6 space-y-5">
+            <form id="mo-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
 
-                    {/* ── Basic Details ── */}
-                    <SectionCard icon={Info} title="Basic Details">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <Field label="MO Number" required>
-                                <input type="text" name="moNumber" required value={formData.moNumber} onChange={handleChange} className={inputCls} placeholder="MO-XXXXXX" />
-                            </Field>
-                            <Field label="Location">
-                                <select name="productionHouseId" value={formData.productionHouseId} onChange={handleChange} className={inputCls}>
-                                    <option value="">Select Location</option>
-                                    {locations.map(loc => <option key={loc.id} value={loc.id}>{loc.name || loc.locationName}</option>)}
-                                    {!locations.length && <option value="HO">HO</option>}
-                                </select>
-                            </Field>
-                            <Field label="Sales Order">
-                                <select name="salesOrderId" value={formData.salesOrderId} onChange={handleChange} className={inputCls}>
-                                    <option value="">Select Sales Order</option>
-                                    {salesOrders.map(so => <option key={so.id} value={so.id}>{so.salesOrderNumber} – {so.customerName}</option>)}
-                                </select>
-                            </Field>
-                            <Field label="Customer">
-                                <select name="customerId" value={formData.customerId} onChange={handleChange} className={inputCls}>
-                                    <option value="">Select Customer</option>
-                                    {customers.map(c => <option key={c.id} value={c.id}>{c.companyName || c.primaryContactPerson}</option>)}
-                                </select>
-                            </Field>
-                            <Field label="Reference No">
-                                <input type="text" name="referenceNo" value={formData.referenceNo} onChange={handleChange} className={inputCls} placeholder="REF-XXXX" />
-                            </Field>
-                            <Field label="Status">
-                                <select name="status" value={formData.status} onChange={handleChange} className={inputCls}>
-                                    <option value="SCHEDULED">Scheduled</option>
-                                    <option value="IN_PROGRESS">In Progress</option>
-                                    <option value="COMPLETED">Completed</option>
-                                    <option value="CANCELLED">Cancelled</option>
-                                </select>
-                            </Field>
+                {/* ── Section 1: Basic Details ── */}
+                <div className="bg-white border border-[#DDE3EC] rounded-xl p-4 shadow-xs flex flex-col gap-3">
+                    <div className="flex items-center gap-2.5 pb-2.5 border-b border-[#DDE3EC]">
+                        <div className="w-7 h-7 rounded-lg bg-[#01A8AC] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                            1
                         </div>
-                    </SectionCard>
+                        <h2 className="text-base font-semibold text-[#041938]">Basic Details</h2>
+                        <button type="button" onClick={() => alert('Basic Details help: Fill in MO number, location, sales order reference and status.')} className="text-[#65738C] hover:text-[#01A8AC] ml-1">
+                            <Info className="w-4 h-4" />
+                        </button>
+                    </div>
 
-                    {/* ── Production Settings ── */}
-                    <SectionCard icon={Settings2} title="Production Settings">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {/* MO Number */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-[#041938]">MO Number <span className="text-red-500">*</span></label>
+                            <input
+                                type="text"
+                                name="moNumber"
+                                required
+                                value={formData.moNumber}
+                                onChange={handleChange}
+                                placeholder="MO-XXXXXX"
+                                className="w-full bg-[#F6F8FB] border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs font-semibold text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                            />
+                        </div>
 
-                            {/* Item Name (searchable) */}
-                            <div className="sm:col-span-2 lg:col-span-2 relative">
-                                <Field label="Item Name" required>
-                                    <div className="relative">
-                                        <input
-                                            type="text" name="searchInput"
-                                            value={formData.searchInput} onChange={handleChange}
-                                            placeholder="Search Product, Raw Material, Finished Good..."
-                                            className={`${inputCls} pr-8`} autoComplete="off" required
-                                        />
-                                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                                    </div>
-                                </Field>
-                                {filteredItems.length > 0 && (
-                                    <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-56 overflow-y-auto">
-                                        {filteredItems.map((item, i) => (
-                                            <div key={i}
-                                                className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-0"
-                                                onClick={() => handleChange({ target: { name: 'searchInput', value: item.label } })}
-                                            >
-                                                <span className="font-medium">{item.label.split(' - ')[0]}</span>
-                                                <span className="text-xs text-gray-400 ml-2">— {item.label.split(' - ')[1]}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                        {/* Location */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-[#041938]">Location</label>
+                            <select
+                                name="productionHouseId"
+                                value={formData.productionHouseId}
+                                onChange={handleChange}
+                                className="w-full bg-white border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                            >
+                                <option value="">Select Location</option>
+                                {locations.map(loc => <option key={loc.id} value={loc.id}>{loc.name || loc.locationName}</option>)}
+                                {!locations.length && <option value="HO">HO</option>}
+                            </select>
+                        </div>
+
+                        {/* Sales Order */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-[#041938]">Sales Order</label>
+                            <select
+                                name="salesOrderId"
+                                value={formData.salesOrderId}
+                                onChange={handleChange}
+                                className="w-full bg-white border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                            >
+                                <option value="">Select Sales Order</option>
+                                {salesOrders.map(so => <option key={so.id} value={so.id}>{so.salesOrderNumber} – {so.customerName}</option>)}
+                            </select>
+                        </div>
+
+                        {/* Customer */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-[#041938]">Customer</label>
+                            <select
+                                name="customerId"
+                                value={formData.customerId}
+                                onChange={handleChange}
+                                className="w-full bg-white border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                            >
+                                <option value="">Select Customer</option>
+                                {customers.map(c => <option key={c.id} value={c.id}>{c.companyName || c.primaryContactPerson}</option>)}
+                            </select>
+                        </div>
+
+                        {/* Reference No. */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-[#041938]">Reference No.</label>
+                            <input
+                                type="text"
+                                name="referenceNo"
+                                value={formData.referenceNo}
+                                onChange={handleChange}
+                                placeholder="REF-XXXX"
+                                className="w-full bg-white border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                            />
+                        </div>
+
+                        {/* Status */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-[#041938]">Status</label>
+                            <select
+                                name="status"
+                                value={formData.status}
+                                onChange={handleChange}
+                                className="w-full bg-white border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs font-semibold text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                            >
+                                <option value="SCHEDULED">Scheduled</option>
+                                <option value="IN_PROGRESS">In Progress</option>
+                                <option value="COMPLETED">Completed</option>
+                                <option value="CANCELLED">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Section 2: Production Settings ── */}
+                <div className="bg-white border border-[#DDE3EC] rounded-xl p-4 shadow-xs flex flex-col gap-3">
+                    <div className="flex items-center gap-2.5 pb-2.5 border-b border-[#DDE3EC]">
+                        <div className="w-7 h-7 rounded-lg bg-[#01A8AC] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                            2
+                        </div>
+                        <h2 className="text-base font-semibold text-[#041938]">Production Settings</h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+
+                        {/* Item Name (searchable) */}
+                        <div className="sm:col-span-2 relative flex flex-col gap-1">
+                            <label className="text-xs font-bold text-[#041938]">Item Name <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    name="searchInput"
+                                    value={formData.searchInput}
+                                    onChange={handleChange}
+                                    placeholder="Search Product, Raw Material, Finished Good..."
+                                    className="w-full bg-white border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC] pr-8"
+                                    autoComplete="off"
+                                    required
+                                />
+                                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#65738C] pointer-events-none" />
                             </div>
-
-                            <Field label="Category">
-                                <select name="categoryId" value={formData.categoryId} onChange={handleChange} className={inputCls}>
-                                    <option value="">Select Category</option>
-                                    {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name || cat.categoryName}</option>)}
-                                </select>
-                            </Field>
-
-                            <Field label="Subcategory">
-                                <select name="subCategoryId" value={formData.subCategoryId} onChange={handleChange} className={inputCls} disabled={!formData.categoryId}>
-                                    <option value="">Select Subcategory</option>
-                                    {availableSubcategories.map(sub => <option key={sub.id} value={sub.id}>{sub.name || sub.subCategoryName}</option>)}
-                                </select>
-                            </Field>
-
-                            <Field label="BOM (Bill of Materials)">
-                                <select
-                                    name={formData.finishedGoodId ? 'bomFinishedGoodId' : 'bomId'}
-                                    value={formData.finishedGoodId ? (formData.bomFinishedGoodId || '') : (formData.bomId || '')}
-                                    onChange={handleChange} className={inputCls}
-                                    disabled={!formData.itemId && !formData.finishedGoodId}
-                                >
-                                    <option value="">Select BOM</option>
-                                    {(formData.finishedGoodId ? fgBoms : boms).map(bom =>
-                                        <option key={bom.id} value={bom.id}>{bom.bomName || bom.name}</option>
-                                    )}
-                                </select>
-                            </Field>
-
-                            <Field label="Quantity" required>
-                                <input type="number" name="quantity" required step="0.01" value={formData.quantity} onChange={handleChange} className={inputCls} placeholder="0" />
-                            </Field>
-
-                            <Field label="Wastage %">
-                                <input type="number" name="wastage" step="0.01" value={formData.wastage} onChange={handleChange} className={inputCls} placeholder="0.00" />
-                            </Field>
-
-                            <Field label="Batch No">
-                                <input type="text" name="batchNo" value={formData.batchNo} onChange={handleChange} className={inputCls} placeholder="B-XXXX-XXX" />
-                            </Field>
-
-                            <Field label="Assign To">
-                                <select name="assignToId" value={formData.assignToId} onChange={handleChange} className={inputCls}>
-                                    <option value="">Select Employee</option>
-                                    {employees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}
-                                </select>
-                            </Field>
-
-                            {/* Hanger Specific */}
-                            {isHangerTenant && (
-                                <div className="sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-blue-50/60 rounded-xl border border-blue-100 mt-1">
-                                    <Field label="Hanger Type (Wire Calc)">
-                                        <select name="hangerTypeId" value={formData.hangerTypeId} onChange={handleChange} className={`${inputCls} border-blue-200`}>
-                                            <option value="">Select Hanger Type</option>
-                                            {hangerTypes.map(ht => <option key={ht.id} value={ht.id}>{ht.typeName} ({ht.standardWireGaugeMm}mm)</option>)}
-                                        </select>
-                                    </Field>
-                                    {formData.hangerTypeId && (
-                                        <>
-                                            <Field label="Wire Gauge Required (mm)">
-                                                <div className={readonlyCls}>{formData.wireGaugeRequired || '—'}</div>
-                                            </Field>
-                                            <Field label="Required Wire (Kg)">
-                                                <div className="relative">
-                                                    <div className={`${readonlyCls} font-bold text-blue-800`}>{formData.requiredWireKg || '—'}</div>
-                                                    <Calculator size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400" />
-                                                </div>
-                                                <p className="text-[10px] text-blue-500 italic mt-0.5">Auto: (Qty × Unit Weight) / 1000</p>
-                                            </Field>
-                                        </>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Inline BOM preview */}
-                        {selectedBom && (
-                            <div className="mt-4 border-t border-gray-100 pt-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h4 className="text-xs font-bold text-gray-600 uppercase tracking-wide">Selected BOM</h4>
-                                    <button type="button" onClick={() => { setSelectedBOMData(selectedBom); setShowBOMModal(true); }}
-                                        className="text-xs text-[#112255] font-bold hover:underline">View BOM Details →</button>
-                                </div>
-                                <div className="bg-gray-50 rounded-lg px-4 py-3 text-sm text-gray-700 border border-gray-100">
-                                    <span className="font-semibold">{selectedBom.bomName || selectedBom.name}</span>
-                                    {selectedBom.approximateCost && <span className="text-gray-400 ml-3 text-xs">Approx. Cost: <strong className="text-gray-600">{selectedBom.approximateCost}</strong></span>}
-                                </div>
-                            </div>
-                        )}
-                    </SectionCard>
-
-                    {/* ── Schedule & Timeline ── */}
-                    <SectionCard icon={Clock} title="Schedule & Timeline">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <Field label="Schedule Start">
-                                <input type="datetime-local" name="scheduleStart" value={formData.scheduleStart} onChange={handleChange} className={inputCls} />
-                            </Field>
-                            <Field label="Schedule Finish">
-                                <input type="datetime-local" name="scheduleFinish" value={formData.scheduleFinish} onChange={handleChange} className={inputCls} />
-                            </Field>
-                            <Field label="Due Date">
-                                <input type="datetime-local" name="dueDate" value={formData.dueDate} onChange={handleChange} className={inputCls} />
-                            </Field>
-                            <Field label="Actual Start">
-                                <input type="datetime-local" name="actualStart" value={formData.actualStart} onChange={handleChange} className={inputCls} />
-                            </Field>
-                            <Field label="Actual Finish">
-                                <input type="datetime-local" name="actualFinish" value={formData.actualFinish} onChange={handleChange} className={inputCls} />
-                            </Field>
-                        </div>
-                    </SectionCard>
-
-                    {/* ── Attachments ── */}
-                    <SectionCard icon={FileText} title="Attachments">
-                        <div className="space-y-3">
-                            <input type="file" onChange={handleFileChange}
-                                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" />
-                            {existingFiles?.length > 0 && (
-                                <div className="space-y-2 mt-3">
-                                    {existingFiles.map((f, i) => (
-                                        <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                            <div className="flex items-center gap-2">
-                                                <FileText size={16} className="text-blue-500" />
-                                                <button type="button" onClick={() => handleViewFile(f.id)}
-                                                    className="text-blue-600 text-sm font-medium hover:underline">{f.fileName}</button>
-                                            </div>
+                            {filteredItems.length > 0 && (
+                                <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-[#DDE3EC] rounded-xl shadow-xl max-h-56 overflow-y-auto">
+                                    {filteredItems.map((item, i) => (
+                                        <div
+                                            key={i}
+                                            className="px-3.5 py-2 hover:bg-[#EAF8FA] cursor-pointer text-xs text-[#041938] border-b border-slate-100 last:border-0"
+                                            onClick={() => handleChange({ target: { name: 'searchInput', value: item.label } })}
+                                        >
+                                            <span className="font-semibold">{item.label.split(' - ')[0]}</span>
+                                            <span className="text-[11px] text-[#65738C] ml-2">— {item.label.split(' - ')[1]}</span>
                                         </div>
                                     ))}
                                 </div>
                             )}
                         </div>
-                    </SectionCard>
 
-                    {/* ── Production Batches (Hanger) ── */}
-                    {isEditing && isHangerTenant && (
-                        <SectionCard icon={Layers} title="Production Batches">
-                            <div className="flex justify-end mb-3">
-                                <button type="button" onClick={() => navigate(`/production-dashboard/hanger/batches/new?moId=${id}`)}
-                                    className="text-sm font-semibold text-[#112255] hover:underline flex items-center gap-1">
-                                    + Add New Batch
-                                </button>
+                        {/* Category */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-[#041938]">Category</label>
+                            <select
+                                name="categoryId"
+                                value={formData.categoryId}
+                                onChange={handleChange}
+                                className="w-full bg-white border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                            >
+                                <option value="">Select Category</option>
+                                {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name || cat.categoryName}</option>)}
+                            </select>
+                        </div>
+
+                        {/* Subcategory */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-[#041938]">Subcategory</label>
+                            <select
+                                name="subCategoryId"
+                                value={formData.subCategoryId}
+                                onChange={handleChange}
+                                disabled={!formData.categoryId}
+                                className="w-full bg-white border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC] disabled:bg-slate-50"
+                            >
+                                <option value="">Select Subcategory</option>
+                                {availableSubcategories.map(sub => <option key={sub.id} value={sub.id}>{sub.name || sub.subCategoryName}</option>)}
+                            </select>
+                        </div>
+
+                        {/* BOM */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-[#041938]">BOM (Bill of Materials)</label>
+                            <select
+                                name={formData.finishedGoodId ? 'bomFinishedGoodId' : 'bomId'}
+                                value={formData.finishedGoodId ? (formData.bomFinishedGoodId || '') : (formData.bomId || '')}
+                                onChange={handleChange}
+                                disabled={!formData.itemId && !formData.finishedGoodId}
+                                className="w-full bg-white border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC] disabled:bg-slate-50"
+                            >
+                                <option value="">Select BOM</option>
+                                {(formData.finishedGoodId ? fgBoms : boms).map(bom =>
+                                    <option key={bom.id} value={bom.id}>{bom.bomName || bom.name}</option>
+                                )}
+                            </select>
+                        </div>
+
+                        {/* Quantity */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-[#041938]">Quantity <span className="text-red-500">*</span></label>
+                            <input
+                                type="number"
+                                name="quantity"
+                                required
+                                step="0.01"
+                                value={formData.quantity}
+                                onChange={handleChange}
+                                placeholder="0"
+                                className="w-full bg-white border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs font-semibold text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                            />
+                        </div>
+
+                        {/* Wastage % */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-[#041938]">Wastage %</label>
+                            <input
+                                type="number"
+                                name="wastage"
+                                step="0.01"
+                                value={formData.wastage}
+                                onChange={handleChange}
+                                placeholder="0.00"
+                                className="w-full bg-white border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                            />
+                        </div>
+
+                        {/* Batch No. */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-[#041938]">Batch No.</label>
+                            <input
+                                type="text"
+                                name="batchNo"
+                                value={formData.batchNo}
+                                onChange={handleChange}
+                                placeholder="B-XXXX-XXX"
+                                className="w-full bg-white border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                            />
+                        </div>
+
+                        {/* Assign To */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-[#041938]">Assign To</label>
+                            <select
+                                name="assignToId"
+                                value={formData.assignToId}
+                                onChange={handleChange}
+                                className="w-full bg-white border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                            >
+                                <option value="">Select Employee</option>
+                                {employees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Hanger Specific Wire Calculator */}
+                    {isHangerTenant && (
+                        <div className="bg-[#EAF8FA] border border-[#01A8AC]/40 rounded-xl p-3 flex flex-col sm:flex-row items-center gap-3">
+                            <div className="flex items-center gap-2 shrink-0">
+                                <div className="w-8 h-8 rounded-full bg-[#0074D9] text-white flex items-center justify-center">
+                                    <Calculator className="w-4 h-4" />
+                                </div>
+                                <span className="text-xs font-bold text-[#041938]">Hanger Type (Wire Calc)</span>
                             </div>
-                            {moBatches.length > 0 ? (
-                                <div className="overflow-x-auto rounded-lg border border-gray-100">
-                                    <table className="w-full text-left">
-                                        <thead className="bg-gray-50 text-[11px] uppercase text-gray-400 font-bold border-b border-gray-100">
-                                            <tr>
-                                                <th className="px-4 py-2.5">Batch No</th>
-                                                <th className="px-4 py-2.5">Stage</th>
-                                                <th className="px-4 py-2.5">Status</th>
-                                                <th className="px-4 py-2.5 text-right">Qty</th>
-                                                <th className="px-4 py-2.5 w-8"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-50">
-                                            {moBatches.map(batch => (
-                                                <tr key={batch.id} className="hover:bg-blue-50/40 transition-colors cursor-pointer group"
-                                                    onClick={() => navigate(`/production-dashboard/hanger/batches/${batch.id}`)}>
-                                                    <td className="px-4 py-3 text-sm font-semibold text-gray-800 group-hover:text-primary">{batch.batchNo}</td>
-                                                    <td className="px-4 py-3 text-xs">
-                                                        <span className="px-2 py-1 rounded-full bg-gray-100 text-gray-600 uppercase tracking-tight font-medium">
-                                                            {batch.currentStage?.replace('_', ' ')}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-xs font-semibold">{batch.status}</td>
-                                                    <td className="px-4 py-3 text-sm text-right font-bold text-gray-700">{batch.plannedQty}</td>
-                                                    <td className="px-4 py-3 text-right text-gray-300 group-hover:text-primary">
-                                                        <ChevronRight size={15} />
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            ) : (
-                                <div className="text-center py-10 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
-                                    <Layers size={28} className="mx-auto text-gray-300 mb-2" />
-                                    <p className="text-sm text-gray-400">No batches for this order yet.</p>
-                                    <button type="button" onClick={() => navigate(`/production-dashboard/hanger/batches/new?moId=${id}`)}
-                                        className="mt-2 text-xs font-bold text-[#112255] uppercase hover:underline">
-                                        Start Batch Production
-                                    </button>
-                                </div>
-                            )}
-                        </SectionCard>
-                    )}
-
-                    {/* ── Help Banner ── */}
-                    {!isEditing && (
-                        <div className="flex items-start gap-3 p-4 bg-[#112255]/[0.04] rounded-xl border border-[#112255]/10">
-                            <Info size={16} className="text-[#112255] mt-0.5 flex-shrink-0" />
-                            <div className="text-xs text-[#112255]/80">
-                                <p className="font-semibold mb-0.5 text-[#112255]">Need assistance with your Bill of Materials?</p>
-                                <p>You can import existing BOM configurations or create new ones in the Production Settings. Changes to quantities will automatically update requirement estimates.</p>
+                            <div className="flex-1 w-full flex flex-col sm:flex-row items-center gap-2">
+                                <select
+                                    name="hangerTypeId"
+                                    value={formData.hangerTypeId}
+                                    onChange={handleChange}
+                                    className="w-full sm:max-w-xs bg-white border border-[#DDE3EC] rounded-lg px-3 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                                >
+                                    <option value="">Select Hanger Type</option>
+                                    {hangerTypes.map(ht => <option key={ht.id} value={ht.id}>{ht.typeName} ({ht.standardWireGaugeMm}mm)</option>)}
+                                </select>
+                                {formData.hangerTypeId && (
+                                    <div className="flex items-center gap-3 text-xs text-[#041938]">
+                                        <span>Gauge: <strong>{formData.wireGaugeRequired}mm</strong></span>
+                                        <span>Required Wire: <strong className="text-[#0074D9]">{formData.requiredWireKg} Kg</strong></span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
-                </form>
-            </main>
+
+                    {/* Inline BOM preview */}
+                    {selectedBom && (
+                        <div className="mt-1 border-t border-[#DDE3EC] pt-3 flex items-center justify-between">
+                            <div className="text-xs text-[#041938]">
+                                <span className="font-bold">Selected BOM: </span>
+                                <span>{selectedBom.bomName || selectedBom.name}</span>
+                                {selectedBom.approximateCost && <span className="text-[#65738C] ml-2">Approx. Cost: <strong>{selectedBom.approximateCost}</strong></span>}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => { setSelectedBOMData(selectedBom); setShowBOMModal(true); }}
+                                className="text-xs font-bold text-[#008287] hover:underline"
+                            >
+                                View BOM Details →
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* ── Section 3 & 4 Grid: Schedule & Timeline + Attachments ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+                    {/* Section 3: Schedule & Timeline */}
+                    <div className="lg:col-span-7 bg-white border border-[#DDE3EC] rounded-xl p-4 shadow-xs flex flex-col gap-3">
+                        <div className="flex items-center gap-2.5 pb-2.5 border-b border-[#DDE3EC]">
+                            <div className="w-7 h-7 rounded-lg bg-[#01A8AC] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                                3
+                            </div>
+                            <h2 className="text-base font-semibold text-[#041938]">Schedule & Timeline</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-[#041938]">Schedule Start</label>
+                                <input
+                                    type="datetime-local"
+                                    name="scheduleStart"
+                                    value={formData.scheduleStart}
+                                    onChange={handleChange}
+                                    className="w-full bg-white border border-[#DDE3EC] rounded-lg px-2.5 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-[#041938]">Schedule Finish</label>
+                                <input
+                                    type="datetime-local"
+                                    name="scheduleFinish"
+                                    value={formData.scheduleFinish}
+                                    onChange={handleChange}
+                                    className="w-full bg-white border border-[#DDE3EC] rounded-lg px-2.5 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-[#041938]">Due Date</label>
+                                <input
+                                    type="datetime-local"
+                                    name="dueDate"
+                                    value={formData.dueDate}
+                                    onChange={handleChange}
+                                    className="w-full bg-white border border-[#DDE3EC] rounded-lg px-2.5 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-[#041938]">Actual Start</label>
+                                <input
+                                    type="datetime-local"
+                                    name="actualStart"
+                                    value={formData.actualStart}
+                                    onChange={handleChange}
+                                    className="w-full bg-white border border-[#DDE3EC] rounded-lg px-2.5 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-[#041938]">Actual Finish</label>
+                                <input
+                                    type="datetime-local"
+                                    name="actualFinish"
+                                    value={formData.actualFinish}
+                                    onChange={handleChange}
+                                    className="w-full bg-white border border-[#DDE3EC] rounded-lg px-2.5 py-1.5 text-xs text-[#041938] focus:outline-none focus:border-[#01A8AC]"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 4: Attachments */}
+                    <div className="lg:col-span-5 bg-white border border-[#DDE3EC] rounded-xl p-4 shadow-xs flex flex-col gap-3">
+                        <div className="flex items-center gap-2.5 pb-2.5 border-b border-[#DDE3EC]">
+                            <div className="w-7 h-7 rounded-lg bg-[#01A8AC] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                                4
+                            </div>
+                            <h2 className="text-base font-semibold text-[#041938]">Attachments</h2>
+                        </div>
+
+                        <div className="border-2 border-dashed border-[#DDE3EC] rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-center bg-[#F8FAFC]">
+                            <div className="w-8 h-8 rounded-full bg-[#01A8AC]/10 text-[#01A8AC] flex items-center justify-center">
+                                <Plus className="w-4 h-4" />
+                            </div>
+                            <span className="text-xs text-[#65738C]">Drag and drop file here</span>
+                            <label className="px-3 py-1 bg-white border border-[#01A8AC] text-[#008287] rounded-lg text-xs font-semibold cursor-pointer hover:bg-[#01A8AC]/5 transition-colors">
+                                Choose File
+                                <input type="file" onChange={handleFileChange} className="hidden" />
+                            </label>
+                            {file && <span className="text-xs font-semibold text-[#041938] mt-1">{file.name}</span>}
+                        </div>
+
+                        {existingFiles?.length > 0 && (
+                            <div className="flex flex-col gap-1.5 mt-1">
+                                {existingFiles.map((f, i) => (
+                                    <div key={i} className="flex items-center justify-between p-2 bg-[#F8FAFC] rounded-lg border border-[#DDE3EC] text-xs">
+                                        <div className="flex items-center gap-2 truncate">
+                                            <FileText className="w-4 h-4 text-[#01A8AC] shrink-0" />
+                                            <button type="button" onClick={() => handleViewFile(f.id)} className="font-semibold text-[#041938] hover:underline truncate">
+                                                {f.fileName}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* ── BOM Assistance Banner ── */}
+                {!isEditing && (
+                    <div className="bg-[#EAF8FA] border border-[#01A8AC]/20 rounded-xl p-3.5 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-[#01A8AC] text-white flex items-center justify-center shrink-0">
+                            <Info className="w-4 h-4" />
+                        </div>
+                        <div className="flex flex-col text-xs text-[#041938]">
+                            <span className="font-bold">BOM assistance</span>
+                            <span className="text-[#65738C]">Import an existing BOM or create one in Production Settings. Quantity changes update estimates.</span>
+                        </div>
+                    </div>
+                )}
+            </form>
 
             {/* ── BOM Slideout ── */}
             <AnimatePresence>
@@ -802,23 +962,23 @@ const ManufacturingOrderForm = () => {
                         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
                             className="fixed inset-0 z-50 flex items-center justify-center p-4">
                             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
-                                <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
-                                    <h3 className="text-base font-bold text-gray-800">Select Sales Order</h3>
-                                    <button onClick={() => setShowSOModal(false)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500">
-                                        <X size={18} />
+                                <div className="px-5 py-4 border-b border-[#DDE3EC] flex justify-between items-center">
+                                    <h3 className="text-base font-bold text-[#041938]">Select Sales Order</h3>
+                                    <button onClick={() => setShowSOModal(false)} className="p-1.5 rounded-lg hover:bg-slate-100 text-[#65738C]">
+                                        <X className="w-5 h-5" />
                                     </button>
                                 </div>
                                 <div className="p-4 overflow-y-auto flex-grow space-y-2">
                                     {salesOrders.length === 0 ? (
-                                        <p className="text-center text-gray-400 py-8 text-sm">No Sales Orders found.</p>
+                                        <p className="text-center text-[#65738C] py-8 text-xs">No Sales Orders found.</p>
                                     ) : salesOrders.map(so => (
                                         <div key={so.id} onClick={() => selectSalesOrder(so)}
-                                            className="p-3.5 border border-gray-100 rounded-xl hover:bg-blue-50 hover:border-blue-200 cursor-pointer flex justify-between items-center transition-all group">
+                                            className="p-3 border border-[#DDE3EC] rounded-xl hover:bg-[#EAF8FA] hover:border-[#01A8AC] cursor-pointer flex justify-between items-center transition-all group">
                                             <div>
-                                                <div className="font-semibold text-gray-800 text-sm">{so.salesOrderNumber}</div>
-                                                <div className="text-xs text-gray-400 mt-0.5">{so.customerName} · {so.salesOrderDate}</div>
+                                                <div className="font-semibold text-[#041938] text-xs">{so.salesOrderNumber}</div>
+                                                <div className="text-[11px] text-[#65738C] mt-0.5">{so.customerName} · {so.salesOrderDate}</div>
                                             </div>
-                                            <ChevronRight size={16} className="text-gray-300 group-hover:text-primary transition-colors" />
+                                            <ChevronRight className="w-4 h-4 text-[#65738C] group-hover:text-[#01A8AC] transition-colors" />
                                         </div>
                                     ))}
                                 </div>

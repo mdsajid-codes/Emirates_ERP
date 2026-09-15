@@ -219,6 +219,14 @@ const BillModal = ({
                                     placeholder="0.00"
                                     disabled={paymentMethod !== 'CASH'}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setReceivedAmount((total / 100).toFixed(2))}
+                                    disabled={paymentMethod !== 'CASH'}
+                                    className="w-full mt-1.5 py-1.5 px-3 bg-teal-50 hover:bg-teal-100 text-[#00A9A8] border border-[#00A9A8]/30 rounded-md text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1 shadow-2xs"
+                                >
+                                    <span>⚡ Full Payment ({formatPrice(total)})</span>
+                                </button>
                             </div>
                             <div>
                                 <label className="label">Change Amount</label>
@@ -247,96 +255,167 @@ const BillModal = ({
                 </div>
             </div>
 
-            {/* Printable Receipt Section */}
-            <div className="hidden print:block fixed inset-0 bg-white z-[9999] p-8 text-black font-mono">
+            {/* Thermal Printer Receipt Section */}
+            <div className="print-thermal-container font-mono text-[10px] leading-tight text-black bg-white">
+                <style>{`
+                    @page {
+                        size: 80mm 200mm !important;
+                        margin: 0mm !important;
+                    }
+                    @media screen {
+                        .print-thermal-container {
+                            display: none !important;
+                        }
+                    }
+                    @media print {
+                        @page {
+                            size: 80mm 200mm !important;
+                            margin: 0mm !important;
+                        }
+                        html, body {
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            background: #ffffff !important;
+                            width: 80mm !important;
+                            max-width: 80mm !important;
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                        }
+                        body * {
+                            visibility: hidden !important;
+                        }
+                        .print-thermal-container, .print-thermal-container * {
+                            visibility: visible !important;
+                        }
+                        .print-thermal-container {
+                            display: block !important;
+                            position: absolute !important;
+                            left: 0 !important;
+                            top: 0 !important;
+                            width: 80mm !important;
+                            max-width: 80mm !important;
+                            margin: 0 !important;
+                            padding: 2mm 3mm !important;
+                            box-sizing: border-box !important;
+                            font-family: 'Courier New', Courier, monospace !important;
+                            font-size: 10px !important;
+                            color: #000000 !important;
+                            background: #ffffff !important;
+                        }
+                    }
+                `}</style>
+
                 {/* Header */}
-                <div className="text-center mb-6 pb-4 border-b border-black border-dashed">
+                <div className="text-center pb-2 border-b border-black border-dashed">
                     {companyInfo?.logoUrl && (
                         <img
                             src={constructImageUrl(companyInfo.logoUrl)}
                             alt="Logo"
-                            className="h-16 mx-auto mb-2 object-contain grayscale"
+                            className="h-10 mx-auto mb-1 object-contain grayscale"
                         />
                     )}
-                    <h1 className="text-2xl font-bold uppercase tracking-wider mb-1">{companyInfo?.companyName || 'POS System'}</h1>
-                    <p className="text-sm">{companyInfo?.address}</p>
-                    <p className="text-sm">{[companyInfo?.city, companyInfo?.state, companyInfo?.country].filter(Boolean).join(', ')}</p>
-                    <p className="text-sm mt-1">
-                        {[
-                            companyInfo?.phone && `Tel: ${companyInfo.phone}`,
-                            companyInfo?.email && `Email: ${companyInfo.email}`
-                        ].filter(Boolean).join(' | ')}
-                    </p>
-                    {companyInfo?.pan && <p className="text-sm">TRN: {companyInfo.pan}</p>}
+                    <h1 className="text-base font-bold uppercase tracking-wide mb-0.5">{companyInfo?.companyName || 'EMIRATES ERP POS'}</h1>
+                    {companyInfo?.address && <p className="text-[10px] leading-tight">{companyInfo.address}</p>}
+                    {[companyInfo?.city, companyInfo?.state, companyInfo?.country].filter(Boolean).join(', ') && (
+                        <p className="text-[10px] leading-tight">{[companyInfo?.city, companyInfo?.state, companyInfo?.country].filter(Boolean).join(', ')}</p>
+                    )}
+                    {(companyInfo?.phone || companyInfo?.email) && (
+                        <p className="text-[10px] leading-tight mt-0.5">
+                            {[companyInfo?.phone && `Tel: ${companyInfo.phone}`, companyInfo?.email && `Email: ${companyInfo.email}`].filter(Boolean).join(' | ')}
+                        </p>
+                    )}
+                    {companyInfo?.pan && <p className="text-[10px] font-semibold mt-0.5">TRN: {companyInfo.pan}</p>}
+                </div>
+
+                {/* Receipt Title */}
+                <div className="text-center my-1.5 font-bold text-xs uppercase tracking-wider">
+                    *** TAX INVOICE ***
                 </div>
 
                 {/* Metadata */}
-                <div className="mb-6 text-sm flex justify-between">
-                    <div>
-                        <p><span className="font-bold">Order ID:</span> {orderId}</p>
-                        <p><span className="font-bold">Date:</span> {new Date().toLocaleString()}</p>
+                <div className="py-1.5 border-y border-black border-dashed text-[10px] space-y-0.5">
+                    <div className="flex justify-between">
+                        <span>Order ID: <strong className="text-xs">{orderId}</strong></span>
+                        <span>Type: <strong>{orderType.replace('_', ' ')}</strong></span>
                     </div>
-                    <div className="text-right">
-                        <p><span className="font-bold">Customer:</span> {customer?.name || 'Walk-in'}</p>
-                        <p><span className="font-bold">Cashier:</span> Admin</p>
+                    <div className="flex justify-between">
+                        <span>Date: {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span>Customer: <strong>{customer?.name || 'Walk-in'}</strong></span>
+                        <span>Cashier: <strong>Admin</strong></span>
                     </div>
                 </div>
 
                 {/* Items Table */}
-                <table className="w-full text-sm mb-6">
+                <table className="w-full text-[9px] my-2 border-collapse table-fixed">
                     <thead>
-                        <tr className="border-b border-black border-dashed">
-                            <th className="text-left py-2">Item</th>
-                            <th className="text-center py-2">Qty</th>
-                            <th className="text-right py-2">Price</th>
-                            <th className="text-right py-2">Total</th>
+                        <tr className="border-b border-black border-dashed font-bold">
+                            <th className="text-left py-1 w-[38%]">ITEM</th>
+                            <th className="text-center py-1 w-[12%]">QTY</th>
+                            <th className="text-right py-1 w-[25%]">PRICE</th>
+                            <th className="text-right py-1 w-[25%]">TOTAL</th>
                         </tr>
                     </thead>
                     <tbody>
                         {cart.map((item, index) => (
-                            <tr key={index} className="border-b border-slate-200">
-                                <td className="py-2">
-                                    <div className="font-bold">{item.productName}</div>
+                            <tr key={index} className="border-b border-gray-200">
+                                <td className="py-1 align-top pr-1">
+                                    <div className="font-semibold text-[9px] leading-tight break-words">{item.productName}</div>
                                     {item.attributes && Object.keys(item.attributes).length > 0 && (
-                                        <div className="text-xs text-slate-500">{formatVariantAttributes(item.attributes)}</div>
+                                        <div className="text-[8px] text-gray-700 leading-tight">{formatVariantAttributes(item.attributes)}</div>
                                     )}
                                 </td>
-                                <td className="text-center py-2 align-top">{item.quantity}</td>
-                                <td className="text-right py-2 align-top">{formatPrice(item.priceCents)}</td>
-                                <td className="text-right py-2 align-top font-medium">{formatPrice(item.quantity * item.priceCents)}</td>
+                                <td className="text-center py-1 align-top">{item.quantity}</td>
+                                <td className="text-right py-1 align-top whitespace-nowrap px-0.5">{formatPrice(item.priceCents)}</td>
+                                <td className="text-right py-1 align-top font-semibold whitespace-nowrap pl-0.5">{formatPrice(item.quantity * item.priceCents)}</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
 
                 {/* Financials */}
-                <div className="flex justify-end mb-6">
-                    <div className="w-1/2 space-y-1 text-sm">
-                        <div className="flex justify-between">
-                            <span>Subtotal:</span>
-                            <span>{formatPrice(subtotal)}</span>
-                        </div>
-                        {discountCents > 0 && (
-                            <div className="flex justify-between">
-                                <span>Discount:</span>
-                                <span>-{formatPrice(discountCents)}</span>
-                            </div>
-                        )}
-                        <div className="flex justify-between">
-                            <span>Tax (Included):</span>
-                            <span>{formatPrice(tax)}</span>
-                        </div>
-                        <div className="flex justify-between font-bold text-lg border-t border-black border-dashed pt-2 mt-2">
-                            <span>Total:</span>
-                            <span>{formatPrice(total)}</span>
-                        </div>
+                <div className="pt-1 border-t border-black border-dashed space-y-0.5 text-[10px]">
+                    <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span>{formatPrice(subtotal)}</span>
                     </div>
+                    {discountCents > 0 && (
+                        <div className="flex justify-between font-medium">
+                            <span>Discount:</span>
+                            <span>-{formatPrice(discountCents)}</span>
+                        </div>
+                    )}
+                    <div className="flex justify-between text-gray-800">
+                        <span>Tax (Included):</span>
+                        <span>{formatPrice(tax)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-xs border-t border-b border-black border-double py-1 my-1">
+                        <span>TOTAL:</span>
+                        <span>{formatPrice(total)}</span>
+                    </div>
+                    <div className="flex justify-between text-[10px]">
+                        <span>Payment Method:</span>
+                        <span className="font-semibold">{paymentMethod}</span>
+                    </div>
+                    {paymentMethod === 'CASH' && receivedAmount && (
+                        <>
+                            <div className="flex justify-between text-[10px]">
+                                <span>Paid Amount:</span>
+                                <span>{formatPrice(parseFloat(receivedAmount) * 100)}</span>
+                            </div>
+                            <div className="flex justify-between text-[10px]">
+                                <span>Change:</span>
+                                <span>{formatPrice(changeAmount > 0 ? changeAmount : 0)}</span>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Footer */}
-                <div className="text-center text-xs mt-8 border-t border-black border-dashed pt-4">
-                    <p className="font-bold mb-1">Thank you for your business!</p>
-                    <p>Please keep this receipt for warranty purposes.</p>
+                <div className="text-center text-[10px] mt-3 border-t border-black border-dashed pt-2 space-y-0.5">
+                    <p className="font-bold">Thank you for your business!</p>
+                    <p className="text-[9px] text-gray-700">Please keep this receipt for warranty purposes.</p>
                 </div>
             </div>
         </>

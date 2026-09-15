@@ -184,26 +184,26 @@ const ProductCheckboxDropdown = ({ products, selectedIds, onChange }) => {
     };
 
     const filteredProducts = products.filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase())
+        (p.name || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const selectedProducts = products.filter(p => selectedIds.some(id => Number(id) === Number(p.id)));
 
     return (
-        <div className="relative w-full" ref={dropdownRef}>
+        <div className="relative w-full z-20" ref={dropdownRef}>
             <button
                 type="button"
                 onClick={() => setIsOpen(prev => !prev)}
-                className="w-full min-h-[32px] px-3 py-1 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all flex items-center justify-between gap-2 cursor-pointer"
+                className="w-full min-h-[32px] px-3 py-1 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all flex items-center justify-between gap-2 cursor-pointer overflow-hidden"
             >
-                <div className="flex flex-wrap gap-1 items-center flex-1 overflow-hidden">
+                <div className="flex flex-wrap gap-1 items-center flex-1 max-h-16 overflow-y-auto pr-1">
                     {selectedProducts.length === 0 ? (
                         <span className="text-[#102A43]/40">Select Products</span>
                     ) : (
                         selectedProducts.map(p => (
                             <span
                                 key={p.id}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#E6F0F8] text-[#0178BC] font-semibold text-[11px] rounded"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#E6F0F8] text-[#0178BC] font-semibold text-[11px] rounded shrink-0"
                             >
                                 {p.name}
                                 <X
@@ -235,14 +235,14 @@ const ProductCheckboxDropdown = ({ products, selectedIds, onChange }) => {
                             />
                         </div>
                     </div>
-                    <div className="overflow-y-auto p-1 flex flex-col gap-0.5">
+                    <div className="overflow-y-auto p-1 flex flex-col gap-0.5 max-h-40">
                         {filteredProducts.length === 0 ? (
-                            <div className="p-2.5 text-center text-xs text-[#60738E]">No products found</div>
+                            <div className="p-2.5 text-center text-xs text-[#60738E]">No products available</div>
                         ) : (
                             filteredProducts.map(p => {
                                 const isChecked = selectedIds.some(id => Number(id) === Number(p.id));
                                 return (
-                                    <label
+                                    <div
                                         key={p.id}
                                         onClick={() => toggleOption(p.id)}
                                         className={`flex items-center gap-2.5 px-3 py-1.5 rounded cursor-pointer text-xs transition-colors ${
@@ -252,12 +252,12 @@ const ProductCheckboxDropdown = ({ products, selectedIds, onChange }) => {
                                         <input
                                             type="checkbox"
                                             checked={isChecked}
-                                            onChange={() => {}} // handled by parent container click
+                                            readOnly
                                             className="w-3.5 h-3.5 rounded border-[#C9D8E5] text-[#0178BC] focus:ring-[#0178BC] cursor-pointer"
                                         />
                                         <span className="flex-1 truncate">{p.name}</span>
                                         {isChecked && <Check size={13} className="text-[#0178BC] shrink-0" />}
-                                    </label>
+                                    </div>
                                 );
                             })
                         )}
@@ -368,31 +368,36 @@ const CrmLeadFormPage = () => {
         if (name === 'firstName') {
             if (!value?.trim()) {
                 err = 'First Name is required.';
-            } else if (/[0-[#^$%&*()_+=[\]{};:"\\|<>,/?~`!@#]]/.test(value) && /\d/.test(value)) {
+            } else if (/^\d+$/.test(value.trim())) {
+                err = 'First Name cannot be numeric-only.';
+            } else if (/[0-9]/.test(value)) {
                 err = 'First Name should only contain letters and spaces.';
             }
         }
         if (name === 'lastName') {
             if (!value?.trim()) {
                 err = 'Last Name is required.';
-            } else if (/\d/.test(value)) {
+            } else if (/^\d+$/.test(value.trim())) {
+                err = 'Last Name cannot be numeric-only.';
+            } else if (/[0-9]/.test(value)) {
                 err = 'Last Name should only contain letters and spaces.';
             }
         }
         if (name === 'leadNo' && !value?.trim()) err = 'Lead No. is required.';
         if (name === 'companyId' && !value) err = 'Company selection is required.';
+        if (name === 'ownerId' && !value) err = 'Lead Owner selection is required.';
         if (name === 'email') {
             if (!value?.trim()) {
                 err = 'Email address is required.';
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-                err = 'Please enter a valid email address.';
+            } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)) {
+                err = 'Please enter a valid email address (e.g. user@domain.com).';
             }
         }
         if (name === 'phone' && value) {
             if (/[a-zA-Z]/.test(value)) {
-                err = 'Phone number cannot contain letters.';
+                err = 'Phone number cannot contain alphabetic letters.';
             } else if (!/^[0-9+\-\s()]{7,20}$/.test(value)) {
-                err = 'Please enter a valid phone number (digits only, min 7 digits).';
+                err = 'Please enter a valid phone number (digits only, min 7 characters).';
             }
         }
         if (name === 'website' && value) {
@@ -400,8 +405,25 @@ const CrmLeadFormPage = () => {
                 err = 'Please enter a valid website URL.';
             }
         }
-        if (name === 'amount' && value && parseFloat(value) < 0) {
-            err = 'Amount cannot be negative.';
+        if (name === 'amount' && value !== '' && value !== null && value !== undefined) {
+            if (parseFloat(value) < 0) {
+                err = 'Amount cannot be negative.';
+            }
+        }
+        if (name === 'address.city' && value?.trim()) {
+            if (/^\d+$/.test(value.trim())) {
+                err = 'City cannot be numeric-only.';
+            }
+        }
+        if (name === 'address.state' && value?.trim()) {
+            if (/^\d+$/.test(value.trim())) {
+                err = 'State/Province cannot be numeric-only.';
+            }
+        }
+        if (name === 'address.zip' && value?.trim()) {
+            if (value.trim().length > 10) {
+                err = 'Zip/Postal code cannot exceed 10 characters.';
+            }
         }
         return err;
     };
@@ -425,6 +447,9 @@ const CrmLeadFormPage = () => {
         const compErr = validateField('companyId', formData.companyId);
         if (compErr) { errorsObj.companyId = compErr; errorList.push(compErr); }
 
+        const ownerErr = validateField('ownerId', formData.ownerId);
+        if (ownerErr) { errorsObj.ownerId = ownerErr; errorList.push(ownerErr); }
+
         const phoneErr = validateField('phone', formData.phone);
         if (phoneErr) { errorsObj.phone = phoneErr; errorList.push(phoneErr); }
 
@@ -433,6 +458,15 @@ const CrmLeadFormPage = () => {
 
         const amtErr = validateField('amount', formData.amount);
         if (amtErr) { errorsObj.amount = amtErr; errorList.push(amtErr); }
+
+        const cityErr = validateField('address.city', formData.address.city);
+        if (cityErr) { errorsObj['address.city'] = cityErr; errorList.push(cityErr); }
+
+        const stateErr = validateField('address.state', formData.address.state);
+        if (stateErr) { errorsObj['address.state'] = stateErr; errorList.push(stateErr); }
+
+        const zipErr = validateField('address.zip', formData.address.zip);
+        if (zipErr) { errorsObj['address.zip'] = zipErr; errorList.push(zipErr); }
 
         setFieldErrors(errorsObj);
         setValidationErrorList(errorList);
@@ -451,34 +485,23 @@ const CrmLeadFormPage = () => {
 
         // Input Sanity restrictions
         if (name === 'firstName' || name === 'lastName') {
-            // Disallow typing numbers directly into name fields
             if (/\d/.test(value)) return;
         }
 
         if (name === 'phone') {
-            // Disallow typing alphabetic letters into phone number field
             if (/[a-zA-Z]/.test(value)) return;
         }
 
         if (name.startsWith("address.")) {
             const field = name.split('.')[1];
             setFormData(prev => ({ ...prev, address: { ...prev.address, [field]: value } }));
+            const err = validateField(name, value);
+            setFieldErrors(prev => ({ ...prev, [name]: err }));
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
             const err = validateField(name, value);
             setFieldErrors(prev => ({ ...prev, [name]: err }));
         }
-    };
-
-    const handleMultiSelectChange = (e) => {
-        const { name, options } = e.target;
-        const value = [];
-        for (let i = 0, l = options.length; i < l; i++) {
-            if (options[i].selected) {
-                value.push(options[i].value);
-            }
-        }
-        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e) => {
@@ -491,8 +514,9 @@ const CrmLeadFormPage = () => {
         try {
             const payload = {
                 ...formData,
-                amount: formData.amount ? parseFloat(formData.amount) : null,
+                amount: formData.amount !== '' && formData.amount !== null ? parseFloat(formData.amount) : null,
                 companyId: formData.companyId ? parseInt(formData.companyId) : null,
+                ownerId: formData.ownerId ? parseInt(formData.ownerId) : null,
                 productIds: formData.productIds.map(pid => parseInt(pid)),
             };
 
@@ -522,7 +546,7 @@ const CrmLeadFormPage = () => {
 
     return (
         <div className="flex flex-col h-full w-full bg-[#F8FAFC] text-[#102A43] p-0 overflow-hidden font-sans">
-            {/* Unified Form Container (Full Width & Edge-to-Edge) */}
+            {/* Unified Form Container */}
             <form onSubmit={handleSubmit} className="bg-white border-none rounded-none shadow-none overflow-hidden flex flex-col h-full min-h-0 w-full">
                 {/* Header / Title Bar */}
                 <div className="bg-white border-b border-[#D7E3EE] px-4 py-3 shrink-0">
@@ -534,10 +558,10 @@ const CrmLeadFormPage = () => {
                     </p>
                 </div>
 
-                {/* Form Sections Grid Container (Scrollable Full Width) */}
+                {/* Form Sections Grid Container */}
                 <div className="p-2 sm:p-3 flex flex-col gap-2.5 sm:gap-3 bg-[#F8FAFC] flex-1 overflow-y-auto w-full">
-                {/* Row 1: Section 1 (Basic Specifications) & Section 2 (Lead Classification) */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+                {/* Row 1: Section 1 & Section 2 */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-start">
                     {/* Section 1: Basic Specifications */}
                     <div className="bg-white border border-[#D7E3EE] rounded-lg p-3 sm:p-4 shadow-2xs flex flex-col gap-2.5">
                         <div className="flex items-center gap-2">
@@ -702,7 +726,7 @@ const CrmLeadFormPage = () => {
                                     onChange={handleChange}
                                     className="w-full px-3 py-1.5 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8 cursor-pointer"
                                 >
-                                    <option value="">Select Industry</option>
+                                    <option value="">{selectData.industries.length === 0 ? 'No Industries Found' : 'Select Industry'}</option>
                                     {selectData.industries.map(i => (
                                         <option key={i.id} value={i.id}>{i.name}</option>
                                     ))}
@@ -735,7 +759,9 @@ const CrmLeadFormPage = () => {
 
                             <div>
                                 <div className="flex items-center justify-between mb-1">
-                                    <label className="block text-xs font-bold text-[#102A43]">Lead Owner</label>
+                                    <label className="block text-xs font-bold text-[#102A43]">
+                                        Lead Owner <span className="text-red-500">*</span>
+                                    </label>
                                     <button
                                         type="button"
                                         onClick={() => setIsOwnerModalOpen(true)}
@@ -748,13 +774,15 @@ const CrmLeadFormPage = () => {
                                     name="ownerId"
                                     value={formData.ownerId}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-1.5 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8 cursor-pointer"
+                                    required
+                                    className={`w-full px-3 py-1.5 bg-white border ${fieldErrors.ownerId ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8 cursor-pointer`}
                                 >
                                     <option value="">Select Owner</option>
                                     {selectData.employees.map(e => (
                                         <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>
                                     ))}
                                 </select>
+                                {fieldErrors.ownerId && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors.ownerId}</p>}
                             </div>
 
                             <div>
@@ -822,8 +850,8 @@ const CrmLeadFormPage = () => {
                     </div>
                 </div>
 
-                {/* Row 2: Section 3 (Financials & Forecast), Section 4 (Products & Addresses), Section 5 (Additional Remarks) */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+                {/* Row 2: Section 3, Section 4, Section 5 */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 items-start">
                     {/* Section 3: Financials & Forecast */}
                     <div className="bg-white border border-[#D7E3EE] rounded-lg p-3 sm:p-4 shadow-2xs flex flex-col gap-2.5">
                         <div className="flex items-center gap-2">
@@ -841,6 +869,8 @@ const CrmLeadFormPage = () => {
                                     <input
                                         type="number"
                                         name="amount"
+                                        min="0"
+                                        step="any"
                                         value={formData.amount}
                                         onChange={handleChange}
                                         placeholder="0.00"
@@ -916,6 +946,7 @@ const CrmLeadFormPage = () => {
                                         name="address.street"
                                         value={formData.address.street}
                                         onChange={handleChange}
+                                        maxLength={150}
                                         placeholder="Type Here"
                                         className="w-full px-3 py-1.5 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] placeholder-[#102A43]/40 focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8"
                                     />
@@ -929,8 +960,9 @@ const CrmLeadFormPage = () => {
                                         value={formData.address.city}
                                         onChange={handleChange}
                                         placeholder="Type Here"
-                                        className="w-full px-3 py-1.5 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] placeholder-[#102A43]/40 focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8"
+                                        className={`w-full px-3 py-1.5 bg-white border ${fieldErrors['address.city'] ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded-md text-xs text-[#102A43] placeholder-[#102A43]/40 focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8`}
                                     />
+                                    {fieldErrors['address.city'] && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors['address.city']}</p>}
                                 </div>
 
                                 <div>
@@ -941,8 +973,9 @@ const CrmLeadFormPage = () => {
                                         value={formData.address.state}
                                         onChange={handleChange}
                                         placeholder="Type Here"
-                                        className="w-full px-3 py-1.5 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] placeholder-[#102A43]/40 focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8"
+                                        className={`w-full px-3 py-1.5 bg-white border ${fieldErrors['address.state'] ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded-md text-xs text-[#102A43] placeholder-[#102A43]/40 focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8`}
                                     />
+                                    {fieldErrors['address.state'] && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors['address.state']}</p>}
                                 </div>
 
                                 <div>
@@ -952,9 +985,11 @@ const CrmLeadFormPage = () => {
                                         name="address.zip"
                                         value={formData.address.zip}
                                         onChange={handleChange}
+                                        maxLength={10}
                                         placeholder="Type Here"
-                                        className="w-full px-3 py-1.5 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] placeholder-[#102A43]/40 focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8"
+                                        className={`w-full px-3 py-1.5 bg-white border ${fieldErrors['address.zip'] ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded-md text-xs text-[#102A43] placeholder-[#102A43]/40 focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8`}
                                     />
+                                    {fieldErrors['address.zip'] && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors['address.zip']}</p>}
                                 </div>
                             </div>
 
@@ -975,7 +1010,7 @@ const CrmLeadFormPage = () => {
                     {/* Section 5: Additional Remarks */}
                     <div className="bg-white border border-[#D7E3EE] rounded-lg p-3 sm:p-4 shadow-2xs flex flex-col gap-2.5">
                         <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 bg-[#0178BC] text-[#102A43] rounded font-bold text-[11px] flex items-center justify-center">
+                            <div className="w-5 h-5 bg-[#0178BC] text-white rounded font-bold text-[11px] flex items-center justify-center">
                                 5
                             </div>
                             <h2 className="text-sm font-bold text-[#102A43]">Additional Remarks</h2>

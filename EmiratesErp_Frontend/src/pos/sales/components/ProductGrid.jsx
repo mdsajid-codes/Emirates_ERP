@@ -18,69 +18,80 @@ const CATEGORIES_TABS = [
 ];
 
 const ProductCard = ({ product, variant, onAddToCart, onDownloadBarcode }) => {
-    const mainAction = () => onAddToCart(product, variant, variant.quantity);
-    const isOutOfStock = variant.quantity <= 0;
-
-    // Pick icon color or style
-    const iconColors = ['text-[#007F8F]', 'text-[#172033]', 'text-[#D92D20]', 'text-[#00719B]'];
-    const colorIndex = (variant.id || 0) % 4;
-    const iconColorClass = iconColors[colorIndex];
+    // Only mark out of stock if quantity is explicitly provided and <= 0
+    const isOutOfStock = variant.quantity !== undefined && variant.quantity !== null ? variant.quantity <= 0 : false;
+    const mainAction = () => {
+        if (!isOutOfStock) {
+            onAddToCart(product, variant, variant.quantity);
+        }
+    };
 
     return (
         <div
-            className="group relative flex flex-col justify-between p-[6px] bg-white border border-[#E3EAF0] rounded-[8px] hover:border-[#00A9A8] transition-all"
-            style={{ width: '100%', height: '104px' }}
+            onClick={mainAction}
+            className={`group relative flex flex-col justify-end overflow-hidden select-none bg-white rounded-[6.09px] transition-all hover:scale-[1.02] shadow-[0px_6.09px_9.14px_-1.52px_rgba(0,0,0,0.1),0px_3.05px_6.09px_-3.05px_rgba(0,0,0,0.1)] ${
+                isOutOfStock ? 'cursor-not-allowed border-2 border-red-500' : 'cursor-pointer'
+            }`}
+            style={{ width: '210px', height: '150px' }}
         >
-            {/* Title / Name */}
-            <div className="flex items-start justify-between gap-1">
-                <span className="text-[8px] font-semibold leading-[12px] text-[#172033] truncate flex-1" title={product.name}>
-                    {product.name}
-                </span>
-                <button
-                    onClick={(e) => onDownloadBarcode(e, variant.id, variant.sku)}
-                    className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-slate-700 transition-opacity"
-                    title="Download QR"
-                >
-                    <Download size={10} />
-                </button>
-            </div>
+            {/* Top Red Bar for Out of Stock */}
+            {isOutOfStock && (
+                <div className="absolute top-0 left-0 right-0 h-[5px] bg-red-600 z-30" />
+            )}
 
-            {/* Middle Image / Icon Display Box */}
-            <div
-                onClick={mainAction}
-                className="w-full h-[48px] bg-[#F3F6F9] rounded-[6px] flex items-center justify-center cursor-pointer overflow-hidden my-1 relative"
-            >
-                {variant.imageUrl && !isOutOfStock ? (
+            {/* Background Product Image Container */}
+            <div className="absolute inset-0 w-full h-full bg-[#E5E9EE]">
+                {variant.imageUrl ? (
                     <img
                         src={constructImageUrl(variant.imageUrl)}
                         alt={product.name}
-                        className="w-full h-full object-contain p-1"
+                        className="w-full h-full object-cover"
                     />
                 ) : (
-                    <div className="flex items-center justify-center">
-                        <Shirt className={`w-[30px] h-[30px] ${iconColorClass}`} strokeWidth={1.5} />
-                    </div>
-                )}
-
-                {isOutOfStock && (
-                    <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                        <span className="text-[7px] font-bold text-[#D92D20] uppercase">Out of Stock</span>
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#1E293B] to-[#0F172A] text-slate-400">
+                        <Shirt className="w-[42px] h-[42px] opacity-40 text-white" strokeWidth={1.5} />
                     </div>
                 )}
             </div>
 
-            {/* Bottom Row: Price & + Button */}
-            <div className="flex items-center justify-between mt-auto">
-                <span className="text-[8px] font-bold leading-[12px] text-[#172033]">
-                    {formatPrice(variant.priceCents)}
-                </span>
+            {/* Top Badge: Red Badge when Out of Stock, White square otherwise */}
+            {isOutOfStock ? (
+                <div className="absolute top-[8px] right-[8px] z-30 px-2 py-0.5 bg-red-600 text-white text-[9px] font-bold uppercase rounded-[4px] shadow-md flex items-center gap-1 border border-red-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    Out of Stock
+                </div>
+            ) : (
+                <div className="absolute top-[6.09px] right-[6.09px] z-10 w-[18.28px] h-[18.28px] bg-white rounded-[6.09px] shadow-xs pointer-events-none" />
+            )}
+
+            {/* Out of Stock Subtle Overlay */}
+            {isOutOfStock && (
+                <div className="absolute inset-0 z-20 bg-black/35 backdrop-blur-[0.5px] pointer-events-none" />
+            )}
+
+            {/* Bottom Dark Blue Gradient Overlay Bar */}
+            <div className="relative z-10 w-full p-[9.14px] bg-gradient-to-t from-[#102A5C] via-[#102A5C]/80 to-transparent flex items-end justify-between min-h-[55.28px]">
+                {/* Left Text: Product Name & AED Price */}
+                <div className="flex flex-col justify-end text-white max-w-[140px] pr-1">
+                    <span className="text-[12.18px] font-bold leading-[18px] text-white truncate drop-shadow-xs" title={product.name}>
+                        {product.name}
+                    </span>
+                    <span className="text-[12.18px] font-bold leading-[18px] text-white/90 font-mono tracking-tight drop-shadow-xs">
+                        {formatPrice(variant.priceCents)}
+                    </span>
+                </div>
+
+                {/* Right Circular Plus Button */}
                 {!isOutOfStock && (
                     <button
-                        onClick={mainAction}
-                        className="w-[16px] h-[16px] rounded-full border border-[#00719B] flex items-center justify-center text-[#00719B] hover:bg-[#00719B] hover:text-white transition-colors cursor-pointer"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            mainAction();
+                        }}
+                        className="w-[30.47px] h-[30.47px] rounded-full bg-[#0078BC] hover:bg-[#006096] text-white flex items-center justify-center shrink-0 shadow-md transition-transform active:scale-95 cursor-pointer"
                         title="Add to Cart"
                     >
-                        <Plus className="w-[10px] h-[10px]" strokeWidth={2} />
+                        <Plus className="w-[18px] h-[18px] text-white" strokeWidth={2.5} />
                     </button>
                 )}
             </div>
@@ -89,7 +100,7 @@ const ProductCard = ({ product, variant, onAddToCart, onDownloadBarcode }) => {
 };
 
 const ProductGrid = ({ products, categories = [], selectedCategory = 'All', onSelectCategory, onAddToCart, onDownloadBarcode }) => {
-    // Combine 'All' with real categories fetched from database, plus 'Uncategorized' if applicable
+    // Combine 'All' with real categories fetched from database
     const categoryTabs = useMemo(() => {
         const list = [{ id: 'All', name: 'All' }];
         (categories || []).forEach(cat => {
@@ -99,6 +110,20 @@ const ProductGrid = ({ products, categories = [], selectedCategory = 'All', onSe
         });
         return list;
     }, [categories]);
+
+    // Flatten product variants
+    const productVariantsList = useMemo(() => {
+        return (products || []).flatMap(product =>
+            (product.variants || []).map(variant => {
+                const isOutOfStock = variant.quantity !== undefined && variant.quantity !== null ? variant.quantity <= 0 : false;
+                return {
+                    product,
+                    variant,
+                    isOutOfStock
+                };
+            })
+        );
+    }, [products]);
 
     const activeCategory = selectedCategory || 'All';
 
@@ -131,11 +156,10 @@ const ProductGrid = ({ products, categories = [], selectedCategory = 'All', onSe
                         <button
                             key={tab.id}
                             onClick={() => handleTabClick(tab.id)}
-                            className={`text-[9px] font-semibold leading-[14px] pb-1 border-b-2 transition-all whitespace-nowrap cursor-pointer ${
-                                isActive
+                            className={`text-[9px] font-semibold leading-[14px] pb-1 border-b-2 transition-all whitespace-nowrap cursor-pointer ${isActive
                                     ? 'border-[#087E8B] text-[#087E8B]'
                                     : 'border-transparent text-[#172033] opacity-75 hover:opacity-100'
-                            }`}
+                                }`}
                         >
                             {tab.name}
                         </button>
@@ -145,18 +169,16 @@ const ProductGrid = ({ products, categories = [], selectedCategory = 'All', onSe
 
             {/* Grid of Product Cards */}
             <div className="flex-1 overflow-y-auto no-scrollbar pr-1">
-                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-                    {products.flatMap(product =>
-                        (product.variants || []).map(variant => (
-                            <ProductCard
-                                key={variant.id}
-                                product={product}
-                                variant={variant}
-                                onAddToCart={onAddToCart}
-                                onDownloadBarcode={onDownloadBarcode}
-                            />
-                        ))
-                    )}
+                <div className="flex flex-wrap gap-3.5">
+                    {productVariantsList.map(({ product, variant }) => (
+                        <ProductCard
+                            key={variant.id}
+                            product={product}
+                            variant={variant}
+                            onAddToCart={onAddToCart}
+                            onDownloadBarcode={onDownloadBarcode}
+                        />
+                    ))}
                 </div>
 
                 {products.length === 0 && (

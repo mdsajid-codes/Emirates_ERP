@@ -76,8 +76,8 @@ public class ProductController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<ProductDto>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProductsForCurrentTenant());
+    public ResponseEntity<List<ProductDto>> getAllProducts(@RequestParam(required = false) Long storeId) {
+        return ResponseEntity.ok(productService.getAllProductsForCurrentTenant(storeId));
     }
 
     @GetMapping("/{id}")

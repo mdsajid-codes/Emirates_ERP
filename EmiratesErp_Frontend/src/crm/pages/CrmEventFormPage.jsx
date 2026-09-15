@@ -211,9 +211,16 @@ const CrmEventFormPage = () => {
 
     const validateField = (name, value) => {
         let err = '';
+        const todayStr = new Date().toISOString().split('T')[0];
         if (name === 'subject' && !value) err = 'Subject / Event type is required.';
-        if (name === 'date' && !value) err = 'Execution Date is required.';
+        if (name === 'date') {
+            if (!value) err = 'Execution Date is required.';
+            else if (value < todayStr) err = 'Execution Date cannot be in the past.';
+        }
         if (name === 'fromTime' && !value) err = 'Start Time is required.';
+        if (name === 'meetingWith' && value) {
+            if (/^\d+$/.test(value.trim())) err = 'Modality Target / Link cannot be numeric-only. Please enter a valid URL or location.';
+        }
 
         setFieldErrors(prev => {
             const next = { ...prev };
@@ -264,6 +271,8 @@ const CrmEventFormPage = () => {
         if (dErr) errors.push(dErr);
         const tErr = validateField('fromTime', formData.fromTime);
         if (tErr) errors.push(tErr);
+        const mErr = validateField('meetingWith', formData.meetingWith);
+        if (mErr) errors.push(mErr);
 
         if (errors.length > 0) {
             setValidationErrorList(errors);
@@ -460,6 +469,7 @@ const CrmEventFormPage = () => {
                                     <input
                                         type="date"
                                         name="date"
+                                        min={new Date().toISOString().split('T')[0]}
                                         value={formData.date}
                                         onChange={handleChange}
                                         required

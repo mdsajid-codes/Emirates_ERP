@@ -1,120 +1,280 @@
 import React from 'react';
 import {
-    Search, ScanLine, Tag, Store, User, UserPlus, Eye, EyeOff
+    Search, PackagePlus, Tag, Store, User, UserPlus, Eye, EyeOff, ChevronDown, Check
 } from 'lucide-react';
 
 const SalesHeader = ({
     searchTerm, onSearchTermChange,
-    barcode, onBarcodeChange, onBarcodeScan,
     selectedCategory, onCategoryChange, categories,
     selectedStore, onStoreChange, stores,
     selectedCustomer, onCustomerChange, customers,
     onAddCustomer, onAddProduct,
     showInactive, onToggleInactive,
+    onInsert,
     posTheme
 }) => {
+    const primaryBg = posTheme?.sidebarBg || '#013E5B';
+
     return (
-        <div className="flex items-center gap-2 flex-wrap font-sans">
-            {/* Search products bar */}
+        <div className="relative z-50 flex items-center gap-3 overflow-visible py-1 shrink-0 font-sans min-w-0">
+            {/* Search products bar - Figma styled */}
             <div
-                className="flex items-center gap-2 px-3 w-[220px] shrink-0"
-                style={{ height: 36, background: '#FFFFFF', border: '1px solid #D7E1E9', borderRadius: 8 }}
+                className="flex items-center gap-2 px-4 h-[48.9px] min-w-[240px] flex-1 max-w-[340px] shrink-0 bg-white border-[1.5px] border-[#DCE6F5] rounded-[6px]"
             >
-                <Search className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#667085' }} />
+                <Search className="w-4 h-4 flex-shrink-0 text-[#013E5B]" />
                 <input
                     type="text"
                     placeholder="Search products by name or SKU..."
                     value={searchTerm}
                     onChange={e => onSearchTermChange(e.target.value)}
-                    className="w-full text-[10px] leading-[15px] outline-none placeholder:text-[#667085] text-[#18233B] bg-transparent"
+                    className="w-full text-[14px] leading-[23px] font-[500] outline-none placeholder:text-slate-400 text-[#102A5C] bg-transparent"
                 />
             </div>
 
-            {/* Scan Barcode chip */}
+            {/* Insert Button - Figma styled */}
             <button
-                className="flex items-center gap-1.5 px-3 font-semibold transition-colors shrink-0"
-                style={{
-                    height: 36, borderRadius: 8,
-                    background: '#FFFFFF', border: '1px solid #E3EAF0', color: '#172033',
-                    fontSize: 10
-                }}
-                title="Scan Barcode"
+                onClick={onInsert}
+                className="flex items-center justify-center gap-2 px-5 h-[48.9px] rounded-[6px] text-[15.23px] font-[500] bg-white border-[1.5px] border-[#DCE6F5] text-[#102A5C] hover:border-[#00A9A8] hover:text-[#00A9A8] transition-all shrink-0 cursor-pointer"
+                title="Insert Items"
             >
-                <ScanLine className="w-3.5 h-3.5" style={{ color: '#00719B' }} />
-                <span>Scan barcode</span>
+                <PackagePlus className="w-4 h-4 text-[#013E5B]" />
+                <span>Insert</span>
             </button>
 
-            {/* All Categories chip */}
+            {/* All Categories chip - Figma styled */}
             <button
-                className="flex items-center gap-1.5 px-3 font-semibold transition-colors shrink-0"
+                onClick={() => onCategoryChange && onCategoryChange('All')}
+                className="flex items-center justify-center gap-2 px-5 h-[48.9px] rounded-[6px] text-[15.23px] font-[600] transition-all shrink-0 cursor-pointer"
                 style={{
-                    height: 36, borderRadius: 8,
-                    background: '#E9F8FF', border: '1px solid #00719B', color: '#00719B',
-                    fontSize: 10
+                    backgroundColor: selectedCategory === 'All' ? primaryBg : '#FFFFFF',
+                    color: selectedCategory === 'All' ? '#FFFFFF' : '#102A5C',
+                    border: selectedCategory === 'All' ? 'none' : '1.5px solid #DCE6F5',
                 }}
             >
-                <Tag className="w-3.5 h-3.5" style={{ color: '#00719B' }} />
+                <Tag className="w-4 h-4" style={{ color: selectedCategory === 'All' ? '#FFFFFF' : '#013E5B' }} />
                 <span>All Categories</span>
             </button>
 
-            {/* Main Store chip */}
-            <button
-                className="flex items-center gap-1.5 px-3 font-semibold transition-colors shrink-0"
-                style={{
-                    height: 36, borderRadius: 8,
-                    background: '#FFFFFF', border: '1px solid #E3EAF0', color: '#172033',
-                    fontSize: 10
-                }}
-            >
-                <Store className="w-3.5 h-3.5" style={{ color: '#00719B' }} />
-                <span>Main Store</span>
-            </button>
+            {/* Store Selection Dropdown */}
+            <StoreDropdown
+                selectedStore={selectedStore}
+                onStoreChange={onStoreChange}
+                stores={stores}
+            />
 
-            {/* Active Only chip */}
+            {/* Active Only chip - Figma styled */}
             <button
                 onClick={onToggleInactive}
-                className="flex items-center gap-1.5 px-3 font-semibold transition-colors shrink-0"
+                className="flex items-center justify-center gap-2 px-5 h-[48.9px] rounded-[6px] text-[15.23px] font-[500] transition-all shrink-0 cursor-pointer"
                 style={{
-                    height: 36, borderRadius: 8,
                     background: showInactive ? '#FFF8E7' : '#FFFFFF',
-                    border: showInactive ? '1px solid #FFA713' : '1px solid #E3EAF0',
-                    color: showInactive ? '#B45309' : '#172033',
-                    fontSize: 10
+                    border: showInactive ? '1.5px solid #FFA713' : '1.5px solid #DCE6F5',
+                    color: showInactive ? '#B45309' : '#102A5C',
                 }}
             >
-                {showInactive ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" style={{ color: '#667085' }} />}
+                {showInactive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-[#013E5B]" />}
                 <span>{showInactive ? 'Inactive' : 'Active Only'}</span>
             </button>
 
-            {/* Customer selector + Add Customer in the same line */}
-            <div className="flex items-center gap-1.5 shrink-0 ml-auto sm:ml-0">
-                <div
-                    className="flex items-center gap-2 px-3"
-                    style={{ height: 36, background: '#FFFFFF', border: '1px solid #E3EAF0', borderRadius: 8 }}
-                >
-                    <User className="w-3.5 h-3.5" style={{ color: '#00719B' }} />
-                    <select
-                        value={selectedCustomer}
-                        onChange={e => onCustomerChange(e.target.value)}
-                        className="text-[10px] font-semibold outline-none cursor-pointer bg-transparent appearance-none"
-                        style={{ color: '#172033' }}
-                    >
-                        <option value="">Walk-in Customer</option>
-                        {customers.map(c => (
-                            <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
-                    </select>
-                </div>
+            {/* Customer Selector Chip with Search Input - Figma styled */}
+            <CustomerSearchDropdown
+                selectedCustomer={selectedCustomer}
+                onCustomerChange={onCustomerChange}
+                customers={customers}
+                onAddCustomer={onAddCustomer}
+            />
+        </div>
+    );
+};
 
-                <button
-                    onClick={onAddCustomer}
-                    title="Add New Customer"
-                    className="flex items-center justify-center rounded-full hover:opacity-80 transition-all cursor-pointer flex-shrink-0"
-                    style={{ width: 28, height: 28, background: '#00A9A8' }}
-                >
-                    <UserPlus className="w-3.5 h-3.5 text-white" strokeWidth={2} />
-                </button>
+/* --- Custom Searchable Customer Dropdown Component --- */
+const CustomerSearchDropdown = ({ selectedCustomer, onCustomerChange, customers, onAddCustomer }) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [searchQuery, setSearchQuery] = React.useState('');
+    const dropdownRef = React.useRef(null);
+
+    const selectedCustObj = React.useMemo(() => {
+        return customers.find(c => String(c.id) === String(selectedCustomer));
+    }, [customers, selectedCustomer]);
+
+    const filteredCustomers = React.useMemo(() => {
+        const query = searchQuery.toLowerCase().trim();
+        if (!query) return customers;
+        return customers.filter(c =>
+            (c.name || '').toLowerCase().includes(query) ||
+            (c.phone || '').toLowerCase().includes(query) ||
+            (c.email || '').toLowerCase().includes(query)
+        );
+    }, [customers, searchQuery]);
+
+    React.useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    return (
+        <div className="relative flex items-center gap-2 shrink-0 ml-auto z-40" ref={dropdownRef}>
+            <div
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center justify-between gap-2.5 px-4 h-[48.9px] min-w-[200px] bg-white border-[1.5px] border-[#DCE6F5] hover:border-[#00A9A8] rounded-[6px] cursor-pointer transition-all shadow-xs select-none"
+            >
+                <div className="flex items-center gap-2 truncate">
+                    <User className="w-4 h-4 text-[#013E5B] shrink-0" />
+                    <span className="text-[14px] font-[500] text-[#102A5C] truncate">
+                        {selectedCustObj ? selectedCustObj.name : 'Select Customer'}
+                    </span>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-[#013E5B] shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </div>
+
+            <button
+                onClick={onAddCustomer}
+                title="Add New Customer"
+                className="flex items-center justify-center rounded-full hover:opacity-80 transition-all cursor-pointer flex-shrink-0 shadow-xs"
+                style={{ width: 36, height: 36, background: '#00A9A8' }}
+            >
+                <UserPlus className="w-4 h-4 text-white" strokeWidth={2} />
+            </button>
+
+            {/* Custom Dropdown Menu with Search Field */}
+            {isOpen && (
+                <div className="absolute top-[54px] right-0 w-[280px] bg-white border border-[#DCE6F5] rounded-[8px] shadow-2xl z-50 overflow-hidden flex flex-col font-sans">
+                    {/* Search Field Input */}
+                    <div className="p-2 border-b border-[#E2E8F0] bg-slate-50/50 flex items-center gap-2">
+                        <Search className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1" />
+                        <input
+                            type="text"
+                            placeholder="Search customer name or phone..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            autoFocus
+                            className="w-full text-xs font-medium text-slate-800 bg-transparent outline-none placeholder:text-slate-400"
+                        />
+                    </div>
+
+                    {/* Customer List Container */}
+                    <div className="max-h-[240px] overflow-y-auto divide-y divide-slate-100">
+                        {/* Walk-in Customer Option */}
+                        <div
+                            onClick={() => {
+                                onCustomerChange('');
+                                setIsOpen(false);
+                                setSearchQuery('');
+                            }}
+                            className={`px-3 py-2.5 text-xs font-semibold cursor-pointer transition-colors flex items-center justify-between ${
+                                !selectedCustomer ? 'bg-[#00A9A8]/10 text-[#00A9A8]' : 'text-slate-700 hover:bg-slate-50'
+                            }`}
+                        >
+                            <span>Walk-in Customer</span>
+                            {!selectedCustomer && <Check className="w-3.5 h-3.5 text-[#00A9A8]" />}
+                        </div>
+
+                        {/* Filtered Customer Options */}
+                        {filteredCustomers.map(c => {
+                            const isSelected = String(c.id) === String(selectedCustomer);
+                            return (
+                                <div
+                                    key={c.id}
+                                    onClick={() => {
+                                        onCustomerChange(c.id);
+                                        setIsOpen(false);
+                                        setSearchQuery('');
+                                    }}
+                                    className={`px-3 py-2 text-xs cursor-pointer transition-colors flex flex-col gap-0.5 ${
+                                        isSelected ? 'bg-[#00A9A8]/10 text-[#00A9A8] font-bold' : 'text-slate-700 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-semibold truncate">{c.name}</span>
+                                        {isSelected && <Check className="w-3.5 h-3.5 text-[#00A9A8] shrink-0" />}
+                                    </div>
+                                    {c.phone && <span className="text-[10px] text-slate-400 font-mono">{c.phone}</span>}
+                                </div>
+                            );
+                        })}
+
+                        {filteredCustomers.length === 0 && (
+                            <div className="p-3 text-center text-xs text-slate-400">
+                                No customer found matching &quot;{searchQuery}&quot;
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+/* --- Store Selector Dropdown Component --- */
+const StoreDropdown = ({ selectedStore, onStoreChange, stores }) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const dropdownRef = React.useRef(null);
+
+    const selectedStoreObj = React.useMemo(() => {
+        return stores?.find(s => String(s.id) === String(selectedStore));
+    }, [stores, selectedStore]);
+
+    React.useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const storeDisplayName = selectedStoreObj ? selectedStoreObj.name : (stores && stores.length > 0 ? stores[0].name : 'Main Store');
+
+    return (
+        <div className="relative shrink-0 z-40" ref={dropdownRef}>
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center justify-center gap-2 px-5 h-[48.9px] rounded-[6px] text-[15.23px] font-[500] bg-white border-[1.5px] border-[#DCE6F5] text-[#102A5C] hover:border-[#00A9A8] transition-all shrink-0 cursor-pointer select-none"
+            >
+                <Store className="w-4 h-4 text-[#013E5B]" />
+                <span>{storeDisplayName}</span>
+                <ChevronDown className={`w-4 h-4 text-[#013E5B] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isOpen && (
+                <div className="absolute top-[54px] left-0 min-w-[240px] w-max max-w-[320px] bg-white border border-[#DCE6F5] rounded-[8px] shadow-2xl z-50 overflow-hidden flex flex-col font-sans">
+                    <div className="px-3 py-2 border-b border-[#E2E8F0] bg-slate-50 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        Select Store
+                    </div>
+                    <div className="max-h-[220px] overflow-y-auto divide-y divide-slate-100">
+                        {stores && stores.length > 0 ? (
+                            stores.map(s => {
+                                const isSelected = String(s.id) === String(selectedStore);
+                                return (
+                                    <div
+                                        key={s.id}
+                                        onClick={() => {
+                                            if (onStoreChange) onStoreChange(s.id);
+                                            setIsOpen(false);
+                                        }}
+                                        className={`px-3 py-2.5 text-xs font-semibold cursor-pointer transition-colors flex items-center justify-between ${
+                                            isSelected ? 'bg-[#00A9A8]/10 text-[#00A9A8]' : 'text-slate-700 hover:bg-slate-50'
+                                        }`}
+                                    >
+                                        <span className="truncate">{s.name}</span>
+                                        {isSelected && <Check className="w-3.5 h-3.5 text-[#00A9A8] shrink-0" />}
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="p-3 text-center text-xs text-slate-400">
+                                No stores available
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

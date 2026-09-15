@@ -184,18 +184,24 @@ const CrmContactFormPage = () => {
 
     const validateField = (name, value) => {
         let err = '';
-        if (name === 'firstName' && !value?.trim()) err = 'First Name is required.';
-        if (name === 'lastName' && !value?.trim()) err = 'Last Name is required.';
-        if (name === 'email' && value) {
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        if (name === 'firstName') {
+            if (!value?.trim()) err = 'First Name is required.';
+            else if (/^\d+$/.test(value.trim())) err = 'First Name cannot be numeric-only.';
+        }
+        if (name === 'lastName') {
+            if (!value?.trim()) err = 'Last Name is required.';
+            else if (/^\d+$/.test(value.trim())) err = 'Last Name cannot be numeric-only.';
+        }
+        if (name === 'email' && value?.trim()) {
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
                 err = 'Please enter a valid email address.';
             }
         }
-        if (name === 'phone' && value) {
+        if (name === 'phone' && value?.trim()) {
             if (/[a-zA-Z]/.test(value)) {
                 err = 'Phone number cannot contain letters.';
-            } else if (!/^[0-9+\-\s()]{7,20}$/.test(value)) {
-                err = 'Please enter a valid phone number (digits only, min 7 digits).';
+            } else if (!/^[0-9+\-\s()]{7,20}$/.test(value.trim())) {
+                err = 'Please enter a valid phone number (digits only, 7-20 chars).';
             }
         }
 

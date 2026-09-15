@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import * as XLSX from 'xlsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     Plus, Loader, AlertCircle, Download,
     Users, UserCheck, TrendingUp, UserX, Briefcase,
-    Clock, PhoneOff, UserCog, GitPullRequest, Copy
+    Clock, PhoneOff, UserCog, GitPullRequest, Copy, Calendar
 } from 'lucide-react';
 import {
     ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -17,7 +18,7 @@ import { useCrmPermissions } from '../context/CrmPermissionsContext';
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 /* ── Mock Data ────────────────────────────────────────────── */
-const trendData = [
+const trendDataMock = [
     { month: 'Jan', leads: 80, sales: 40 },
     { month: 'Feb', leads: 95, sales: 55 },
     { month: 'Mar', leads: 75, sales: 60 },
@@ -32,60 +33,6 @@ const trendData = [
     { month: 'Dec', leads: 180, sales: 135 },
 ];
 
-const pipelineStages = [
-    { label: 'New', count: 156, pct: 12.5, color: '#0159A0', w: 100 },
-    { label: 'Contacted', count: 320, pct: 25.7, color: '#007FC8', w: 91 },
-    { label: 'Qualified', count: 410, pct: 32.9, color: '#0096AB', w: 82 },
-    { label: 'Proposal', count: 210, pct: 16.8, color: '#13AEA1', w: 72 },
-    { label: 'Negotiation', count: 110, pct: 8.8, color: '#69C8C4', w: 63 },
-    { label: 'Won', count: 40, pct: 3.2, color: '#47BD68', w: 53 },
-];
-
-const stageDonut = [
-    { name: 'New', value: 156, color: '#0159A0' },
-    { name: 'Contacted', value: 320, color: '#007FC8' },
-    { name: 'Qualified', value: 410, color: '#0096AB' },
-    { name: 'Proposal', value: 210, color: '#13AEA1' },
-    { name: 'Negotiation', value: 110, color: '#69C8C4' },
-    { name: 'Won', value: 40, color: '#47BD68' },
-];
-
-const sourceDonut = stageDonut;
-const industryDonut = stageDonut;
-
-const lostByStage = [
-    { stage: 'New', lost: 20 },
-    { stage: 'Contacted', lost: 35 },
-    { stage: 'Qualified', lost: 28 },
-    { stage: 'Proposal', lost: 8 },
-    { stage: 'Negotiation', lost: 5 },
-    { stage: 'Won', lost: 2 },
-];
-
-const lostByReason = [
-    { reason: 'Not Interested', count: 38, pct: 38.7 },
-    { reason: 'Competitor', count: 28, pct: 28.6 },
-    { reason: 'Pricing Issue', count: 16, pct: 16.3 },
-    { reason: 'No Response', count: 10, pct: 10.2 },
-    { reason: 'Other', count: 8, pct: 8.2 },
-];
-
-const recentActs = [
-    { type: 'add', text: 'New lead added', name: 'Ahmed Al Mansoori from Dubai Contracting', time: '10:30 AM', date: 'May 26, 2025' },
-    { type: 'update', text: 'Lead updated', name: 'Lead status changed to Qualified', time: '09:15 AM', date: 'May 26, 2025' },
-    { type: 'task', text: 'Task created', name: 'Follow up call with Fatima Al Zaabi', time: 'Yesterday', date: 'May 25, 2025' },
-    { type: 'convert', text: 'Lead converted', name: 'Omar Hassan converted to customer', time: '03:45 PM', date: 'May 24, 2025' },
-];
-
-const topUsers = [
-    { name: 'James Anderson', newLeads: 156, converted: 42, rate: '26.9%' },
-    { name: 'Sarah Wilson', newLeads: 132, converted: 35, rate: '26.5%' },
-    { name: 'Michael Brown', newLeads: 110, converted: 28, rate: '25.5%' },
-    { name: 'Emily Davis', newLeads: 98, converted: 24, rate: '24.5%' },
-];
-
-/* ── Small helpers ─────────────────────────────────────────── */
-/* ── Color Palette for Donut Charts ────────────────────────────── */
 const DONUT_COLORS = ['#0159A0', '#007FC8', '#0096AB', '#13AEA1', '#69C8C4', '#47BD68', '#FE8E2E', '#E5184F'];
 
 const actIconBg = { add: ['#EEF9F0', '#05AE25', '+'], update: ['#EEF4FD', '#0355FD', '↑'], task: ['#FDF4ED', '#FE9514', '✓'], convert: ['#F3F1FF', '#571FFE', '★'] };
@@ -129,6 +76,8 @@ const CrmLead = () => {
 
     // Header Filter & Dropdown States
     const [selectedPeriod, setSelectedPeriod] = useState('This Month');
+    const [customStartDate, setCustomStartDate] = useState('');
+    const [customEndDate, setCustomEndDate] = useState('');
     const [isPeriodDropdownOpen, setPeriodDropdownOpen] = useState(false);
     const [filterStatus, setFilterStatus] = useState('');
     const [filterOwnerId, setFilterOwnerId] = useState('');
@@ -158,8 +107,54 @@ const CrmLead = () => {
             const leadsRes = await axios.get(`${API_URL}/crm/leads?size=1000`, { headers });
             const allLeads = leadsRes.data.content || [];
 
-            // Apply header filters if active
+            // Apply header filters if active (status, owner, date range/period)
             let leads = allLeads;
+
+            // Date filtering helper
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            if (selectedPeriod === 'Today') {
+                leads = leads.filter(l => {
+                    const d = new Date(l.createdDate || l.createdAt || l.date);
+                    return d >= startOfToday;
+                });
+            } else if (selectedPeriod === 'This Week') {
+                const dayOfWeek = now.getDay();
+                const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
+                leads = leads.filter(l => {
+                    const d = new Date(l.createdDate || l.createdAt || l.date);
+                    return d >= startOfWeek;
+                });
+            } else if (selectedPeriod === 'This Month') {
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                leads = leads.filter(l => {
+                    const d = new Date(l.createdDate || l.createdAt || l.date);
+                    return d >= startOfMonth;
+                });
+            } else if (selectedPeriod === 'This Quarter') {
+                const currentQuarter = Math.floor(now.getMonth() / 3);
+                const startOfQuarter = new Date(now.getFullYear(), currentQuarter * 3, 1);
+                leads = leads.filter(l => {
+                    const d = new Date(l.createdDate || l.createdAt || l.date);
+                    return d >= startOfQuarter;
+                });
+            } else if (selectedPeriod === 'This Year') {
+                const startOfYear = new Date(now.getFullYear(), 0, 1);
+                leads = leads.filter(l => {
+                    const d = new Date(l.createdDate || l.createdAt || l.date);
+                    return d >= startOfYear;
+                });
+            } else if (selectedPeriod === 'Custom Range' && customStartDate && customEndDate) {
+                const startCustom = new Date(customStartDate);
+                const endCustom = new Date(customEndDate);
+                endCustom.setHours(23, 59, 59, 999);
+                leads = leads.filter(l => {
+                    const d = new Date(l.createdDate || l.createdAt || l.date);
+                    return d >= startCustom && d <= endCustom;
+                });
+            }
+
             if (filterStatus) {
                 leads = leads.filter(l => l.status === filterStatus);
             }
@@ -262,9 +257,21 @@ const CrmLead = () => {
 
             // 7. Fetch Trend Data with Period
             try {
-                const periodMap = { 'This Month': 'MONTHLY', 'This Quarter': 'QUARTERLY', 'This Year': 'YEARLY', 'All Time': 'ALL' };
-                const periodParam = periodMap[selectedPeriod] || 'YEARLY';
-                const trendRes = await axios.get(`${API_URL}/crm/reports/lead-trend?period=${periodParam}`, { headers });
+                const periodMap = {
+                    'Today': 'TODAY',
+                    'This Week': 'WEEKLY',
+                    'This Month': 'MONTHLY',
+                    'This Quarter': 'QUARTERLY',
+                    'This Year': 'YEARLY',
+                    'All Time': 'ALL',
+                    'Custom Range': 'CUSTOM'
+                };
+                const periodParam = periodMap[selectedPeriod] || 'MONTHLY';
+                let queryStr = `period=${periodParam}`;
+                if (selectedPeriod === 'Custom Range' && customStartDate && customEndDate) {
+                    queryStr += `&startDate=${customStartDate}&endDate=${customEndDate}`;
+                }
+                const trendRes = await axios.get(`${API_URL}/crm/reports/lead-trend?${queryStr}`, { headers });
                 setTrendData(trendRes.data || []);
             } catch (e) { console.error('Trend report error', e); }
 
@@ -309,7 +316,7 @@ const CrmLead = () => {
         }
     };
 
-    useEffect(() => { fetchDashboardData(); }, [selectedPeriod, filterStatus, filterOwnerId]);
+    useEffect(() => { fetchDashboardData(); }, [selectedPeriod, customStartDate, customEndDate, filterStatus, filterOwnerId]);
 
     const handleSaveLead = async (leadData) => {
         setFormLoading(true);
@@ -319,6 +326,54 @@ const CrmLead = () => {
             setSidebarOpen(false); fetchDashboardData();
         } catch (err) { alert(`Error: ${err.response?.data?.message || 'Failed to save lead.'}`); }
         finally { setFormLoading(false); }
+    };
+
+    const handleExportExcel = () => {
+        // Build Excel Workbook with multiple sheets
+        const summaryData = [
+            { Metric: 'Total Lead', Value: stats.total },
+            { Metric: 'Active Lead', Value: stats.active },
+            { Metric: 'New Lead', Value: stats.newLeads },
+            { Metric: 'Lost Lead', Value: stats.lost },
+            { Metric: 'Lead to Operation (Converted)', Value: stats.converted },
+            { Metric: 'Pending Tasks', Value: kpi2Counts.pendingTasks },
+            { Metric: 'Not Responded Leads', Value: kpi2Counts.notResponded },
+            { Metric: 'Unassigned Leads', Value: kpi2Counts.unassigned },
+            { Metric: 'Transferred Leads', Value: kpi2Counts.transferred },
+            { Metric: 'Duplicate Leads', Value: kpi2Counts.duplicates },
+        ];
+
+        const stagesData = pipelineStages.map(s => ({
+            Stage: s.label,
+            'Lead Count': s.count,
+            'Percentage (%)': `${s.pct}%`
+        }));
+
+        const topPerformersData = topUsers.map(u => ({
+            User: u.name,
+            'New Leads': u.newLeads,
+            'Converted Leads': u.converted,
+            'Conversion Rate': u.rate
+        }));
+
+        const wb = XLSX.utils.book_new();
+
+        const wsSummary = XLSX.utils.json_to_sheet(summaryData);
+        XLSX.utils.sheet_add_aoa(wsSummary, [['Metric', 'Value']], { origin: 'A1' });
+        wsSummary['!cols'] = [{ wch: 30 }, { wch: 15 }];
+        XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary Metrics');
+
+        const wsStages = XLSX.utils.json_to_sheet(stagesData);
+        wsStages['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 15 }];
+        XLSX.utils.book_append_sheet(wb, wsStages, 'Pipeline Stages');
+
+        if (topPerformersData.length > 0) {
+            const wsPerformers = XLSX.utils.json_to_sheet(topPerformersData);
+            wsPerformers['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 18 }, { wch: 15 }];
+            XLSX.utils.book_append_sheet(wb, wsPerformers, 'Top Performers');
+        }
+
+        XLSX.writeFile(wb, `CRM_Lead_Dashboard_Report_${selectedPeriod.replace(/\s+/g, '_')}.xlsx`);
     };
 
     const kpi1 = [
@@ -343,7 +398,15 @@ const CrmLead = () => {
             {/* ── Header ──────────────────────────── */}
             <div className="flex items-center justify-between mb-3">
                 <div>
-                    <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111111', lineHeight: '30px' }}>Lead Dashboard</h1>
+                    <h1
+                        onClick={() => navigate('/crm-dashboard/leads/all')}
+                        title="Click to view all leads"
+                        style={{ fontSize: 22, fontWeight: 700, color: '#111111', lineHeight: '30px' }}
+                        className="cursor-pointer hover:text-[#019CAA] transition-colors flex items-center gap-2 group"
+                    >
+                        <span>Lead Dashboard</span>
+                        <span className="text-xs font-normal text-[#019CAA] underline opacity-0 group-hover:opacity-100 transition-opacity">View All Leads →</span>
+                    </h1>
                     <p style={{ fontSize: 12, color: '#60738A', marginTop: 1 }}>Track and manage your leads with real-time insights.</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -352,7 +415,7 @@ const CrmLead = () => {
                         <button onClick={() => setPeriodDropdownOpen(!isPeriodDropdownOpen)}
                             className="flex items-center gap-1.5 bg-white border border-[#E2EAF1] rounded-[9px] px-3 py-2 hover:bg-slate-50 transition-colors cursor-pointer"
                             style={{ fontSize: 12, fontWeight: 600, color: '#002341' }}>
-                            <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="2" width="15" height="14.5" rx="2" stroke="#002341" strokeWidth="1.5" /><path d="M6 1v2M12 1v2M1.5 6h15" stroke="#002341" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                            <Calendar className="w-3.5 h-3.5 text-[#002341]" />
                             {selectedPeriod}
                             <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="#002341" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                         </button>
@@ -360,15 +423,29 @@ const CrmLead = () => {
                         {isPeriodDropdownOpen && (
                             <>
                                 <div className="fixed inset-0 z-10" onClick={() => setPeriodDropdownOpen(false)} />
-                                <div className="absolute right-0 mt-1 w-40 bg-white border border-[#E2EAF1] rounded-lg shadow-lg z-20 py-1 text-xs">
-                                    {['This Month', 'This Quarter', 'This Year', 'All Time'].map(p => (
+                                <div className="absolute right-0 mt-1 w-52 bg-white border border-[#E2EAF1] rounded-lg shadow-lg z-20 py-1 text-xs">
+                                    {['Today', 'This Week', 'This Month', 'This Quarter', 'This Year', 'All Time', 'Custom Range'].map(p => (
                                         <button key={p}
-                                            onClick={() => { setSelectedPeriod(p); setPeriodDropdownOpen(false); }}
+                                            onClick={() => { setSelectedPeriod(p); if (p !== 'Custom Range') setPeriodDropdownOpen(false); }}
                                             className={`w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center justify-between cursor-pointer ${selectedPeriod === p ? 'font-bold text-[#019CAA]' : 'text-slate-700'}`}>
                                             {p}
                                             {selectedPeriod === p && <span>✓</span>}
                                         </button>
                                     ))}
+
+                                    {selectedPeriod === 'Custom Range' && (
+                                        <div className="p-2 border-t border-slate-100 flex flex-col gap-2 bg-slate-50 mt-1">
+                                            <div>
+                                                <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Start Date</label>
+                                                <input type="date" value={customStartDate} onChange={e => setCustomStartDate(e.target.value)} className="w-full text-xs p-1 bg-white border border-slate-200 rounded" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">End Date</label>
+                                                <input type="date" value={customEndDate} onChange={e => setCustomEndDate(e.target.value)} className="w-full text-xs p-1 bg-white border border-slate-200 rounded" />
+                                            </div>
+                                            <button onClick={() => setPeriodDropdownOpen(false)} className="w-full bg-[#019CAA] text-white py-1 rounded text-xs font-semibold cursor-pointer">Apply Range</button>
+                                        </div>
+                                    )}
                                 </div>
                             </>
                         )}
@@ -444,7 +521,11 @@ const CrmLead = () => {
                             Add New Lead
                         </button>
                     )}
-                    <button className="flex items-center justify-center bg-white border border-[#E2EAF1] rounded-[9px] p-2 hover:bg-slate-50 transition-colors">
+                    <button
+                        onClick={handleExportExcel}
+                        title="Download Dashboard Report in Excel format"
+                        className="flex items-center justify-center bg-white border border-[#E2EAF1] rounded-[9px] p-2 hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
                         <Download className="w-4 h-4 text-[#002341]" />
                     </button>
                 </div>
