@@ -16,7 +16,7 @@ const Cart = ({ cart, onUpdateQuantity, onRemoveItem, onClearCart, onDiscountCha
                 <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                     <ShoppingCart size={18} /> Current Cart
                 </h2>
-                <span 
+                <span
                     className="text-[10px] font-black text-white px-2.5 py-0.5 rounded-full shadow-2xs"
                     style={{ backgroundColor: posTheme?.primary || '#0f172a' }}
                 >
@@ -90,9 +90,9 @@ const Cart = ({ cart, onUpdateQuantity, onRemoveItem, onClearCart, onDiscountCha
                     <button onClick={onOpenDiscountModal} className="py-2 px-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 shadow-2xs transition-all cursor-pointer">
                         Discount
                     </button>
-                    <button 
-                        onClick={onOpenBillModal} 
-                        disabled={cart.length === 0} 
+                    <button
+                        onClick={onOpenBillModal}
+                        disabled={cart.length === 0}
                         className="col-span-2 py-2.5 px-4 text-white rounded-xl font-bold hover:opacity-90 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         style={{ backgroundColor: posTheme?.primary || '#0f172a' }}
                     >

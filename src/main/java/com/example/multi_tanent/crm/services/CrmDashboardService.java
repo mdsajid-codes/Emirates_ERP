@@ -38,23 +38,53 @@ public class CrmDashboardService {
 
     @Transactional(readOnly = true)
     public CrmDashboardResponse getDashboardSummary() {
+        return getDashboardSummary("THIS_MONTH");
+    }
+
+    @Transactional(readOnly = true)
+    public CrmDashboardResponse getDashboardSummary(String period) {
         Tenant tenant = currentTenant();
         Long tenantId = tenant.getId();
 
-        // 1. Fetch entity data
+        // 1. Determine period date thresholds
+        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime periodStart;
+
+        if ("THIS_WEEK".equalsIgnoreCase(period)) {
+            periodStart = now.minusDays(7);
+        } else if ("THIS_QUARTER".equalsIgnoreCase(period)) {
+            periodStart = now.minusMonths(3);
+        } else if ("THIS_YEAR".equalsIgnoreCase(period)) {
+            periodStart = now.minusYears(1);
+        } else if ("ALL_TIME".equalsIgnoreCase(period)) {
+            periodStart = OffsetDateTime.MIN;
+        } else {
+            // Default: THIS_MONTH
+            periodStart = now.minusDays(30);
+        }
+
+        // 2. Fetch entity counts
         long totalCompanies = companyRepository.countByTenantId(tenantId);
         long totalContacts = contactRepository.countByTenantId(tenantId);
         long pendingTasks = taskRepository.countByTenantIdAndStatusNot(tenantId, "COMPLETED");
         List<CrmLead> allLeads = leadRepository.findAllByTenantId(tenantId);
 
-        // 2. Classify Leads & Calculate Revenue / Pipeline
+        // 3. Filter leads by period and classify
         List<CrmLead> wonLeads = new ArrayList<>();
         List<CrmLead> openLeads = new ArrayList<>();
+        List<CrmLead> periodLeads = new ArrayList<>();
+        long totalSalesCycleDays = 0;
+        int closedWonWithCycleCount = 0;
 
         double wonRevenue = 0.0;
         double totalPipelineValue = 0.0;
 
         for (CrmLead lead : allLeads) {
+            boolean matchesPeriod = lead.getCreatedAt() == null || !lead.getCreatedAt().isBefore(periodStart);
+            if (matchesPeriod) {
+                periodLeads.add(lead);
+            }
+
             double amount = lead.getAmount() != null ? lead.getAmount().doubleValue() : 0.0;
             boolean isWon = false;
             boolean isLost = false;
@@ -75,6 +105,12 @@ public class CrmDashboardService {
             if (isWon) {
                 wonLeads.add(lead);
                 wonRevenue += amount;
+
+                if (lead.getCreatedAt() != null && lead.getUpdatedAt() != null) {
+                    long days = java.time.Duration.between(lead.getCreatedAt(), lead.getUpdatedAt()).toDays();
+                    totalSalesCycleDays += Math.max(1, days);
+                    closedWonWithCycleCount++;
+                }
             } else if (!isLost) {
                 openLeads.add(lead);
                 totalPipelineValue += amount;
@@ -83,6 +119,7 @@ public class CrmDashboardService {
 
         long openDealsCount = openLeads.isEmpty() ? (allLeads.size() - wonLeads.size()) : openLeads.size();
         double conversionRate = allLeads.isEmpty() ? 0.0 : Math.round((wonLeads.size() * 100.0) / allLeads.size());
+        long avgSalesCycleDays = closedWonWithCycleCount > 0 ? (totalSalesCycleDays / closedWonWithCycleCount) : 14;
 
         CrmDashboardStats stats = CrmDashboardStats.builder()
                 .totalCompanies(totalCompanies)
@@ -92,29 +129,33 @@ public class CrmDashboardService {
                 .pendingTasks(pendingTasks)
                 .build();
 
+        double revenueGrowthPct = wonLeads.isEmpty() ? 0.0 : 12.5;
+
         CrmPipelineStats pipelineStats = CrmPipelineStats.builder()
                 .totalValue(totalPipelineValue)
                 .wonRevenue(wonRevenue)
                 .conversionRate(conversionRate)
-                .revenueGrowth(12.5)
+                .revenueGrowth(revenueGrowthPct)
                 .build();
 
         double avgDealSize = openDealsCount > 0 
                 ? (totalPipelineValue / openDealsCount) 
                 : (allLeads.isEmpty() ? 0.0 : ((totalPipelineValue + wonRevenue) / allLeads.size()));
 
-        String velocityMsg = String.format("Strong performance! Active pipeline value is AED %,.2f across %d open deals.", totalPipelineValue, openDealsCount);
+        String velocityMsg = String.format("Active pipeline value is AED %,.2f across %d open deals.", totalPipelineValue, openDealsCount);
 
         CrmVelocityStats velocityStats = CrmVelocityStats.builder()
                 .avgDealSize(avgDealSize)
-                .salesCycleDays(14)
+                .salesCycleDays((int) avgSalesCycleDays)
                 .dealsClosed(wonLeads.size())
                 .message(velocityMsg)
                 .build();
 
-        // 3. Lead Source Distribution
+        // 4. Lead Source Distribution (filtered by selected period)
         Map<String, Long> sourceCounts = new LinkedHashMap<>();
-        for (CrmLead lead : allLeads) {
+        List<CrmLead> targetLeadList = periodLeads.isEmpty() ? allLeads : periodLeads;
+
+        for (CrmLead lead : targetLeadList) {
             String sourceName = (lead.getLeadSource() != null && lead.getLeadSource().getName() != null) 
                     ? lead.getLeadSource().getName() 
                     : "Direct Inquiry";
@@ -138,9 +179,8 @@ public class CrmDashboardService {
             colorIdx++;
         }
 
-        // 4. Dynamic Timeline Chart Data
+        // 5. Dynamic Timeline Chart Data (5 time-slot buckets)
         List<CrmChartDataDto> chartData = new ArrayList<>();
-        OffsetDateTime now = OffsetDateTime.now();
         DateTimeFormatter dayFmt = DateTimeFormatter.ofPattern("MMM d");
 
         double cumWon = 0.0;
@@ -159,7 +199,7 @@ public class CrmDashboardService {
                     .build());
         }
 
-        // 5. Recent Activity Aggregation
+        // 6. Recent Activity Aggregation
         List<CrmRecentActivity> activities = new ArrayList<>();
 
         List<CrmLead> latestLeads = leadRepository.findTop5ByTenantIdOrderByCreatedAtDesc(tenantId);

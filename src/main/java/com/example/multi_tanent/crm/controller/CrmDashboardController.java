@@ -5,10 +5,7 @@ import com.example.multi_tanent.crm.services.CrmDashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/crm/dashboard")
@@ -20,7 +17,9 @@ public class CrmDashboardController {
 
     @GetMapping("/summary")
     @PreAuthorize("@crmAccess.canView('DASHBOARD')")
-    public ResponseEntity<CrmDashboardResponse> getDashboardSummary() {
-        return ResponseEntity.ok(dashboardService.getDashboardSummary());
+    public ResponseEntity<CrmDashboardResponse> getDashboardSummary(
+            @RequestParam(required = false, defaultValue = "THIS_MONTH") String period
+    ) {
+        return ResponseEntity.ok(dashboardService.getDashboardSummary(period));
     }
 }

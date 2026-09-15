@@ -130,6 +130,7 @@ const CrmModule = lazy(() => import('./crm/pages/CrmModule.jsx'));
 const CrmLead = lazy(() => import('./crm/pages/CrmLead.jsx'));
 const CrmCompanies = lazy(() => import('./crm/pages/CrmCompanies.jsx'));
 const CrmDashboard = lazy(() => import('./crm/pages/CrmDashboard.jsx'));
+const CrmRecentActivityPage = lazy(() => import('./crm/pages/CrmRecentActivityPage.jsx'));
 const CrmHome = lazy(() => import('./crm/pages/CrmHome.jsx'));
 const CrmTasks = lazy(() => import('./crm/pages/CrmTasks.jsx'));
 const LeadInfo = lazy(() => import('./crm/pages/Leadinfo.jsx'));
@@ -512,6 +513,7 @@ function App() {
             <Route path='/crm-dashboard' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><CrmModule /></ProtectedRoute>}>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<PermissionRoute module="DASHBOARD"><CrmDashboard /></PermissionRoute>} />
+              <Route path="recent-activities" element={<PermissionRoute module="DASHBOARD"><CrmRecentActivityPage /></PermissionRoute>} />
               <Route path="home" element={<CrmHome />} />
               <Route path="calling-data" element={<PermissionRoute module="CALL_LOG"><CrmCallingData /></PermissionRoute>} />
               <Route path="calling-data/new" element={<PermissionRoute module="CALL_LOG"><CrmCallLogFormPage /></PermissionRoute>} />

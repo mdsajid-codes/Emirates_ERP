@@ -245,7 +245,10 @@ const CrmHome = () => {
 
                     <div className="flex items-center justify-center gap-0 px-8 py-4 relative z-10">
                         {/* Stat 1 */}
-                        <div className="flex items-center gap-3 px-6">
+                        <div
+                            onClick={() => navigate('/crm-dashboard/leads/all?status=NEW')}
+                            className="flex items-center gap-3 px-6 cursor-pointer hover:bg-white/10 p-2 rounded-xl transition-all"
+                        >
                             <div className="w-12 h-12 rounded-full bg-[#013E5B] flex items-center justify-center flex-shrink-0">
                                 <Users className="w-5 h-5 text-white" />
                             </div>
@@ -259,7 +262,10 @@ const CrmHome = () => {
                         <div className="w-px h-16 bg-[#E7F2F4] opacity-30 mx-2" />
 
                         {/* Stat 2 */}
-                        <div className="flex items-center gap-3 px-6">
+                        <div
+                            onClick={() => navigate('/crm-dashboard/leads/all?status=ACTIVE')}
+                            className="flex items-center gap-3 px-6 cursor-pointer hover:bg-white/10 p-2 rounded-xl transition-all"
+                        >
                             <div className="w-12 h-12 rounded-full bg-[#013E5B] flex items-center justify-center flex-shrink-0">
                                 <Target className="w-5 h-5 text-white" />
                             </div>
@@ -273,7 +279,10 @@ const CrmHome = () => {
                         <div className="w-px h-16 bg-[#E7F2F4] opacity-30 mx-2" />
 
                         {/* Stat 3 */}
-                        <div className="flex items-center gap-3 px-6">
+                        <div
+                            onClick={() => navigate('/crm-dashboard/tasks')}
+                            className="flex items-center gap-3 px-6 cursor-pointer hover:bg-white/10 p-2 rounded-xl transition-all"
+                        >
                             <div className="w-12 h-12 rounded-full bg-[#013E5B] flex items-center justify-center flex-shrink-0">
                                 <Calendar className="w-5 h-5 text-white" />
                             </div>
@@ -381,12 +390,17 @@ const CrmHome = () => {
                             {/* 4 stat cards in 2x2 grid */}
                             <div className="grid grid-cols-2 gap-2 flex-1">
                                 {[
-                                    { label: 'Total Leads', value: stats.total, icon: Users, bg: '#F3F9F7', iconBg: '#E1F3EA', iconColor: '#00818D', trend: '↑ 100% vs last week' },
-                                    { label: 'New Leads', value: stats.new, icon: Plus, bg: '#F2F7FD', iconBg: '#E5EFFC', iconColor: '#0367FD', trend: '— 0% vs last week' },
-                                    { label: 'Active Leads', value: stats.active, icon: Activity, bg: '#EEF8F8', iconBg: '#DEF2EF', iconColor: '#0B968E', trend: '— 0% vs last week' },
-                                    { label: 'Converted', value: stats.converted, icon: UserCheck, bg: '#FCF8F5', iconBg: '#FCE1D2', iconColor: '#F54A00', trend: '— 0% vs last week' },
+                                    { label: 'Total Leads', value: stats.total, icon: Users, bg: '#F3F9F7', iconBg: '#E1F3EA', iconColor: '#00818D', trend: '↑ 100% vs last week', route: '/crm-dashboard/leads/all' },
+                                    { label: 'New Leads', value: stats.new, icon: Plus, bg: '#F2F7FD', iconBg: '#E5EFFC', iconColor: '#0367FD', trend: '— 0% vs last week', route: '/crm-dashboard/leads/all?status=NEW' },
+                                    { label: 'Active Leads', value: stats.active, icon: Activity, bg: '#EEF8F8', iconBg: '#DEF2EF', iconColor: '#0B968E', trend: '— 0% vs last week', route: '/crm-dashboard/leads/all?status=ACTIVE' },
+                                    { label: 'Converted', value: stats.converted, icon: UserCheck, bg: '#FCF8F5', iconBg: '#FCE1D2', iconColor: '#F54A00', trend: '— 0% vs last week', route: '/crm-dashboard/leads/all?status=CONVERTED' },
                                 ].map((s) => (
-                                    <div key={s.label} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: s.bg }}>
+                                    <div
+                                        key={s.label}
+                                        onClick={() => navigate(s.route)}
+                                        className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:opacity-90 hover:shadow-sm transition-all"
+                                        style={{ background: s.bg }}
+                                    >
                                         <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: s.iconBg }}>
                                             <s.icon className="w-4 h-4" style={{ color: s.iconColor }} />
                                         </div>
@@ -483,7 +497,10 @@ const CrmHome = () => {
                             <Activity className="w-4 h-4 text-[#00818D]" />
                             <span className="text-[13px] font-bold text-[#111]">Recent Activity</span>
                         </div>
-                        <button className="text-[10px] text-[#00818D] font-semibold hover:underline flex items-center gap-0.5">
+                        <button
+                            onClick={() => navigate('/crm-dashboard/recent-activities')}
+                            className="text-[10px] text-[#00818D] font-semibold hover:underline flex items-center gap-0.5"
+                        >
                             View All <ChevronRight className="w-3 h-3" />
                         </button>
                     </div>
@@ -514,7 +531,7 @@ const CrmHome = () => {
                             <Users className="w-4 h-4 text-[#00818D]" />
                             <span className="text-[13px] font-bold text-[#111]">Recent Leads</span>
                         </div>
-                        <button onClick={() => navigate('/crm-dashboard/leads')}
+                        <button onClick={() => navigate('/crm-dashboard/leads/all')}
                             className="text-[10px] text-[#00818D] font-semibold hover:underline flex items-center gap-0.5">
                             View All <ChevronRight className="w-3 h-3" />
                         </button>
@@ -523,7 +540,11 @@ const CrmHome = () => {
                         {loading ? (
                             <p className="text-[10px] text-[#5B7177] py-2">Loading leads…</p>
                         ) : recentLeads.length > 0 ? recentLeads.map((lead) => (
-                            <div key={lead.id} className="flex items-center gap-2 py-2 border-b border-[#E7F2F4] last:border-0">
+                            <div
+                                key={lead.id}
+                                onClick={() => navigate(`/crm-dashboard/leads/${lead.id}`)}
+                                className="flex items-center gap-2 py-2 border-b border-[#E7F2F4] last:border-0 cursor-pointer hover:bg-slate-50/80 px-1 rounded-lg transition-all"
+                            >
                                 <Avatar name={`${lead.firstName || ''} ${lead.lastName || ''}`} />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[11px] font-semibold text-[#111] truncate">
@@ -546,9 +567,9 @@ const CrmHome = () => {
                     </div>
                     <div className="grid grid-cols-4 gap-2">
                         {[
-                            { label: 'Add Lead', icon: Users, color: 'text-[#00818D]', bg: 'bg-[#E7F2F4]', action: () => navigate('/crm-dashboard/leads'), perm: 'LEAD' },
+                            { label: 'Add Lead', icon: Users, color: 'text-[#00818D]', bg: 'bg-[#E7F2F4]', action: () => navigate('/crm-dashboard/leads/new'), perm: 'LEAD' },
                             { label: 'Log Call', icon: Phone, color: 'text-[#1976D2]', bg: 'bg-[#E3F2FD]', action: () => navigate('/crm-dashboard/calling-data'), perm: 'CALL_LOG' },
-                            { label: 'Send Email', icon: Mail, color: 'text-[#3949AB]', bg: 'bg-[#E8EAF6]', action: () => navigate('/crm-dashboard/leads'), perm: null },
+                            { label: 'Send Email', icon: Mail, color: 'text-[#3949AB]', bg: 'bg-[#E8EAF6]', action: () => navigate('/crm-dashboard/calling-data'), perm: null },
                             { label: 'Schedule Meeting', icon: Calendar, color: 'text-[#7B1FA2]', bg: 'bg-[#F3E5F5]', action: () => navigate('/crm-dashboard/calendar'), perm: 'EVENT' },
                         ].map((a) => (
                             <button key={a.label} onClick={a.action}

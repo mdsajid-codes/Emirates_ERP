@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { 
     BarChart3, Users, PieChart, ShieldAlert, 
@@ -8,7 +9,9 @@ import {
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const CrmReports = () => {
-    const [activeTab, setActiveTab] = useState('leads'); // 'leads', 'activities', 'audit'
+    const [searchParams] = useSearchParams();
+    const initialTab = searchParams.get('tab');
+    const [activeTab, setActiveTab] = useState(initialTab && ['leads', 'activities', 'audit'].includes(initialTab) ? initialTab : 'leads');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -29,6 +32,13 @@ const CrmReports = () => {
     const isAdmin = roles.includes('SUPER_ADMIN') || roles.includes('CRM_ADMIN');
 
     const headers = { Authorization: `Bearer ${token}` };
+
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab && ['leads', 'activities', 'audit'].includes(tab)) {
+            setActiveTab(tab);
+        }
+    }, [searchParams]);
 
     const fetchReportData = async () => {
         setLoading(true);

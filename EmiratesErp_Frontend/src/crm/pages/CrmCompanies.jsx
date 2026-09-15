@@ -86,7 +86,9 @@ const CrmCompanies = () => {
                 axios.get(`${API_URL}/settings/industries`, { headers: authHeaders }),
                 axios.get(`${API_URL}/locations`, { headers: authHeaders }),
             ]);
-            setCompanies(Array.isArray(companiesRes.data) ? companiesRes.data : []);
+            const rawCompanies = Array.isArray(companiesRes.data) ? companiesRes.data : [];
+            const sortedCompanies = [...rawCompanies].sort((a, b) => (b.id || 0) - (a.id || 0));
+            setCompanies(sortedCompanies);
             setSelectData({
                 companyTypes: Array.isArray(typesRes.data) ? typesRes.data : [],
                 industries: Array.isArray(industriesRes.data) ? industriesRes.data : [],

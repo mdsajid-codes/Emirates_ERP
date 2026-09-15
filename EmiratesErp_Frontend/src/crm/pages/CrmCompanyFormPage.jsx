@@ -216,23 +216,50 @@ const CrmCompanyFormPage = () => {
 
     const validateField = (name, value) => {
         let err = '';
-        if (name === 'name' && !value?.trim()) err = 'Company Name is required.';
-        if (name === 'email' && value) {
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        if (name === 'name') {
+            if (!value?.trim()) err = 'Company Name is required.';
+            else if (/^\d+$/.test(value.trim())) err = 'Company Name cannot be numbers-only.';
+        }
+        if (name === 'companyOwner' && value?.trim()) {
+            if (/^\d+$/.test(value.trim())) err = 'Account Owner cannot be numeric-only.';
+            else if (/[0-9]/.test(value)) err = 'Account Owner name should not contain numbers.';
+        }
+        if (name === 'companyTypeId') {
+            if (!value) err = 'Company Type / Classification selection is required.';
+        }
+        if (name === 'industryId') {
+            if (!value) err = 'Industry Sector selection is required.';
+        }
+        if (name === 'email') {
+            if (!value?.trim()) {
+                err = 'Corporate Email Address is required.';
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
                 err = 'Please enter a valid email address.';
             }
         }
-        if (name === 'phone' && value) {
+        if (name === 'phone' && value?.trim()) {
             if (/[a-zA-Z]/.test(value)) {
                 err = 'Phone number cannot contain letters.';
-            } else if (!/^[0-9+\-\s()]{7,20}$/.test(value)) {
-                err = 'Please enter a valid phone number (digits only, min 7 digits).';
+            } else if (!/^[0-9+\-\s()]{7,20}$/.test(value.trim())) {
+                err = 'Please enter a valid phone number (digits and valid symbols only, 7-20 chars).';
             }
         }
-        if (name === 'website' && value) {
-            if (!/^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/.test(value)) {
-                err = 'Please enter a valid website URL.';
+        if (name === 'website' && value?.trim()) {
+            if (!/^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/.test(value.trim())) {
+                err = 'Please enter a valid website / portal URL.';
             }
+        }
+        if ((name === 'billingCity' || name === 'shippingCity') && value?.trim()) {
+            if (/^\d+$/.test(value.trim())) err = `${name === 'billingCity' ? 'Billing' : 'Shipping'} City cannot be numeric-only.`;
+        }
+        if ((name === 'billingCountry' || name === 'shippingCountry') && value?.trim()) {
+            if (/^\d+$/.test(value.trim())) err = `${name === 'billingCountry' ? 'Billing' : 'Shipping'} Country cannot be numeric-only.`;
+        }
+        if ((name === 'billingZip' || name === 'shippingZip') && value?.trim()) {
+            if (value.trim().length > 10) err = `${name === 'billingZip' ? 'Billing' : 'Shipping'} Zip / PO Box cannot exceed 10 characters.`;
+        }
+        if ((name === 'billingStreet' || name === 'shippingStreet') && value?.trim()) {
+            if (value.trim().length < 3) err = `${name === 'billingStreet' ? 'Billing' : 'Shipping'} Street address must be at least 3 characters.`;
         }
 
         setFieldErrors(prev => {
@@ -252,6 +279,7 @@ const CrmCompanyFormPage = () => {
             if (isSameAddress && name.startsWith('billing')) {
                 const targetKey = name.replace('billing', 'shipping');
                 updated[targetKey] = value;
+                validateField(targetKey, value);
             }
             return updated;
         });
@@ -270,6 +298,10 @@ const CrmCompanyFormPage = () => {
                 shippingZip: prev.billingZip,
                 shippingCountry: prev.billingCountry,
             }));
+            validateField('shippingStreet', formData.billingStreet);
+            validateField('shippingCity', formData.billingCity);
+            validateField('shippingZip', formData.billingZip);
+            validateField('shippingCountry', formData.billingCountry);
         }
     };
 
@@ -278,6 +310,7 @@ const CrmCompanyFormPage = () => {
         const newIndustry = res.data;
         setSelectData(prev => ({ ...prev, industries: [...prev.industries, newIndustry] }));
         setFormData(prev => ({ ...prev, industryId: newIndustry.id }));
+        validateField('industryId', newIndustry.id);
     };
 
     const handleQuickAddLocation = async (data) => {
@@ -291,14 +324,28 @@ const CrmCompanyFormPage = () => {
         e.preventDefault();
         const errors = [];
 
-        const nameErr = validateField('name', formData.name);
-        if (nameErr) errors.push(nameErr);
-        const emailErr = validateField('email', formData.email);
-        if (emailErr) errors.push(emailErr);
-        const phoneErr = validateField('phone', formData.phone);
-        if (phoneErr) errors.push(phoneErr);
-        const webErr = validateField('website', formData.website);
-        if (webErr) errors.push(webErr);
+        const fieldsToValidate = [
+            'name',
+            'companyOwner',
+            'companyTypeId',
+            'industryId',
+            'email',
+            'phone',
+            'website',
+            'billingStreet',
+            'billingCity',
+            'billingZip',
+            'billingCountry',
+            'shippingStreet',
+            'shippingCity',
+            'shippingZip',
+            'shippingCountry'
+        ];
+
+        fieldsToValidate.forEach(field => {
+            const err = validateField(field, formData[field]);
+            if (err) errors.push(err);
+        });
 
         if (errors.length > 0) {
             setValidationErrorList(errors);
@@ -430,31 +477,33 @@ const CrmCompanyFormPage = () => {
                                         value={formData.companyOwner}
                                         onChange={handleChange}
                                         placeholder="Account Owner Name"
-                                        className="w-full px-3 py-1.5 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8"
+                                        className={`w-full px-3 py-1.5 bg-white border ${fieldErrors.companyOwner ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8`}
                                     />
+                                    {fieldErrors.companyOwner && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors.companyOwner}</p>}
                                 </div>
 
                                 <div>
                                     <label className="block text-xs font-bold text-[#102A43] mb-1">
-                                        Company Type
+                                        Company Type / Classification <span className="text-red-500">*</span>
                                     </label>
                                     <select
                                         name="companyTypeId"
                                         value={formData.companyTypeId}
                                         onChange={handleChange}
-                                        className="w-full px-3 py-1.5 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8 cursor-pointer"
+                                        className={`w-full px-3 py-1.5 bg-white border ${fieldErrors.companyTypeId ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8 cursor-pointer`}
                                     >
                                         <option value="">-- Select Type --</option>
                                         {selectData.companyTypes.map(t => (
                                             <option key={t.id} value={t.id}>{t.name}</option>
                                         ))}
                                     </select>
+                                    {fieldErrors.companyTypeId && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors.companyTypeId}</p>}
                                 </div>
 
                                 <div>
                                     <div className="flex items-center justify-between mb-1">
                                         <label className="block text-xs font-bold text-[#102A43]">
-                                            Industry Sector
+                                            Industry Sector <span className="text-red-500">*</span>
                                         </label>
                                         <button
                                             type="button"
@@ -468,13 +517,14 @@ const CrmCompanyFormPage = () => {
                                         name="industryId"
                                         value={formData.industryId}
                                         onChange={handleChange}
-                                        className="w-full px-3 py-1.5 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8 cursor-pointer"
+                                        className={`w-full px-3 py-1.5 bg-white border ${fieldErrors.industryId ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8 cursor-pointer`}
                                     >
                                         <option value="">-- Select Industry --</option>
                                         {selectData.industries.map(ind => (
                                             <option key={ind.id} value={ind.id}>{ind.name}</option>
                                         ))}
                                     </select>
+                                    {fieldErrors.industryId && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors.industryId}</p>}
                                 </div>
 
                                 <div>
@@ -551,7 +601,7 @@ const CrmCompanyFormPage = () => {
 
                                 <div>
                                     <label className="block text-xs font-bold text-[#102A43] mb-1">
-                                        Corporate Email Address
+                                        Corporate Email Address <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="email"
@@ -566,7 +616,7 @@ const CrmCompanyFormPage = () => {
 
                                 <div className="sm:col-span-2">
                                     <label className="block text-xs font-bold text-[#102A43] mb-1">
-                                        Website / Portal URL
+                                        Website / Digital Hub URL
                                     </label>
                                     <input
                                         type="text"
@@ -604,29 +654,31 @@ const CrmCompanyFormPage = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                                 {/* Billing Address */}
                                 <div className="p-3 bg-[#F8FAFC] border border-[#E8EEF7] rounded-lg space-y-2.5">
-                                    <h3 className="text-xs font-extrabold text-[#102A43] uppercase tracking-wider">Billing Address</h3>
+                                    <h3 className="text-xs font-extrabold text-[#102A43] uppercase tracking-wider">Billing Address Details</h3>
                                     <div>
-                                        <label className="block text-[11px] font-bold text-[#60738E] mb-1">Street</label>
+                                        <label className="block text-[11px] font-bold text-[#60738E] mb-1">Billing Street</label>
                                         <input
                                             type="text"
                                             name="billingStreet"
                                             value={formData.billingStreet}
                                             onChange={handleChange}
                                             placeholder="Street details"
-                                            className="w-full px-3 py-1 bg-white border border-[#C9D8E5] rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7"
+                                            className={`w-full px-3 py-1 bg-white border ${fieldErrors.billingStreet ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7`}
                                         />
+                                        {fieldErrors.billingStreet && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors.billingStreet}</p>}
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
                                         <div>
-                                            <label className="block text-[11px] font-bold text-[#60738E] mb-1">City</label>
+                                            <label className="block text-[11px] font-bold text-[#60738E] mb-1">Billing City</label>
                                             <input
                                                 type="text"
                                                 name="billingCity"
                                                 value={formData.billingCity}
                                                 onChange={handleChange}
                                                 placeholder="Dubai"
-                                                className="w-full px-3 py-1 bg-white border border-[#C9D8E5] rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7"
+                                                className={`w-full px-3 py-1 bg-white border ${fieldErrors.billingCity ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7`}
                                             />
+                                            {fieldErrors.billingCity && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors.billingCity}</p>}
                                         </div>
                                         <div>
                                             <label className="block text-[11px] font-bold text-[#60738E] mb-1">State / Emirate</label>
@@ -646,31 +698,34 @@ const CrmCompanyFormPage = () => {
                                             <input
                                                 type="text"
                                                 name="billingZip"
+                                                maxLength={10}
                                                 value={formData.billingZip}
                                                 onChange={handleChange}
                                                 placeholder="PO Box 12345"
-                                                className="w-full px-3 py-1 bg-white border border-[#C9D8E5] rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7"
+                                                className={`w-full px-3 py-1 bg-white border ${fieldErrors.billingZip ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7`}
                                             />
+                                            {fieldErrors.billingZip && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors.billingZip}</p>}
                                         </div>
                                         <div>
-                                            <label className="block text-[11px] font-bold text-[#60738E] mb-1">Country</label>
+                                            <label className="block text-[11px] font-bold text-[#60738E] mb-1">Billing Country</label>
                                             <input
                                                 type="text"
                                                 name="billingCountry"
                                                 value={formData.billingCountry}
                                                 onChange={handleChange}
                                                 placeholder="United Arab Emirates"
-                                                className="w-full px-3 py-1 bg-white border border-[#C9D8E5] rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7"
+                                                className={`w-full px-3 py-1 bg-white border ${fieldErrors.billingCountry ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7`}
                                             />
+                                            {fieldErrors.billingCountry && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors.billingCountry}</p>}
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Shipping Address */}
                                 <div className="p-3 bg-[#F8FAFC] border border-[#E8EEF7] rounded-lg space-y-2.5">
-                                    <h3 className="text-xs font-extrabold text-[#102A43] uppercase tracking-wider">Shipping Address</h3>
+                                    <h3 className="text-xs font-extrabold text-[#102A43] uppercase tracking-wider">Shipping Address Details</h3>
                                     <div>
-                                        <label className="block text-[11px] font-bold text-[#60738E] mb-1">Street</label>
+                                        <label className="block text-[11px] font-bold text-[#60738E] mb-1">Shipping Street</label>
                                         <input
                                             type="text"
                                             name="shippingStreet"
@@ -678,12 +733,13 @@ const CrmCompanyFormPage = () => {
                                             onChange={handleChange}
                                             disabled={isSameAddress}
                                             placeholder="Street details"
-                                            className="w-full px-3 py-1 bg-white border border-[#C9D8E5] rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7 disabled:bg-slate-100"
+                                            className={`w-full px-3 py-1 bg-white border ${fieldErrors.shippingStreet ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7 disabled:bg-slate-100`}
                                         />
+                                        {fieldErrors.shippingStreet && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors.shippingStreet}</p>}
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
                                         <div>
-                                            <label className="block text-[11px] font-bold text-[#60738E] mb-1">City</label>
+                                            <label className="block text-[11px] font-bold text-[#60738E] mb-1">Shipping City</label>
                                             <input
                                                 type="text"
                                                 name="shippingCity"
@@ -691,8 +747,9 @@ const CrmCompanyFormPage = () => {
                                                 onChange={handleChange}
                                                 disabled={isSameAddress}
                                                 placeholder="Dubai"
-                                                className="w-full px-3 py-1 bg-white border border-[#C9D8E5] rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7 disabled:bg-slate-100"
+                                                className={`w-full px-3 py-1 bg-white border ${fieldErrors.shippingCity ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7 disabled:bg-slate-100`}
                                             />
+                                            {fieldErrors.shippingCity && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors.shippingCity}</p>}
                                         </div>
                                         <div>
                                             <label className="block text-[11px] font-bold text-[#60738E] mb-1">State / Emirate</label>
@@ -713,15 +770,17 @@ const CrmCompanyFormPage = () => {
                                             <input
                                                 type="text"
                                                 name="shippingZip"
+                                                maxLength={10}
                                                 value={formData.shippingZip}
                                                 onChange={handleChange}
                                                 disabled={isSameAddress}
                                                 placeholder="PO Box 12345"
-                                                className="w-full px-3 py-1 bg-white border border-[#C9D8E5] rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7 disabled:bg-slate-100"
+                                                className={`w-full px-3 py-1 bg-white border ${fieldErrors.shippingZip ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7 disabled:bg-slate-100`}
                                             />
+                                            {fieldErrors.shippingZip && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors.shippingZip}</p>}
                                         </div>
                                         <div>
-                                            <label className="block text-[11px] font-bold text-[#60738E] mb-1">Country</label>
+                                            <label className="block text-[11px] font-bold text-[#60738E] mb-1">Shipping Country</label>
                                             <input
                                                 type="text"
                                                 name="shippingCountry"
@@ -729,8 +788,9 @@ const CrmCompanyFormPage = () => {
                                                 onChange={handleChange}
                                                 disabled={isSameAddress}
                                                 placeholder="United Arab Emirates"
-                                                className="w-full px-3 py-1 bg-white border border-[#C9D8E5] rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7 disabled:bg-slate-100"
+                                                className={`w-full px-3 py-1 bg-white border ${fieldErrors.shippingCountry ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded text-xs text-[#102A43] focus:border-[#0178BC] outline-none h-7 disabled:bg-slate-100`}
                                             />
+                                            {fieldErrors.shippingCountry && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors.shippingCountry}</p>}
                                         </div>
                                     </div>
                                 </div>

@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Loader, Save, X, ClipboardList, Calendar, Users, FileText, CheckCircle2, Tag, Target } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import CustomMultiSelect from './CustomMultiSelect';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const FormField = ({ label, children, required, icon: Icon }) => (
     <div className="space-y-1.5">
-        <label className="flex items-center gap-2 text-[10px] font-bold text-foreground-muted uppercase tracking-widest pl-1">
-            {Icon && <Icon size={12} className="text-primary/70" />}
-            {label} {required && <span className="text-error">*</span>}
+        <label className="flex items-center gap-1.5 text-xs font-bold text-[#102A43] uppercase tracking-wider">
+            {Icon && <Icon size={14} className="text-[#00A3A6]" />}
+            {label} {required && <span className="text-red-500">*</span>}
         </label>
         <div className="relative group">
             {children}
-            <div className="absolute inset-0 rounded-theme border border-primary/0 group-focus-within:border-primary/30 pointer-events-none transition-all"></div>
         </div>
     </div>
 );
@@ -26,6 +25,7 @@ const CrmTaskForm = ({ item, onSave, onCancel, loading: isSubmitting, leadId }) 
 
     const [selectData, setSelectData] = useState({ employees: [], contacts: [], leads: [] });
     const [loading, setLoading] = useState(true);
+    const [errors, setErrors] = useState({});
 
     useEffect(() => {
         const fetchData = async () => {
@@ -39,13 +39,12 @@ const CrmTaskForm = ({ item, onSave, onCancel, loading: isSubmitting, leadId }) 
                     axios.get(`${API_URL}/crm/leads?size=1000`, { headers })
                 ]);
                 setSelectData({
-                    employees: employeesRes.data,
-                    contacts: contactsRes.data.content || contactsRes.data,
-                    leads: leadsRes.data.content || leadsRes.data || [],
+                    employees: employeesRes.data || [],
+                    contacts: contactsRes.data?.content || contactsRes.data || [],
+                    leads: leadsRes.data?.content || leadsRes.data || [],
                 });
             } catch (error) {
                 console.error("Failed to fetch form select data", error);
-                alert("Failed to load required data for the form.");
             } finally {
                 setLoading(false);
             }
@@ -71,56 +70,74 @@ const CrmTaskForm = ({ item, onSave, onCancel, loading: isSubmitting, leadId }) 
         }
     }, [item, leadId]);
 
+    const employeeOptions = useMemo(() => selectData.employees.map(e => ({ value: e.id, label: `${e.firstName} ${e.lastName}` })), [selectData.employees]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleMultiSelectChange = (e) => {
-        const { name, options } = e.target;
-        const value = Array.from(options).filter(option => option.selected).map(option => option.value);
-        setFormData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const todayStr = new Date().toISOString().split('T')[0];
+        const newErrors = {};
+
+        if (!formData.assignedToEmployeeId) {
+            newErrors.assignedToEmployeeId = "Primary Assignee is required.";
+        }
+
+        if (formData.dueDate && formData.dueDate < todayStr) {
+            newErrors.dueDate = "Execution date cannot be in the past.";
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
+        setErrors({});
         onSave(formData);
     };
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center h-full gap-4">
-                <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-primary animate-pulse">Initializing Protocol...</p>
+            <div className="flex flex-col items-center justify-center h-full gap-3 p-8">
+                <div className="w-8 h-8 border-3 border-[#00A3A6] border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-xs font-bold text-[#00A3A6] tracking-wider uppercase">Initializing Task Details...</p>
             </div>
         );
     }
 
+    const todayStr = new Date().toISOString().split('T')[0];
+
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col h-full bg-card animate-in slide-in-from-right duration-500">
-            <header className="p-6 border-b border-border bg-white flex-shrink-0 flex items-center justify-between shadow-sm">
+        <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white animate-in slide-in-from-right duration-300">
+            {/* Header */}
+            <header className="p-4 px-6 border-b border-[#D7E3EE] bg-[#F8FAFC] flex-shrink-0 flex items-center justify-between shadow-2xs">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-theme bg-primary/10 text-primary">
-                        <ClipboardList size={20} />
+                    <div className="p-2 rounded-lg bg-[#00A3A6]/10 text-[#00A3A6]">
+                        <ClipboardList size={18} />
                     </div>
                     <div>
-                        <h3 className="text-xl font-bold text-foreground tracking-tight">{item ? 'Edit Tasking Protocol' : 'Initiate New Task'}</h3>
-                        <p className="text-[10px] text-foreground-muted font-bold uppercase tracking-widest opacity-60">Lead Lifecycle Management System</p>
+                        <h3 className="text-base font-bold text-[#102A43]">{item ? 'Edit Task Protocol' : 'Initiate New Task'}</h3>
+                        <p className="text-[10px] text-[#62708A] font-bold uppercase tracking-wider">Lead Lifecycle Management System</p>
                     </div>
                 </div>
-                <button type="button" onClick={onCancel} className="p-2 rounded-full hover:bg-slate-100 text-foreground-muted transition-colors"><X size={20} /></button>
+                <button type="button" onClick={onCancel} className="p-1.5 rounded-full hover:bg-slate-200 text-[#62708A] transition-colors"><X size={18} /></button>
             </header>
 
-            <div className="flex-1 p-8 space-y-8 overflow-y-auto custom-scrollbar bg-slate-50/30">
+            {/* Form Body */}
+            <div className="flex-1 p-6 space-y-6 overflow-y-auto custom-scrollbar">
                 {/* Core Context */}
-                <div className="grid grid-cols-1 gap-6">
-                    <FormField label="Subject Class" required icon={Tag}>
+                <div className="space-y-4">
+                    <FormField label="Subject Classification" required icon={Tag}>
                         <select 
                             name="subject" 
                             value={formData.subject} 
                             onChange={handleChange} 
                             required 
-                            className="w-full h-11 px-4 bg-white border border-border rounded-theme text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all appearance-none cursor-pointer"
+                            className="w-full h-10 px-3 bg-white border border-[#C9D8E5] rounded-lg text-xs font-medium text-[#102A43] focus:border-[#00A3A6] focus:ring-1 focus:ring-[#00A3A6] outline-none transition-all cursor-pointer"
                         >
                             <option value="TASK">General Task</option>
                             <option value="CALL">Strategic Call</option>
@@ -130,37 +147,66 @@ const CrmTaskForm = ({ item, onSave, onCancel, loading: isSubmitting, leadId }) 
                         </select>
                     </FormField>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField label="Execution Date" icon={Calendar}>
-                            <input type="date" name="dueDate" value={formData.dueDate} onChange={handleChange} className="w-full h-11 px-4 bg-white border border-border rounded-theme text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all" />
+                            <input 
+                                type="date" 
+                                name="dueDate" 
+                                min={todayStr}
+                                value={formData.dueDate} 
+                                onChange={handleChange} 
+                                className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-medium text-[#102A43] outline-none transition-all ${errors.dueDate ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5] focus:border-[#00A3A6] focus:ring-1 focus:ring-[#00A3A6]'}`} 
+                            />
+                            {errors.dueDate && <p className="text-[11px] text-red-500 font-semibold mt-1">{errors.dueDate}</p>}
                         </FormField>
                         <FormField label="Protocol Time" icon={Loader}>
-                            <input type="time" name="callTime" value={formData.callTime} onChange={handleChange} className="w-full h-11 px-4 bg-white border border-border rounded-theme text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all" />
+                            <input 
+                                type="time" 
+                                name="callTime" 
+                                value={formData.callTime} 
+                                onChange={handleChange} 
+                                className="w-full h-10 px-3 bg-white border border-[#C9D8E5] rounded-lg text-xs font-medium text-[#102A43] focus:border-[#00A3A6] focus:ring-1 focus:ring-[#00A3A6] outline-none transition-all" 
+                            />
                         </FormField>
                     </div>
                 </div>
 
                 {/* Assignments */}
-                <div className="space-y-6 pt-4 border-t border-border/50">
+                <div className="space-y-4 pt-4 border-t border-[#D7E3EE]">
                     <FormField label="Primary Assignee" required icon={Users}>
-                        <select name="assignedToEmployeeId" value={formData.assignedToEmployeeId} onChange={handleChange} required className="w-full h-11 px-4 bg-white border border-border rounded-theme text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all appearance-none cursor-pointer">
+                        <select 
+                            name="assignedToEmployeeId" 
+                            value={formData.assignedToEmployeeId} 
+                            onChange={handleChange} 
+                            required 
+                            className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-medium text-[#102A43] outline-none transition-all cursor-pointer ${errors.assignedToEmployeeId ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5] focus:border-[#00A3A6] focus:ring-1 focus:ring-[#00A3A6]'}`}
+                        >
                             <option value="">Select Primary Stakeholder</option>
                             {selectData.employees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}
                         </select>
+                        {errors.assignedToEmployeeId && <p className="text-[11px] text-red-500 font-semibold mt-1">{errors.assignedToEmployeeId}</p>}
                     </FormField>
 
                     <FormField label="Collaborators" icon={Users}>
-                        <select name="employeeIds" value={formData.employeeIds} onChange={handleMultiSelectChange} multiple className="w-full h-32 p-2 bg-white border border-border rounded-theme text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all custom-scrollbar">
-                            {selectData.employees.map(e => <option key={e.id} value={e.id} className="p-2 rounded hover:bg-primary/10 transition-colors">{e.firstName} {e.lastName}</option>)}
-                        </select>
+                        <CustomMultiSelect 
+                            options={employeeOptions} 
+                            value={formData.employeeIds} 
+                            onChange={(newVals) => setFormData(prev => ({ ...prev, employeeIds: newVals }))} 
+                            placeholder="Search collaborators..." 
+                        />
                     </FormField>
                 </div>
 
                 {/* Intelligence Links */}
-                <div className="space-y-6 pt-4 border-t border-border/50">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4 pt-4 border-t border-[#D7E3EE]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField label="Operational Status" icon={CheckCircle2}>
-                            <select name="status" value={formData.status} onChange={handleChange} className="w-full h-11 px-4 bg-white border border-border rounded-theme text-sm font-bold text-primary focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all appearance-none cursor-pointer">
+                            <select 
+                                name="status" 
+                                value={formData.status} 
+                                onChange={handleChange} 
+                                className="w-full h-10 px-3 bg-white border border-[#C9D8E5] rounded-lg text-xs font-bold text-[#00A3A6] focus:border-[#00A3A6] focus:ring-1 focus:ring-[#00A3A6] outline-none transition-all cursor-pointer"
+                            >
                                 <option value="OPEN">Open Protocol</option>
                                 <option value="IN_PROGRESS">In Progress</option>
                                 <option value="COMPLETED">Execution Finished</option>
@@ -173,7 +219,7 @@ const CrmTaskForm = ({ item, onSave, onCancel, loading: isSubmitting, leadId }) 
                                 name="leadId" 
                                 value={formData.leadId || ''} 
                                 onChange={handleChange} 
-                                className="w-full h-11 px-4 bg-white border border-border rounded-theme text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all appearance-none cursor-pointer disabled:opacity-50"
+                                className="w-full h-10 px-3 bg-white border border-[#C9D8E5] rounded-lg text-xs font-medium text-[#102A43] focus:border-[#00A3A6] focus:ring-1 focus:ring-[#00A3A6] outline-none transition-all cursor-pointer disabled:opacity-50"
                                 disabled={!!leadId}
                             >
                                 <option value="">Global Assignment</option>
@@ -189,17 +235,20 @@ const CrmTaskForm = ({ item, onSave, onCancel, loading: isSubmitting, leadId }) 
                             onChange={handleChange} 
                             rows="4" 
                             placeholder="Detailed comments on task objectives and expected outcomes..."
-                            className="w-full p-4 bg-white border border-border rounded-theme text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all resize-none"
+                            className="w-full p-3 bg-white border border-[#C9D8E5] rounded-lg text-xs font-medium text-[#102A43] focus:border-[#00A3A6] focus:ring-1 focus:ring-[#00A3A6] outline-none transition-all resize-none"
                         ></textarea>
                     </FormField>
                 </div>
             </div>
 
-            <footer className="p-6 bg-white border-t border-border flex justify-end gap-3 shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
-                <button type="button" onClick={onCancel} className="px-6 py-2.5 bg-white border border-border text-foreground-muted rounded-theme font-bold text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all" disabled={isSubmitting}>Abort Changes</button>
-                <button type="submit" className="bg-primary text-primary-foreground px-8 py-2.5 rounded-theme font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-xl shadow-primary/25 hover:scale-105 active:scale-95 transition-all" disabled={isSubmitting}>
-                    {isSubmitting ? <Loader className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
-                    Save Protocol
+            {/* Footer */}
+            <footer className="p-4 px-6 bg-[#F8FAFC] border-t border-[#D7E3EE] flex justify-end gap-3 shadow-2xs">
+                <button type="button" onClick={onCancel} className="px-4 py-2 bg-white border border-[#C9D8E5] text-[#62708A] rounded-lg font-bold text-xs hover:bg-slate-100 transition-all" disabled={isSubmitting}>
+                    Cancel Task
+                </button>
+                <button type="submit" className="bg-[#00A3A6] hover:bg-[#0178BC] text-white px-5 py-2 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all disabled:opacity-50" disabled={isSubmitting}>
+                    {isSubmitting ? <Loader className="animate-spin h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
+                    Save Task Protocol
                 </button>
             </footer>
         </form>

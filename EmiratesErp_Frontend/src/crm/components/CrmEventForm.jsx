@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Loader, Save, X, Calendar, Clock, Users, MapPin, Tag, AlertCircle, FileText, Globe } from 'lucide-react';
+import CustomMultiSelect from './CustomMultiSelect';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -72,19 +73,39 @@ const CrmEventForm = ({ item, onSave, onCancel, loading: isSubmitting, leadId })
         }
     }, [item, leadId]);
 
+    const [errors, setErrors] = useState({});
+
+    const employeeOptions = useMemo(() => selectData.employees.map(e => ({ value: e.id, label: `${e.firstName} ${e.lastName}` })), [selectData.employees]);
+    const contactOptions = useMemo(() => selectData.contacts.map(c => ({ value: c.id, label: `${c.firstName} ${c.lastName}` })), [selectData.contacts]);
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-    };
-
-    const handleMultiSelectChange = (e) => {
-        const { name, options } = e.target;
-        const value = Array.from(options).filter(option => option.selected).map(option => option.value);
-        setFormData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const todayStr = new Date().toISOString().split('T')[0];
+        const newErrors = {};
+
+        if (formData.date && formData.date < todayStr) {
+            newErrors.date = "Event execution date cannot be in the past.";
+        }
+
+        if (formData.meetingWith) {
+            const val = formData.meetingWith.trim();
+            if (/^\d+$/.test(val)) {
+                newErrors.meetingWith = "Modality Target / Link cannot be numeric-only. Enter a valid link or location.";
+            }
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
+        setErrors({});
         onSave({ ...formData, leadId });
     };
 
@@ -96,6 +117,8 @@ const CrmEventForm = ({ item, onSave, onCancel, loading: isSubmitting, leadId })
             </div>
         );
     }
+
+    const todayStr = new Date().toISOString().split('T')[0];
 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white animate-in slide-in-from-right duration-300">
@@ -135,7 +158,16 @@ const CrmEventForm = ({ item, onSave, onCancel, loading: isSubmitting, leadId })
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField label="Execution Date" required icon={Calendar}>
-                            <input type="date" name="date" value={formData.date} onChange={handleChange} required className="w-full h-10 px-3 bg-white border border-[#C9D8E5] rounded-lg text-xs font-medium text-[#102A43] focus:border-[#00A3A6] focus:ring-1 focus:ring-[#00A3A6] outline-none transition-all" />
+                            <input 
+                                type="date" 
+                                name="date" 
+                                min={todayStr} 
+                                value={formData.date} 
+                                onChange={handleChange} 
+                                required 
+                                className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-medium text-[#102A43] outline-none transition-all ${errors.date ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5] focus:border-[#00A3A6] focus:ring-1 focus:ring-[#00A3A6]'}`} 
+                            />
+                            {errors.date && <p className="text-[11px] text-red-500 font-semibold mt-1">{errors.date}</p>}
                         </FormField>
                         <FormField label="Priority Level" icon={AlertCircle}>
                             <select name="priority" value={formData.priority} onChange={handleChange} className="w-full h-10 px-3 bg-white border border-[#C9D8E5] rounded-lg text-xs font-bold text-[#00A3A6] focus:border-[#00A3A6] focus:ring-1 focus:ring-[#00A3A6] outline-none transition-all cursor-pointer">
@@ -167,7 +199,14 @@ const CrmEventForm = ({ item, onSave, onCancel, loading: isSubmitting, leadId })
                                 </select>
                             </FormField>
                             <FormField label="Modality Target / Link" icon={MapPin}>
-                                <input name="meetingWith" value={formData.meetingWith} onChange={handleChange} className="w-full h-10 px-3 bg-white border border-[#C9D8E5] rounded-lg text-xs font-medium text-[#102A43] focus:border-[#00A3A6] focus:ring-1 focus:ring-[#00A3A6] outline-none transition-all" placeholder="Meeting Link or Address" />
+                                <input 
+                                    name="meetingWith" 
+                                    value={formData.meetingWith} 
+                                    onChange={handleChange} 
+                                    className={`w-full h-10 px-3 bg-white border rounded-lg text-xs font-medium text-[#102A43] outline-none transition-all ${errors.meetingWith ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5] focus:border-[#00A3A6] focus:ring-1 focus:ring-[#00A3A6]'}`} 
+                                    placeholder="Meeting Link or Address" 
+                                />
+                                {errors.meetingWith && <p className="text-[11px] text-red-500 font-semibold mt-1">{errors.meetingWith}</p>}
                             </FormField>
                         </div>
                     )}
@@ -181,14 +220,20 @@ const CrmEventForm = ({ item, onSave, onCancel, loading: isSubmitting, leadId })
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField label="Internal Delegates" icon={Users}>
-                            <select name="employeeIds" value={formData.employeeIds} onChange={handleMultiSelectChange} multiple className="w-full h-28 p-2 bg-white border border-[#C9D8E5] rounded-lg text-xs font-medium text-[#102A43] focus:border-[#00A3A6] focus:ring-1 focus:ring-[#00A3A6] outline-none transition-all custom-scrollbar">
-                                {selectData.employees.map(e => <option key={e.id} value={e.id} className="p-1.5 rounded hover:bg-[#00A3A6]/10 transition-colors">{e.firstName} {e.lastName}</option>)}
-                            </select>
+                            <CustomMultiSelect 
+                                options={employeeOptions} 
+                                value={formData.employeeIds} 
+                                onChange={(newVals) => setFormData(prev => ({ ...prev, employeeIds: newVals }))} 
+                                placeholder="Search delegates..." 
+                            />
                         </FormField>
                         <FormField label="External Delegates" icon={Users}>
-                            <select name="contactIds" value={formData.contactIds} onChange={handleMultiSelectChange} multiple className="w-full h-28 p-2 bg-white border border-[#C9D8E5] rounded-lg text-xs font-medium text-[#102A43] focus:border-[#00A3A6] focus:ring-1 focus:ring-[#00A3A6] outline-none transition-all custom-scrollbar">
-                                {selectData.contacts.map(c => <option key={c.id} value={c.id} className="p-1.5 rounded hover:bg-[#00A3A6]/10 transition-colors">{c.firstName} {c.lastName}</option>)}
-                            </select>
+                            <CustomMultiSelect 
+                                options={contactOptions} 
+                                value={formData.contactIds} 
+                                onChange={(newVals) => setFormData(prev => ({ ...prev, contactIds: newVals }))} 
+                                placeholder="Search external contacts..." 
+                            />
                         </FormField>
                     </div>
                 </div>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
+import * as XLSX from 'xlsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     Loader, Search, Edit, Trash2, PlusCircle, X, ChevronLeft, ChevronRight, AlertCircle,
     Plus, Download, CheckSquare, User, Share2, RotateCcw, Settings, Grid, Users, LayoutGrid, Table,
-    Square, CheckSquare as CheckSquareIcon, Upload, FileSpreadsheet, UserCog
+    Square, CheckSquare as CheckSquareIcon, Upload, FileSpreadsheet, UserCog, Mail, Phone, Building, Calendar, Eye
 } from 'lucide-react';
 import CrmLeadForm from '../components/CrmLeadForm';
 import CrmLeadBulkUploadModal from '../components/CrmLeadBulkUploadModal';
@@ -19,8 +20,6 @@ const LeadDetails = ({ onClose }) => {
     const { hasPermission } = useCrmPermissions();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const initialStatus = searchParams.get('status') || '';
-    const initialUnassigned = searchParams.get('unassigned') === 'true';
 
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -31,8 +30,17 @@ const LeadDetails = ({ onClose }) => {
     const [totalElements, setTotalElements] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
-    const [statusFilter, setStatusFilter] = useState(initialStatus);
-    const [ownerFilter, setOwnerFilter] = useState(initialUnassigned ? 'UNASSIGNED' : (searchParams.get('ownerId') || ''));
+    const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
+    const [ownerFilter, setOwnerFilter] = useState(searchParams.get('unassigned') === 'true' ? 'UNASSIGNED' : (searchParams.get('ownerId') || ''));
+
+    // Sync state if URL searchParams change
+    useEffect(() => {
+        const s = searchParams.get('status') || '';
+        const u = searchParams.get('unassigned') === 'true';
+        const o = searchParams.get('ownerId') || '';
+        setStatusFilter(s);
+        setOwnerFilter(u ? 'UNASSIGNED' : o);
+    }, [searchParams]);
     const [periodFilter, setPeriodFilter] = useState('YEAR');
     const [employees, setEmployees] = useState([]);
     const [isFormSidebarOpen, setIsFormSidebarOpen] = useState(false);
@@ -43,6 +51,20 @@ const LeadDetails = ({ onClose }) => {
     const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
     const [isBulkAssignOpen, setIsBulkAssignOpen] = useState(false);
     const [bulkAssignLoading, setBulkAssignLoading] = useState(false);
+
+    // New Toolbar & View State
+    const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
+    const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
+    const [visibleColumns, setVisibleColumns] = useState({
+        leadNo: true,
+        company: true,
+        email: true,
+        phone: true,
+        source: true,
+        owner: true,
+        status: true,
+    });
+    const [shareNotification, setShareNotification] = useState('');
 
     const authHeaders = useMemo(() => ({ "Authorization": `Bearer ${localStorage.getItem('token')}` }), []);
 
@@ -95,16 +117,18 @@ const LeadDetails = ({ onClose }) => {
                 params: {
                     page: currentPage,
                     size: pageSize,
-                    sort: 'createdAt,desc',
+                    sort: 'id,desc',
                     q: debouncedSearch || undefined,
                     status: statusFilter || undefined,
                     ownerId: ownerFilter || undefined,
                     period: periodFilter || undefined
                 }
             });
-            setLeads(response.data.content);
-            setTotalPages(response.data.totalPages);
-            setTotalElements(response.data.totalElements);
+            const fetchedLeads = response.data.content || [];
+            fetchedLeads.sort((a, b) => (b.id || 0) - (a.id || 0));
+            setLeads(fetchedLeads);
+            setTotalPages(response.data.totalPages || 0);
+            setTotalElements(response.data.totalElements || 0);
         } catch (err) {
             setError('Failed to fetch leads. Please try again.');
             console.error(err);
@@ -135,28 +159,47 @@ const LeadDetails = ({ onClose }) => {
         setSelectedLeads(newSelected);
     };
 
-    const handleExportSelected = async () => {
-        if (selectedLeads.size === 0) {
-            alert("Please select at least one lead to export.");
+    const handleExportSelected = () => {
+        const leadsToExport = selectedLeads.size > 0
+            ? leads.filter(l => selectedLeads.has(l.id))
+            : leads;
+
+        if (leadsToExport.length === 0) {
+            alert("No leads available to export.");
             return;
         }
-        try {
-            const ids = Array.from(selectedLeads).join(',');
-            const response = await axios.get(`${API_URL}/crm/leads/export?ids=${ids}`, {
-                headers: authHeaders,
-                responseType: 'blob'
-            });
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', 'leads_export.csv');
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-        } catch (err) {
-            console.error("Export failed", err);
-            alert("Failed to export leads.");
-        }
+
+        const exportData = leadsToExport.map(l => ({
+            'Lead No': l.leadNo || 'N/A',
+            'First Name': l.firstName || '',
+            'Last Name': l.lastName || '',
+            'Company': l.companyName || 'N/A',
+            'Email': l.email || '',
+            'Phone': l.phone || 'N/A',
+            'Source': l.leadSourceName || 'N/A',
+            'Owner': l.ownerName || 'Unassigned',
+            'Status': l.status || 'NEW',
+            'Amount (AED)': l.amount || 0,
+            'Created Date': l.createdAt ? new Date(l.createdAt).toLocaleDateString() : ''
+        }));
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        ws['!cols'] = [
+            { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 25 },
+            { wch: 25 }, { wch: 18 }, { wch: 20 }, { wch: 20 },
+            { wch: 15 }, { wch: 15 }, { wch: 15 }
+        ];
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Leads Export');
+        XLSX.writeFile(wb, `CRM_Leads_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
+    const handleShare = () => {
+        const currentUrl = window.location.href;
+        navigator.clipboard.writeText(currentUrl);
+        setShareNotification('Link copied to clipboard!');
+        setTimeout(() => setShareNotification(''), 3000);
     };
 
     const handlePageChange = (newPage) => {
@@ -269,6 +312,13 @@ const LeadDetails = ({ onClose }) => {
 
     return (
         <div className="flex flex-col h-screen bg-background text-foreground relative overflow-hidden">
+            {/* Share Notification Alert */}
+            {shareNotification && (
+                <div className="fixed top-4 right-4 bg-[#009BA1] text-white px-4 py-2 rounded-lg shadow-xl text-xs font-bold z-50 animate-bounce">
+                    {shareNotification}
+                </div>
+            )}
+
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto p-0">
                 {loading ? (
@@ -300,23 +350,23 @@ const LeadDetails = ({ onClose }) => {
                                 <select
                                     value={periodFilter}
                                     onChange={(e) => { setPeriodFilter(e.target.value); setCurrentPage(0); }}
-                                    className="bg-[#F8FAFC] border border-[#DFE6EF] rounded-lg text-xs font-medium py-1.5 px-2.5 text-[#0A1929] hover:bg-white focus:ring-1 focus:ring-[#009BA1] outline-none cursor-pointer transition-all h-8"
+                                    className="bg-[#F8FAFC] border border-[#DFE6EF] rounded-lg text-xs font-medium py-1.5 px-2.5 text-[#0A1929] hover:bg-white focus:ring-1 focus:ring-[#009BA1] outline-none cursor-pointer transition-all max-w-[130px] h-8"
                                 >
-                                    <option value="ALL">All Time</option>
-                                    <option value="TODAY">Today</option>
-                                    <option value="WEEK">This Week</option>
-                                    <option value="MONTH">This Month</option>
                                     <option value="YEAR">This Year</option>
+                                    <option value="MONTH">This Month</option>
+                                    <option value="QUARTER">This Quarter</option>
+                                    <option value="ALL">All Time</option>
                                 </select>
 
                                 <select
                                     value={statusFilter}
                                     onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(0); }}
-                                    className="bg-[#F8FAFC] border border-[#DFE6EF] rounded-lg text-xs font-medium py-1.5 px-2.5 text-[#0A1929] hover:bg-white focus:ring-1 focus:ring-[#009BA1] outline-none cursor-pointer transition-all h-8"
+                                    className="bg-[#F8FAFC] border border-[#DFE6EF] rounded-lg text-xs font-medium py-1.5 px-2.5 text-[#0A1929] hover:bg-white focus:ring-1 focus:ring-[#009BA1] outline-none cursor-pointer transition-all max-w-[140px] h-8"
                                 >
-                                    <option value="">All Status</option>
+                                    <option value="">All Statuses</option>
                                     <option value="NEW">New</option>
                                     <option value="ACTIVE">Active</option>
+                                    <option value="CONVERTED">Converted</option>
                                     <option value="LOST">Lost</option>
                                     <option value="PENDING">Pending</option>
                                     <option value="DUPLICATE">Duplicate</option>
@@ -374,7 +424,6 @@ const LeadDetails = ({ onClose }) => {
                                             title="Add Lead"
                                         >
                                             <Plus size={14} />
-                                            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Add Lead</span>
                                         </button>
                                     )}
 
@@ -382,7 +431,7 @@ const LeadDetails = ({ onClose }) => {
                                         <button
                                             onClick={handleExportSelected}
                                             className="p-1.5 text-[#60738A] hover:text-[#0A1929] hover:bg-slate-50 rounded transition-all cursor-pointer relative group"
-                                            title="Download Selected"
+                                            title="Download Excel Report"
                                         >
                                             <Download size={14} />
                                             {selectedLeads.size > 0 && (
@@ -390,18 +439,22 @@ const LeadDetails = ({ onClose }) => {
                                                     {selectedLeads.size}
                                                 </span>
                                             )}
-                                            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Download CSV</span>
                                         </button>
                                     )}
 
                                     {hasPermission('LEAD', 'changeOwner') && (
                                         <button
-                                            onClick={() => { if (selectedLeads.size > 0) setIsBulkAssignOpen(true); }}
-                                            className={`p-1.5 text-[#60738A] hover:text-[#0A1929] hover:bg-slate-50 rounded transition-all cursor-pointer relative group ${selectedLeads.size === 0 ? 'opacity-50' : ''}`}
-                                            title={selectedLeads.size > 0 ? "Assign Owner" : "Select leads to assign owner"}
+                                            onClick={() => {
+                                                if (selectedLeads.size > 0) {
+                                                    setIsBulkAssignOpen(true);
+                                                } else {
+                                                    alert("Please select leads using the checkboxes first to assign an owner.");
+                                                }
+                                            }}
+                                            className={`p-1.5 text-[#60738A] hover:text-[#0A1929] hover:bg-slate-50 rounded transition-all cursor-pointer relative group`}
+                                            title="Assign Owner to Selected"
                                         >
                                             <UserCog size={14} />
-                                            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Assign Owner</span>
                                         </button>
                                     )}
 
@@ -409,10 +462,9 @@ const LeadDetails = ({ onClose }) => {
                                         <button
                                             onClick={handleBulkDelete}
                                             className={`p-1.5 text-[#60738A] hover:text-rose-600 hover:bg-rose-50 rounded transition-all cursor-pointer relative group ${selectedLeads.size === 0 ? 'opacity-50' : ''}`}
-                                            title={selectedLeads.size > 0 ? "Delete Selected" : "Select leads to delete"}
+                                            title="Delete Selected"
                                         >
                                             <Trash2 size={14} />
-                                            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Delete Selected</span>
                                         </button>
                                     )}
 
@@ -421,10 +473,9 @@ const LeadDetails = ({ onClose }) => {
                                             <button
                                                 onClick={handleDownloadTemplate}
                                                 className="p-1.5 text-[#60738A] hover:text-[#0A1929] hover:bg-slate-50 rounded transition-all cursor-pointer group relative"
-                                                title="Download Excel Template"
+                                                title="Download Excel Import Template"
                                             >
                                                 <FileSpreadsheet size={14} />
-                                                <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Excel Template</span>
                                             </button>
 
                                             <button
@@ -433,160 +484,245 @@ const LeadDetails = ({ onClose }) => {
                                                 title="Bulk Upload Leads"
                                             >
                                                 <Upload size={14} />
-                                                <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Bulk Upload</span>
                                             </button>
                                         </>
                                     )}
 
-                                    <div className="w-px h-4 bg-[#DFE6EF] mx-0.5" />
-
-                                    <button className="p-1.5 text-[#60738A] hover:text-[#0A1929] hover:bg-slate-50 rounded transition-all cursor-pointer group relative">
-                                        <User size={14} />
-                                        <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Owner</span>
-                                    </button>
-
-                                    <button className="p-1.5 text-[#60738A] hover:text-[#0A1929] hover:bg-slate-50 rounded transition-all cursor-pointer group relative">
+                                    <button
+                                        onClick={handleShare}
+                                        className="p-1.5 text-[#60738A] hover:text-[#0A1929] hover:bg-slate-50 rounded transition-all cursor-pointer group relative"
+                                        title="Share Page Link"
+                                    >
                                         <Share2 size={14} />
-                                        <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Share</span>
                                     </button>
 
-                                    <button onClick={() => fetchLeads()} className="p-1.5 text-[#60738A] hover:text-[#0A1929] hover:bg-slate-50 rounded transition-all cursor-pointer group relative" title="Refresh">
+                                    <button onClick={() => fetchLeads()} className="p-1.5 text-[#60738A] hover:text-[#0A1929] hover:bg-slate-50 rounded transition-all cursor-pointer group relative" title="Refresh Table">
                                         <RotateCcw size={14} />
-                                        <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Refresh</span>
-                                    </button>
-
-                                    <button className="p-1.5 text-[#60738A] hover:text-[#0A1929] hover:bg-slate-50 rounded transition-all cursor-pointer group relative">
-                                        <Settings size={14} />
-                                        <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Settings</span>
                                     </button>
 
                                     <div className="w-px h-4 bg-[#DFE6EF] mx-0.5" />
 
-                                    <button className="p-1.5 text-[#60738A] hover:text-[#0A1929] hover:bg-slate-50 rounded transition-all cursor-pointer group relative">
-                                        <Grid size={14} />
-                                        <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Layout</span>
+                                    <button
+                                        onClick={() => setViewMode(prev => prev === 'table' ? 'grid' : 'table')}
+                                        className={`p-1.5 rounded transition-all cursor-pointer group relative ${viewMode === 'grid' ? 'bg-[#009BA1] text-white' : 'text-[#60738A] hover:text-[#0A1929] hover:bg-slate-50'}`}
+                                        title={viewMode === 'table' ? 'Switch to Card Grid View' : 'Switch to Table View'}
+                                    >
+                                        {viewMode === 'table' ? <Grid size={14} /> : <Table size={14} />}
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse min-w-[1000px]">
-                                <thead className="sticky top-0 z-10 bg-[#F6F8FB]">
-                                    <tr className="bg-[#F6F8FB] border-b border-[#E3EAF2]">
-                                        <th className="py-2.5 px-3 text-center w-10">
-                                            <button onClick={toggleSelectAll} className="p-0.5 rounded hover:bg-black/5 transition-colors">
-                                                {selectedLeads.size === leads.length && leads.length > 0 ? (
-                                                    <CheckSquareIcon className="h-3.5 w-3.5 text-[#009BA1]" />
-                                                ) : (
-                                                    <Square className="h-3.5 w-3.5 text-slate-400" />
-                                                )}
-                                            </button>
-                                        </th>
-                                        <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">NAME</th>
-                                        <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">LEAD NO.</th>
-                                        <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">COMPANY</th>
-                                        <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">EMAIL</th>
-                                        <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">PHONE</th>
-                                        <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">SOURCE</th>
-                                        <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">OWNER</th>
-                                        <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">STATUS</th>
-                                        <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider text-center">ACTIONS</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-[#E3EAF2]">
-                                    {leads.length > 0 ? (
-                                        leads.map((lead) => (
-                                            <tr key={lead.id} className="hover:bg-[#F8FAFC] transition-colors group">
-                                                <td className="py-2.5 px-3 text-center">
-                                                    <button onClick={() => toggleSelectLead(lead.id)} className="p-0.5 rounded hover:bg-black/5 transition-colors">
-                                                        {selectedLeads.has(lead.id) ? (
-                                                            <CheckSquareIcon className="h-3.5 w-3.5 text-[#009BA1]" />
-                                                        ) : (
-                                                            <Square className="h-3.5 w-3.5 text-slate-400" />
-                                                        )}
-                                                    </button>
-                                                </td>
-                                                <td className="py-2.5 px-2.5 text-xs font-medium">
-                                                    <button 
-                                                        onClick={() => handleViewLead(lead)} 
-                                                        className="text-[#008288] font-medium hover:underline cursor-pointer"
-                                                    >
-                                                        {lead.firstName} {lead.lastName}
-                                                    </button>
-                                                </td>
-                                                <td className="py-2.5 px-2.5 text-xs">
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded bg-[#EDF4FF] text-[#071B62] text-[11px] font-semibold tracking-tight">
-                                                        {lead.leadNo || 'N/A'}
-                                                    </span>
-                                                </td>
-                                                <td className="py-2.5 px-2.5 text-xs text-[#092036] font-normal truncate max-w-[150px]">
-                                                    {lead.companyName || 'N/A'}
-                                                </td>
-                                                <td className="py-2.5 px-2.5 text-xs text-[#092036] font-normal truncate max-w-[170px]">
-                                                    {lead.email}
-                                                </td>
-                                                <td className="py-2.5 px-2.5 text-xs text-[#092036] font-normal">
-                                                    {lead.phone || 'N/A'}
-                                                </td>
-                                                <td className="py-2.5 px-2.5 text-xs text-[#092036] font-normal">
-                                                    {lead.leadSourceName || 'Website Form'}
-                                                </td>
-                                                <td className="py-2.5 px-2.5 text-xs text-[#092036]">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <div className="w-5 h-5 rounded-full bg-[#F3F8FA] border border-slate-100 flex items-center justify-center text-[10px] font-medium text-[#092036]">
-                                                            {lead.ownerName ? lead.ownerName.charAt(0) : 'U'}
+                        {/* VIEW MODE: TABLE vs GRID */}
+                        {viewMode === 'table' ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse min-w-[1000px]">
+                                    <thead className="sticky top-0 z-10 bg-[#F6F8FB]">
+                                        <tr className="bg-[#F6F8FB] border-b border-[#E3EAF2]">
+                                            <th className="py-2.5 px-3 text-center w-10">
+                                                <button onClick={toggleSelectAll} className="p-0.5 rounded hover:bg-black/5 transition-colors">
+                                                    {selectedLeads.size === leads.length && leads.length > 0 ? (
+                                                        <CheckSquareIcon className="h-3.5 w-3.5 text-[#009BA1]" />
+                                                    ) : (
+                                                        <Square className="h-3.5 w-3.5 text-slate-400" />
+                                                    )}
+                                                </button>
+                                            </th>
+                                            <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">NAME</th>
+                                            {visibleColumns.leadNo && <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">LEAD NO.</th>}
+                                            {visibleColumns.company && <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">COMPANY</th>}
+                                            {visibleColumns.email && <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">EMAIL</th>}
+                                            {visibleColumns.phone && <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">PHONE</th>}
+                                            {visibleColumns.source && <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">SOURCE</th>}
+                                            {visibleColumns.owner && <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">OWNER</th>}
+                                            {visibleColumns.status && <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider">STATUS</th>}
+                                            <th className="py-2.5 px-2.5 text-[11px] font-bold text-[#092036] uppercase tracking-wider text-center">ACTIONS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#E3EAF2]">
+                                        {leads.length > 0 ? (
+                                            leads.map((lead) => (
+                                                <tr key={lead.id} className="hover:bg-[#F8FAFC] transition-colors group">
+                                                    <td className="py-2.5 px-3 text-center">
+                                                        <button onClick={() => toggleSelectLead(lead.id)} className="p-0.5 rounded hover:bg-black/5 transition-colors">
+                                                            {selectedLeads.has(lead.id) ? (
+                                                                <CheckSquareIcon className="h-3.5 w-3.5 text-[#009BA1]" />
+                                                            ) : (
+                                                                <Square className="h-3.5 w-3.5 text-slate-400" />
+                                                            )}
+                                                        </button>
+                                                    </td>
+                                                    <td className="py-2.5 px-2.5 text-xs font-medium">
+                                                        <button
+                                                            onClick={() => handleViewLead(lead)}
+                                                            className="text-[#008288] font-medium hover:underline cursor-pointer"
+                                                        >
+                                                            {lead.firstName} {lead.lastName}
+                                                        </button>
+                                                    </td>
+                                                    {visibleColumns.leadNo && (
+                                                        <td className="py-2.5 px-2.5 text-xs">
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded bg-[#EDF4FF] text-[#071B62] text-[11px] font-semibold tracking-tight">
+                                                                {lead.leadNo || 'N/A'}
+                                                            </span>
+                                                        </td>
+                                                    )}
+                                                    {visibleColumns.company && (
+                                                        <td className="py-2.5 px-2.5 text-xs text-[#092036] font-normal truncate max-w-[150px]">
+                                                            {lead.companyName || 'N/A'}
+                                                        </td>
+                                                    )}
+                                                    {visibleColumns.email && (
+                                                        <td className="py-2.5 px-2.5 text-xs text-[#092036] font-normal truncate max-w-[170px]">
+                                                            {lead.email}
+                                                        </td>
+                                                    )}
+                                                    {visibleColumns.phone && (
+                                                        <td className="py-2.5 px-2.5 text-xs text-[#092036] font-normal">
+                                                            {lead.phone || 'N/A'}
+                                                        </td>
+                                                    )}
+                                                    {visibleColumns.source && (
+                                                        <td className="py-2.5 px-2.5 text-xs text-[#092036] font-normal">
+                                                            {lead.leadSourceName || 'Direct / Organic'}
+                                                        </td>
+                                                    )}
+                                                    {visibleColumns.owner && (
+                                                        <td className="py-2.5 px-2.5 text-xs text-[#092036]">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className="w-5 h-5 rounded-full bg-[#F3F8FA] border border-slate-100 flex items-center justify-center text-[10px] font-medium text-[#092036]">
+                                                                    {lead.ownerName ? lead.ownerName.charAt(0) : 'U'}
+                                                                </div>
+                                                                <span className="truncate max-w-[100px] text-[11px] text-[#092036]">
+                                                                    {lead.ownerName || 'Unassigned'}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                    )}
+                                                    {visibleColumns.status && (
+                                                        <td className="py-2.5 px-2.5 text-xs">
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${
+                                                                lead.status === 'NEW' ? 'bg-[#E4F5F5] text-[#0F8E9A]' :
+                                                                lead.status === 'ACTIVE' || lead.status === 'IN PROGRESS' ? 'bg-[#EAF3FE] text-[#197BDD]' :
+                                                                lead.status === 'WON' || lead.status === 'CONVERTED' ? 'bg-[#EBF9E1] text-[#097F1E]' :
+                                                                lead.status === 'LOST' ? 'bg-rose-100 text-rose-700' :
+                                                                'bg-slate-100 text-slate-700'
+                                                            }`}>
+                                                                {lead.status || 'NEW'}
+                                                            </span>
+                                                        </td>
+                                                    )}
+                                                    <td className="py-2.5 px-2.5 text-xs text-center">
+                                                        <div className="flex items-center justify-center gap-1">
+                                                            <button onClick={() => handleViewLead(lead)} className="p-1 text-slate-500 hover:text-[#009BA1] hover:bg-slate-100 rounded transition-colors cursor-pointer" title="View Details">
+                                                                <Eye size={14} />
+                                                            </button>
+                                                            {hasPermission('LEAD', 'update') && (
+                                                                <button onClick={() => handleEditLead(lead)} className="p-1 text-slate-500 hover:text-[#009BA1] hover:bg-slate-100 rounded transition-colors cursor-pointer" title="Edit">
+                                                                    <Edit size={14} />
+                                                                </button>
+                                                            )}
+                                                            {hasPermission('LEAD', 'delete') && (
+                                                                <button onClick={() => handleDeleteLead(lead.id)} className="p-1 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer" title="Delete">
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            )}
                                                         </div>
-                                                        <span className="truncate max-w-[100px] text-[11px] text-[#092036]">
-                                                            {lead.ownerName || 'Unassigned'}
-                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="10" className="text-center py-12 bg-white">
+                                                    <div className="flex flex-col items-center">
+                                                        <div className="w-12 h-12 bg-[#F8FAFC] rounded-full flex items-center justify-center mb-3">
+                                                            <Search className="h-6 w-6 text-slate-400" />
+                                                        </div>
+                                                        <h3 className="text-base font-bold text-[#092036]">No leads found</h3>
+                                                        <p className="text-slate-500 text-xs mt-0.5">Try adjusting your filters or search term.</p>
                                                     </div>
                                                 </td>
-                                                <td className="py-2.5 px-2.5 text-xs">
-                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            /* GRID CARD VIEW */
+                            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 bg-[#F8FAFC]">
+                                {leads.length > 0 ? (
+                                    leads.map(lead => (
+                                        <div key={lead.id} className="bg-white border border-[#DFE6EF] rounded-xl p-4 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between gap-3">
+                                            <div>
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-[#EDF4FF] text-[#071B62]">
+                                                        {lead.leadNo || 'N/A'}
+                                                    </span>
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
                                                         lead.status === 'NEW' ? 'bg-[#E4F5F5] text-[#0F8E9A]' :
-                                                        lead.status === 'ACTIVE' || lead.status === 'IN PROGRESS' ? 'bg-[#EAF3FE] text-[#197BDD]' :
-                                                        lead.status === 'WON' ? 'bg-[#EBF9E1] text-[#097F1E]' :
+                                                        lead.status === 'ACTIVE' ? 'bg-[#EAF3FE] text-[#197BDD]' :
+                                                        lead.status === 'CONVERTED' ? 'bg-[#EBF9E1] text-[#097F1E]' :
                                                         lead.status === 'LOST' ? 'bg-rose-100 text-rose-700' :
                                                         'bg-slate-100 text-slate-700'
                                                     }`}>
                                                         {lead.status || 'NEW'}
                                                     </span>
-                                                </td>
-                                                <td className="py-2.5 px-2.5 text-xs text-center">
-                                                    <div className="flex items-center justify-center gap-1">
-                                                        {hasPermission('LEAD', 'update') && (
-                                                            <button onClick={() => handleEditLead(lead)} className="p-1 text-slate-500 hover:text-[#009BA1] hover:bg-slate-100 rounded transition-colors cursor-pointer" title="Edit">
-                                                                <Edit size={14} />
-                                                            </button>
-                                                        )}
-                                                        {hasPermission('LEAD', 'delete') && (
-                                                            <button onClick={() => handleDeleteLead(lead.id)} className="p-1 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer" title="Delete">
-                                                                <Trash2 size={14} />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="10" className="text-center py-12 bg-white">
-                                                <div className="flex flex-col items-center">
-                                                    <div className="w-12 h-12 bg-[#F8FAFC] rounded-full flex items-center justify-center mb-3">
-                                                        <Search className="h-6 w-6 text-slate-400" />
-                                                    </div>
-                                                    <h3 className="text-base font-bold text-[#092036]">No leads found</h3>
-                                                    <p className="text-slate-500 text-xs mt-0.5">Try adjusting your filters or search term.</p>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
 
-                        {/* Attached Table Footer / Pagination */}
+                                                <h3
+                                                    onClick={() => handleViewLead(lead)}
+                                                    className="text-sm font-bold text-[#092036] hover:text-[#009BA1] cursor-pointer transition-colors truncate"
+                                                >
+                                                    {lead.firstName} {lead.lastName}
+                                                </h3>
+                                                <p className="text-xs text-[#60738A] font-medium mt-0.5 truncate">
+                                                    {lead.companyName || 'No Company'}
+                                                </p>
+                                            </div>
+
+                                            <div className="flex flex-col gap-1 text-xs text-slate-600 border-t border-slate-100 pt-2">
+                                                <div className="flex items-center gap-1.5 truncate">
+                                                    <Mail size={12} className="text-slate-400 shrink-0" />
+                                                    <span className="truncate">{lead.email || 'N/A'}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Phone size={12} className="text-slate-400 shrink-0" />
+                                                    <span>{lead.phone || 'N/A'}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+                                                <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                                                    <User size={12} className="text-slate-400" />
+                                                    <span className="truncate max-w-[100px]">{lead.ownerName || 'Unassigned'}</span>
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    <button onClick={() => handleViewLead(lead)} className="p-1 text-slate-400 hover:text-[#009BA1] rounded transition-colors" title="View">
+                                                        <Eye size={14} />
+                                                    </button>
+                                                    {hasPermission('LEAD', 'update') && (
+                                                        <button onClick={() => handleEditLead(lead)} className="p-1 text-slate-400 hover:text-[#009BA1] rounded transition-colors" title="Edit">
+                                                            <Edit size={14} />
+                                                        </button>
+                                                    )}
+                                                    {hasPermission('LEAD', 'delete') && (
+                                                        <button onClick={() => handleDeleteLead(lead.id)} className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors" title="Delete">
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="col-span-full py-12 text-center text-slate-500 text-xs">
+                                        No leads found.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Pagination Bar */}
                         {!loading && !error && (
                             <div className="flex flex-col sm:flex-row justify-between items-center px-4 py-3 bg-white border-t border-[#E3EAF2] gap-3">
                                 <div className="flex items-center gap-3">

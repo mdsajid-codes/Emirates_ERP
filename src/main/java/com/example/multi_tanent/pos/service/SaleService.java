@@ -24,9 +24,14 @@ import java.util.stream.Collectors;
 
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 @Transactional("tenantTx")
 public class SaleService {
+
+    private static final Logger logger = LoggerFactory.getLogger(SaleService.class);
 
     private final SaleRepository saleRepository;
     private final TenantRepository tenantRepository;
@@ -102,21 +107,15 @@ public class SaleService {
         long totalTax = 0L;
 
         // --- Inventory Check ---
-        // Before creating the sale, verify that there is enough stock for each item.
-        List<String> stockErrors = new ArrayList<>();
+        // Log warnings if stock is low, allowing POS sales to process smoothly
         for (var itemRequest : request.getItems()) {
             inventoryRepository.findByStoreIdAndProductVariantId(saleStore.getId(), itemRequest.getProductVariantId())
                     .ifPresent(inventory -> {
                         if (inventory.getQuantity() < itemRequest.getQuantity()) {
-                            stockErrors.add("Insufficient stock for SKU " + inventory.getProductVariant().getSku() +
-                                    ": Requested " + itemRequest.getQuantity() + ", but only " + inventory.getQuantity()
-                                    + " available.");
+                            logger.warn("Low stock for SKU {}: Requested {}, but only {} available. Proceeding with POS sale.",
+                                    inventory.getProductVariant().getSku(), itemRequest.getQuantity(), inventory.getQuantity());
                         }
                     });
-        }
-        if (!stockErrors.isEmpty()) {
-            throw new IllegalStateException(
-                    "Cannot complete sale due to stock issues: " + String.join("; ", stockErrors));
         }
 
         List<SaleItem> saleItems = request.getItems().stream().map(itemRequest -> {
