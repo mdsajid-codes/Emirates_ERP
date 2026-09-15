@@ -19,4 +19,5 @@ public class ProductVariantDto {
     private Long taxRateId;
     private String taxRateName;
     private BigDecimal taxRatePercent;
+    private int quantity;
 }

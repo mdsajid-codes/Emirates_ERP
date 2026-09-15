@@ -312,6 +312,8 @@ const CrmCallingData = () => {
     const [typeFilter, setTypeFilter] = useState('ALL');
     const [userFilter, setUserFilter] = useState('ALL');
     const [dateRange, setDateRange] = useState('01 May - 31 May');
+    const [isAdvancedFilterOpen, setIsAdvancedFilterOpen] = useState(false);
+    const [outcomeFilter, setOutcomeFilter] = useState('ALL');
 
     // Form & Drawer State
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -370,9 +372,17 @@ const CrmCallingData = () => {
             );
             const matchesType = typeFilter === 'ALL' || (log.interactionType || 'OUTBOUND') === typeFilter;
             const matchesUser = userFilter === 'ALL' || log.employeeName === userFilter;
-            return matchesSearch && matchesType && matchesUser;
+            const matchesOutcome = outcomeFilter === 'ALL' || (log.outcome || 'Completed') === outcomeFilter;
+            return matchesSearch && matchesType && matchesUser && matchesOutcome;
         });
-    }, [callLogs, searchTerm, typeFilter, userFilter]);
+    }, [callLogs, searchTerm, typeFilter, userFilter, outcomeFilter]);
+
+    const resetAdvancedFilters = () => {
+        setSearchTerm('');
+        setTypeFilter('ALL');
+        setUserFilter('ALL');
+        setOutcomeFilter('ALL');
+    };
 
     const handleSave = async (formData) => {
         setIsSubmitting(true);
@@ -380,7 +390,6 @@ const CrmCallingData = () => {
             const token = localStorage.getItem('token');
             const headers = { "Authorization": `Bearer ${token}` };
 
-            // Format time fields for backend (expected HH:mm:ss)
             const payload = {
                 ...formData,
                 callTime: formData.callTime ? formData.callTime + ":00" : null,
@@ -457,62 +466,120 @@ const CrmCallingData = () => {
                 </div>
 
                 {/* Filters & Actions Bar */}
-                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 bg-white p-2 rounded-lg border border-[#E8EEF7] shadow-2xs">
-                    {/* Search Bar */}
-                    <div className="relative flex-1 max-w-sm">
-                        <Search className="w-4 h-4 text-[#62708A] absolute left-3 top-1/2 -translate-y-1/2" />
-                        <input
-                            type="text"
-                            placeholder="Search lead or name..."
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full pl-9 pr-3 py-1.5 bg-[#F8FAFC] rounded-lg text-xs text-[#111111] placeholder-[#62708A] outline-none border border-[#E8EEF7] focus:border-[#00A3A6] focus:bg-white transition-all"
-                        />
-                    </div>
-
-                    {/* Dropdown Filters & Log Button */}
-                    <div className="flex flex-wrap items-center gap-2.5">
-                        <select
-                            value={typeFilter}
-                            onChange={e => setTypeFilter(e.target.value)}
-                            className="px-3 py-1.5 bg-[#F8FAFC] border border-[#E8EEF7] rounded-lg text-xs font-semibold text-[#111111] outline-none cursor-pointer hover:bg-white transition-colors"
-                        >
-                            <option value="ALL">All Interaction Types</option>
-                            <option value="OUTBOUND">Outbound</option>
-                            <option value="INBOUND">Inbound</option>
-                            <option value="MISSED">Missed</option>
-                            <option value="VOICEMAIL">Voicemail</option>
-                        </select>
-
-                        <select
-                            value={userFilter}
-                            onChange={e => setUserFilter(e.target.value)}
-                            className="px-3 py-1.5 bg-[#F8FAFC] border border-[#E8EEF7] rounded-lg text-xs font-semibold text-[#111111] outline-none cursor-pointer hover:bg-white transition-colors"
-                        >
-                            <option value="ALL">All Users</option>
-                            <option value="Sarah Ahmed">Sarah Ahmed</option>
-                            <option value="Michael Johnson">Michael Johnson</option>
-                        </select>
-
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-[#F8FAFC] border border-[#E8EEF7] rounded-lg text-xs font-semibold text-[#111111]">
-                            <Calendar className="w-3.5 h-3.5 text-[#62708A]" />
-                            <span>{dateRange}</span>
+                <div className="flex flex-col gap-2 bg-white p-2.5 rounded-lg border border-[#E8EEF7] shadow-2xs">
+                    <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2">
+                        {/* Search Bar */}
+                        <div className="relative flex-1 max-w-sm">
+                            <Search className="w-4 h-4 text-[#62708A] absolute left-3 top-1/2 -translate-y-1/2" />
+                            <input
+                                type="text"
+                                placeholder="Search lead or name..."
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                className="w-full pl-9 pr-3 py-1.5 bg-[#F8FAFC] rounded-lg text-xs text-[#111111] placeholder-[#62708A] outline-none border border-[#E8EEF7] focus:border-[#00A3A6] focus:bg-white transition-all"
+                            />
                         </div>
 
-                        <button className="flex items-center gap-2 px-3 py-1.5 bg-[#F8FAFC] border border-[#E8EEF7] hover:bg-slate-100 text-[#111111] rounded-lg text-xs font-bold transition-colors cursor-pointer">
-                            <Filter className="w-3.5 h-3.5 text-[#111111]" />
-                            <span>Filters</span>
-                        </button>
-
-                        {hasPermission('CALL_LOG', 'create') && (
-                            <button
-                                onClick={() => navigate('/crm-dashboard/calling-data/new')}
-                                className="bg-[#00A3A6] hover:bg-[#008286] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer ml-auto sm:ml-2"
+                        {/* Dropdown Filters & Log Button */}
+                        <div className="flex flex-wrap items-center gap-2.5">
+                            <select
+                                value={typeFilter}
+                                onChange={e => setTypeFilter(e.target.value)}
+                                className="px-3 py-1.5 bg-[#F8FAFC] border border-[#E8EEF7] rounded-lg text-xs font-semibold text-[#111111] outline-none cursor-pointer hover:bg-white transition-colors"
                             >
-                                <Plus className="h-4 w-4" /> Log Interaction
+                                <option value="ALL">All Interaction Types</option>
+                                <option value="OUTBOUND">Outbound</option>
+                                <option value="INBOUND">Inbound</option>
+                                <option value="MISSED">Missed</option>
+                                <option value="VOICEMAIL">Voicemail</option>
+                            </select>
+
+                            <select
+                                value={userFilter}
+                                onChange={e => setUserFilter(e.target.value)}
+                                className="px-3 py-1.5 bg-[#F8FAFC] border border-[#E8EEF7] rounded-lg text-xs font-semibold text-[#111111] outline-none cursor-pointer hover:bg-white transition-colors"
+                            >
+                                <option value="ALL">All Users</option>
+                                <option value="Sarah Ahmed">Sarah Ahmed</option>
+                                <option value="Michael Johnson">Michael Johnson</option>
+                            </select>
+
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-[#F8FAFC] border border-[#E8EEF7] rounded-lg text-xs font-semibold text-[#111111]">
+                                <Calendar className="w-3.5 h-3.5 text-[#62708A]" />
+                                <span>{dateRange}</span>
+                            </div>
+
+                            <button 
+                                onClick={() => setIsAdvancedFilterOpen(prev => !prev)}
+                                className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                    isAdvancedFilterOpen ? 'bg-[#00A3A6] text-white border-[#00A3A6]' : 'bg-[#F8FAFC] border-[#E8EEF7] hover:bg-slate-100 text-[#111111]'
+                                }`}
+                            >
+                                <Filter className="w-3.5 h-3.5" />
+                                <span>Filters {isAdvancedFilterOpen ? '▲' : '▼'}</span>
                             </button>
-                        )}
+
+                            {hasPermission('CALL_LOG', 'create') && (
+                                <button
+                                    onClick={() => navigate('/crm-dashboard/calling-data/new')}
+                                    className="bg-[#00A3A6] hover:bg-[#008286] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer ml-auto sm:ml-2"
+                                >
+                                    <Plus className="h-4 w-4" /> Log Interaction
+                                </button>
+                            )}
+                        </div>
                     </div>
+
+                    {/* Expandable Advanced Filter Panel */}
+                    <AnimatePresence>
+                        {isAdvancedFilterOpen && (
+                            <motion.div 
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden pt-2 border-t border-[#E8EEF7] mt-1"
+                            >
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-[#F8FAFC] rounded-lg border border-[#E8EEF7]">
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-[#62708A] uppercase tracking-wider mb-1">Interaction Outcome</label>
+                                        <select 
+                                            value={outcomeFilter}
+                                            onChange={e => setOutcomeFilter(e.target.value)}
+                                            className="w-full px-3 py-1.5 bg-white border border-[#E8EEF7] rounded-md text-xs font-medium text-[#111111] outline-none"
+                                        >
+                                            <option value="ALL">All Outcomes</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="No Answer">No Answer</option>
+                                            <option value="Voicemail Left">Voicemail Left</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-[#62708A] uppercase tracking-wider mb-1">Date Period</label>
+                                        <select 
+                                            value={dateRange}
+                                            onChange={e => setDateRange(e.target.value)}
+                                            className="w-full px-3 py-1.5 bg-white border border-[#E8EEF7] rounded-md text-xs font-medium text-[#111111] outline-none"
+                                        >
+                                            <option value="01 May - 31 May">This Month (May 2026)</option>
+                                            <option value="Today">Today</option>
+                                            <option value="This Week">This Week</option>
+                                            <option value="All Time">All Time</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="flex items-end gap-2">
+                                        <button 
+                                            onClick={resetAdvancedFilters}
+                                            className="w-full px-3 py-1.5 bg-white border border-[#C9D8E5] text-[#62708A] hover:text-[#0F2342] rounded-md text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                                        >
+                                            Reset Filters
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 {/* Main Split Content Section */}

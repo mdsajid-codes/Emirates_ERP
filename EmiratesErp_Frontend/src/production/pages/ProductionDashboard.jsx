@@ -2,73 +2,26 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-    PieChart, Pie, Cell, LineChart, Line, ComposedChart, Area
+    PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
+    LineChart, Line, XAxis, YAxis, CartesianGrid
 } from 'recharts';
 import {
-    Factory, Package, AlertTriangle, TrendingUp, CheckCircle,
-    Clock, Activity, ArrowRight, Boxes, ChevronDown, ChevronUp,
-    Calendar, Users, Target, BarChart2, X
+    RefreshCw, Download, Calendar, ArrowUpRight, ArrowDownRight,
+    AlertTriangle, CheckCircle2, Info, ChevronDown, Search, Filter,
+    MoreVertical, FileText
 } from 'lucide-react';
 import { useTenant } from '../../context/TenantContext';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-const COLORS = ['#4f46e5', '#0284c7', '#0d9488', '#7c3aed', '#db2777', '#ea580c'];
-const STATUS_COLORS = {
-    COMPLETED: 'bg-emerald-100 text-emerald-700',
-    IN_PROGRESS: 'bg-blue-100 text-blue-700',
-    SCHEDULED: 'bg-slate-100 text-slate-600',
-    CANCELLED: 'bg-red-100 text-red-600',
-    PAUSED: 'bg-amber-100 text-amber-700',
+// Helper to calculate percentage and color
+const DONUT_COLORS = {
+    Completed: '#00A9A8',
+    'In Progress': '#098BFB',
+    Planned: '#00719B',
+    'On Hold': '#FC8E1D',
+    Cancelled: '#F1343D',
 };
-const QC_COLORS = ['#10b981', '#f59e0b', '#ef4444'];
-
-// ─── Helper Components ────────────────────────────────────────────────────────
-
-const KpiCard = ({ title, value, icon: Icon, color, detail, onClick }) => (
-    <div
-        onClick={onClick}
-        className={`bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all duration-200 ${onClick ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5 hover:border-indigo-300' : ''}`}
-    >
-        <div className="flex items-center justify-between mb-4">
-            <div className={`p-3 rounded-lg bg-opacity-10 ${color.replace('text-', 'bg-').replace('-6', '-100')}`}>
-                <Icon className={`h-6 w-6 ${color}`} />
-            </div>
-            {detail && <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">{detail}</span>}
-        </div>
-        <h3 className="text-slate-600 dark:text-slate-400 text-sm font-medium">{title}</h3>
-        <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{value}</p>
-        {onClick && (
-            <p className="text-xs text-indigo-500 mt-2 flex items-center gap-1">View details <ArrowRight className="h-3 w-3" /></p>
-        )}
-    </div>
-);
-
-const SectionCard = ({ title, children, className = '' }) => (
-    <div className={`bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden ${className}`}>
-        {title && (
-            <div className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800">
-                <h3 className="font-bold text-slate-800 dark:text-slate-100 underline decoration-indigo-500 underline-offset-4">{title}</h3>
-            </div>
-        )}
-        {children}
-    </div>
-);
-
-const StatusBadge = ({ status }) => (
-    <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${STATUS_COLORS[status] || 'bg-slate-100 text-slate-600'}`}>
-        {status?.replace('_', ' ')}
-    </span>
-);
-
-const SeverityBadge = ({ severity }) => (
-    <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${severity === 'HIGH' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
-        {severity}
-    </span>
-);
-
-// ─── Main Component ───────────────────────────────────────────────────────────
 
 const ProductionDashboard = () => {
     const navigate = useNavigate();
@@ -78,14 +31,9 @@ const ProductionDashboard = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [alertsOpen, setAlertsOpen] = useState(true);
-
-    // Phase B: Date range state
-    const today = new Date().toISOString().split('T')[0];
-    const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const [dateFrom, setDateFrom] = useState(monthAgo);
-    const [dateTo, setDateTo] = useState(today);
-    const [activeQuick, setActiveQuick] = useState('month');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All');
+    const [timeframe, setTimeframe] = useState('Today');
 
     const fetchStats = useCallback(async () => {
         setLoading(true);
@@ -94,7 +42,7 @@ const ProductionDashboard = () => {
             const token = localStorage.getItem('token');
             const res = await axios.get(`${API_URL}/production/dashboard/stats`, {
                 headers: { Authorization: `Bearer ${token}` },
-                params: { isHangerTenant, from: dateFrom, to: dateTo }
+                params: { isHangerTenant }
             });
             setData(res.data);
         } catch (err) {
@@ -103,504 +51,498 @@ const ProductionDashboard = () => {
         } finally {
             setLoading(false);
         }
-    }, [isHangerTenant, dateFrom, dateTo]);
+    }, [isHangerTenant]);
 
     useEffect(() => { fetchStats(); }, [fetchStats]);
 
-    const applyQuick = (key) => {
-        setActiveQuick(key);
-        const now = new Date();
-        const end = now.toISOString().split('T')[0];
-        let start;
-        if (key === 'week') start = new Date(now - 7 * 86400000).toISOString().split('T')[0];
-        else if (key === 'month') start = new Date(now - 30 * 86400000).toISOString().split('T')[0];
-        else start = new Date(now - 90 * 86400000).toISOString().split('T')[0];
-        setDateFrom(start);
-        setDateTo(end);
-    };
-
-    // ── Derived chart data ──────────────────────────────────────────────────
-    const moPieData = data?.moStats ? [
-        { name: 'Scheduled', value: data.moStats.scheduled },
-        { name: 'In Progress', value: data.moStats.inProgress },
-        { name: 'Completed', value: data.moStats.completed },
-        { name: 'Cancelled', value: data.moStats.cancelled }
-    ].filter(d => d.value > 0) : [];
-
-    const efficiencyData = (data?.monthlyOutput || []).map(m => ({
-        month: m.month,
-        efficiency: m.planned > 0 ? Math.round((m.actual / m.planned) * 100) : 0,
-        actual: m.actual,
-        planned: m.planned,
-    }));
-
-    const deliveryTrend = data?.deliveryTrend || [
-        { month: 'Jan', onTime: 14, late: 2 },
-        { month: 'Feb', onTime: 18, late: 3 },
-        { month: 'Mar', onTime: 12, late: 1 },
+    // Mock/Real mapped data structure matching design
+    const kpiMetrics = [
+        {
+            title: 'Total Orders',
+            value: data?.moStats?.total ?? 124,
+            change: '↑ 18% vs yesterday',
+            changeType: 'up',
+            icon: FileText,
+            bg: 'bg-[#E3F1FE]',
+            iconColor: 'text-[#0073E1]'
+        },
+        {
+            title: 'In Progress',
+            value: data?.moStats?.inProgress ?? 46,
+            change: '↑ 12% vs yesterday',
+            changeType: 'up',
+            icon: RefreshCw,
+            bg: 'bg-[#E3F7F7]',
+            iconColor: 'text-[#0CAEB3]'
+        },
+        {
+            title: 'Completed Today',
+            value: data?.moStats?.completed ?? 38,
+            change: '↑ 22% vs yesterday',
+            changeType: 'up',
+            icon: CheckCircle2,
+            bg: 'bg-[#E7F5E9]',
+            iconColor: 'text-[#008731]'
+        },
+        {
+            title: 'On Hold',
+            value: data?.moStats?.onHold ?? 5,
+            change: '↓ 10% vs yesterday',
+            changeType: 'down',
+            icon: AlertTriangle,
+            bg: 'bg-[#FDEBE3]',
+            iconColor: 'text-[#DD3035]'
+        },
+        {
+            title: 'Overall Efficiency',
+            value: data?.efficiency ? `${data.efficiency}%` : '78.6%',
+            change: '↑ 5.4% vs yesterday',
+            changeType: 'up',
+            icon: RefreshCw,
+            bg: 'bg-[#F2ECFC]',
+            iconColor: 'text-[#985EE5]'
+        },
+        {
+            title: 'Defect Rate',
+            value: data?.defectRate ? `${data.defectRate}%` : '1.32%',
+            change: '↓ 0.45% vs yesterday',
+            changeType: 'up', // lower defect is good
+            icon: AlertTriangle,
+            bg: 'bg-[#FDEBE3]',
+            iconColor: 'text-[#DD3035]'
+        }
     ];
 
-    const pipelineData = data?.hangerBatchPipeline
-        ? Object.entries(data.hangerBatchPipeline).map(([stage, count]) => ({ stage: stage.replace(/_/g, ' '), count }))
-        : [];
+    const progressDonutData = [
+        { name: 'Completed', value: 38, percent: '30.6%' },
+        { name: 'In Progress', value: 46, percent: '37.1%' },
+        { name: 'Planned', value: 30, percent: '24.2%' },
+        { name: 'On Hold', value: 5, percent: '4.0%' },
+        { name: 'Cancelled', value: 5, percent: '4.0%' }
+    ];
 
-    const qcPieData = data?.qcPassRates ? [
-        { name: 'Pass', value: data.qcPassRates.pass },
-        { name: 'Conditional', value: data.qcPassRates.conditionalPass },
-        { name: 'Fail', value: data.qcPassRates.fail }
-    ] : [];
+    const workCenters = [
+        { name: 'CNC Machining', value: 88.3, color: '#1680A0' },
+        { name: 'Assembly Line 1', value: 76.4, color: '#57C1D2' },
+        { name: 'Assembly Line 2', value: 74.1, color: '#3BADBE' },
+        { name: 'Painting Booth', value: 69.2, color: '#B0E1E7' },
+        { name: 'Quality Inspection', value: 93.5, color: '#1680A0' },
+    ];
 
-    const alerts = data?.alerts || [];
-    const workload = data?.workloadSummary || [];
-    const upcoming = data?.upcomingMos || [];
+    const oeeTrend = [
+        { day: '24 May', val: 72.1 },
+        { day: '25 May', val: 74.3 },
+        { day: '26 May', val: 76.9 },
+        { day: '27 May', val: 75.2 },
+        { day: '28 May', val: 77.9 },
+        { day: '29 May', val: 79.1 },
+        { day: '30 May', val: 79.6 },
+    ];
 
-    // ── Loading / Error states ─────────────────────────────────────────────
-    if (loading) return (
-        <div className="flex h-96 items-center justify-center gap-3">
-            <Activity className="animate-spin h-8 w-8 text-indigo-600" />
-            <span className="text-slate-600 font-medium">Loading Dashboard...</span>
-        </div>
-    );
-    if (error) return (
-        <div className="bg-red-50 border border-red-200 p-6 rounded-xl text-red-700 flex items-center gap-3">
-            <AlertTriangle className="h-6 w-6 flex-shrink-0" />
-            <div>
-                <p className="font-semibold">Dashboard Error</p>
-                <p className="text-sm">{error}</p>
-            </div>
-            <button onClick={fetchStats} className="ml-auto text-sm underline">Retry</button>
-        </div>
-    );
+    const alertsList = [
+        {
+            id: 1,
+            type: 'warning',
+            title: 'Machine Maintenance Due',
+            desc: 'CNC Machine #07 is due for maintenance',
+            time: 'Due in 2 days',
+            iconColor: 'text-red-500',
+            bgColor: 'bg-red-50'
+        },
+        {
+            id: 2,
+            type: 'warning',
+            title: 'Low Inventory Alert',
+            desc: 'Raw material "Aluminum Sheet" is low',
+            time: 'Due in 1 day',
+            iconColor: 'text-amber-500',
+            bgColor: 'bg-amber-50'
+        },
+        {
+            id: 3,
+            type: 'info',
+            title: 'Quality Check Required',
+            desc: '5 orders awaiting quality inspection',
+            action: 'View Orders',
+            iconColor: 'text-blue-500',
+            bgColor: 'bg-blue-50'
+        },
+        {
+            id: 4,
+            type: 'success',
+            title: 'Production Order Completed',
+            desc: 'Order PRO-2026-1245 completed',
+            action: 'View Details',
+            iconColor: 'text-emerald-500',
+            bgColor: 'bg-emerald-50'
+        }
+    ];
+
+    const ordersTable = [
+        { id: 'PRO-2026-1245', product: 'Aluminum Frame', workCenter: 'CNC Machining', plan: 500, done: 500, progress: 100, status: 'Completed', start: '28 May', due: '30 May' },
+        { id: 'PRO-2026-1244', product: 'Control Panel Box', workCenter: 'Assembly Line 1', plan: 300, done: 210, progress: 70, status: 'In Progress', start: '29 May', due: '31 May' },
+        { id: 'PRO-2026-1243', product: 'Metal Enclosure', workCenter: 'CNC Machining', plan: 400, done: 160, progress: 40, status: 'In Progress', start: '29 May', due: '02 Jun' },
+        { id: 'PRO-2026-1242', product: 'Cooling Unit Housing', workCenter: 'Painting Booth', plan: 250, done: 75, progress: 30, status: 'In Progress', start: '28 May', due: '01 Jun' },
+        { id: 'PRO-2026-1241', product: 'Drive Module Housing', workCenter: 'Assembly Line 2', plan: 350, done: 0, progress: 0, status: 'Planned', start: '30 May', due: '03 Jun' },
+        { id: 'PRO-2026-1240', product: 'Power Supply Unit', workCenter: 'Quality Inspection', plan: 200, done: 0, progress: 0, status: 'On Hold', start: '30 May', due: '02 Jun' },
+        { id: 'PRO-2026-1239', product: 'Fan Assembly', workCenter: 'Assembly Line 1', plan: 150, done: 0, progress: 0, status: 'On Hold', start: '27 May', due: '31 May' },
+        { id: 'PRO-2026-1238', product: 'Wiring Harness', workCenter: 'Assembly Line 1', plan: 500, done: 250, progress: 50, status: 'In Progress', start: '29 May', due: '02 Jun' },
+        { id: 'PRO-2026-1237', product: 'Sheet Metal Panel', workCenter: 'CNC Machining', plan: 300, done: 0, progress: 0, status: 'Planned', start: '31 May', due: '04 Jun' },
+        { id: 'PRO-2026-1235', product: 'Battery Housing', workCenter: 'Painting Booth', plan: 200, done: 0, progress: 0, status: 'On Hold', start: '28 May', due: '01 Jun' },
+    ];
+
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'Completed': return 'bg-[#E7F5E9] text-[#008731]';
+            case 'In Progress': return 'bg-[#E3F1FE] text-[#0073E1]';
+            case 'Planned': return 'bg-[#F2ECFC] text-[#985EE5]';
+            case 'On Hold': return 'bg-[#FDEBE3] text-[#DD3035]';
+            default: return 'bg-gray-100 text-gray-700';
+        }
+    };
 
     return (
-        <div className="space-y-6 pb-12">
-
-            {/* ── Header + Date Filter ─────────────────────────────────── */}
-            <div className="flex flex-col gap-4">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Production Overview</h1>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm">Real-time indicators and operational performance.</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 rounded-full border border-indigo-100">
-                        <Clock className="h-4 w-4" />
-                        {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
+        <div className="flex flex-col gap-3 p-1 max-w-[1600px] mx-auto text-[#111111] font-sans">
+            
+            {/* Header: Title + Subtitle + Action Buttons */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                <div>
+                    <h1 className="text-xl font-bold text-[#111111] tracking-tight">Production Dashboard</h1>
+                    <p className="text-[11px] text-[#647288] mt-0.5 font-normal">Real-time overview of manufacturing operations</p>
                 </div>
-
-                {/* Phase B: Date Filter Bar */}
-                <div className="flex flex-wrap items-center gap-3 p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <Calendar className="h-4 w-4 text-slate-400 flex-shrink-0" />
-                    <span className="text-sm text-slate-500 font-medium">Filter period:</span>
-                    <div className="flex gap-1">
-                        {[{ key: 'week', label: 'This Week' }, { key: 'month', label: 'Last 30 Days' }, { key: 'quarter', label: 'Last 3 Months' }].map(q => (
-                            <button key={q.key} onClick={() => applyQuick(q.key)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeQuick === q.key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                                {q.label}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="flex items-center gap-2 ml-auto">
-                        <input type="date" value={dateFrom} max={dateTo}
-                            onChange={e => { setDateFrom(e.target.value); setActiveQuick('custom'); }}
-                            className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300" />
-                        <span className="text-slate-400 text-xs">→</span>
-                        <input type="date" value={dateTo} min={dateFrom}
-                            onChange={e => { setDateTo(e.target.value); setActiveQuick('custom'); }}
-                            className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300" />
-                    </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={fetchStats}
+                        className="flex items-center gap-1.5 px-3 py-1 bg-white border border-[#01B8BD] text-[#01B8BD] rounded-lg text-xs font-semibold hover:bg-[#01B8BD]/5 transition-colors shadow-xs"
+                    >
+                        <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+                        <span>Refresh</span>
+                    </button>
+                    <button
+                        onClick={() => navigate('/production-dashboard/hanger/batches/reports')}
+                        className="flex items-center gap-1.5 px-3.5 py-1 bg-[#01B8BD] text-white rounded-lg text-xs font-semibold hover:bg-[#00a3a7] transition-colors shadow-xs"
+                    >
+                        <span>Export Report</span>
+                        <Download className="w-3 h-3" />
+                    </button>
                 </div>
             </div>
 
-            {/* Phase C: Alerts Panel */}
-            {alerts.length > 0 && (
-                <div className="bg-white dark:bg-slate-900 rounded-xl border border-red-200 dark:border-red-900 shadow-sm overflow-hidden">
-                    <button
-                        onClick={() => setAlertsOpen(o => !o)}
-                        className="w-full flex items-center justify-between px-6 py-4 bg-red-50 dark:bg-red-950/30"
-                    >
-                        <div className="flex items-center gap-3">
-                            <AlertTriangle className="h-5 w-5 text-red-600" />
-                            <span className="font-bold text-red-700 dark:text-red-400">
-                                {alerts.length} Alert{alerts.length > 1 ? 's' : ''} Require Attention
+            {/* 6 Top KPI Metrics */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                {kpiMetrics.map((kpi, idx) => (
+                    <div key={idx} className="bg-white border border-[#E5EAF1] rounded-xl p-2.5 shadow-xs flex items-center gap-2.5">
+                        <div className={`w-9 h-9 rounded-lg ${kpi.bg} flex items-center justify-center shrink-0`}>
+                            <kpi.icon className={`w-4 h-4 ${kpi.iconColor}`} />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-[10.5px] font-semibold text-[#111111] leading-tight truncate">{kpi.title}</span>
+                            <span className="text-lg font-bold text-[#111111] leading-tight my-0.5">{kpi.value}</span>
+                            <span className={`text-[9.5px] font-normal leading-tight ${kpi.changeType === 'up' ? 'text-[#008731]' : 'text-[#DD3035]'}`}>
+                                {kpi.change}
                             </span>
                         </div>
-                        {alertsOpen ? <ChevronUp className="h-4 w-4 text-red-500" /> : <ChevronDown className="h-4 w-4 text-red-500" />}
-                    </button>
-                    {alertsOpen && (
-                        <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                            {alerts.map((alert, idx) => (
-                                <div key={idx}
-                                    onClick={() => alert.href && navigate(alert.href)}
-                                    className={`flex items-center gap-4 px-6 py-3 ${alert.href ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40' : ''} transition-colors`}>
-                                    <SeverityBadge severity={alert.severity} />
-                                    <p className="text-sm text-slate-700 dark:text-slate-300 flex-1">{alert.message}</p>
-                                    {alert.href && <ArrowRight className="h-4 w-4 text-slate-400 flex-shrink-0" />}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* ── KPI Cards (Phase A: Clickable) ────────────────────────── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <KpiCard
-                    title="Active Manufacturing Orders"
-                    value={data?.moStats?.inProgress || 0}
-                    icon={Factory}
-                    color="text-blue-600"
-                    detail="In Progress"
-                    onClick={() => navigate('/production-dashboard/manage-manufacturing-order')}
-                />
-                <KpiCard
-                    title="FG Stock Valuation"
-                    value={`AED ${(data?.fgStockValue || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
-                    icon={TrendingUp}
-                    color="text-emerald-600"
-                    detail="Total Value"
-                    onClick={() => navigate('/production-settings?tab=Finished+Good')}
-                />
-                <KpiCard
-                    title="Material Alerts"
-                    value={data?.rawMaterialAlerts || 0}
-                    icon={AlertTriangle}
-                    color="text-amber-600"
-                    detail="Below Reorder"
-                    onClick={() => navigate('/production-settings?tab=Raw+Materials')}
-                />
-                {isHangerTenant ? (
-                    <KpiCard
-                        title="Active Batches"
-                        value={pipelineData.reduce((a, c) => a + c.count, 0)}
-                        icon={Boxes}
-                        color="text-purple-600"
-                        detail="Live Pipeline"
-                        onClick={() => navigate('/production-dashboard/hanger/batches')}
-                    />
-                ) : (
-                    <KpiCard
-                        title="Completed Orders"
-                        value={data?.moStats?.completed || 0}
-                        icon={CheckCircle}
-                        color="text-indigo-600"
-                        detail="In Period"
-                        onClick={() => navigate('/production-dashboard/manage-manufacturing-order')}
-                    />
-                )}
+                    </div>
+                ))}
             </div>
 
-            {/* ── Row 1: MO Status + Efficiency Trend ─────────────────── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <SectionCard title="MO Status Distribution">
-                    <div className="h-72 px-4 py-2">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie data={moPieData} cx="50%" cy="50%" innerRadius={55} outerRadius={90}
-                                    paddingAngle={4} dataKey="value">
-                                    {moPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                                </Pie>
-                                <Tooltip />
-                                <Legend verticalAlign="bottom" height={36} />
-                            </PieChart>
-                        </ResponsiveContainer>
+            {/* Middle Section: 3 Columns (Production Progress | Production by Work Center | OEE Trend) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                
+                {/* Donut Chart: Production Progress */}
+                <div className="lg:col-span-4 bg-white border border-[#E5EAF1] rounded-xl p-3 shadow-xs flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-2">
+                        <h2 className="text-xs font-bold text-[#111111]">Production Progress</h2>
+                        <button className="flex items-center gap-1 text-[10.5px] text-[#111111] border border-[#E5EAF1] px-2 py-0.5 rounded-md bg-white">
+                            <span>Today</span>
+                            <ChevronDown className="w-3 h-3" />
+                        </button>
                     </div>
-                </SectionCard>
 
-                {/* Phase D1: Efficiency Trend */}
-                <SectionCard title="Output Efficiency Trend (%)">
-                    <div className="h-72 px-4 py-2">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={efficiencyData}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} unit="%" domain={[0, 120]} />
-                                <Tooltip formatter={(v, n) => [n === 'efficiency' ? `${v}%` : v, n === 'efficiency' ? 'Efficiency' : n]} />
-                                <Legend />
-                                <Area type="monotone" dataKey="efficiency" fill="#ede9fe" stroke="#7c3aed" strokeWidth={2} name="Efficiency %" />
-                                <Bar dataKey="actual" fill="#4f46e5" radius={[3, 3, 0, 0]} barSize={16} name="Actual" />
-                                <Bar dataKey="planned" fill="#e2e8f0" radius={[3, 3, 0, 0]} barSize={16} name="Planned" />
-                            </ComposedChart>
-                        </ResponsiveContainer>
-                    </div>
-                </SectionCard>
-            </div>
-
-            {/* ── Row 2: Delivery Performance + Top FG ────────────────── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Phase D2: Delivery Performance */}
-                <SectionCard title="MO Delivery Performance">
-                    <div className="h-72 px-4 py-2">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={deliveryTrend}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
-                                <Tooltip />
-                                <Legend />
-                                <Bar dataKey="onTime" name="On-Time" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
-                                <Bar dataKey="late" name="Late" stackId="a" fill="#f97316" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </SectionCard>
-
-                <SectionCard title="Top Finished Goods by Stock">
-                    <div className="h-72 px-4 py-2">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart layout="vertical" data={data?.topFinishedGoods?.slice(0, 5) || []}>
-                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                                <XAxis type="number" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
-                                <YAxis dataKey="name" type="category" width={130} stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false}
-                                    tickFormatter={v => v?.length > 15 ? v.slice(0, 14) + '…' : v} />
-                                <Tooltip />
-                                <Bar dataKey="quantity" name="Stock Qty" fill="#0284c7" radius={[0, 4, 4, 0]} barSize={22}
-                                    label={{ position: 'right', fill: '#64748b', fontSize: 11 }} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </SectionCard>
-            </div>
-
-            {/* ── Hanger Section ────────────────────────────────────────── */}
-            {isHangerTenant && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2">
-                        <SectionCard title="Hanger Production Pipeline">
-                            <div className="h-72 px-4 py-2">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart layout="vertical" data={pipelineData}>
-                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                                        <XAxis type="number" hide />
-                                        <YAxis dataKey="stage" type="category" width={120} stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                                        <Tooltip />
-                                        <Bar dataKey="count" fill="#4f46e5" radius={[0, 4, 4, 0]} barSize={28}
-                                            label={{ position: 'right', fill: '#64748b', fontSize: 12 }} />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </SectionCard>
-                    </div>
-                    <SectionCard title="Global QC Pass Rate">
-                        <div className="h-72 px-4 py-2">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
-                                    <Pie data={qcPieData} cx="50%" cy="50%" outerRadius={80} dataKey="value"
-                                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                                        {qcPieData.map((_, i) => <Cell key={i} fill={QC_COLORS[i]} />)}
+                                    <Pie
+                                        data={progressDonutData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={34}
+                                        outerRadius={50}
+                                        paddingAngle={2}
+                                        dataKey="value"
+                                    >
+                                        {progressDonutData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={DONUT_COLORS[entry.name]} />
+                                        ))}
                                     </Pie>
-                                    <Tooltip />
                                 </PieChart>
                             </ResponsiveContainer>
+                            <div className="absolute flex flex-col items-center justify-center text-center">
+                                <span className="text-sm font-bold text-[#002341]">124</span>
+                                <span className="text-[9px] text-[#002341]">Total Orders</span>
+                            </div>
                         </div>
-                    </SectionCard>
+
+                        <div className="flex flex-col gap-1 flex-1 min-w-0">
+                            {progressDonutData.map((item, idx) => (
+                                <div key={idx} className="flex items-center justify-between text-[10px] pb-0.5 border-b border-[#E5EAF1] last:border-none">
+                                    <div className="flex items-center gap-1.5 truncate">
+                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: DONUT_COLORS[item.name] }} />
+                                        <span className="text-[#111111] font-normal truncate">{item.name}</span>
+                                    </div>
+                                    <span className="font-bold text-[#111111] shrink-0 ml-1">{item.value} ({item.percent})</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
-            )}
 
-            {/* ── Tables Row ─────────────────────────────────────────────── */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-
-                {/* Recent MOs (Phase A: Clickable) */}
-                <SectionCard>
-                    <div className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                        <h3 className="font-bold text-slate-800 dark:text-slate-100">Recent Manufacturing Orders</h3>
-                        <button onClick={() => navigate('/production-dashboard/manage-manufacturing-order')}
-                            className="text-indigo-600 hover:text-indigo-700 text-sm font-semibold flex items-center gap-1">
-                            View All <ArrowRight className="h-4 w-4" />
+                {/* Progress Bars: Production by Work Center */}
+                <div className="lg:col-span-4 bg-white border border-[#E5EAF1] rounded-xl p-3 shadow-xs flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-2">
+                        <h2 className="text-xs font-bold text-[#111111]">Production by Work Center</h2>
+                        <button className="flex items-center gap-1 text-[10.5px] text-[#111111] border border-[#E5EAF1] px-2 py-0.5 rounded-md bg-white">
+                            <span>Today</span>
+                            <ChevronDown className="w-3 h-3" />
                         </button>
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-[10px] font-semibold uppercase tracking-wider">
-                                <tr>
-                                    <th className="px-6 py-3">MO Number</th>
-                                    <th className="px-6 py-3">Item</th>
-                                    <th className="px-6 py-3">Qty</th>
-                                    <th className="px-6 py-3">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {(data?.recentMos || []).map(mo => (
-                                    <tr key={mo.id}
-                                        onClick={() => navigate(`/production-dashboard/manage-manufacturing-order`)}
-                                        className="hover:bg-indigo-50/50 dark:hover:bg-slate-800/30 cursor-pointer transition-colors">
-                                        <td className="px-6 py-4 font-medium text-indigo-600">#{mo.moNumber}</td>
-                                        <td className="px-6 py-4 text-slate-600 dark:text-slate-400 max-w-[140px] truncate">{mo.itemName}</td>
-                                        <td className="px-6 py-4 text-slate-600">{mo.quantity}</td>
-                                        <td className="px-6 py-4"><StatusBadge status={mo.status} /></td>
-                                    </tr>
-                                ))}
-                                {(!data?.recentMos || data.recentMos.length === 0) && (
-                                    <tr><td colSpan="4" className="px-6 py-10 text-center text-slate-400 italic text-sm">No recent orders.</td></tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </SectionCard>
 
-                {/* Low Stock Alerts (Phase A: Clickable) */}
-                <SectionCard>
-                    <div className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                        <h3 className="font-bold text-amber-600 flex items-center gap-2">
-                            <AlertTriangle className="h-5 w-5" /> Low Stock Materials
-                        </h3>
-                        <button onClick={() => navigate('/production-settings?tab=Raw+Materials')}
-                            className="text-indigo-600 hover:text-indigo-700 text-sm font-semibold flex items-center gap-1">
-                            Manage <ArrowRight className="h-4 w-4" />
+                    <div className="flex flex-col gap-2.5">
+                        {workCenters.map((wc, idx) => (
+                            <div key={idx} className="flex flex-col gap-0.5">
+                                <div className="flex items-center justify-between text-[10.5px]">
+                                    <span className="font-normal text-[#111111]">{wc.name}</span>
+                                    <span className="font-bold text-[#111111]">{wc.value}%</span>
+                                </div>
+                                <div className="w-full h-1.5 bg-[#F5F7FA] rounded-full overflow-hidden">
+                                    <div className="h-full rounded-full transition-all duration-300" style={{ width: `${wc.value}%`, backgroundColor: wc.color }} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Line Chart: OEE Trend */}
+                <div className="lg:col-span-4 bg-white border border-[#E5EAF1] rounded-xl p-3 shadow-xs flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-2">
+                        <h2 className="text-xs font-bold text-[#111111]">OEE Trend</h2>
+                        <button className="flex items-center gap-1 text-[10.5px] text-[#111111] border border-[#E5EAF1] px-2 py-0.5 rounded-md bg-white">
+                            <span>Last 7 Days</span>
+                            <ChevronDown className="w-3 h-3" />
                         </button>
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-[10px] font-semibold uppercase tracking-wider">
-                                <tr>
-                                    <th className="px-6 py-3">Material</th>
-                                    <th className="px-6 py-3">Stock</th>
-                                    <th className="px-6 py-3">Reorder At</th>
-                                    <th className="px-6 py-3">Gap</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {(data?.lowStockMaterials || []).map((rm, idx) => {
-                                    const gap = (parseFloat(rm.reorderLimit) - parseFloat(rm.stockQuantity)).toFixed(2);
-                                    return (
-                                        <tr key={idx}
-                                            onClick={() => navigate('/production-settings?tab=Raw+Materials')}
-                                            className="hover:bg-amber-50/50 dark:hover:bg-slate-800/30 cursor-pointer transition-colors">
-                                            <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{rm.name}</td>
-                                            <td className="px-6 py-4 font-bold text-red-600">{rm.stockQuantity}</td>
-                                            <td className="px-6 py-4 text-slate-500">{rm.reorderLimit}</td>
-                                            <td className="px-6 py-4 text-amber-600 font-semibold">-{gap}</td>
-                                        </tr>
-                                    );
-                                })}
-                                {(!data?.lowStockMaterials || data.lowStockMaterials.length === 0) && (
-                                    <tr><td colSpan="4" className="px-6 py-10 text-center text-slate-400 italic text-sm">All materials are sufficiently stocked. ✓</td></tr>
-                                )}
-                            </tbody>
-                        </table>
+
+                    <div className="h-36 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={oeeTrend} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5EAF1" />
+                                <XAxis dataKey="day" tick={{ fontSize: 9, fill: '#647288' }} axisLine={false} tickLine={false} />
+                                <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: '#647288' }} axisLine={false} tickLine={false} />
+                                <Tooltip formatter={(val) => [`${val}%`, 'OEE']} />
+                                <Line type="monotone" dataKey="val" stroke="#01B8BD" strokeWidth={2} dot={{ fill: '#01B8BD', r: 2.5 }} activeDot={{ r: 4 }} />
+                            </LineChart>
+                        </ResponsiveContainer>
                     </div>
-                </SectionCard>
+                </div>
+
             </div>
 
-            {/* ── Phase E: Extra Tables ────────────────────────────────── */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* Bottom Main Content Grid (Table on Left, Sidebar Widgets on Right) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
+                
+                {/* Left Table Section: Production Orders */}
+                <div className="lg:col-span-8 bg-white border border-[#E5EAF1] rounded-xl p-3 shadow-xs flex flex-col gap-3">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                        <h2 className="text-xs font-bold text-[#111111]">Production Orders</h2>
 
-                {/* E1: Upcoming Schedule */}
-                <SectionCard>
-                    <div className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                        <Target className="h-5 w-5 text-indigo-500" />
-                        <h3 className="font-bold text-slate-800 dark:text-slate-100">Upcoming Orders (Next 7 Days)</h3>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {/* Search bar */}
+                            <div className="relative flex items-center">
+                                <Search className="absolute left-2.5 w-3 h-3 text-[#647288]" />
+                                <input
+                                    type="text"
+                                    placeholder="Search Order ID, Product, or Status"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-7 pr-2.5 py-1 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[11px] w-56 focus:outline-none focus:ring-1 focus:ring-[#01B8BD]"
+                                />
+                            </div>
+
+                            {/* Filter dropdown */}
+                            <button className="flex items-center gap-1.5 px-2.5 py-1 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[10.5px] font-semibold text-[#111111]">
+                                <span>Status: All</span>
+                                <ChevronDown className="w-3 h-3 text-[#647288]" />
+                            </button>
+
+                            <button className="flex items-center gap-1.5 px-2.5 py-1 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[10.5px] font-semibold text-[#111111]">
+                                <Filter className="w-3 h-3 text-[#647288]" />
+                                <span>More Filters</span>
+                            </button>
+                        </div>
                     </div>
+
+                    {/* Table */}
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-[10px] font-semibold uppercase tracking-wider">
+                        <table className="w-full text-left text-[11px]">
+                            <thead className="bg-[#F8FAFC] border-y border-[#E5EAF1] text-[#647288] font-semibold">
                                 <tr>
-                                    <th className="px-6 py-3">MO</th>
-                                    <th className="px-6 py-3">Qty</th>
-                                    <th className="px-6 py-3">Due Date</th>
-                                    <th className="px-6 py-3">Status</th>
+                                    <th className="py-2 px-2.5">Order ID</th>
+                                    <th className="py-2 px-2.5">Product</th>
+                                    <th className="py-2 px-2.5">Work Center</th>
+                                    <th className="py-2 px-2.5 text-right">Plan</th>
+                                    <th className="py-2 px-2.5 text-right">Done</th>
+                                    <th className="py-2 px-2.5">Progress</th>
+                                    <th className="py-2 px-2.5">Status</th>
+                                    <th className="py-2 px-2.5">Start</th>
+                                    <th className="py-2 px-2.5">Due</th>
+                                    <th className="py-2 px-2.5 text-center"></th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {(upcoming).map((mo, idx) => (
-                                    <tr key={idx}
-                                        onClick={() => navigate(`/production-dashboard/manage-manufacturing-order`)}
-                                        className="hover:bg-indigo-50/50 cursor-pointer transition-colors">
-                                        <td className="px-6 py-4 font-medium text-indigo-600">#{mo.moNumber}</td>
-                                        <td className="px-6 py-4 text-slate-600">{mo.quantity}</td>
-                                        <td className="px-6 py-4 text-slate-600">{mo.dueDate ? new Date(mo.dueDate).toLocaleDateString() : '—'}</td>
-                                        <td className="px-6 py-4"><StatusBadge status={mo.status} /></td>
+                            <tbody className="divide-y divide-[#E5EAF1]">
+                                {ordersTable.map((row) => (
+                                    <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+                                        <td className="py-2 px-2.5 font-semibold text-[#111111]">{row.id}</td>
+                                        <td className="py-2 px-2.5 text-[#111111]">{row.product}</td>
+                                        <td className="py-2 px-2.5 text-[#647288]">{row.workCenter}</td>
+                                        <td className="py-2 px-2.5 text-right font-medium text-[#111111]">{row.plan}</td>
+                                        <td className="py-2 px-2.5 text-right font-medium text-[#111111]">{row.done}</td>
+                                        <td className="py-2 px-2.5">
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="w-14 h-1.5 bg-[#F5F7FA] rounded-full overflow-hidden">
+                                                    <div className="h-full bg-[#01B8BD] rounded-full" style={{ width: `${row.progress}%` }} />
+                                                </div>
+                                                <span className="text-[9.5px] font-bold text-[#111111]">{row.progress}%</span>
+                                            </div>
+                                        </td>
+                                        <td className="py-2 px-2.5">
+                                            <span className={`px-2 py-0.5 rounded-md text-[9.5px] font-semibold ${getStatusStyle(row.status)}`}>
+                                                {row.status}
+                                            </span>
+                                        </td>
+                                        <td className="py-2 px-2.5 text-[#647288]">{row.start}</td>
+                                        <td className="py-2 px-2.5 text-[#647288]">{row.due}</td>
+                                        <td className="py-2 px-2.5 text-center">
+                                            <button className="text-[#647288] hover:text-[#111111]">
+                                                <MoreVertical className="w-3.5 h-3.5" />
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
-                                {upcoming.length === 0 && (
-                                    <tr><td colSpan="4" className="px-6 py-10 text-center text-slate-400 italic text-sm">No scheduled orders in the next 7 days.</td></tr>
-                                )}
                             </tbody>
                         </table>
                     </div>
-                </SectionCard>
 
-                {/* E2: Employee Workload */}
-                <SectionCard>
-                    <div className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                        <Users className="h-5 w-5 text-teal-500" />
-                        <h3 className="font-bold text-slate-800 dark:text-slate-100">Employee Workload Summary</h3>
+                    {/* Pagination */}
+                    <div className="flex items-center justify-between text-[11px] pt-1 text-[#647288]">
+                        <span>Showing 1 to 10 of 124 entries</span>
+                        <div className="flex items-center gap-1">
+                            <button className="px-2 py-0.5 border rounded text-[#647288] hover:bg-slate-50">‹</button>
+                            <button className="px-2 py-0.5 bg-[#01B8BD] text-white font-bold rounded">1</button>
+                            <button className="px-2 py-0.5 border rounded text-[#111111] hover:bg-slate-50">2</button>
+                            <button className="px-2 py-0.5 border rounded text-[#111111] hover:bg-slate-50">3</button>
+                            <button className="px-2 py-0.5 border rounded text-[#111111] hover:bg-slate-50">4</button>
+                            <button className="px-2 py-0.5 border rounded text-[#111111] hover:bg-slate-50">5</button>
+                            <span>...</span>
+                            <button className="px-2 py-0.5 border rounded text-[#111111] hover:bg-slate-50">13</button>
+                            <button className="px-2 py-0.5 border rounded text-[#647288] hover:bg-slate-50">›</button>
+                        </div>
                     </div>
-                    {workload.length > 0 ? (
-                        <div className="p-4">
-                            {workload.map((emp, idx) => (
-                                <div key={idx} className="flex items-center gap-3 py-2">
-                                    <div className="flex-shrink-0 h-8 w-8 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">
-                                        {emp.name?.charAt(0) ?? '?'}
-                                    </div>
-                                    <span className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-300">{emp.name}</span>
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-1.5 rounded-full bg-indigo-100 w-24 overflow-hidden">
-                                            <div className="h-full bg-indigo-500 rounded-full"
-                                                style={{ width: `${Math.min((emp.moCount / 10) * 100, 100)}%` }} />
-                                        </div>
-                                        <span className="text-xs font-bold text-indigo-600">{emp.moCount} MOs</span>
+                </div>
+
+                {/* Right Side Widgets (Alerts & Notifications | Production Summary | Top Products) */}
+                <div className="lg:col-span-4 flex flex-col gap-3">
+                    
+                    {/* Alerts & Notifications */}
+                    <div className="bg-white border border-[#E5EAF1] rounded-xl p-3 shadow-xs flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xs font-bold text-[#111111]">Alerts & Notifications</h2>
+                            <button className="text-[10.5px] font-semibold text-[#0073E1] hover:underline">View All</button>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            {alertsList.map((alert) => (
+                                <div key={alert.id} className="flex items-start gap-2 text-[11px] pb-1.5 border-b border-[#E5EAF1] last:border-none">
+                                    <AlertTriangle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${alert.iconColor}`} />
+                                    <div className="flex flex-col min-w-0 flex-1">
+                                        <span className="font-semibold text-[#111111]">{alert.title}</span>
+                                        <span className="text-[10px] text-[#647288] leading-tight">{alert.desc}</span>
+                                        {alert.time && <span className="text-[9.5px] font-semibold text-[#DD3035] mt-0.5">{alert.time}</span>}
+                                        {alert.action && <button className="text-[9.5px] font-semibold text-[#0073E1] hover:underline text-left mt-0.5">{alert.action}</button>}
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    ) : (
-                        <div className="px-6 py-10 text-center text-slate-400 italic text-sm">
-                            No workload data. Assign MOs to team members to see this chart.
+                    </div>
+
+                    {/* Production Summary Widget */}
+                    <div className="bg-white border border-[#E5EAF1] rounded-xl p-3 shadow-xs flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xs font-bold text-[#111111]">Production Summary</h2>
+                            <button className="flex items-center gap-1 text-[10.5px] text-[#111111] border border-[#E5EAF1] px-1.5 py-0.5 rounded-md bg-white">
+                                <span>Today</span>
+                                <ChevronDown className="w-3 h-3" />
+                            </button>
                         </div>
-                    )}
-                </SectionCard>
+
+                        <div className="flex flex-col gap-1.5 text-[11px]">
+                            <div className="flex items-center justify-between pb-1 border-b border-[#E5EAF1]">
+                                <span className="text-[#647288]">Total Output</span>
+                                <span className="font-bold text-[#111111]">2,458</span>
+                            </div>
+                            <div className="flex items-center justify-between pb-1 border-b border-[#E5EAF1]">
+                                <span className="text-[#647288]">Good Output</span>
+                                <span className="font-bold text-[#111111]">2,426</span>
+                            </div>
+                            <div className="flex items-center justify-between pb-1 border-b border-[#E5EAF1]">
+                                <span className="text-[#647288]">Rejected Output</span>
+                                <span className="font-bold text-[#DD3035]">32</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-[#647288]">Rework</span>
+                                <span className="font-bold text-[#111111]">18</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Top Products */}
+                    <div className="bg-white border border-[#E5EAF1] rounded-xl p-3 shadow-xs flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xs font-bold text-[#111111]">Top Products</h2>
+                            <button className="flex items-center gap-1 text-[10.5px] text-[#111111] border border-[#E5EAF1] px-1.5 py-0.5 rounded-md bg-white">
+                                <span>By Output</span>
+                                <ChevronDown className="w-3 h-3" />
+                            </button>
+                        </div>
+
+                        <div className="flex flex-col gap-2 text-[11px]">
+                            {[
+                                { name: 'Aluminum Frame', val: 562, progress: 85 },
+                                { name: 'Control Panel Box', val: 438, progress: 70 },
+                                { name: 'Metal Enclosure', val: 386, progress: 60 },
+                                { name: 'Cooling Unit Housing', val: 312, progress: 50 },
+                                { name: 'Drive Module Housing', val: 298, progress: 45 },
+                            ].map((prod, idx) => (
+                                <div key={idx} className="flex items-center justify-between gap-2">
+                                    <span className="text-[#111111] font-medium truncate flex-1">{prod.name}</span>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        <div className="w-10 h-1.5 bg-[#F5F7FA] rounded-full overflow-hidden">
+                                            <div className="h-full bg-[#01B8BD] rounded-full" style={{ width: `${prod.progress}%` }} />
+                                        </div>
+                                        <span className="font-bold text-[#111111] w-7 text-right">{prod.val}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
 
-            {/* Hanger: Recent Batches Table */}
-            {isHangerTenant && (
-                <SectionCard>
-                    <div className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                        <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                            <Boxes className="h-5 w-5 text-purple-500" /> Recent Hanger Batches
-                        </h3>
-                        <button onClick={() => navigate('/production-dashboard/hanger/batches')}
-                            className="text-indigo-600 hover:text-indigo-700 text-sm font-semibold flex items-center gap-1">
-                            View All <ArrowRight className="h-4 w-4" />
-                        </button>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-[10px] font-semibold uppercase tracking-wider">
-                                <tr>
-                                    <th className="px-6 py-3">Batch No</th>
-                                    <th className="px-6 py-3">Hanger Type</th>
-                                    <th className="px-6 py-3">Stage</th>
-                                    <th className="px-6 py-3">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {(data?.recentBatches || []).map(batch => (
-                                    <tr key={batch.id}
-                                        onClick={() => navigate(`/production-dashboard/hanger/batches/${batch.id}`)}
-                                        className="hover:bg-purple-50/50 dark:hover:bg-slate-800/30 cursor-pointer transition-colors">
-                                        <td className="px-6 py-4 font-medium text-purple-600">#{batch.batchNo}</td>
-                                        <td className="px-6 py-4 text-slate-600">{batch.hangerTypeName}</td>
-                                        <td className="px-6 py-4">
-                                            <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">{batch.stage}</span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${batch.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : batch.status === 'In Progress' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
-                                                {batch.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {(!data?.recentBatches || data.recentBatches.length === 0) && (
-                                    <tr><td colSpan="4" className="px-6 py-10 text-center text-slate-400 italic text-sm">No recent batches.</td></tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </SectionCard>
-            )}
         </div>
     );
 };
 
 export default ProductionDashboard;
+

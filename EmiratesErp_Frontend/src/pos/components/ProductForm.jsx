@@ -140,6 +140,10 @@ const ProductForm = ({ product, onSave, onCancel, isSubmitting, onGenerateBarcod
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (/^\d+$/.test(formData.name?.trim() || '')) {
+            toast.error("Product Name cannot be numeric-only.");
+            return;
+        }
         const submitProduct = async () => {
             const uploadedVariants = await Promise.all(
                 (formData.variants || []).map(async (variant) => {

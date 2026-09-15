@@ -27,6 +27,9 @@ public class InvoiceDto {
     private Long amountDueCents;
 
     private String paymentStatus;
+    private String orderType;
+    private String cashierName;
+    private String paymentMethod;
 
     @Data
     @Builder

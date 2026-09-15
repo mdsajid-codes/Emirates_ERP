@@ -18,6 +18,7 @@ const CrmContactForm = ({ item, onSave, onCancel, loading }) => {
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', email: '', phone: '', leadId: ''
     });
+    const [fieldErrors, setFieldErrors] = useState({});
 
     useEffect(() => {
         if (item) {
@@ -31,8 +32,54 @@ const CrmContactForm = ({ item, onSave, onCancel, loading }) => {
         }
     }, [item]);
 
+    const validateField = (name, value) => {
+        let err = '';
+        if (name === 'firstName') {
+            if (!value?.trim()) err = 'First Name is required.';
+            else if (/^\d+$/.test(value.trim())) err = 'First Name cannot be numeric-only.';
+        }
+        if (name === 'lastName') {
+            if (!value?.trim()) err = 'Last Name is required.';
+            else if (/^\d+$/.test(value.trim())) err = 'Last Name cannot be numeric-only.';
+        }
+        if (name === 'email' && value?.trim()) {
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
+                err = 'Please enter a valid email address.';
+            }
+        }
+        if (name === 'phone' && value?.trim()) {
+            if (/[a-zA-Z]/.test(value)) {
+                err = 'Phone number cannot contain letters.';
+            } else if (!/^[0-9+\-\s()]{7,20}$/.test(value.trim())) {
+                err = 'Please enter a valid phone number (digits only, 7-20 chars).';
+            }
+        }
+
+        setFieldErrors(prev => {
+            const next = { ...prev };
+            if (err) next[name] = err;
+            else delete next[name];
+            return next;
+        });
+
+        return err;
+    };
+
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+        validateField(name, value);
+    };
+
+    const handleFormSubmit = (e) => {
+        if (e) e.preventDefault();
+        const errors = [];
+        ['firstName', 'lastName', 'email', 'phone'].forEach(field => {
+            const err = validateField(field, formData[field]);
+            if (err) errors.push(err);
+        });
+        if (errors.length > 0) return;
+        onSave({ ...formData, id: item?.id });
     };
 
     return (
@@ -51,24 +98,28 @@ const CrmContactForm = ({ item, onSave, onCancel, loading }) => {
                 </button>
             </div>
             
-            <form className="p-6 flex-grow overflow-y-auto space-y-5" onSubmit={(e) => { e.preventDefault(); onSave({ ...formData, id: item?.id }); }}>
+            <form className="p-6 flex-grow overflow-y-auto space-y-5" onSubmit={handleFormSubmit}>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-foreground-muted uppercase tracking-widest ml-1">First Name</label>
-                        <input name="firstName" value={formData.firstName} onChange={handleChange} required className="w-full px-4 py-2.5 bg-background border border-border rounded-theme outline-none focus:ring-2 focus:ring-primary/20 font-bold text-sm" />
+                        <label className="text-[10px] font-black text-foreground-muted uppercase tracking-widest ml-1">First Name *</label>
+                        <input name="firstName" value={formData.firstName} onChange={handleChange} required className={`w-full px-4 py-2.5 bg-background border ${fieldErrors.firstName ? 'border-red-500 ring-1 ring-red-500' : 'border-border'} rounded-theme outline-none focus:ring-2 focus:ring-primary/20 font-bold text-sm`} />
+                        {fieldErrors.firstName && <p className="text-[10px] text-red-500 font-medium">{fieldErrors.firstName}</p>}
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-foreground-muted uppercase tracking-widest ml-1">Last Name</label>
-                        <input name="lastName" value={formData.lastName} onChange={handleChange} required className="w-full px-4 py-2.5 bg-background border border-border rounded-theme outline-none focus:ring-2 focus:ring-primary/20 font-bold text-sm" />
+                        <label className="text-[10px] font-black text-foreground-muted uppercase tracking-widest ml-1">Last Name *</label>
+                        <input name="lastName" value={formData.lastName} onChange={handleChange} required className={`w-full px-4 py-2.5 bg-background border ${fieldErrors.lastName ? 'border-red-500 ring-1 ring-red-500' : 'border-border'} rounded-theme outline-none focus:ring-2 focus:ring-primary/20 font-bold text-sm`} />
+                        {fieldErrors.lastName && <p className="text-[10px] text-red-500 font-medium">{fieldErrors.lastName}</p>}
                     </div>
                 </div>
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-foreground-muted uppercase tracking-widest ml-1">Email Address</label>
-                    <input name="email" type="email" value={formData.email} onChange={handleChange} className="w-full px-4 py-2.5 bg-background border border-border rounded-theme outline-none focus:ring-2 focus:ring-primary/20 font-bold text-sm" />
+                    <input name="email" type="email" value={formData.email} onChange={handleChange} className={`w-full px-4 py-2.5 bg-background border ${fieldErrors.email ? 'border-red-500 ring-1 ring-red-500' : 'border-border'} rounded-theme outline-none focus:ring-2 focus:ring-primary/20 font-bold text-sm`} />
+                    {fieldErrors.email && <p className="text-[10px] text-red-500 font-medium">{fieldErrors.email}</p>}
                 </div>
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-foreground-muted uppercase tracking-widest ml-1">Phone Number</label>
-                    <input name="phone" value={formData.phone} onChange={handleChange} className="w-full px-4 py-2.5 bg-background border border-border rounded-theme outline-none focus:ring-2 focus:ring-primary/20 font-bold text-sm" />
+                    <input name="phone" value={formData.phone} onChange={handleChange} className={`w-full px-4 py-2.5 bg-background border ${fieldErrors.phone ? 'border-red-500 ring-1 ring-red-500' : 'border-border'} rounded-theme outline-none focus:ring-2 focus:ring-primary/20 font-bold text-sm`} />
+                    {fieldErrors.phone && <p className="text-[10px] text-red-500 font-medium">{fieldErrors.phone}</p>}
                 </div>
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-foreground-muted uppercase tracking-widest ml-1">Associate Lead ID</label>
@@ -79,7 +130,7 @@ const CrmContactForm = ({ item, onSave, onCancel, loading }) => {
             <div className="p-5 bg-background-muted/30 border-t border-border flex justify-end gap-3">
                 <button onClick={onCancel} className="px-5 py-2.5 rounded-theme text-[10px] font-black uppercase tracking-widest text-foreground-muted hover:bg-background-muted transition-all">Cancel</button>
                 <button 
-                    onClick={() => onSave({ ...formData, id: item?.id })} 
+                    onClick={handleFormSubmit} 
                     className="px-6 py-2.5 bg-primary text-primary-foreground rounded-theme text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:bg-primary/90 transition-all flex items-center gap-2"
                     disabled={loading}
                 >
@@ -161,9 +212,11 @@ const CrmContacts = () => {
         setLoading(true);
         setError(null);
         try {
-            const params = { page: currentPage, size: pageSize, sort: 'firstName,asc' };
+            const params = { page: currentPage, size: pageSize, sort: 'id,desc' };
             const response = await axios.get(`${API_URL}/contacts`, { params, headers: authHeaders });
-            setContacts(response.data.content || []);
+            const raw = response.data.content || response.data || [];
+            const sorted = Array.isArray(raw) ? [...raw].sort((a, b) => (b.id || 0) - (a.id || 0)) : [];
+            setContacts(sorted);
             setTotalPages(response.data.totalPages || 0);
         } catch (err) {
             setError('Failed to fetch contact directory.');

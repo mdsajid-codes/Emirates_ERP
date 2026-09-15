@@ -956,24 +956,25 @@ import EmailsTab from '../components/EmailsTab'; // Import the new email tab
 import AttachmentsTab from '../components/AttachmentsTab';
 import { useCrmPermissions } from '../context/CrmPermissionsContext';
 const API_URL = import.meta.env.VITE_API_BASE_URL;
-const InfoDisplay = ({ label, value, icon: Icon, colorClass = "text-primary bg-primary/10" }) => (
-    <div className="flex items-center gap-4 p-4 bg-card border border-border rounded-theme shadow-sm hover:border-primary/30 hover:shadow-md transition-all group">
-        <div className={`p-3 rounded-full ${colorClass} group-hover:scale-110 transition-transform`}>
-            {Icon && <Icon className="h-5 w-5" />}
+
+const InfoDisplay = ({ label, value, icon: Icon, colorClass = "text-[#00A3A6] bg-[#00A3A6]/10" }) => (
+    <div className="flex items-center gap-3 p-3 bg-white border border-[#E2EAF1] rounded-lg shadow-2xs hover:border-[#00A3A6]/30 transition-all group">
+        <div className={`p-2 rounded-md ${colorClass} group-hover:scale-105 transition-transform`}>
+            {Icon && <Icon className="h-4 w-4" />}
         </div>
         <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold text-foreground-muted uppercase tracking-widest mb-1">{label}</p>
-            <p className="text-sm font-bold text-foreground truncate break-words">
-                {value || <span className="text-foreground-muted/40 italic font-medium">Not Specified</span>}
+            <p className="text-[10px] font-bold text-[#60738A] uppercase tracking-wider mb-0.5">{label}</p>
+            <p className="text-xs font-bold text-[#0F2342] truncate break-words">
+                {value || <span className="text-[#60738A]/50 italic font-normal">Not Specified</span>}
             </p>
         </div>
     </div>
 );
 
 const Section = ({ title, children }) => (
-    <div className="p-4 border border-border rounded-lg bg-background-muted">
-        <h4 className="font-semibold mb-4 text-foreground-muted">{title}</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="p-3 border border-[#E2EAF1] rounded-lg bg-white">
+        <h4 className="font-bold text-xs mb-3 text-[#60738A] uppercase tracking-wider">{title}</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {children}
         </div>
     </div>
@@ -982,99 +983,100 @@ const Section = ({ title, children }) => (
 const ContentTab = ({ icon: Icon, label, isActive, onClick }) => (
     <button
         onClick={onClick}
-        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${isActive
-                ? 'border-primary text-primary'
-                : 'border-transparent text-foreground-muted hover:text-foreground'
+        className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold transition-colors border-b-2 -mb-px ${isActive
+                ? 'border-[#00A3A6] text-[#00A3A6]'
+                : 'border-transparent text-[#60738A] hover:text-[#0F2342]'
             }`}
     >
-        <Icon className="h-5 w-5" />
+        <Icon className="h-4 w-4" />
         <span>{label}</span>
     </button>
 );
+
 const MetricCard = ({ icon: Icon, label, value, colorClass }) => (
-    <div className="bg-card border border-border p-5 rounded-theme shadow-sm hover:shadow-md transition-all group">
-        <div className="flex items-center justify-between mb-3">
-            <div className={`p-2 rounded-lg ${colorClass} group-hover:scale-110 transition-transform`}>
-                <Icon size={18} />
+    <div className="bg-white border border-[#E2EAF1] p-3.5 rounded-lg shadow-2xs hover:shadow-xs transition-all group">
+        <div className="flex items-center justify-between mb-2">
+            <div className={`p-1.5 rounded-md ${colorClass} group-hover:scale-105 transition-transform`}>
+                <Icon size={16} />
             </div>
-            <span className="text-[10px] font-bold text-foreground-muted uppercase tracking-[0.2em]">Live Data</span>
+            <span className="text-[9px] font-bold text-[#60738A] uppercase tracking-wider">Live Data</span>
         </div>
-        <p className="text-[10px] font-bold text-foreground-muted uppercase tracking-widest mb-1">{label}</p>
-        <h4 className="text-2xl font-bold text-foreground">{value}</h4>
+        <p className="text-[10px] font-bold text-[#60738A] uppercase tracking-wider mb-0.5">{label}</p>
+        <h4 className="text-xl font-black text-[#0F2342]">{value}</h4>
     </div>
 );
 
 const ActivityFeed = ({ lead, stages, tasks = [], events = [], calls = [] }) => {
     const currentStageIndex = stages.findIndex(s => s.name === lead.currentStageName);
-    const progress = ((currentStageIndex + 1) / stages.length) * 100;
+    const progress = Math.max(0, Math.min(100, ((currentStageIndex + 1) / (stages.length || 1)) * 100));
 
     return (
-        <div className="p-8 space-y-8 animate-in fade-in duration-700">
+        <div className="p-4 space-y-4 animate-in fade-in duration-300">
             {/* Strategic Intelligence Header */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-card border border-border p-8 rounded-theme shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-2 h-full bg-primary"></div>
-                    <div className="flex items-center justify-between mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2 bg-white border border-[#E2EAF1] p-4 rounded-lg shadow-2xs relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-[#00A3A6]"></div>
+                    <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h3 className="text-xl font-bold text-foreground uppercase tracking-tight">Current Standing</h3>
-                            <p className="text-[10px] text-foreground-muted font-bold uppercase tracking-widest opacity-60">Lead Progression Analysis</p>
+                            <h3 className="text-base font-extrabold text-[#0F2342] uppercase tracking-tight">Current Standing</h3>
+                            <p className="text-[10px] text-[#60738A] font-bold uppercase tracking-wider">Lead Progression Analysis</p>
                         </div>
                         <div className="text-right">
-                            <span className="text-sm font-bold text-primary bg-primary/10 px-4 py-1.5 rounded-full uppercase tracking-widest">
+                            <span className="text-xs font-bold text-[#00A3A6] bg-[#00A3A6]/10 px-3 py-1 rounded-full uppercase tracking-wider">
                                 {lead.currentStageName || 'Initial Stage'}
                             </span>
                         </div>
                     </div>
                     
-                    <div className="space-y-4">
-                        <div className="flex justify-between text-[10px] font-bold text-foreground-muted uppercase tracking-widest">
+                    <div className="space-y-3">
+                        <div className="flex justify-between text-[10px] font-bold text-[#60738A] uppercase tracking-wider">
                             <span>Pipeline Maturity</span>
                             <span>{Math.round(progress)}% Complete</span>
                         </div>
-                        <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
                             <motion.div 
                                 initial={{ width: 0 }}
                                 animate={{ width: `${progress}%` }}
-                                transition={{ duration: 1, ease: "easeOut" }}
-                                className="h-full bg-primary shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.5)]"
+                                transition={{ duration: 0.8, ease: "easeOut" }}
+                                className="h-full bg-[#00A3A6]"
                             />
                         </div>
-                        <div className="flex justify-between pt-2">
+                        <div className="flex justify-between pt-1">
                             {stages.slice(0, 5).map((s, i) => (
-                                <div key={s.id} className={`flex flex-col items-center gap-1 ${i <= currentStageIndex ? 'opacity-100' : 'opacity-30'}`}>
-                                    <div className={`w-2 h-2 rounded-full ${i <= currentStageIndex ? 'bg-primary' : 'bg-slate-300'}`}></div>
-                                    <span className="text-[8px] font-bold uppercase tracking-tighter">{s.name}</span>
+                                <div key={s.id} className={`flex flex-col items-center gap-1 ${i <= currentStageIndex ? 'opacity-100' : 'opacity-40'}`}>
+                                    <div className={`w-2 h-2 rounded-full ${i <= currentStageIndex ? 'bg-[#00A3A6]' : 'bg-slate-300'}`}></div>
+                                    <span className="text-[8px] font-bold uppercase tracking-tighter text-[#60738A]">{s.name}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-card border border-border p-8 rounded-theme shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <Activity size={80} />
+                <div className="bg-white border border-[#E2EAF1] p-4 rounded-lg shadow-2xs relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-3 opacity-10">
+                        <Activity size={60} />
                     </div>
-                    <h3 className="text-lg font-bold text-foreground uppercase tracking-tight mb-6">Strategic Snapshot</h3>
-                    <div className="space-y-5">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded bg-blue-500/10 text-blue-500"><Building size={14} /></div>
+                    <h3 className="text-sm font-extrabold text-[#0F2342] uppercase tracking-tight mb-4">Strategic Snapshot</h3>
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2.5">
+                            <div className="p-1.5 rounded bg-blue-500/10 text-blue-500"><Building size={14} /></div>
                             <div>
-                                <p className="text-[9px] font-bold text-foreground-muted uppercase tracking-widest">Corporate Entity</p>
-                                <p className="text-xs font-bold text-foreground">{lead.companyName || 'Private Lead'}</p>
+                                <p className="text-[9px] font-bold text-[#60738A] uppercase tracking-wider">Corporate Entity</p>
+                                <p className="text-xs font-bold text-[#0F2342]">{lead.companyName || 'Private Lead'}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded bg-purple-500/10 text-purple-500"><User size={14} /></div>
+                        <div className="flex items-center gap-2.5">
+                            <div className="p-1.5 rounded bg-purple-500/10 text-purple-500"><User size={14} /></div>
                             <div>
-                                <p className="text-[9px] font-bold text-foreground-muted uppercase tracking-widest">Protocol Owner</p>
-                                <p className="text-xs font-bold text-foreground">{lead.ownerName || 'Unassigned'}</p>
+                                <p className="text-[9px] font-bold text-[#60738A] uppercase tracking-wider">Protocol Owner</p>
+                                <p className="text-xs font-bold text-[#0F2342]">{lead.ownerName || 'Unassigned'}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded bg-orange-500/10 text-orange-500"><Tag size={14} /></div>
+                        <div className="flex items-center gap-2.5">
+                            <div className="p-1.5 rounded bg-orange-500/10 text-orange-500"><Tag size={14} /></div>
                             <div>
-                                <p className="text-[9px] font-bold text-foreground-muted uppercase tracking-widest">Engagement Status</p>
-                                <p className="text-xs font-bold text-foreground">{lead.status}</p>
+                                <p className="text-[9px] font-bold text-[#60738A] uppercase tracking-wider">Engagement Status</p>
+                                <p className="text-xs font-bold text-[#0F2342]">{lead.status}</p>
                             </div>
                         </div>
                     </div>
@@ -1083,43 +1085,43 @@ const ActivityFeed = ({ lead, stages, tasks = [], events = [], calls = [] }) => 
 
             {/* Operational Health Grid */}
             <div>
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="h-6 w-1 bg-accent rounded-full"></div>
-                    <h3 className="text-lg font-bold text-foreground uppercase tracking-tight">Operational Health</h3>
+                <div className="flex items-center gap-2 mb-3">
+                    <div className="h-4 w-1 bg-[#00A3A6] rounded-full"></div>
+                    <h3 className="text-sm font-extrabold text-[#0F2342] uppercase tracking-tight">Operational Health</h3>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <MetricCard icon={CheckSquare} label="Pending Tasks" value={tasks.filter(t => t.status !== 'COMPLETED').length} colorClass="text-primary bg-primary/10" />
-                    <MetricCard icon={Calendar} label="Scheduled Events" value={events.length} colorClass="text-accent bg-accent/10" />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <MetricCard icon={CheckSquare} label="Pending Tasks" value={tasks.filter(t => t.status !== 'COMPLETED').length} colorClass="text-[#00A3A6] bg-[#00A3A6]/10" />
+                    <MetricCard icon={Calendar} label="Scheduled Events" value={events.length} colorClass="text-amber-600 bg-amber-500/10" />
                     <MetricCard icon={Phone} label="Call Interactions" value={calls.length} colorClass="text-blue-500 bg-blue-500/10" />
                     <MetricCard icon={Mail} label="Digital Outreach" value="0" colorClass="text-indigo-500 bg-indigo-500/10" />
                 </div>
             </div>
 
             {/* Recent Engagement Intelligence */}
-            <div className="bg-slate-50/50 border border-border p-8 rounded-theme">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="h-6 w-1 bg-success rounded-full"></div>
-                    <h3 className="text-lg font-bold text-foreground uppercase tracking-tight">Recent Intelligence</h3>
+            <div className="bg-white border border-[#E2EAF1] p-4 rounded-lg shadow-2xs">
+                <div className="flex items-center gap-2 mb-3">
+                    <div className="h-4 w-1 bg-[#10B981] rounded-full"></div>
+                    <h3 className="text-sm font-extrabold text-[#0F2342] uppercase tracking-tight">Recent Intelligence</h3>
                 </div>
                 {tasks.length > 0 || events.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                         {tasks.slice(0, 2).map(task => (
-                            <div key={task.id} className="flex items-center gap-4 p-4 bg-white border border-border rounded-theme shadow-sm">
-                                <div className="p-2 rounded bg-primary/10 text-primary"><CheckSquare size={16} /></div>
+                            <div key={task.id} className="flex items-center gap-3 p-3 bg-[#F8FAFC] border border-[#E8EEF7] rounded-lg">
+                                <div className="p-1.5 rounded bg-[#00A3A6]/10 text-[#00A3A6]"><CheckSquare size={14} /></div>
                                 <div className="flex-1">
-                                    <p className="text-xs font-bold text-foreground uppercase tracking-tight">{task.subject}</p>
-                                    <p className="text-[10px] text-foreground-muted font-bold uppercase tracking-widest opacity-60">Due: {task.dueDate}</p>
+                                    <p className="text-xs font-bold text-[#0F2342] uppercase tracking-tight">{task.subject}</p>
+                                    <p className="text-[10px] text-[#60738A] font-medium">Due: {task.dueDate}</p>
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-[9px] font-bold text-primary bg-primary/10 px-3 py-1 rounded-full uppercase tracking-widest">{task.status}</span>
+                                    <span className="text-[9px] font-bold text-[#00A3A6] bg-[#00A3A6]/10 px-2.5 py-0.5 rounded-full uppercase tracking-wider">{task.status}</span>
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-10 opacity-40">
-                        <Activity size={30} className="mx-auto mb-2" />
-                        <p className="text-xs font-bold uppercase tracking-widest text-foreground-muted">No Recent Activity Detected</p>
+                    <div className="text-center py-6 opacity-50">
+                        <Activity size={24} className="mx-auto mb-1.5 text-[#60738A]" />
+                        <p className="text-xs font-bold uppercase tracking-wider text-[#60738A]">No Recent Activity Detected</p>
                     </div>
                 )}
             </div>
@@ -1152,7 +1154,10 @@ const LeadStages = ({ allStages, currentStageName, onStatusChange, onStageChange
     };
 
     const handleLost = () => onStatusChange('LOST');
-    const handleCompleted = () => onStatusChange('ACTIVE');
+    const handleCompleted = () => {
+        onStatusChange('CONVERTED');
+        navigate('/crm-dashboard/leads/all?status=CONVERTED');
+    };
 
     const handleCreateQuotation = () => {
         navigate('/sales/quotations/new', { state: { lead } });
@@ -1163,85 +1168,83 @@ const LeadStages = ({ allStages, currentStageName, onStatusChange, onStageChange
     };
 
     return (
-        <div className="p-8 bg-card rounded-theme shadow-sm border border-border space-y-10">
+        <div className="p-4 bg-white rounded-lg shadow-2xs border border-[#E2EAF1] space-y-6">
             <div>
-                <div className="flex items-center gap-3 mb-8">
-                    <div className="h-6 w-1 bg-primary rounded-full"></div>
-                    <h3 className="text-lg font-bold text-foreground uppercase tracking-tight">Lead Progression Matrix</h3>
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="h-4 w-1 bg-[#00A3A6] rounded-full"></div>
+                    <h3 className="text-sm font-extrabold text-[#0F2342] uppercase tracking-tight">Lead Progression Matrix</h3>
                 </div>
                 
-                <div className="flex items-center justify-between w-full px-4">
-                    {sortedStages.map((stage, index) => {
-                        const isStageCompleted = stage.isCompleted;
-                        const isActive = index === currentStageIndex;
-                        return (
-                            <React.Fragment key={stage.id}>
-                                <div className="flex flex-col items-center text-center relative group">
-                                    <div className={`h-12 w-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 shadow-sm
-                                        ${isActive ? 'bg-primary border-primary text-primary-foreground scale-110 shadow-lg shadow-primary/20' : 
-                                          isStageCompleted ? 'bg-success border-success text-white shadow-lg shadow-success/10' : 
-                                          'bg-background border-border text-foreground-muted opacity-60'}
-                                    `}>
-                                        {isStageCompleted ? <CheckCircle className="h-6 w-6" /> : <span className="text-sm font-bold">{index + 1}</span>}
+                <div className="overflow-x-auto custom-scrollbar pb-2">
+                    <div className="flex items-start justify-between min-w-[750px] px-2">
+                        {sortedStages.map((stage, index) => {
+                            const isStageCompleted = stage.isCompleted;
+                            const isActive = index === currentStageIndex;
+                            return (
+                                <React.Fragment key={stage.id}>
+                                    <div className="flex flex-col items-center text-center w-28 shrink-0">
+                                        <div className={`h-8 w-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 shadow-2xs shrink-0
+                                            ${isActive ? 'bg-[#00A3A6] border-[#00A3A6] text-white scale-105 shadow-md shadow-[#00A3A6]/20' : 
+                                              isStageCompleted ? 'bg-[#10B981] border-[#10B981] text-white' : 
+                                              'bg-white border-[#C9D8E5] text-[#60738A] opacity-60'}
+                                        `}>
+                                            {isStageCompleted ? <CheckCircle className="h-4 w-4" /> : <span className="text-xs font-bold">{index + 1}</span>}
+                                        </div>
+                                        <p className={`mt-2 text-[10px] font-bold uppercase tracking-wider leading-tight text-center break-words max-w-[110px]
+                                            ${isActive ? 'text-[#00A3A6]' : isStageCompleted ? 'text-[#10B981]' : 'text-[#60738A]'}
+                                        `}>
+                                            {stage.name}
+                                        </p>
                                     </div>
-                                    <p className={`mt-3 text-[11px] font-bold uppercase tracking-wider absolute -bottom-8 whitespace-nowrap
-                                        ${isActive ? 'text-primary' : isStageCompleted ? 'text-success' : 'text-foreground-muted'}
-                                    `}>
-                                        {stage.name}
-                                    </p>
-                                </div>
-                                {index < sortedStages.length - 1 && (
-                                    <div className="flex-1 h-1 mx-4 relative overflow-hidden bg-border rounded-full">
-                                        <motion.div 
-                                            initial={{ width: 0 }}
-                                            animate={{ width: isStageCompleted ? '100%' : '0%' }}
-                                            className={`h-full ${isStageCompleted ? 'bg-success' : 'bg-primary/20'}`}
-                                        />
-                                    </div>
-                                )}
-                            </React.Fragment>
-                        );
-                    })}
+                                    {index < sortedStages.length - 1 && (
+                                        <div className="flex-1 h-0.5 mx-1 mt-4 relative overflow-hidden bg-[#E2EAF1] rounded-full shrink-0">
+                                            <motion.div 
+                                                initial={{ width: 0 }}
+                                                animate={{ width: isStageCompleted ? '100%' : '0%' }}
+                                                className={`h-full ${isStageCompleted ? 'bg-[#10B981]' : 'bg-[#00A3A6]/20'}`}
+                                            />
+                                        </div>
+                                    )}
+                                </React.Fragment>
+                            );
+                        })}
+                    </div>
                 </div>
-                <div className="h-10"></div> {/* Spacer for absolute labels */}
             </div>
 
             {hasPermission && hasPermission('LEAD', 'update') && (
-                <div className="pt-8 border-t border-border">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="h-6 w-1 bg-accent rounded-full"></div>
-                        <h3 className="text-lg font-bold text-foreground uppercase tracking-tight">Strategic Actions</h3>
+                <div className="pt-4 border-t border-[#E2EAF1]">
+                    <div className="flex items-center gap-2 mb-3">
+                        <div className="h-4 w-1 bg-amber-500 rounded-full"></div>
+                        <h3 className="text-sm font-extrabold text-[#0F2342] uppercase tracking-tight">Strategic Actions</h3>
                     </div>
                     
-                    <div className="flex flex-col md:flex-row items-start md:items-center gap-6 bg-slate-50/50 p-6 rounded-theme border border-border/50">
-                        <label className="flex items-center gap-3 cursor-pointer text-sm font-bold text-foreground-muted uppercase tracking-widest group">
-                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${notResponding ? 'bg-primary border-primary' : 'border-border group-hover:border-primary/50'}`}>
-                                {notResponding && <CheckCircle size={14} className="text-white" />}
-                            </div>
-                            <input type="checkbox" checked={notResponding} onChange={(e) => setNotResponding(e.target.checked)} className="hidden" />
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-[#F8FAFC] p-3.5 rounded-lg border border-[#E8EEF7]">
+                        <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#60738A] uppercase tracking-wider group">
+                            <input type="checkbox" checked={notResponding} onChange={(e) => setNotResponding(e.target.checked)} className="rounded border-slate-300 text-[#00A3A6] focus:ring-[#00A3A6]" />
                             Mark as "Not Responding"
                         </label>
-                        <div className="flex flex-wrap items-center gap-3 flex-1 justify-end">
+                        <div className="flex flex-wrap items-center gap-2 flex-1 justify-end">
                             {currentStage?.moveTo === 'Quotation' && (
-                                <button onClick={handleCreateQuotation} className="bg-purple-600 text-white px-6 py-2.5 rounded-theme font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-purple-500/20 hover:scale-105 transition-all">
+                                <button onClick={handleCreateQuotation} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all">
                                     Create Quotation <ArrowRight size={14} />
                                 </button>
                             )}
                             {currentStage?.moveTo === 'Sale Order' && (
-                                <button onClick={handleCreateSaleOrder} className="bg-orange-600 text-white px-6 py-2.5 rounded-theme font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-orange-500/20 hover:scale-105 transition-all">
+                                <button onClick={handleCreateSaleOrder} className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all">
                                     Create Sale Order <ArrowRight size={14} />
                                 </button>
                             )}
-                            <button onClick={handleBack} disabled={currentStageIndex <= 0} className="px-6 py-2.5 bg-white border border-border text-foreground-muted rounded-theme font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-50 disabled:opacity-30 transition-all">
+                            <button onClick={handleBack} disabled={currentStageIndex <= 0} className="px-3.5 py-1.5 bg-white border border-[#C9D8E5] text-[#60738A] rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-1 hover:bg-slate-50 disabled:opacity-40 transition-all">
                                 <ArrowLeftCircle size={14} /> Back
                             </button>
-                            <button onClick={handleNext} className="bg-primary text-primary-foreground px-8 py-2.5 rounded-theme font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-xl shadow-primary/25 hover:scale-105 transition-all">
+                            <button onClick={handleNext} className="bg-[#00A3A6] hover:bg-[#008286] text-white px-4 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all">
                                 Next Stage <ArrowRight size={14} />
                             </button>
-                            <button onClick={handleLost} className="bg-error text-white px-6 py-2.5 rounded-theme font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-error/20 hover:scale-105 transition-all">
+                            <button onClick={handleLost} className="bg-red-600 hover:bg-red-700 text-white px-3.5 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-1 transition-all">
                                 <XCircle size={14} /> Lost Deal
                             </button>
-                            <button onClick={handleCompleted} className="bg-success text-white px-6 py-2.5 rounded-theme font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-success/20 hover:scale-105 transition-all">
+                            <button onClick={handleCompleted} className="bg-[#10B981] hover:bg-[#059669] text-white px-3.5 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-1 transition-all">
                                 <CheckCircle size={14} /> Convert Lead
                             </button>
                         </div>
@@ -1267,30 +1270,24 @@ const ActionGrid = ({ onNewTaskClick, onNewEventClick, onLogCallClick, onEmailCl
         actions.push({ label: 'Email', icon: Mail, onClick: onEmailClick });
     }
 
-    // Handle case where onClick might be undefined
-    const handleActionClick = (action) => {
-        if (action.onClick) action.onClick();
-        else alert(`${action.label} functionality not implemented yet.`);
-    };
-
     return (
-        <div className="p-8 border-t border-border bg-slate-50/30">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="h-6 w-1 bg-success rounded-full"></div>
-                <h3 className="text-lg font-bold text-foreground uppercase tracking-tight">Quick Operational Actions</h3>
+        <div className="p-4 border-t border-[#E2EAF1] bg-[#F8FAFC]">
+            <div className="flex items-center gap-2 mb-3">
+                <div className="h-4 w-1 bg-[#10B981] rounded-full"></div>
+                <h3 className="text-sm font-extrabold text-[#0F2342] uppercase tracking-tight">Quick Operational Actions</h3>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {actions.map(action => (
                     <button 
                         key={action.label} 
                         onClick={action.onClick} 
-                        className="flex flex-col items-center justify-center p-6 bg-card border border-border rounded-theme hover:bg-slate-50 hover:border-primary/30 hover:shadow-lg transition-all gap-4 group"
+                        className="flex flex-col items-center justify-center p-4 bg-white border border-[#E8EEF7] rounded-lg hover:border-[#00A3A6]/40 hover:shadow-sm transition-all gap-2.5 group cursor-pointer"
                     >
-                        <div className="p-3 rounded-full bg-primary/10 text-primary group-hover:scale-110 transition-transform">
-                            <action.icon className="h-6 w-6" />
+                        <div className="p-2 rounded-md bg-[#00A3A6]/10 text-[#00A3A6] group-hover:scale-105 transition-transform">
+                            <action.icon className="h-5 w-5" />
                         </div>
-                        <span className="text-xs font-bold text-foreground uppercase tracking-widest">{action.label}</span>
+                        <span className="text-xs font-bold text-[#0F2342] uppercase tracking-wider">{action.label}</span>
                     </button>
                 ))}
             </div>
@@ -1299,13 +1296,13 @@ const ActionGrid = ({ onNewTaskClick, onNewEventClick, onLogCallClick, onEmailCl
 };
 
 const LeadDetailsGrid = ({ lead }) => (
-    <div className="p-8 space-y-10">
+    <div className="p-4 space-y-4">
         <div>
-            <div className="flex items-center gap-3 mb-6">
-                <div className="h-6 w-1 bg-primary rounded-full"></div>
-                <h3 className="text-lg font-bold text-foreground uppercase tracking-tight">Core Intelligence</h3>
+            <div className="flex items-center gap-2 mb-3">
+                <div className="h-4 w-1 bg-[#00A3A6] rounded-full"></div>
+                <h3 className="text-sm font-extrabold text-[#0F2342] uppercase tracking-tight">Core Intelligence</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <InfoDisplay icon={User} label="Full Name" value={`${lead.firstName} ${lead.lastName}`} colorClass="text-blue-500 bg-blue-500/10" />
                 <InfoDisplay icon={Tag} label="Status" value={lead.status} colorClass="text-emerald-500 bg-emerald-500/10" />
                 <InfoDisplay icon={User} label="Lead Owner" value={lead.ownerName} colorClass="text-purple-500 bg-purple-500/10" />
@@ -1313,11 +1310,11 @@ const LeadDetailsGrid = ({ lead }) => (
         </div>
 
         <div>
-            <div className="flex items-center gap-3 mb-6">
-                <div className="h-6 w-1 bg-accent rounded-full"></div>
-                <h3 className="text-lg font-bold text-foreground uppercase tracking-tight">Institutional Context</h3>
+            <div className="flex items-center gap-2 mb-3">
+                <div className="h-4 w-1 bg-amber-500 rounded-full"></div>
+                <h3 className="text-sm font-extrabold text-[#0F2342] uppercase tracking-tight">Institutional Context</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <InfoDisplay icon={Building} label="Company Name" value={lead.companyName} colorClass="text-orange-500 bg-orange-500/10" />
                 <InfoDisplay icon={Briefcase} label="Target Industry" value={lead.industryName} colorClass="text-indigo-500 bg-indigo-500/10" />
                 <InfoDisplay icon={Globe} label="Digital Presence" value={lead.website} colorClass="text-cyan-500 bg-cyan-500/10" />
@@ -1326,11 +1323,11 @@ const LeadDetailsGrid = ({ lead }) => (
         </div>
 
         <div>
-            <div className="flex items-center gap-3 mb-6">
-                <div className="h-6 w-1 bg-slate-400 rounded-full"></div>
-                <h3 className="text-lg font-bold text-foreground uppercase tracking-tight">Temporal Tracking</h3>
+            <div className="flex items-center gap-2 mb-3">
+                <div className="h-4 w-1 bg-slate-400 rounded-full"></div>
+                <h3 className="text-sm font-extrabold text-[#0F2342] uppercase tracking-tight">Temporal Tracking</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <InfoDisplay icon={Calendar} label="Capture Date" value={lead.createdAt ? new Date(lead.createdAt).toLocaleString() : null} colorClass="text-slate-500 bg-slate-500/10" />
                 <InfoDisplay icon={Activity} label="Last Modification" value={lead.updatedAt ? new Date(lead.updatedAt).toLocaleString() : null} colorClass="text-slate-500 bg-slate-500/10" />
             </div>
@@ -1360,6 +1357,7 @@ const LeadInfo = () => {
     const [tasks, setTasks] = useState([]);
     const [events, setEvents] = useState([]);
     const [calls, setCalls] = useState([]);
+    const [refreshCount, setRefreshCount] = useState(0);
 
     const fetchData = useCallback(async () => {
         if (!leadId) {
@@ -1455,8 +1453,8 @@ const LeadInfo = () => {
             const token = localStorage.getItem('token');
             await axios[method](url, taskData, { headers: { "Authorization": `Bearer ${token}` } });
             setIsTaskFormOpen(false);
-            // Optionally, force a refresh of the tasks tab if it's active
-            // For now, TasksTab refetches on its own when leadId changes, which is sufficient
+            setRefreshCount(prev => prev + 1);
+            await fetchData();
         } catch (err) {
             alert(`Error: ${err.response?.data?.message || 'Failed to save task.'}`);
         } finally {
@@ -1484,6 +1482,8 @@ const LeadInfo = () => {
             const token = localStorage.getItem('token');
             await axios[method](url, eventData, { headers: { "Authorization": `Bearer ${token}` } });
             setIsEventFormOpen(false);
+            setRefreshCount(prev => prev + 1);
+            await fetchData();
         } catch (err) {
             alert(`Error: ${err.response?.data?.message || 'Failed to save event.'}`);
         } finally {
@@ -1511,7 +1511,8 @@ const LeadInfo = () => {
             const token = localStorage.getItem('token');
             await axios[method](url, logData, { headers: { "Authorization": `Bearer ${token}` } });
             setIsCallLogFormOpen(false);
-            // The CallLogsTab will refetch data automatically when it's rendered again.
+            setRefreshCount(prev => prev + 1);
+            await fetchData();
         } catch (err) {
             alert(`Error: ${err.response?.data?.message || 'Failed to save call log.'}`);
         } finally {
@@ -1529,7 +1530,8 @@ const LeadInfo = () => {
             const token = localStorage.getItem('token');
             await axios.post(`${API_URL}/crm/emails/send`, emailData, { headers: { "Authorization": `Bearer ${token}` } });
             setIsEmailFormOpen(false);
-            // The EmailsTab will refetch its data automatically when it becomes active again.
+            setRefreshCount(prev => prev + 1);
+            await fetchData();
             alert("Email sent successfully!");
         } catch (err) {
             alert(`Error: ${err.response?.data?.message || 'Failed to send email. Check SMTP settings.'}`);
@@ -1553,44 +1555,45 @@ const LeadInfo = () => {
     const initials = `${lead.firstName ? lead.firstName.charAt(0) : ''}${lead.lastName ? lead.lastName.charAt(0) : ''}`;
 
     return (
-        <div className="bg-background text-foreground flex flex-col h-full">
+        <div className="bg-[#F4F7FA] text-[#0F2342] flex flex-col h-full">
             {/* Header */}
-            <header className={`bg-card text-card-foreground border-b border-border flex-shrink-0 transition-all duration-300 ${isHeaderExpanded ? 'h-auto' : 'h-24'}`}>
-                <div className="flex items-center justify-between p-4">
-                    <div className="flex items-center gap-4">                        <button onClick={() => navigate('/crm-dashboard/leads/all')} className="p-1.5 rounded-full hover:bg-background-muted">
-                        <ArrowLeft className="h-5 w-5 text-foreground" />
-                    </button>
-                        <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold text-lg">
+            <header className="bg-white text-[#0F2342] border-b border-[#E2EAF1] flex-shrink-0 transition-all duration-300">
+                <div className="flex items-center justify-between p-3 px-4">
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => navigate('/crm-dashboard/leads/all')} className="p-1 rounded-md hover:bg-slate-100 text-[#60738A] transition-colors cursor-pointer">
+                            <ArrowLeft className="h-4 w-4 text-[#0F2342]" />
+                        </button>
+                        <div className="flex items-center gap-2.5">
+                            <div className="h-8 w-8 rounded-full bg-[#00A3A6] flex items-center justify-center text-white font-bold text-sm shadow-2xs">
                                 {initials}
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-foreground">{lead.firstName} {lead.lastName}</h2>
-                                <p className="text-sm text-foreground-muted">Lead No: {lead.leadNo || 'N/A'}</p>
+                                <h2 className="text-sm font-extrabold text-[#0F2342] leading-tight">{lead.firstName} {lead.lastName}</h2>
+                                <p className="text-[11px] text-[#60738A] font-medium">Lead No: {lead.leadNo || 'N/A'}</p>
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="hidden md:flex flex-col text-sm text-right">
-                            <p className="text-foreground-muted">Phone: {lead.phone || 'N/A'}</p>
-                            <p className="text-foreground-muted">Email: {lead.email || 'N/A'}</p>
+                    <div className="flex items-center gap-2.5">
+                        <div className="hidden md:flex flex-col text-xs text-right">
+                            <p className="text-[#60738A] font-medium">Phone: <span className="text-[#0F2342] font-semibold">{lead.phone || 'N/A'}</span></p>
+                            <p className="text-[#60738A] font-medium">Email: <span className="text-[#0F2342] font-semibold">{lead.email || 'N/A'}</span></p>
                         </div>
-                        <button onClick={() => setIsFullDetailsModalOpen(true)} className="btn-secondary p-2" title="View All Details">
-                            <Users className="h-5 w-5" />
+                        <button onClick={() => setIsFullDetailsModalOpen(true)} className="p-1.5 rounded-lg border border-[#C9D8E5] text-[#60738A] hover:bg-slate-50 hover:text-[#00A3A6] transition-colors cursor-pointer" title="View All Details">
+                            <Users className="h-4 w-4" />
                         </button>
                         {hasPermission('LEAD', 'update') && (
-                            <button onClick={() => alert('Edit functionality to be implemented here.')} className="btn-secondary p-2" title="Edit Lead">
-                                <Edit className="h-5 w-5" />
+                            <button onClick={() => navigate(`/crm-dashboard/leads/edit/${leadId}`)} className="p-1.5 rounded-lg border border-[#C9D8E5] text-[#60738A] hover:bg-slate-50 hover:text-[#00A3A6] transition-colors cursor-pointer" title="Edit Lead">
+                                <Edit className="h-4 w-4" />
                             </button>
                         )}
-                        <button onClick={() => setIsHeaderExpanded(!isHeaderExpanded)} className="btn-secondary p-2" title={isHeaderExpanded ? 'Collapse Details' : 'Expand Details'}>
-                            {isHeaderExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                        <button onClick={() => setIsHeaderExpanded(!isHeaderExpanded)} className="p-1.5 rounded-lg border border-[#C9D8E5] text-[#60738A] hover:bg-slate-50 transition-colors cursor-pointer" title={isHeaderExpanded ? 'Collapse Details' : 'Expand Details'}>
+                            {isHeaderExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         </button>
                     </div>
                 </div>
 
                 {isHeaderExpanded && (
-                    <div className="p-4 pt-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                    <div className="p-3 pt-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs bg-[#F8FAFC] border-t border-[#E8EEF7]">
                         <InfoDisplay icon={Building} label="Company" value={lead.companyName} />
                         <InfoDisplay icon={Briefcase} label="Industry" value={lead.industryName} />
                         <InfoDisplay icon={Globe} label="Website" value={lead.website} />
@@ -1604,10 +1607,10 @@ const LeadInfo = () => {
                 )}
             </header>
 
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden bg-[#F4F7FA]">
                 {/* Tab Navigation */}
-                <div className="border-b border-border flex-shrink-0">
-                    <nav className="flex items-center space-x-2 px-4">
+                <div className="border-b border-[#E2EAF1] bg-white flex-shrink-0">
+                    <nav className="flex items-center space-x-1 px-3">
                         <ContentTab icon={Activity} label="Activity" isActive={activeSidebarTab === 'Activity'} onClick={() => setActiveSidebarTab('Activity')} />
                         <ContentTab icon={ListFilter} label="Lead Stages" isActive={activeSidebarTab === 'Lead Stages'} onClick={() => setActiveSidebarTab('Lead Stages')} />
                         <ContentTab icon={LayoutGrid} label="Details Grid" isActive={activeSidebarTab === 'Details Grid'} onClick={() => setActiveSidebarTab('Details Grid')} />
@@ -1631,7 +1634,7 @@ const LeadInfo = () => {
                 </div>
 
                 {/* Tab Content */}
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto p-1">
                     {activeSidebarTab === 'Activity' && <ActivityFeed lead={lead} stages={leadStages} tasks={tasks} events={events} calls={calls} />}
                     {activeSidebarTab === 'Lead Stages' && (
                         <div>
@@ -1640,62 +1643,51 @@ const LeadInfo = () => {
                         </div>
                     )}
                     {activeSidebarTab === 'Details Grid' && <LeadDetailsGrid lead={lead} />}
-                    {activeSidebarTab === 'Tasks' && <TasksTab leadId={leadId} onAddTask={handleOpenNewTask} onEditTask={handleEditTask} />}
-                    {activeSidebarTab === 'Events' && <EventsTab leadId={leadId} onAddEvent={handleOpenNewEvent} onEditEvent={handleEditEvent} />}
-                    {activeSidebarTab === 'Call Logs' && <CallLogsTab leadId={leadId} onAddCallLog={handleOpenLogCall} onEditCallLog={handleEditCallLog} />}
-                    {activeSidebarTab === 'Emails' && <EmailsTab leadId={leadId} onComposeEmail={handleOpenEmailForm} />}
+                    {activeSidebarTab === 'Tasks' && <TasksTab key={`tasks-${refreshCount}`} leadId={leadId} onAddTask={handleOpenNewTask} onEditTask={handleEditTask} />}
+                    {activeSidebarTab === 'Events' && <EventsTab key={`events-${refreshCount}`} leadId={leadId} onAddEvent={handleOpenNewEvent} onEditEvent={handleEditEvent} />}
+                    {activeSidebarTab === 'Call Logs' && <CallLogsTab key={`calllogs-${refreshCount}`} leadId={leadId} onAddCallLog={handleOpenLogCall} onEditCallLog={handleEditCallLog} />}
+                    {activeSidebarTab === 'Emails' && <EmailsTab key={`emails-${refreshCount}`} leadId={leadId} onComposeEmail={handleOpenEmailForm} />}
                     {activeSidebarTab === 'Attachments' && <AttachmentsTab leadId={leadId} />}
                     {activeSidebarTab === 'Notes' && (
-                        <div className="p-8 animate-in fade-in duration-500">
-                            <div className="bg-card border border-border p-8 rounded-theme shadow-sm relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-2 h-full bg-primary"></div>
-                                <div className="flex items-center justify-between mb-8">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-3 rounded-full bg-primary/10 text-primary">
-                                            <StickyNote className="h-6 w-6" />
+                        <div className="p-4 animate-in fade-in duration-300">
+                            <div className="bg-white border border-[#E2EAF1] p-4 rounded-lg shadow-2xs relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#00A3A6]"></div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-md bg-[#00A3A6]/10 text-[#00A3A6]">
+                                            <StickyNote className="h-5 w-5" />
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-bold text-foreground uppercase tracking-tight">Lead Intelligence</h3>
-                                            <p className="text-[10px] text-foreground-muted font-bold uppercase tracking-widest opacity-60">Strategic observations and internal notes</p>
+                                            <h3 className="text-sm font-extrabold text-[#0F2342] uppercase tracking-tight">Lead Intelligence</h3>
+                                            <p className="text-[10px] text-[#60738A] font-medium">Strategic observations and internal notes</p>
                                         </div>
                                     </div>
                                     <button 
-                                        onClick={() => alert('Edit functionality to be implemented in the lead edit form.')}
-                                        className="flex items-center gap-2 px-4 py-2 bg-background-muted border border-border text-foreground-muted hover:text-primary hover:border-primary/30 text-[10px] font-bold uppercase tracking-widest rounded-theme transition-all shadow-sm"
+                                        onClick={() => navigate(`/crm-dashboard/leads/edit/${leadId}`)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F8FAFC] border border-[#C9D8E5] text-[#60738A] hover:text-[#00A3A6] hover:border-[#00A3A6]/30 text-xs font-bold uppercase tracking-wider rounded-lg transition-all shadow-2xs cursor-pointer"
                                     >
-                                        <Edit size={14} /> Update Notes
+                                        <Edit size={13} /> Update Notes
                                     </button>
                                 </div>
                                 
-                                <div className="bg-background-muted/30 p-8 rounded-theme border border-border/50 min-h-[300px] relative">
+                                <div className="bg-[#F8FAFC] p-4 rounded-lg border border-[#E8EEF7] min-h-[200px] relative">
                                     {lead.notes ? (
-                                        <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-medium relative z-10">
+                                        <div className="text-xs text-[#0F2342] leading-relaxed whitespace-pre-wrap font-medium relative z-10">
                                             {lead.notes}
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center h-full py-20 opacity-30">
-                                            <StickyNote size={60} className="mb-4 text-foreground-muted" />
-                                            <h4 className="text-sm font-bold uppercase tracking-[0.2em] text-foreground-muted">No Intelligence Captured</h4>
-                                            <p className="text-[10px] uppercase tracking-widest mt-2">Initialize strategic notes to track lead progress</p>
+                                        <div className="flex flex-col items-center justify-center h-full py-12 opacity-40">
+                                            <StickyNote size={40} className="mb-2 text-[#60738A]" />
+                                            <h4 className="text-xs font-bold uppercase tracking-wider text-[#60738A]">No Intelligence Captured</h4>
+                                            <p className="text-[10px] uppercase tracking-wider mt-1">Initialize strategic notes to track lead progress</p>
                                         </div>
                                     )}
-                                    {/* Decorative background element */}
-                                    <div className="absolute bottom-4 right-4 opacity-[0.03] select-none pointer-events-none">
-                                        <StickyNote size={120} />
-                                    </div>
                                 </div>
                                 
-                                <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
-                                    <div className="flex items-center gap-2 text-foreground-muted">
-                                        <Calendar size={14} />
-                                        <span className="text-[10px] font-bold uppercase tracking-widest">Last Modified: {lead.updatedAt ? new Date(lead.updatedAt).toLocaleDateString() : 'N/A'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex -space-x-2">
-                                            <div className="w-8 h-8 rounded-full border-2 border-card bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">A</div>
-                                            <div className="w-8 h-8 rounded-full border-2 border-card bg-accent/20 flex items-center justify-center text-[10px] font-bold text-accent">S</div>
-                                        </div>
-                                        <span className="text-[10px] font-bold text-foreground-muted uppercase tracking-widest">Shared Intelligence</span>
+                                <div className="mt-4 pt-3 border-t border-[#E2EAF1] flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-[#60738A]">
+                                        <Calendar size={13} />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">Last Modified: {lead.updatedAt ? new Date(lead.updatedAt).toLocaleDateString() : 'N/A'}</span>
                                     </div>
                                 </div>
                             </div>

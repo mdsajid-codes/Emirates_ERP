@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.example.multi_tanent.pos.repository.InventoryRepository;
+
 @Service
 @Transactional("tenantTx")
 public class ProductVariantService {
@@ -35,6 +37,7 @@ public class ProductVariantService {
     private final SaleItemRepository saleItemRepository;
     private final BarCodeService barCodeService;
     private final MasterTenantRepository masterTenantRepository;
+    private final InventoryRepository inventoryRepository;
 
     public ProductVariantService(ProductRepository productRepository,
             ProductVariantRepository productVariantRepository,
@@ -42,7 +45,8 @@ public class ProductVariantService {
             TaxRateRepository taxRateRepository,
             SaleItemRepository saleItemRepository,
             BarCodeService barCodeService,
-            MasterTenantRepository masterTenantRepository) {
+            MasterTenantRepository masterTenantRepository,
+            InventoryRepository inventoryRepository) {
         this.productRepository = productRepository;
         this.productVariantRepository = productVariantRepository;
         this.tenantRepository = tenantRepository;
@@ -50,6 +54,7 @@ public class ProductVariantService {
         this.saleItemRepository = saleItemRepository;
         this.barCodeService = barCodeService;
         this.masterTenantRepository = masterTenantRepository;
+        this.inventoryRepository = inventoryRepository;
     }
 
     private Tenant getCurrentTenant() {
@@ -198,6 +203,10 @@ public class ProductVariantService {
     }
 
     ProductVariantDto toDto(ProductVariant variant) {
+        return toDto(variant, null);
+    }
+
+    ProductVariantDto toDto(ProductVariant variant, Long storeId) {
         ProductVariantDto dto = new ProductVariantDto();
         dto.setId(variant.getId());
         dto.setSku(variant.getSku());
@@ -217,6 +226,16 @@ public class ProductVariantService {
             dto.setTaxRateName(variant.getTaxRate().getName());
             dto.setTaxRatePercent(variant.getTaxRate().getPercent());
         }
+        int totalQuantity;
+        if (storeId != null) {
+            totalQuantity = inventoryRepository.findByStoreIdAndProductVariantId(storeId, variant.getId())
+                    .map(inv -> inv.getQuantity() != null ? inv.getQuantity().intValue() : 0)
+                    .orElse(0);
+        } else {
+            totalQuantity = inventoryRepository.findByProductVariantId(variant.getId())
+                    .stream().mapToInt(inv -> inv.getQuantity() != null ? inv.getQuantity().intValue() : 0).sum();
+        }
+        dto.setQuantity(totalQuantity);
         return dto;
     }
 
