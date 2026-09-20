@@ -42,11 +42,13 @@ public class SaleService {
     private final InventoryRepository inventoryRepository;
     private final StoreRepository storeRepository;
     private final StockMovementService stockMovementService;
+    private final PosAccountingIntegrationService posAccountingIntegrationService;
 
     public SaleService(SaleRepository saleRepository, TenantRepository tenantRepository,
             UserRepository userRepository, CustomerRepository customerRepository,
             ProductVariantRepository productVariantRepository, StoreRepository storeRepository,
-            InventoryRepository inventoryRepository, StockMovementService stockMovementService) {
+            InventoryRepository inventoryRepository, StockMovementService stockMovementService,
+            PosAccountingIntegrationService posAccountingIntegrationService) {
         this.saleRepository = saleRepository;
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
@@ -56,6 +58,7 @@ public class SaleService {
 
         this.inventoryRepository = inventoryRepository;
         this.storeRepository = storeRepository;
+        this.posAccountingIntegrationService = posAccountingIntegrationService;
     }
 
     private Tenant getCurrentTenant() {
@@ -178,7 +181,7 @@ public class SaleService {
             sale.setPaymentStatus("unpaid");
         }
 
-        Sale savedSale = saleRepository.save(sale);
+        final Sale savedSale = saleRepository.save(sale);
 
         // After sale is saved, create stock movements which will update inventory
         savedSale.getItems().forEach(item -> {
@@ -188,6 +191,22 @@ public class SaleService {
                     -item.getQuantity() // Negative quantity for a sale
             );
         });
+
+        // Trigger GL Accounting Integration (Revenue, Output VAT, Payment Asset & COGS)
+        try {
+            Long tenantId = savedSale.getTenant() != null ? savedSale.getTenant().getId() : null;
+            if (tenantId != null) {
+                Long jeId = posAccountingIntegrationService.postSaleToLedger(savedSale, tenantId);
+                Long cogsJeId = posAccountingIntegrationService.postCogsToLedger(savedSale, tenantId);
+                if (jeId != null || cogsJeId != null) {
+                    savedSale.setJournalEntryId(jeId);
+                    savedSale.setCogsJournalEntryId(cogsJeId);
+                    saleRepository.save(savedSale);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Failed to post POS sale {} to accounting ledger: {}", savedSale.getId(), e.getMessage(), e);
+        }
 
         return toDto(savedSale);
     }
@@ -213,6 +232,11 @@ public class SaleService {
     public void deleteSale(Long id) {
         Sale sale = getSaleById(id)
                 .orElseThrow(() -> new RuntimeException("Sale not found with id: " + id));
+
+        // Reverse accounting journal entries if present
+        if (sale.getTenant() != null) {
+            posAccountingIntegrationService.reverseSaleFromLedger(sale, sale.getTenant().getId());
+        }
 
         // Before deleting the sale, we must break the link from any stock movements
         // that reference it to avoid a foreign key constraint violation.

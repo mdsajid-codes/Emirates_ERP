@@ -313,11 +313,7 @@ public class VatServiceImpl implements VatService {
     public List<VatTransactionLineResponse> getOutputVatTransactions(LocalDate fromDate, LocalDate toDate, String tenantId) {
         java.util.List<VatTransactionLineResponse> responses = new java.util.ArrayList<>();
         
-        // Query journal entries with DocumentType.SALES_INVOICE or similar
-        // and lines where account is VAT Payable
-        // (Currently mocked/empty for JournalEntries)
-        
-        // Add TaxTransactions
+        // 1. Add TaxTransactions
         List<TaxTransaction> taxTxns = taxTransactionRepository.findByTenantIdAndTransactionDateBetween(tenantId, fromDate, toDate);
         for (TaxTransaction txn : taxTxns) {
             if (txn.getTransactionType() == com.example.multi_tanent.accounts.entity.enums.TaxTransactionType.PAYABLE_INCREASE ||
@@ -327,7 +323,6 @@ public class VatServiceImpl implements VatService {
                 line.setEntryDate(txn.getTransactionDate());
                 line.setDocumentType(txn.getTransactionType().name());
                 line.setDescription(txn.getDescription() != null ? txn.getDescription() : "Tax Adjustment");
-                line.setAmount(BigDecimal.ZERO);
                 
                 BigDecimal vatAmount = txn.getAmount();
                 if (txn.getTransactionType() == com.example.multi_tanent.accounts.entity.enums.TaxTransactionType.PAYABLE_DECREASE) {
@@ -335,11 +330,59 @@ public class VatServiceImpl implements VatService {
                 }
                 line.setVatAmount(vatAmount);
                 
+                // For 5% UAE VAT, Net Taxable Sales Amount = VAT Amount * 20 (vatAmount / 0.05)
+                BigDecimal taxableAmount = vatAmount.multiply(BigDecimal.valueOf(20));
+                line.setAmount(taxableAmount);
+                
                 if (txn.getJournalEntry() != null) {
                     line.setJournalEntryId(txn.getJournalEntry().getJournalEntryId());
                     line.setJournalEntryNumber(txn.getJournalEntry().getEntryNumber());
                 }
                 responses.add(line);
+            }
+        }
+
+        // 2. Query posted Journal Entries (POS_SALE, CUSTOMER_INVOICE, POS_REFUND) if not already added via TaxTransaction
+        Long numericTenantId = null;
+        try { numericTenantId = Long.parseLong(tenantId); } catch (Exception ignored) {}
+        if (numericTenantId != null) {
+            List<JournalEntry> entries = journalEntryRepository.findByEntryDateBetweenAndTenant(fromDate, toDate, numericTenantId);
+            for (JournalEntry je : entries) {
+                if (je.getStatus() == JournalEntryStatus.POSTED && 
+                    (je.getDocumentType() == DocumentType.POS_SALE || je.getDocumentType() == DocumentType.CUSTOMER_INVOICE || je.getDocumentType() == DocumentType.POS_REFUND)) {
+                    
+                    boolean exists = responses.stream().anyMatch(r -> r.getJournalEntryId() != null && r.getJournalEntryId().equals(je.getJournalEntryId()));
+                    if (!exists) {
+                        BigDecimal vatAmount = BigDecimal.ZERO;
+                        BigDecimal netSalesAmount = BigDecimal.ZERO;
+                        
+                        if (je.getLines() != null) {
+                            for (JournalEntryLine l : je.getLines()) {
+                                if (l.getAccount() != null && l.getAccount().getSection() == com.example.multi_tanent.accounts.entity.enums.AccountSection.BS_VAT_PAYABLE) {
+                                    vatAmount = vatAmount.add(l.getCreditAmount().subtract(l.getDebitAmount()));
+                                }
+                                if (l.getAccount() != null && (l.getAccount().getSection() == com.example.multi_tanent.accounts.entity.enums.AccountSection.PL_SALES_GOODS || l.getAccount().getSection() == com.example.multi_tanent.accounts.entity.enums.AccountSection.PL_SALES_SERVICES)) {
+                                    netSalesAmount = netSalesAmount.add(l.getCreditAmount().subtract(l.getDebitAmount()));
+                                }
+                            }
+                        }
+                        
+                        if (vatAmount.compareTo(BigDecimal.ZERO) != 0 || netSalesAmount.compareTo(BigDecimal.ZERO) != 0) {
+                            if (netSalesAmount.compareTo(BigDecimal.ZERO) == 0 && vatAmount.compareTo(BigDecimal.ZERO) != 0) {
+                                netSalesAmount = vatAmount.multiply(BigDecimal.valueOf(20));
+                            }
+                            VatTransactionLineResponse line = new VatTransactionLineResponse();
+                            line.setEntryDate(je.getEntryDate());
+                            line.setDocumentType(je.getDocumentType().name());
+                            line.setDescription(je.getDescription() != null ? je.getDescription() : "POS / Customer Sale");
+                            line.setJournalEntryId(je.getJournalEntryId());
+                            line.setJournalEntryNumber(je.getEntryNumber());
+                            line.setAmount(netSalesAmount);
+                            line.setVatAmount(vatAmount);
+                            responses.add(line);
+                        }
+                    }
+                }
             }
         }
         

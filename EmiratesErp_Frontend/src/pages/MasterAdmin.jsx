@@ -17,6 +17,7 @@ import TenantsView from './master/views/TenantsView';
 import RequestsView from './master/views/RequestsView';
 import MasterUsers from './master/views/MasterUsers';
 import MyCompanyInfo from './master/views/MyCompanyInfo';
+import DemoRequestsView from './master/views/DemoRequestsView';
 
 const MasterAdmin = () => {
     const navigate = useNavigate();
@@ -24,6 +25,7 @@ const MasterAdmin = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [tenants, setTenants] = useState([]);
     const [tenantRequests, setTenantRequests] = useState([]);
+    const [demoRequests, setDemoRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [modalLoading, setModalLoading] = useState(false);
 
@@ -78,6 +80,19 @@ const MasterAdmin = () => {
 
             setTenants(tenantsRes.data);
             setTenantRequests(requestsRes.data);
+
+            // Fetch demo requests separately — isolated try/catch so it doesn't
+            // break the dashboard if the endpoint isn't deployed yet
+            try {
+                const demoRes = await axios.get(`${API_URL}/master/demo-requests`, { headers });
+                setDemoRequests(demoRes.data);
+            } catch (demoErr) {
+                console.error(
+                    'Demo requests fetch failed:',
+                    demoErr?.response?.status,
+                    demoErr?.response?.data || demoErr?.message
+                );
+            }
         } catch (err) {
             setError('Failed to fetch data. Please try again later.');
             console.error("Error fetching data:", err);
@@ -213,6 +228,8 @@ const MasterAdmin = () => {
                 return <TenantsView tenants={tenants} loading={loading} error={error} onDelete={handleDelete} onEdit={handleOpenUpdateModal} onProvisionClick={() => { setProvisionFormData(null); setActiveView('provision'); }} onViewDetails={handleViewDetails} />;
             case 'requests':
                 return <RequestsView requests={tenantRequests} loading={loading} error={error} onApprove={handleApprove} onReject={handleReject} />;
+            case 'demo-requests':
+                return <DemoRequestsView requests={demoRequests} loading={loading} onRefresh={fetchData} />;
             case 'users':
                 return <MasterUsers />;
             case 'provision':

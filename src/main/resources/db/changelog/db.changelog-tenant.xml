@@ -54,6 +54,9 @@
 
     <!-- POS Module -->
     <include file="db/changelog/pos/pos-schema.xml"/>
+    <include file="db/changelog/pos/002-add-journal-link-to-sales.xml"/>
+    <include file="db/changelog/pos/004-pos-phase3-shift-clearing-returns.xml"/>
+    <include file="db/changelog/pos/005-pos-phase4-enterprise-schema.xml"/>
 
     <!-- Purchases Module -->
     <include file="db/changelog/purchases/purchases-schema.xml"/>

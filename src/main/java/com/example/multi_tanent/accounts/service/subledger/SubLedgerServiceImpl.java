@@ -15,6 +15,7 @@ import com.example.multi_tanent.spersusers.enitity.BaseCustomer;
 import com.example.multi_tanent.spersusers.repository.BaseCustomerRepository;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
 import com.example.multi_tanent.tenant.payroll.repository.CompanyBankAccountRepository;
+import com.example.multi_tanent.accounts.repository.coa.ChartOfAccountRepository;
 import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.spersusers.enitity.CompanyBankAccount;
 import lombok.RequiredArgsConstructor;
@@ -39,30 +40,52 @@ public class SubLedgerServiceImpl implements SubLedgerService {
     private final BankGLAccountRepository bankGLAccountRepository;
     private final EmployeeRepository employeeRepository;
     private final CompanyBankAccountRepository companyBankAccountRepository;
+    private final ChartOfAccountRepository chartOfAccountRepository;
 
     private List<Long> getArAccountIds(Long tenantId) {
-        return partyGLAccountRepository.findAllByTenant(tenantId).stream()
+        List<Long> ids = partyGLAccountRepository.findAllByTenant(tenantId).stream()
                 .filter(p -> p.getPartyType() == PartyType.CUSTOMER && p.getAccountsReceivable() != null)
                 .map(p -> p.getAccountsReceivable().getAccountId())
                 .distinct()
                 .collect(Collectors.toList());
+
+        List<com.example.multi_tanent.accounts.entity.coa.ChartOfAccount> coaAccounts = 
+                chartOfAccountRepository.findBySectionAndTenant(com.example.multi_tanent.accounts.entity.enums.AccountSection.BS_TRADE_RECEIVABLES, tenantId);
+        for (com.example.multi_tanent.accounts.entity.coa.ChartOfAccount coa : coaAccounts) {
+            if (coa.getAccountId() != null && !ids.contains(coa.getAccountId())) {
+                ids.add(coa.getAccountId());
+            }
+        }
+        return ids;
     }
 
     private List<Long> getApAccountIds(Long tenantId) {
-        return partyGLAccountRepository.findAllByTenant(tenantId).stream()
+        List<Long> ids = partyGLAccountRepository.findAllByTenant(tenantId).stream()
                 .filter(p -> p.getPartyType() == PartyType.SUPPLIER && p.getAccountsPayable() != null)
                 .map(p -> p.getAccountsPayable().getAccountId())
                 .distinct()
                 .collect(Collectors.toList());
+
+        List<com.example.multi_tanent.accounts.entity.coa.ChartOfAccount> coaAccounts = 
+                chartOfAccountRepository.findBySectionAndTenant(com.example.multi_tanent.accounts.entity.enums.AccountSection.BS_TRADE_PAYABLES, tenantId);
+        for (com.example.multi_tanent.accounts.entity.coa.ChartOfAccount coa : coaAccounts) {
+            if (coa.getAccountId() != null && !ids.contains(coa.getAccountId())) {
+                ids.add(coa.getAccountId());
+            }
+        }
+        return ids;
     }
 
     private String getPartyName(Long partyId, Long tenantId) {
         if (partyId == null)
             return "Unknown";
         return baseCustomerRepository.findById(partyId)
-                .filter(c -> c.getTenant().getId().equals(tenantId))
-                .map(BaseCustomer::getCompanyName)
-                .orElse("Unknown Party " + partyId);
+                .map(c -> {
+                    if (c.getCompanyName() != null && !c.getCompanyName().isBlank()) return c.getCompanyName();
+                    if (c.getPrimaryContactPersonFull() != null && !c.getPrimaryContactPersonFull().isBlank()) return c.getPrimaryContactPersonFull();
+                    return "Customer #" + partyId;
+                })
+                .orElse("Customer #" + partyId);
     }
 
     private String getPartyCode(Long partyId, Long tenantId) {

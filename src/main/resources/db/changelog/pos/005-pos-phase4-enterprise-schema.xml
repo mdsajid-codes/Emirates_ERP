@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <!-- Changelog 005: Phase 4 Advanced Enterprise Capabilities -->
+
+    <changeSet id="20260919-pos-005-create-pos-period-locks-table" author="emirates-erp">
+        <createTable tableName="pos_period_locks">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="period_name" type="VARCHAR(50)"/>
+            <column name="start_date" type="DATE"/>
+            <column name="end_date" type="DATE"/>
+            <column name="is_closed" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="closed_by" type="VARCHAR(100)"/>
+            <column name="closed_at" type="DATETIME"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <createIndex tableName="pos_period_locks" indexName="idx_pos_period_locks_tenant">
+            <column name="tenant_id"/>
+            <column name="period_name"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260919-pos-005-create-pos-consignment-settlements-table" author="emirates-erp">
+        <createTable tableName="pos_consignment_settlements">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vendor_id" type="BIGINT"/>
+            <column name="sale_id" type="BIGINT"/>
+            <column name="vendor_payout_cents" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="store_commission_cents" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="journal_entry_id" type="BIGINT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20260919-pos-005-add-fx-loyalty-fields-to-sales" author="emirates-erp">
+        <addColumn tableName="sales">
+            <column name="currency_code" type="VARCHAR(3)" defaultValue="AED"/>
+            <column name="fx_rate" type="DECIMAL(12,6)" defaultValueNumeric="1.000000"/>
+            <column name="loyalty_points_redeemed" type="INT" defaultValueNumeric="0"/>
+            <column name="loyalty_discount_cents" type="BIGINT" defaultValueNumeric="0"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>
