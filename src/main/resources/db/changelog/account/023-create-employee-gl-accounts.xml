@@ -6,6 +6,10 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet id="023-create-employee-gl-accounts" author="antigravity">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="chart_of_accounts"/>
+            <tableExists tableName="tenants"/>
+        </preConditions>
         <createTable tableName="employee_gl_accounts">
             <column name="employee_gl_account_id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>

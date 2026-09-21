@@ -91,7 +91,7 @@ public class MultiTenantDataSourceConfig {
     // Lock dialect (so Hibernate doesn't try to detect it)
     p.put("hibernate.dialect", "org.hibernate.dialect.MySQL8Dialect");
     p.put("hibernate.globally_quoted_identifiers", "true");
-    p.put("hibernate.show_sql", "false");  // ✅ MUST be false in production — 50 tenants × all queries = massive log spam
+    p.put("hibernate.show_sql", "false"); // ✅ MUST be false in production — 50 tenants × all queries = massive log spam
     p.put("hibernate.format_sql", "false"); // ✅ Same — disable in prod
     emf.setJpaProperties(p);
     return emf;

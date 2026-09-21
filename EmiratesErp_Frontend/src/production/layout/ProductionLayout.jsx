@@ -34,7 +34,6 @@ export const productionNavLinks = [
     { name: 'Workgroup', icon: Factory, iconBg: 'bg-orange-500/35 text-orange-300' },
     { name: 'Manage Process', icon: Layers, iconBg: 'bg-green-500/35 text-green-300' },
     { name: 'Parameter', icon: SlidersHorizontal, iconBg: 'bg-indigo-500/35 text-indigo-300' },
-    { name: 'Categories', icon: LayoutGrid, iconBg: 'bg-rose-500/35 text-rose-300' },
     { name: 'Raw Materials', icon: Package, iconBg: 'bg-amber-500/35 text-amber-300' },
     { name: 'Semi Finished', icon: Box, iconBg: 'bg-teal-500/35 text-teal-300' },
     { name: 'Finished Good', icon: Box, iconBg: 'bg-blue-500/35 text-blue-300' },

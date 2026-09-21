@@ -7,6 +7,12 @@
 
     <changeSet id="hng-packing-1" author="antigravity">
         <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="hng_production_batch"/>
+            <tableExists tableName="sales_orders"/>
+            <tableExists tableName="ware_product_batches"/>
+            <tableExists tableName="delivery_orders"/>
+        </preConditions>
         <createTable tableName="hng_batch_packing">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
@@ -68,6 +74,11 @@
 
     <changeSet id="hng-packing-3" author="antigravity">
         <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="hng_hanger_types"/>
+            <tableExists tableName="crm_sales_products"/>
+            <tableExists tableName="pro_finished_goods"/>
+        </preConditions>
         <addColumn tableName="hng_hanger_types">
             <column name="crm_sales_product_id" type="BIGINT">
                 <constraints foreignKeyName="fk_hng_type_crm_product"
@@ -82,6 +93,10 @@
 
     <changeSet id="hng-packing-4" author="antigravity">
         <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="delivery_orders"/>
+            <tableExists tableName="hng_batch_packing"/>
+        </preConditions>
         <addColumn tableName="delivery_orders">
             <column name="source" type="VARCHAR(20)" defaultValue="MANUAL"/>
             <column name="hng_packing_id" type="BIGINT">
@@ -93,6 +108,9 @@
 
     <changeSet id="hng-packing-5" author="antigravity">
         <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="delivery_order_items"/>
+        </preConditions>
         <addColumn tableName="delivery_order_items">
             <column name="description" type="TEXT"/>
         </addColumn>

@@ -2,51 +2,73 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Edit, Trash2, Loader2, Search, X, Building, User, Mail, Phone, ChevronLeft, ChevronRight, HelpCircle, Download, LayoutGrid, List, Eye, MapPin, Hash, Briefcase, Banknote, Users as UsersIcon, FileText, ChevronDown, Landmark, CreditCard, Truck, CircleDollarSign, Code, Percent, Share2, Globe, CalendarDays, BookUser, Info, MessageSquare, Link as LinkIcon, TrendingUp, UserCheck, ShieldCheck, Upload, FileSpreadsheet, ArrowLeft } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import CompanyHubLayout from '../CompanyHubLayout';
 
 const INITIAL_PARTY_STATE = {
     companyName: '',
     primaryContactPerson: '',
     contactEmail: '',
     contactPhone: '',
-    partyType: 'CUSTOMER', // Default as per backend
+    partyType: 'CUSTOMER',
+};
+
+const getPartyTypeBadge = (type) => {
+    switch (type) {
+        case 'CUSTOMER':
+            return <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">Customer</span>;
+        case 'SUPPLIER':
+            return <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300">Supplier</span>;
+        case 'VENDOR':
+            return <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Vendor</span>;
+        case 'CRM_LEAD':
+            return <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">CRM Lead</span>;
+        default:
+            return <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">{type || 'Customer'}</span>;
+    }
 };
 
 const PartyCard = ({ party, onEdit, onDelete, onView }) => (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-5 flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xs border border-gray-200 dark:border-gray-700 p-5 flex flex-col justify-between transition-all hover:shadow-md hover:-translate-y-0.5">
         <div>
-            <div className="flex justify-between items-start mb-3">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-                    <Building className="w-5 h-5 mr-2 text-blue-500" />
-                    {party.companyName}
+            <div className="flex justify-between items-start mb-3 gap-2">
+                <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center truncate">
+                    <Building className="w-5 h-5 mr-2 text-[#00A9A8] shrink-0" />
+                    <span className="truncate">{party.companyName}</span>
                 </h3>
+                {getPartyTypeBadge(party.partyType)}
             </div>
-            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                <p className="flex items-center"><User className="w-4 h-4 mr-2 text-gray-400" /> {party.primaryContactPerson || 'N/A'}</p>
-                <p className="flex items-center"><Mail className="w-4 h-4 mr-2 text-gray-400" /> {party.contactEmail || 'N/A'}</p>
-                <p className="flex items-center"><Phone className="w-4 h-4 mr-2 text-gray-400" /> {party.contactPhone || 'N/A'}</p>
+            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 mt-2">
+                <p className="flex items-center"><User className="w-4 h-4 mr-2 text-gray-400 shrink-0" /> <span className="truncate">{party.primaryContactPerson || 'N/A'}</span></p>
+                <p className="flex items-center"><Mail className="w-4 h-4 mr-2 text-gray-400 shrink-0" /> <span className="truncate">{party.contactEmail || 'N/A'}</span></p>
+                <p className="flex items-center"><Phone className="w-4 h-4 mr-2 text-gray-400 shrink-0" /> <span className="truncate">{party.contactPhone || 'N/A'}</span></p>
             </div>
         </div>
-        <div className="flex justify-end items-center mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <button onClick={() => onView(party)} className="p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <Eye className="h-4 w-4" />
-            </button>
-            <button onClick={() => onEdit(party.id)} className="p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <Edit className="h-4 w-4" />
-            </button>
-            <button onClick={() => onDelete(party.id)} className="p-2 rounded-full text-red-500 hover:bg-red-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500">
-                <Trash2 className="h-4 w-4" />
-            </button>
+        <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/60">
+            <span className={`px-2 py-0.5 text-[11px] font-medium rounded-md ${party.active ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                {party.active ? 'Active' : 'Inactive'}
+            </span>
+            <div className="flex items-center gap-1">
+                <button onClick={() => onView(party)} title="View Party Details" className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-400">
+                    <Eye className="h-4 w-4" />
+                </button>
+                <button onClick={() => onEdit(party.id)} title="Edit Party" className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-400">
+                    <Edit className="h-4 w-4" />
+                </button>
+                <button onClick={() => onDelete(party.id)} title="Delete Party" className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-gray-700">
+                    <Trash2 className="h-4 w-4" />
+                </button>
+            </div>
         </div>
     </div>
 );
 
 const ToggleSection = ({ title, icon, children, defaultOpen = false }) => {
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(defaultOpen);
     return (
         <div className="border-t border-gray-200 dark:border-gray-700">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex justify-between items-center p-4 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                className="w-full flex justify-between items-center p-4 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
                 <div className="flex items-center">
                     {icon}
@@ -66,7 +88,7 @@ const PartyViewModal = ({ party, onClose, onEdit, onDelete, isLoadingDetails }) 
         <div className="flex items-start text-sm mb-3">
             <div className="text-gray-400 mr-3 mt-0.5">{icon}</div>
             <div className="flex-1">
-                <p className="text-gray-500 dark:text-gray-400">{label}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
                 <p className="font-medium text-gray-800 dark:text-gray-200">{value || 'N/A'}</p>
             </div>
         </div>
@@ -82,47 +104,53 @@ const PartyViewModal = ({ party, onClose, onEdit, onDelete, isLoadingDetails }) 
 
     const formatAddress = (address) => {
         if (!address) return 'N/A';
-        if (typeof address !== 'object') return address; // It might already be a string
+        if (typeof address !== 'object') return address;
 
         const parts = [
             address.addressLine,
+            address.addressLine1,
             address.city,
             address.state,
             address.zipCode,
             address.country
-        ].filter(Boolean); // Filter out empty or null values
+        ].filter(Boolean);
 
         return parts.length > 0 ? parts.join(', ') : 'N/A';
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4" onClick={onClose}>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-                <header className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center">
-                        <Building className="w-6 h-6 mr-3 text-blue-500" />
+        <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4 backdrop-blur-xs" onClick={onClose}>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+                <header className="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-[#00A9A8]">
+                            <Building className="w-5 h-5" />
+                        </div>
                         <div>
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">{party.companyName}</h2>
-                            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${party.partyType === 'CUSTOMER' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>{party.partyType}</span>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-lg font-bold text-gray-900 dark:text-white">{party.companyName}</h2>
+                                {getPartyTypeBadge(party.partyType)}
+                            </div>
+                            <p className="text-xs text-gray-500">Code: {party.customerCode || party.vendorCustomerCode || party.id}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button onClick={() => onEdit(party)} className="p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none">
-                            <Edit className="h-5 w-5" />
+                        <button onClick={() => onEdit(party)} className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300">
+                            <Edit className="h-4.5 w-4.5" />
                         </button>
-                        <button onClick={() => onDelete(party.id)} className="p-2 rounded-full text-red-500 hover:bg-red-50 dark:hover:bg-gray-700 focus:outline-none">
-                            <Trash2 className="h-5 w-5" />
+                        <button onClick={() => onDelete(party.id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-gray-700">
+                            <Trash2 className="h-4.5 w-4.5" />
                         </button>
-                        <button onClick={onClose} className="p-1 rounded-full text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700">
-                            <X className="h-6 w-6" />
+                        <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <X className="h-5 w-5" />
                         </button>
                     </div>
                 </header>
 
                 <main className="overflow-y-auto">
-                    {isLoadingDetails ? <div className="flex justify-center items-center p-10"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div> : <>
-                        <ToggleSection title="Primary Information" icon={<Info className="w-5 h-5" />} defaultOpen={true}>
-                            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+                    {isLoadingDetails ? <div className="flex justify-center items-center p-12"><Loader2 className="h-8 w-8 animate-spin text-[#00A9A8]" /></div> : <>
+                        <ToggleSection title="Primary Information" icon={<Info className="w-5 h-5 text-[#00A9A8]" />} defaultOpen={true}>
+                            <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
                                 <DetailItem icon={<UserCheck className="w-4 h-4" />} label="Primary Contact" value={formatFullName(party)} />
                                 <DetailItem icon={<Mail className="w-4 h-4" />} label="Email" value={party.contactEmail} />
                                 <DetailItem icon={<Phone className="w-4 h-4" />} label="Contact Phone" value={party.contactPhone} />
@@ -138,114 +166,54 @@ const PartyViewModal = ({ party, onClose, onEdit, onDelete, isLoadingDetails }) 
                                 <DetailItem icon={<MapPin className="w-4 h-4" />} label="City" value={party.city} />
                                 <DetailItem icon={<MapPin className="w-4 h-4" />} label="Region" value={party.region} />
                                 <DetailItem icon={<Briefcase className="w-4 h-4" />} label="Status" value={
-                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${party.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                    <span className={`px-2 py-0.5 text-xs font-medium rounded-md ${party.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                         {party.active ? 'Active' : 'Inactive'}
                                     </span>
                                 } />
                             </div>
                         </ToggleSection>
 
-                        <ToggleSection title="Address Details" icon={<MapPin className="w-5 h-5" />}>
-                            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div>
-                                    <h4 className="font-semibold mb-2 text-gray-800 dark:text-gray-200">Billing Address</h4>
-                                    <p className="text-gray-600 dark:text-gray-300">{formatAddress(party.billingAddress)}</p>
+                        <ToggleSection title="Address Details" icon={<MapPin className="w-5 h-5 text-[#00A9A8]" />}>
+                            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <h4 className="font-semibold mb-2 text-gray-800 dark:text-gray-200 text-sm flex items-center"><MapPin className="w-4 h-4 mr-2 text-[#00A9A8]" /> Billing Address</h4>
+                                    <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{formatAddress(party.billingAddress)}</p>
                                 </div>
-                                <div>
-                                    <h4 className="font-semibold mb-2 text-gray-800 dark:text-gray-200">Shipping Address</h4>
-                                    <p className="text-gray-600 dark:text-gray-300">{party.shippingSameAsBilling ? 'Same as Billing Address' : formatAddress(party.shippingAddress)}</p>
+                                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <h4 className="font-semibold mb-2 text-gray-800 dark:text-gray-200 text-sm flex items-center"><Truck className="w-4 h-4 mr-2 text-[#00A9A8]" /> Shipping Address</h4>
+                                    <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{party.shippingSameAsBilling ? 'Same as Billing Address' : formatAddress(party.shippingAddress)}</p>
                                 </div>
                             </div>
                         </ToggleSection>
 
-                        <ToggleSection title="Tax & Financials" icon={<Percent className="w-5 h-5" />}>
-                            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
-                                <DetailItem icon={<CreditCard className="w-4 h-4" />} label="PAN Number" value={party.panNumber} />
-                                <DetailItem icon={<CreditCard className="w-4 h-4" />} label="TAN Number" value={party.tanNumber} />
-                                <DetailItem icon={<CreditCard className="w-4 h-4" />} label="CIN Number" value={party.cinNo} />
+                        <ToggleSection title="Tax & Financials (AED)" icon={<Percent className="w-5 h-5 text-[#00A9A8]" />}>
+                            <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+                                <DetailItem icon={<CreditCard className="w-4 h-4" />} label="PAN / Trade License" value={party.panNumber} />
                                 <DetailItem icon={<ShieldCheck className="w-4 h-4" />} label="VAT Treatment" value={party.vatTreatment} />
-                                <DetailItem icon={<Hash className="w-4 h-4" />} label="VAT Number" value={party.vatNumber} />
-                                <DetailItem icon={<Hash className="w-4 h-4" />} label="VAT TRN Number" value={party.vatTrnNumber} />
-                                <DetailItem icon={<CircleDollarSign className="w-4 h-4" />} label="Opening Balance" value={`${party.openingBalanceType || ''} ${party.openingBalance ? `AED ${party.openingBalance}` : 'N/A'}`} />
+                                <DetailItem icon={<Hash className="w-4 h-4" />} label="VAT TRN Number" value={party.vatTrnNumber || party.vatNumber} />
+                                <DetailItem icon={<CircleDollarSign className="w-4 h-4" />} label="Opening Balance" value={`${party.openingBalanceType || ''} AED ${party.openingBalance || 0}`} />
                                 <DetailItem icon={<CircleDollarSign className="w-4 h-4" />} label="Credit Limit" value={party.creditLimitAllowed ? `AED ${party.creditLimitAllowed}` : 'N/A'} />
                                 <DetailItem icon={<CalendarDays className="w-4 h-4" />} label="Credit Period" value={party.creditPeriodAllowed ? `${party.creditPeriodAllowed} days` : 'N/A'} />
                                 <DetailItem icon={<TrendingUp className="w-4 h-4" />} label="Sales (Prev. Year)" value={party.salesValuePreviousYear ? `AED ${party.salesValuePreviousYear}` : 'N/A'} />
-                                <DetailItem icon={<CircleDollarSign className="w-4 h-4" />} label="Currency" value={party.currency} />
-                                <DetailItem icon={<Briefcase className="w-4 h-4" />} label="Price Category" value={party.priceCategory} />
+                                <DetailItem icon={<CircleDollarSign className="w-4 h-4" />} label="Currency" value={party.currency || 'AED'} />
                             </div>
                         </ToggleSection>
 
-                        <ToggleSection title="Terms & Delivery" icon={<Truck className="w-5 h-5" />}>
-                            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
-                                <DetailItem icon={<FileText className="w-4 h-4" />} label="Mode of Payment" value={party.modeOfPayment} />
-                                <DetailItem icon={<FileText className="w-4 h-4" />} label="Payment Terms" value={party.paymentTerms} />
-                                <DetailItem icon={<Truck className="w-4 h-4" />} label="Delivery Type" value={party.deliveryType} />
-                                <DetailItem icon={<Truck className="w-4 h-4" />} label="Dispatch Through" value={party.transportDispatchThrough} />
-                                <DetailItem icon={<Truck className="w-4 h-4" />} label="Freight Terms" value={party.freightTerms} />
-                                <div className="md:col-span-2 lg:col-span-3"><DetailItem icon={<FileText className="w-4 h-4" />} label="Internal T&C" value={party.termsAndConditionsInternal} /></div>
-                                <div className="md:col-span-2 lg:col-span-3"><DetailItem icon={<FileText className="w-4 h-4" />} label="Display T&C" value={party.termsAndConditionsDisplay} /></div>
-                                <div className="md:col-span-2 lg:col-span-3"><DetailItem icon={<MessageSquare className="w-4 h-4" />} label="Special Instructions" value={party.splInstruction} /></div>
-                            </div>
-                        </ToggleSection>
-
-                        <ToggleSection title="Bank Details" icon={<Banknote className="w-5 h-5" />}>
+                        <ToggleSection title="Bank Details" icon={<Banknote className="w-5 h-5 text-[#00A9A8]" />}>
                             {party.bankDetails && party.bankDetails.length > 0 ? (
-                                <div className="space-y-4">
+                                <div className="space-y-3 p-4">
                                     {party.bankDetails.map((bank, index) => (
-                                        <div key={index} className="p-3 bg-gray-100 dark:bg-gray-800 rounded-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        <div key={index} className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                             <DetailItem icon={<Landmark className="w-4 h-4" />} label="Bank Name" value={bank.bankName} />
                                             <DetailItem icon={<Hash className="w-4 h-4" />} label="Account Number" value={bank.accountNumber} />
-                                            <DetailItem icon={<Code className="w-4 h-4" />} label="IFSC Code" value={bank.ifsCode} />
+                                            <DetailItem icon={<Code className="w-4 h-4" />} label="IFSC / BIC" value={bank.ifsCode} />
                                             <DetailItem icon={<Code className="w-4 h-4" />} label="IBAN Code" value={bank.ibanCode} />
-                                            <DetailItem icon={<Hash className="w-4 h-4" />} label="Corporate ID" value={bank.corporateId} />
-                                            <DetailItem icon={<MapPin className="w-4 h-4" />} label="Branch" value={bank.locationBranch} />
-                                            <DetailItem icon={<Mail className="w-4 h-4" />} label="Beneficiary Email" value={bank.beneficiaryMailId} />
-                                            <div className="sm:col-span-2 lg:col-span-4"><DetailItem icon={<MapPin className="w-4 h-4" />} label="Branch Address" value={bank.branchAddress} /></div>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Bank details are not available for this party.</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 p-4">No bank details recorded for this party.</p>
                             )}
-                        </ToggleSection>
-
-                        <ToggleSection title="Other Person Details" icon={<BookUser className="w-5 h-5" />}>
-                            {party.otherPersons && party.otherPersons.length > 0 ? (
-                                <div className="space-y-4">
-                                    {party.otherPersons.map((person, index) => (
-                                        <div key={index} className="p-3 bg-gray-100 dark:bg-gray-800 rounded-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                            <DetailItem icon={<User className="w-4 h-4" />} label="Name" value={[person.salutation, person.firstName, person.lastName].filter(Boolean).join(' ')} />
-                                            <DetailItem icon={<Mail className="w-4 h-4" />} label="Email" value={person.emailAddress} />
-                                            <DetailItem icon={<Phone className="w-4 h-4" />} label="Work Phone" value={person.workPhone} />
-                                            <DetailItem icon={<Phone className="w-4 h-4" />} label="Mobile" value={person.mobile} />
-                                            <DetailItem icon={<Briefcase className="w-4 h-4" />} label="Designation" value={person.designation} />
-                                            <DetailItem icon={<UsersIcon className="w-4 h-4" />} label="Department" value={person.department} />
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-sm text-gray-500 dark:text-gray-400">No other person details found.</p>
-                            )}
-                        </ToggleSection>
-
-                        <ToggleSection title="Custom & Social Fields" icon={<Share2 className="w-5 h-5" />}>
-                            {party.customFields && party.customFields.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {party.customFields.map((field, index) => (
-                                        <div key={index} className="p-3 bg-gray-100 dark:bg-gray-800 rounded-md">
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{field.fieldName}</p>
-                                            <p className="font-medium text-gray-800 dark:text-gray-200">{field.fieldValue}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-sm text-gray-500 dark:text-gray-400 px-4 pt-4">No custom fields defined.</p>
-                            )}
-                            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 border-t border-gray-200 dark:border-gray-700 mt-4">
-                                <DetailItem icon={<LinkIcon className="w-4 h-4" />} label="Facebook" value={party.facebook} />
-                                <DetailItem icon={<LinkIcon className="w-4 h-4" />} label="Twitter" value={party.twitter} />
-                                <div className="md:col-span-2"><DetailItem icon={<MessageSquare className="w-4 h-4" />} label="Remarks" value={party.remarks} /></div>
-                            </div>
                         </ToggleSection>
                     </>}
                 </main>
@@ -258,7 +226,7 @@ const PartyType = () => {
     const [parties, setParties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [viewMode, setViewMode] = useState('table'); // 'table' or 'card'
+    const [viewMode, setViewMode] = useState('table');
     const [isImportGuideOpen, setIsImportGuideOpen] = useState(false);
     const [viewingParty, setViewingParty] = useState(null);
     const [isImporting, setIsImporting] = useState(false);
@@ -267,24 +235,26 @@ const PartyType = () => {
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [partyTypeFilter, setPartyTypeFilter] = useState('ALL');
-    const [currentPage, setCurrentPage] = useState(0); // page index, starts at 0
+    const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
     const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
 
     const fileInputRef = useRef(null);
-    const location = useLocation();
-
-
     const navigate = useNavigate();
-    const partyTypes = ['ALL', 'CUSTOMER', 'SUPPLIER'];
+    const partyTypes = ['ALL', 'CUSTOMER', 'SUPPLIER', 'VENDOR', 'CRM_LEAD'];
 
     const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-    const getAuthHeaders = () => ({
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-    });
+    const getAuthHeaders = () => {
+        const tenantId = localStorage.getItem('tenantId') || 'default';
+        return {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                'X-Tenant-ID': tenantId
+            }
+        };
+    };
 
     const fetchParties = async () => {
         try {
@@ -297,14 +267,14 @@ const PartyType = () => {
             if (partyTypeFilter !== 'ALL') {
                 params.append('type', partyTypeFilter);
             }
-            // The provided backend controller doesn't support a search parameter.
 
             const response = await axios.get(`${API_URL}/parties?${params.toString()}`, getAuthHeaders());
             setParties(response.data.content || []);
-            setTotalPages(response.data.totalPages);
+            setTotalPages(response.data.totalPages || 0);
+            setTotalElements(response.data.totalElements || (response.data.content ? response.data.content.length : 0));
             setError(null);
         } catch (err) {
-            setError('Failed to fetch parties. Please try again.');
+            setError('Failed to fetch parties. Please check server connections.');
             console.error(err);
         } finally {
             setLoading(false);
@@ -313,26 +283,27 @@ const PartyType = () => {
 
     useEffect(() => {
         fetchParties();
-    }, [currentPage, pageSize, partyTypeFilter, searchTerm]);
+    }, [currentPage, pageSize, partyTypeFilter]);
 
-    // Reset to first page when filter changes
-    useEffect(() => {
-        setCurrentPage(0);
-    }, [partyTypeFilter, searchTerm]);
+    const filteredParties = parties.filter(p => {
+        if (!searchTerm) return true;
+        const term = searchTerm.toLowerCase();
+        return (
+            (p.companyName && p.companyName.toLowerCase().includes(term)) ||
+            (p.primaryContactPerson && p.primaryContactPerson.toLowerCase().includes(term)) ||
+            (p.contactEmail && p.contactEmail.toLowerCase().includes(term)) ||
+            (p.customerCode && p.customerCode.toLowerCase().includes(term))
+        );
+    });
 
     const handleView = async (party) => {
         try {
-            // Show modal immediately with basic data
             setViewingParty(party);
             setIsLoadingDetails(true);
-
-            // Fetch full details from the single party endpoint (e.g., /parties/{id})
             const response = await axios.get(`${API_URL}/parties/${party.id}`, getAuthHeaders());
-
-            // Update the modal with the complete data
             setViewingParty(response.data);
         } catch (err) {
-            setError('Failed to fetch party details. Please try again.');
+            setError('Failed to fetch party details.');
             console.error(err);
         } finally {
             setIsLoadingDetails(false);
@@ -390,13 +361,13 @@ const PartyType = () => {
 
         try {
             await axios.post(`${API_URL}/parties/bulk-import`, formData, getAuthHeaders());
-            setImportSuccess('Parties imported successfully! The list will now refresh.');
-            fetchParties(); // Refresh the list
+            setImportSuccess('Parties imported successfully! List updated.');
+            fetchParties();
         } catch (err) {
             setImportErrors(err.response?.data || ['An unknown error occurred during import.']);
         } finally {
             setIsImporting(false);
-            fileInputRef.current.value = null; // Reset file input
+            if (fileInputRef.current) fileInputRef.current.value = null;
         }
     };
 
@@ -404,8 +375,7 @@ const PartyType = () => {
         if (window.confirm('Are you sure you want to delete this party?')) {
             try {
                 await axios.delete(`${API_URL}/parties/${id}`, getAuthHeaders());
-                // Refetch data to ensure consistency
-                setViewingParty(null); // Close modal if open
+                setViewingParty(null);
                 fetchParties();
             } catch (err) {
                 setError('Failed to delete party. Please try again.');
@@ -414,248 +384,240 @@ const PartyType = () => {
         }
     };
 
-    const handleDownloadSampleCsv = () => {
-        const headers = "companyName,partyType,primaryContactPerson";
-        const exampleRow = "Innovate Inc.,CUSTOMER,Jane Doe";
-        const csvContent = `data:text/csv;charset=utf-8,${headers}\n${exampleRow}`;
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "sample_customer_import.csv");
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-    };
-
     return (
-        <div className="flex flex-col h-full bg-slate-50 relative">
-            <header className="bg-white shadow-sm p-4 border-b border-slate-200">
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-slate-100">
-                            <ArrowLeft className="h-5 w-5 text-slate-600" />
-                        </button>
-                        <div>
-                            <h1 className="text-xl font-bold text-slate-800">Manage Parties</h1>
-                            <p className="text-sm text-slate-500">Add, edit, or remove customer and vendor information.</p>
+        <CompanyHubLayout>
+            <div className="flex flex-col h-full bg-[#F7FAFF] dark:bg-gray-900">
+                <header className="bg-white dark:bg-gray-800 shadow-2xs px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => navigate('/company-settings')} title="Back to Settings" className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                            </button>
+                            <div>
+                                <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">Manage Parties</h1>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Add, edit, or remove customer and vendor information.</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </header>
+                </header>
 
-            <div className="flex-grow p-4 sm:p-6 flex flex-col">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                    {/* Left side buttons */}
-                    <div className="flex items-center gap-4 flex-wrap">
-                        <div className="flex items-center gap-2">
-                            <input type="file" ref={fileInputRef} onChange={handleImportFile} className="hidden" accept=".xlsx, .xls" />
-                            <button onClick={() => fileInputRef.current.click()} disabled={isImporting} className="flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50">
-                                {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                <div className="flex-grow p-6 flex flex-col w-full">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <div className="flex items-center gap-3 flex-wrap">
+                            <input type="file" ref={fileInputRef} onChange={handleImportFile} className="hidden" accept=".xlsx, .xls, .csv" />
+                            <button onClick={() => fileInputRef.current.click()} disabled={isImporting} className="flex items-center justify-center px-3.5 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 shadow-2xs transition-colors disabled:opacity-50">
+                                {isImporting ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin text-[#00A9A8]" /> : <Upload className="mr-1.5 h-4 w-4 text-gray-500" />}
                                 Import
                             </button>
-                            <button onClick={handleDownloadTemplate} className="flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <Download className="mr-2 h-4 w-4" />
+                            <button onClick={handleDownloadTemplate} className="flex items-center justify-center px-3.5 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 shadow-2xs transition-colors">
+                                <Download className="mr-1.5 h-4 w-4 text-gray-500" />
                                 Template
                             </button>
-                            <button onClick={handleExport} className="flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                            <button onClick={handleExport} className="flex items-center justify-center px-3.5 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 shadow-2xs transition-colors">
+                                <FileSpreadsheet className="mr-1.5 h-4 w-4 text-gray-500" />
                                 Export
                             </button>
+                            <div className="h-6 w-[1px] bg-gray-300 dark:bg-gray-700 mx-1 hidden sm:block"></div>
+                            <div className="flex items-center p-0.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
+                                <button onClick={() => setViewMode('table')} title="List View" className={`p-1.5 rounded-md text-xs font-medium transition-all ${viewMode === 'table' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-2xs' : 'text-gray-500 dark:text-gray-400'}`}>
+                                    <List className="h-4 w-4" />
+                                </button>
+                                <button onClick={() => setViewMode('card')} title="Grid View" className={`p-1.5 rounded-md text-xs font-medium transition-all ${viewMode === 'card' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-2xs' : 'text-gray-500 dark:text-gray-400'}`}>
+                                    <LayoutGrid className="h-4 w-4" />
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2 p-1 bg-gray-200 dark:bg-gray-700 rounded-lg">
-                            <button onClick={() => setViewMode('table')} className={`p-2 rounded-md ${viewMode === 'table' ? 'bg-white dark:bg-gray-800 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}><List className="h-5 w-5" /></button>
-                            <button onClick={() => setViewMode('card')} className={`p-2 rounded-md ${viewMode === 'card' ? 'bg-white dark:bg-gray-800 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}><LayoutGrid className="h-5 w-5" /></button>
+
+                        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                            <button onClick={() => setIsImportGuideOpen(true)} title="Import Help Guide" className="p-2 text-gray-500 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 shadow-2xs transition-colors">
+                                <HelpCircle className="h-4.5 w-4.5" />
+                            </button>
+                            <button onClick={() => navigate('/company-settings/party-type/new')} className="flex items-center justify-center px-4 py-2 bg-[#00A9A8] hover:bg-[#008f8e] text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors">
+                                <Plus className="mr-1.5 h-4 w-4" /> Add Party
+                            </button>
                         </div>
                     </div>
-                    {/* Right side buttons */}
-                    <div className="flex items-center gap-2">
-                        <button onClick={() => setIsImportGuideOpen(true)} className="p-2 text-gray-500 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <HelpCircle className="h-5 w-5" />
-                            <span className="sr-only">Import Guide</span>
-                        </button>
-                        <button onClick={() => navigate('/company-settings/party-type/new')} className="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition-colors shrink-0">
-                            <Plus className="mr-2 h-4 w-4" /> Add Party
-                        </button>
-                    </div>
-                </div>
 
-                <div className="flex flex-col md:flex-row gap-4 mb-6">
-                    <div className="relative flex-grow">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search by company name..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                        />
-                    </div>
-                    <select
-                        value={partyTypeFilter}
-                        onChange={(e) => setPartyTypeFilter(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                    >
-                        {partyTypes.map(type => (
-                            <option key={type} value={type}>{type === 'ALL' ? 'All Types' : type}</option>
-                        ))}
-                    </select>
-                </div>
-
-                {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative mb-4" role="alert">{error}</div>}
-
-                {importSuccess && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md relative mb-4" role="alert">{importSuccess}</div>}
-                {importErrors.length > 0 && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative mb-4" role="alert">
-                        <strong className="font-bold">Import Failed!</strong>
-                        <ul className="mt-2 list-disc list-inside">
-                            {importErrors.map((err, index) => (
-                                <li key={index}>{err}</li>
+                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                        <div className="relative flex-grow">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search by company name, contact, code..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A9A8] dark:text-white shadow-2xs"
+                            />
+                        </div>
+                        <select
+                            value={partyTypeFilter}
+                            onChange={(e) => { setPartyTypeFilter(e.target.value); setCurrentPage(0); }}
+                            className="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A9A8] dark:text-white shadow-2xs"
+                        >
+                            {partyTypes.map(type => (
+                                <option key={type} value={type}>
+                                    {type === 'ALL' ? 'All Party Types' : type === 'CRM_LEAD' ? 'CRM Lead' : type.charAt(0) + type.slice(1).toLowerCase()}
+                                </option>
                             ))}
-                        </ul>
-                        <button onClick={() => setImportErrors([])} className="absolute top-0 bottom-0 right-0 px-4 py-3">
-                            <X className="h-5 w-5" />
-                        </button>
+                        </select>
                     </div>
-                )}
 
+                    {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-xs mb-4" role="alert">{error}</div>}
+                    {importSuccess && <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-xs mb-4" role="alert">{importSuccess}</div>}
 
-                <main className="flex-grow overflow-auto">
-                    {loading ? (
-                        <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>
-                    ) : parties.length > 0 ? (
-                        viewMode === 'card' ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {parties.map(party => (
-                                    <PartyCard key={party.id} party={party} onEdit={() => navigate(`/company-settings/party-type/edit/${party.id}`)} onDelete={handleDelete} onView={handleView} />
-                                ))}
-                            </div>
+                    <main className="flex-grow">
+                        {loading ? (
+                            <div className="flex justify-center items-center py-24"><Loader2 className="h-8 w-8 animate-spin text-[#00A9A8]" /></div>
+                        ) : filteredParties.length > 0 ? (
+                            viewMode === 'card' ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                                    {filteredParties.map(party => (
+                                        <PartyCard key={party.id} party={party} onEdit={() => navigate(`/company-settings/party-type/edit/${party.id}`)} onDelete={handleDelete} onView={handleView} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-2xs overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm text-left text-gray-600 dark:text-gray-300">
+                                            <thead className="text-xs text-gray-700 dark:text-gray-300 uppercase bg-gray-50 dark:bg-gray-700/60 border-b border-gray-200 dark:border-gray-700">
+                                                <tr>
+                                                    <th scope="col" className="px-5 py-3.5 font-bold">#</th>
+                                                    <th scope="col" className="px-5 py-3.5 font-bold">Company Name</th>
+                                                    <th scope="col" className="px-5 py-3.5 font-bold">Code</th>
+                                                    <th scope="col" className="px-5 py-3.5 font-bold">Contact Person</th>
+                                                    <th scope="col" className="px-5 py-3.5 font-bold">Email</th>
+                                                    <th scope="col" className="px-5 py-3.5 font-bold">City</th>
+                                                    <th scope="col" className="px-5 py-3.5 font-bold">Role Type</th>
+                                                    <th scope="col" className="px-5 py-3.5 font-bold">Status</th>
+                                                    <th scope="col" className="px-5 py-3.5 text-right font-bold">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                                {filteredParties.map((party, index) => (
+                                                    <tr key={party.id} className="hover:bg-teal-50/30 dark:hover:bg-gray-750 transition-colors">
+                                                        <td className="px-5 py-4 text-xs text-gray-500">{currentPage * pageSize + index + 1}</td>
+                                                        <td className="px-5 py-4 font-semibold text-gray-900 dark:text-white whitespace-nowrap">{party.companyName}</td>
+                                                        <td className="px-5 py-4 text-xs font-mono text-gray-500">{party.customerCode || party.vendorCustomerCode || 'N/A'}</td>
+                                                        <td className="px-5 py-4">{party.primaryContactPerson || 'N/A'}</td>
+                                                        <td className="px-5 py-4 text-xs">{party.contactEmail || 'N/A'}</td>
+                                                        <td className="px-5 py-4 text-xs">{party.city || 'N/A'}</td>
+                                                        <td className="px-5 py-4">{getPartyTypeBadge(party.partyType)}</td>
+                                                        <td className="px-5 py-4">
+                                                            <span className={`px-2 py-0.5 text-xs font-medium rounded-md ${party.active ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'}`}>
+                                                                {party.active ? 'Active' : 'Inactive'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-5 py-4 text-right whitespace-nowrap">
+                                                            <div className="flex items-center justify-end gap-1">
+                                                                <button onClick={() => handleView(party)} title="View Details" className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500">
+                                                                    <Eye className="h-4 w-4" />
+                                                                </button>
+                                                                <button onClick={() => navigate(`/company-settings/party-type/edit/${party.id}`)} title="Edit" className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500">
+                                                                    <Edit className="h-4 w-4" />
+                                                                </button>
+                                                                <button onClick={() => handleDelete(party.id)} title="Delete" className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-gray-700 text-red-500">
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )
                         ) : (
-                            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                                <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400 divide-y divide-gray-200 dark:divide-gray-700">
-                                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                        <tr>
-                                            <th scope="col" className="px-6 py-3 border-r dark:border-gray-600">S.No.</th>
-                                            <th scope="col" className="px-6 py-3 border-r dark:border-gray-600">Company Name</th>
-                                            <th scope="col" className="px-6 py-3 border-r dark:border-gray-600">Code</th>
-                                            <th scope="col" className="px-6 py-3 border-r dark:border-gray-600">Contact Person</th>
-                                            <th scope="col" className="px-6 py-3 border-r dark:border-gray-600">Email</th>
-                                            <th scope="col" className="px-6 py-3 border-r dark:border-gray-600">City</th>
-                                            <th scope="col" className="px-6 py-3 border-r dark:border-gray-600">Type</th>
-                                            <th scope="col" className="px-6 py-3 border-r dark:border-gray-600">Status</th>
-                                            <th scope="col" className="px-6 py-3 text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {parties.map((party, index) => (
-                                            <tr key={party.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                                <td className="px-6 py-4 border-r dark:border-gray-600">{currentPage * pageSize + index + 1}</td>
-                                                <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white border-r dark:border-gray-600">{party.companyName}</td>
-                                                <td className="px-6 py-4 border-r dark:border-gray-600">{party.customerCode || party.vendorCustomerCode || 'N/A'}</td>
-                                                <td className="px-6 py-4 border-r dark:border-gray-600">{party.primaryContactPerson || 'N/A'}</td>
-                                                <td className="px-6 py-4 border-r dark:border-gray-600">{party.contactEmail || 'N/A'}</td>
-                                                <td className="px-6 py-4 border-r dark:border-gray-600">{party.city || 'N/A'}</td>
-                                                <td className="px-6 py-4 border-r dark:border-gray-600"><span className={`px-2 py-1 text-xs font-medium rounded-full ${party.partyType === 'CUSTOMER' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>{party.partyType}</span></td>
-                                                <td className="px-6 py-4 border-r dark:border-gray-600">
-                                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${party.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                        {party.active ? 'Active' : 'Inactive'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <button onClick={() => handleView(party)} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"><Eye className="h-4 w-4 text-gray-600 dark:text-gray-300" /></button>
-                                                    <button onClick={() => navigate(`/company-settings/party-type/edit/${party.id}`)} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"><Edit className="h-4 w-4 text-gray-600 dark:text-gray-300" /></button>
-                                                    <button onClick={() => handleDelete(party.id)} className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"><Trash2 className="h-4 w-4 text-red-500" /></button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-16 text-center shadow-2xs">
+                                <Search className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" />
+                                <h3 className="text-base font-bold text-gray-800 dark:text-white">No Parties Found</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">There are no records matching your current filter. Get started by creating a new party entry.</p>
+                                <button onClick={() => navigate('/company-settings/party-type/new')} className="mt-4 inline-flex items-center px-4 py-2 bg-[#00A9A8] text-white text-xs font-semibold rounded-lg hover:bg-[#008f8e] transition-colors">
+                                    <Plus className="mr-1.5 h-4 w-4" /> Create First Party
+                                </button>
                             </div>
-                        )
-                    ) : (
-                        <div className="text-center text-gray-500 py-16 flex flex-col items-center">
-                            <Search className="mx-auto h-12 w-12 text-gray-400" />
-                            <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">No Parties Found</h3>
-                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding a new party.</p>
-                        </div>
-                    )}
-                </main>
+                        )}
+                    </main>
 
-                {!loading && parties.length > 0 && (
-                    <footer className="flex flex-col sm:flex-row justify-between items-center pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4 sm:mb-0">
-                            <span>Rows per page:</span>
-                            <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(0); }} className="px-2 py-1 border border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-600">
-                                {[10, 20, 50, 100].map(size => <option key={size} value={size}>{size}</option>)}
-                            </select>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                                Page {totalPages > 0 ? currentPage + 1 : 0} of {totalPages}
-                            </span>
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0} className="p-2 rounded-md border dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <ChevronLeft className="h-5 w-5" />
-                                </button>
-                                <button onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1} className="p-2 rounded-md border dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <ChevronRight className="h-5 w-5" />
-                                </button>
+                    {!loading && parties.length > 0 && (
+                        <footer className="flex flex-col sm:flex-row justify-between items-center pt-4 mt-4 border-t border-gray-200 dark:border-gray-700 gap-4">
+                            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                <span>Rows per page:</span>
+                                <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(0); }} className="px-2 py-1 text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-[#00A9A8]">
+                                    {[10, 25, 50, 100].map(size => <option key={size} value={size}>{size}</option>)}
+                                </select>
+                                <span className="ml-2">
+                                    Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, totalElements || parties.length)} of {totalElements || parties.length} entries
+                                </span>
                             </div>
-                        </div>
-                    </footer>
-                )}
+                            <div className="flex items-center gap-3">
+                                <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                                    Page {totalPages > 0 ? currentPage + 1 : 0} of {totalPages}
+                                </span>
+                                <div className="flex items-center gap-1">
+                                    <button onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0} className="p-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors">
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </button>
+                                    <button onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1} className="p-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors">
+                                        <ChevronRight className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        </footer>
+                    )}
+                </div>
 
                 {isImportGuideOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4" onClick={() => setIsImportGuideOpen(false)}>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl" onClick={e => e.stopPropagation()}>
-                            <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 p-4">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Customer Import Guide</h3>
-                                <button onClick={() => setIsImportGuideOpen(false)} className="p-1 rounded-full text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700">
-                                    <X className="h-6 w-6" />
+                    <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4 backdrop-blur-xs" onClick={() => setIsImportGuideOpen(false)}>
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+                            <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                                <h3 className="text-base font-bold text-gray-900 dark:text-white">Party Bulk Import Guide</h3>
+                                <button onClick={() => setIsImportGuideOpen(false)} className="p-1 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    <X className="h-5 w-5" />
                                 </button>
                             </div>
                             <div className="p-6">
-                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                                    To bulk import customers, prepare a CSV file with the following columns. The 'Field Name' should be the header in your file.
+                                <p className="text-xs text-gray-600 dark:text-gray-300 mb-4">
+                                    Prepare your CSV or Excel file matching the following format for seamless bulk party ingestion:
                                 </p>
                                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                                    <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                    <table className="w-full text-xs text-left text-gray-600 dark:text-gray-400">
+                                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700">
                                             <tr>
-                                                <th scope="col" className="px-6 py-3">Field Name</th>
-                                                <th scope="col" className="px-6 py-3">Required</th>
-                                                <th scope="col" className="px-6 py-3">Description</th>
-                                                <th scope="col" className="px-6 py-3">Example</th>
+                                                <th scope="col" className="px-4 py-2.5 font-bold">Field Name</th>
+                                                <th scope="col" className="px-4 py-2.5 font-bold">Required</th>
+                                                <th scope="col" className="px-4 py-2.5 font-bold">Description</th>
+                                                <th scope="col" className="px-4 py-2.5 font-bold">Example</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
-                                            <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                                <td className="px-6 py-4 font-mono">companyName</td>
-                                                <td className="px-6 py-4"><span className="text-red-500 font-semibold">Yes</span></td>
-                                                <td className="px-6 py-4">The legal name of the company.</td>
-                                                <td className="px-6 py-4">Innovate Inc.</td>
+                                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                            <tr>
+                                                <td className="px-4 py-2.5 font-mono font-bold text-gray-900 dark:text-white">companyName</td>
+                                                <td className="px-4 py-2.5 text-red-600 font-bold">Yes</td>
+                                                <td className="px-4 py-2.5">Legal name of the business entity</td>
+                                                <td className="px-4 py-2.5">Emirates Logistics LLC</td>
                                             </tr>
-                                            <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                                <td className="px-6 py-4 font-mono">partyType</td>
-                                                <td className="px-6 py-4"><span className="text-red-500 font-semibold">Yes</span></td>
-                                                <td className="px-6 py-4">Must be 'CUSTOMER' or 'VENDOR'.</td>
-                                                <td className="px-6 py-4">CUSTOMER</td>
+                                            <tr>
+                                                <td className="px-4 py-2.5 font-mono font-bold text-gray-900 dark:text-white">partyType</td>
+                                                <td className="px-4 py-2.5 text-red-600 font-bold">Yes</td>
+                                                <td className="px-4 py-2.5">CUSTOMER, SUPPLIER, or VENDOR</td>
+                                                <td className="px-4 py-2.5">CUSTOMER</td>
                                             </tr>
-                                            <tr className="bg-white dark:bg-gray-800">
-                                                <td className="px-6 py-4 font-mono">primaryContactPerson</td>
-                                                <td className="px-6 py-4">No</td>
-                                                <td className="px-6 py-4">Full name of the main contact person.</td>
-                                                <td className="px-6 py-4">Jane Doe</td>
+                                            <tr>
+                                                <td className="px-4 py-2.5 font-mono">primaryContactPerson</td>
+                                                <td className="px-4 py-2.5 text-gray-400">No</td>
+                                                <td className="px-4 py-2.5">Main point of contact full name</td>
+                                                <td className="px-4 py-2.5">Sajid Al-Maktoum</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="px-4 py-2.5 font-mono">vatTrnNumber</td>
+                                                <td className="px-4 py-2.5 text-gray-400">No</td>
+                                                <td className="px-4 py-2.5">UAE 15-digit Tax Registration Number</td>
+                                                <td className="px-4 py-2.5">100234567800003</td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
-                            <div className="flex justify-end p-4 border-t border-gray-200 dark:border-gray-700">
-                                <button onClick={handleDownloadSampleCsv} className="flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75">
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Download Sample CSV
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -671,8 +633,8 @@ const PartyType = () => {
                     />
                 )}
             </div>
-        </div>
+        </CompanyHubLayout>
     );
-}
+};
 
 export default PartyType;

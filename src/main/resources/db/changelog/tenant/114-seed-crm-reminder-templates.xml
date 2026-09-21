@@ -7,6 +7,9 @@
 
     <changeSet id="114-seed-crm-reminder-email" author="antigravity">
         <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="notif_email_templates"/>
+        </preConditions>
         <insert tableName="notif_email_templates">
             <column name="tenant_id" valueNumeric="1"/>
             <column name="template_id" value="crm_reminder_alert"/>
@@ -20,6 +23,9 @@
 
     <changeSet id="114-seed-crm-reminder-sms" author="antigravity">
         <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="notif_sms_templates"/>
+        </preConditions>
         <insert tableName="notif_sms_templates">
             <column name="tenant_id" valueNumeric="1"/>
             <column name="template_id" value="crm_reminder_alert"/>
@@ -32,6 +38,9 @@
 
     <changeSet id="114-seed-crm-reminder-whatsapp" author="antigravity">
         <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="notif_whatsapp_templates"/>
+        </preConditions>
         <insert tableName="notif_whatsapp_templates">
             <column name="tenant_id" valueNumeric="1"/>
             <column name="template_id" value="crm_reminder_alert"/>

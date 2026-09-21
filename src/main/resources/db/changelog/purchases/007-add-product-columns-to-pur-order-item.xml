@@ -7,6 +7,11 @@
 
     <changeSet id="007-add-product-columns-to-pur-order-item" author="emirateserp">
         <preConditions onFail="MARK_RAN">
+            <tableExists tableName="pur_purchase_order_item"/>
+            <tableExists tableName="crm_sales_products"/>
+            <tableExists tableName="pro_raw_materials"/>
+            <tableExists tableName="pro_semifinished"/>
+            <tableExists tableName="pro_finished_goods"/>
             <not>
                 <columnExists tableName="pur_purchase_order_item" columnName="crm_product_id"/>
             </not>

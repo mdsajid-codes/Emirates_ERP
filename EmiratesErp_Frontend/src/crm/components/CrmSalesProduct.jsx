@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Plus, Edit, Trash2, Loader2, Search, ArrowLeft, ChevronLeft, ChevronRight, ImageOff, List, Grid, Printer, X } from 'lucide-react';
 import { useCrmPermissions } from '../context/CrmPermissionsContext.jsx';
+import CompanyHubLayout from '../../components/CompanyHubLayout.jsx';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -54,9 +55,14 @@ const AuthenticatedImage = ({ url, alt, className, fallback }) => {
     return <img src={src} alt={alt} className={className} />;
 };
 
-const CrmSalesProduct = () => {
+const CrmSalesProduct = ({ pageName }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { hasPermission } = useCrmPermissions();
+    const isCompanySettings = location.pathname.includes('/company-settings');
+    const getAddPath = () => isCompanySettings ? '/company-settings/product-services/new' : '/crm-dashboard/products/new';
+    const getEditPath = (id) => isCompanySettings ? `/company-settings/product-services/edit/${id}` : `/crm-dashboard/products/edit/${id}`;
+    const getBasePath = () => isCompanySettings ? '/company-settings/product-services' : '/crm-dashboard/products';
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -176,7 +182,7 @@ const CrmSalesProduct = () => {
                         <Printer size={15} />
                     </button>
                     {hasPermission('PRODUCT', 'update') && (
-                        <button onClick={() => navigate(`/crm-dashboard/products/edit/${product.id}`)} className="p-1.5 rounded-md hover:bg-slate-200 text-[#00A3A6] transition-colors" title="Edit">
+                        <button onClick={() => navigate(getEditPath(product.id))} className="p-1.5 rounded-md hover:bg-slate-200 text-[#00A3A6] transition-colors" title="Edit">
                             <Edit size={15} />
                         </button>
                     )}
@@ -190,8 +196,8 @@ const CrmSalesProduct = () => {
         );
     };
 
-    return (
-        <div className="w-full px-3 py-2 space-y-2 bg-slate-50/50 min-h-screen">
+    const content = (
+        <div className="w-full px-4 py-4 space-y-4 bg-slate-50/50 min-h-screen">
             {/* Header & Action Bar */}
             <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 bg-white p-2.5 rounded-lg border border-[#E8EEF7] shadow-2xs">
                 <div className="flex items-center gap-2.5">
@@ -200,7 +206,7 @@ const CrmSalesProduct = () => {
                     </button>
                     <div className="h-6 w-1 bg-[#00A3A6] rounded-full"></div>
                     <div>
-                        <h3 className="text-base font-extrabold text-[#0F2342] uppercase tracking-wide">CRM PRODUCTS</h3>
+                        <h3 className="text-base font-extrabold text-[#0F2342] uppercase tracking-wide">{pageName || (isCompanySettings ? 'PRODUCT & SERVICES' : 'CRM PRODUCTS')}</h3>
                     </div>
                 </div>
 
@@ -229,7 +235,7 @@ const CrmSalesProduct = () => {
 
                     {hasPermission('PRODUCT', 'create') && (
                         <button
-                            onClick={() => navigate('/crm-dashboard/products/new')}
+                            onClick={() => navigate(getAddPath())}
                             className="bg-[#00A3A6] hover:bg-[#008286] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer ml-auto sm:ml-0"
                         >
                             <Plus className="h-4 w-4" /> Add Product
@@ -292,7 +298,7 @@ const CrmSalesProduct = () => {
                                                         <Printer size={15} />
                                                     </button>
                                                     {hasPermission('PRODUCT', 'update') && (
-                                                        <button onClick={() => navigate(`/crm-dashboard/products/edit/${product.id}`)} className="p-1.5 rounded-md text-[#62708A] hover:bg-slate-100 hover:text-[#00A3A6] transition-colors" title="Edit Product">
+                                                        <button onClick={() => navigate(getEditPath(product.id))} className="p-1.5 rounded-md text-[#62708A] hover:bg-slate-100 hover:text-[#00A3A6] transition-colors" title="Edit Product">
                                                             <Edit size={15} />
                                                         </button>
                                                     )}
@@ -390,6 +396,8 @@ const CrmSalesProduct = () => {
             )}
         </div>
     );
+
+    return isCompanySettings ? <CompanyHubLayout>{content}</CompanyHubLayout> : content;
 };
 
 export default CrmSalesProduct;

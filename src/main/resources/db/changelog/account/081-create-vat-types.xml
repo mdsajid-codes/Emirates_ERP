@@ -6,6 +6,10 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
 
     <changeSet id="081-create-vat-types" author="system">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="vat_groups"/>
+            <tableExists tableName="chart_of_accounts"/>
+        </preConditions>
         <createTable tableName="vat_types">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
