@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <!-- Changelog 004: POS Shift Cash Reconciliation, Card Settlement Clearing, and Returns -->
+
+    <changeSet id="20260919-pos-004-create-pos-shifts-table" author="emirates-erp">
+        <createTable tableName="pos_shifts">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="terminal_id" type="VARCHAR(100)"/>
+            <column name="cashier_user_id" type="VARCHAR(100)"/>
+            <column name="opened_at" type="DATETIME"/>
+            <column name="closed_at" type="DATETIME"/>
+            <column name="opening_cash_cents" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="expected_cash_cents" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="actual_cash_cents" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="over_short_cents" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="status" type="VARCHAR(50)" defaultValue="OPEN"/>
+            <column name="z_report_journal_entry_id" type="BIGINT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <createIndex tableName="pos_shifts" indexName="idx_pos_shifts_tenant_cashier">
+            <column name="tenant_id"/>
+            <column name="cashier_user_id"/>
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260919-pos-004-add-shift-clearing-return-to-sales" author="emirates-erp">
+        <addColumn tableName="sales">
+            <column name="shift_id" type="BIGINT"/>
+            <column name="location_id" type="BIGINT"/>
+            <column name="payment_clearing_status" type="VARCHAR(50)" defaultValue="PENDING"/>
+            <column name="settlement_id" type="BIGINT"/>
+            <column name="is_return" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="original_sale_id" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20260919-pos-004-create-pos-settlements-table" author="emirates-erp">
+        <createTable tableName="pos_settlements">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="settlement_ref" type="VARCHAR(100)"/>
+            <column name="settled_at" type="DATETIME"/>
+            <column name="gross_amount_cents" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="merchant_fee_cents" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="net_amount_cents" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="bank_account_id" type="BIGINT"/>
+            <column name="journal_entry_id" type="BIGINT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <createIndex tableName="pos_settlements" indexName="idx_pos_settlements_tenant">
+            <column name="tenant_id"/>
+            <column name="settlement_ref"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

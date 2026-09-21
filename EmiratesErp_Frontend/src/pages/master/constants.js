@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, Building, Activity, Users, Receipt } from 'lucide-react';
+import { LayoutDashboard, Building, Activity, Users, Receipt, MonitorSpeaker } from 'lucide-react';
 
 export const serviceModulesOptions = [
     { value: 'HRMS_CORE', label: 'HRMS Core' },
@@ -38,9 +38,10 @@ export const masterRoleOptions = [
 ];
 
 export const masterNavLinks = [
-    { name: 'Dashboard', view: 'dashboard', icon: LayoutDashboard, color: 'text-sky-500' },
-    { name: 'Tenants', view: 'tenants', icon: Building, color: 'text-orange-500' },
-    { name: 'Requests', view: 'requests', icon: Activity, color: 'text-yellow-500' },
-    { name: 'Tenant Company', view: 'tenant-company', icon: Building, color: 'text-indigo-500' },
-    { name: 'Tenant Invoice', view: 'tenant-invoice', icon: Receipt, color: 'text-green-600' },
+    { name: 'Dashboard',      view: 'dashboard',     icon: LayoutDashboard,  color: 'text-sky-500' },
+    { name: 'Tenants',        view: 'tenants',       icon: Building,         color: 'text-orange-500' },
+    { name: 'Requests',       view: 'requests',      icon: Activity,         color: 'text-yellow-500' },
+    { name: 'Demo Requests',  view: 'demo-requests', icon: MonitorSpeaker,   color: 'text-teal-500' },
+    { name: 'Tenant Company', view: 'tenant-company',icon: Building,         color: 'text-indigo-500' },
+    { name: 'Tenant Invoice', view: 'tenant-invoice',icon: Receipt,          color: 'text-green-600' },
 ];

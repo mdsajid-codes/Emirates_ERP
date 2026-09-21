@@ -38,7 +38,6 @@ const crmNavLinks = [
     { nameKey: 'crm.nav.leads',     defaultName: 'Leads',     icon: Users,           href: '/crm-dashboard/leads', module: 'LEAD' },
     { nameKey: 'crm.nav.companies', defaultName: 'Companies', icon: Building,        href: '/crm-dashboard/companies', module: 'COMPANY' },
     { nameKey: 'crm.nav.contacts',  defaultName: 'Contacts',  icon: Contact,         href: '/crm-dashboard/contacts', module: 'CONTACT' },
-    { nameKey: 'crm.nav.products',  defaultName: 'Products',  icon: Package,         href: '/crm-dashboard/products', module: 'PRODUCT' },
     { nameKey: 'crm.nav.deals',     defaultName: 'Deals',     icon: Handshake,       href: '/crm-dashboard/deals', module: 'DEAL' },
     { nameKey: 'crm.nav.tasks',     defaultName: 'Tasks',     icon: ListTodo,        href: '/crm-dashboard/tasks', module: 'TASK' },
     { nameKey: 'crm.nav.calendar',  defaultName: 'Calendar',  icon: CalendarDays,    href: '/crm-dashboard/calendar', module: 'EVENT' },

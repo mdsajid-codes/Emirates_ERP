@@ -70,6 +70,18 @@ public class PostingRulesFactory {
             case POS_SALE:
                 generatePosSaleLines(request, tenantId, generatedLines);
                 break;
+            case POS_COGS:
+                generatePosCogsLines(request, tenantId, generatedLines);
+                break;
+            case POS_REFUND:
+                generatePosRefundLines(request, tenantId, generatedLines);
+                break;
+            case POS_SHIFT_RECONCILIATION:
+                generatePosShiftReconciliationLines(request, tenantId, generatedLines);
+                break;
+            case POS_CARD_SETTLEMENT:
+                generatePosCardSettlementLines(request, tenantId, generatedLines);
+                break;
             default:
                 throw new UnsupportedOperationException("Document type " + docType + " is not yet supported by the Posting Engine.");
         }
@@ -603,9 +615,10 @@ public class PostingRulesFactory {
 
     private void generatePosSaleLines(PostingRequest request, Long tenantId, List<JournalEntryLineRequest> targetLines) {
         BigDecimal totalSalesAmount = BigDecimal.ZERO;
+        BigDecimal totalVatAmount = BigDecimal.ZERO;
 
         for (PostingRequest.Line line : request.getLines()) {
-            // Sales/Revenue account lookup
+            // 1. Sales/Revenue account lookup
             ChartOfAccount salesAccount;
             try {
                 if (line.getItemId() != null) {
@@ -618,25 +631,265 @@ public class PostingRulesFactory {
                         "Failed to resolve Sales account: " + e.getMessage());
             }
 
-            // Cr: Sales
+            // Cr: Sales (Subtotal)
+            JournalEntryLineRequest crSalesLine = new JournalEntryLineRequest();
+            crSalesLine.setAccountId(salesAccount.getAccountId());
+            crSalesLine.setDebitAmount(BigDecimal.ZERO);
+            crSalesLine.setCreditAmount(line.getAmount());
+            populateDimensions(line, crSalesLine);
+            if (crSalesLine.getDimCompanyId() == null && request.getCompanyId() != null) {
+                crSalesLine.setDimCompanyId(request.getCompanyId());
+            }
+            targetLines.add(crSalesLine);
+
+            totalSalesAmount = totalSalesAmount.add(line.getAmount());
+
+            // 2. Output VAT Payable lookup & Line creation (if line has VAT)
+            if (line.getTaxAmount() != null && line.getTaxAmount().compareTo(BigDecimal.ZERO) > 0) {
+                ChartOfAccount vatAccount;
+                try {
+                    if (line.getItemId() != null) {
+                        vatAccount = resolver.resolveItemAccount(line.getItemId(), "OUTPUT_VAT", tenantId);
+                    } else {
+                        vatAccount = resolver.resolveAccountBySection(AccountSection.BS_VAT_PAYABLE, tenantId);
+                    }
+                } catch (Exception e) {
+                    vatAccount = fallbackOrThrow(AccountSection.BS_VAT_PAYABLE, tenantId,
+                            "Failed to resolve Output VAT account: " + e.getMessage());
+                }
+
+                JournalEntryLineRequest crVatLine = new JournalEntryLineRequest();
+                crVatLine.setAccountId(vatAccount.getAccountId());
+                crVatLine.setDebitAmount(BigDecimal.ZERO);
+                crVatLine.setCreditAmount(line.getTaxAmount());
+                populateDimensions(line, crVatLine);
+                if (crVatLine.getDimCompanyId() == null && request.getCompanyId() != null) {
+                    crVatLine.setDimCompanyId(request.getCompanyId());
+                }
+                targetLines.add(crVatLine);
+
+                totalVatAmount = totalVatAmount.add(line.getTaxAmount());
+            }
+        }
+
+        BigDecimal netTotalAmount = totalSalesAmount.add(totalVatAmount);
+
+        // 3. Dr: Cash/Bank (BS_CASH) for cash/card/wallet; BS_TRADE_RECEIVABLES for credit/account sales
+        String paymentMethod = request.getPaymentMethod() != null ? request.getPaymentMethod().toLowerCase() : "cash";
+        AccountSection targetSection;
+        if (paymentMethod.contains("credit") || paymentMethod.contains("receivable") || paymentMethod.contains("ar")
+                || paymentMethod.contains("customer") || paymentMethod.contains("on_account") || paymentMethod.contains("account")) {
+            targetSection = AccountSection.BS_TRADE_RECEIVABLES;
+        } else {
+            // cash, card, wallet, terminal all debit BS_CASH (Cash/Bank on hand)
+            targetSection = AccountSection.BS_CASH;
+        }
+
+        ChartOfAccount debitAccount;
+        if (targetSection == AccountSection.BS_TRADE_RECEIVABLES && request.getCompanyId() != null) {
+            try {
+                debitAccount = resolver.resolvePartyAccount(request.getCompanyId(), PartyType.CUSTOMER, "AR", tenantId);
+            } catch (Exception e) {
+                debitAccount = fallbackOrThrow(targetSection, tenantId,
+                        "Failed to resolve party AR account for POS Sales: " + e.getMessage());
+            }
+        } else {
+            debitAccount = fallbackOrThrow(targetSection, tenantId,
+                    "Failed to resolve asset account for POS Sales (" + paymentMethod + ")");
+        }
+
+        JournalEntryLineRequest drLine = new JournalEntryLineRequest();
+        drLine.setAccountId(debitAccount.getAccountId());
+        drLine.setDebitAmount(netTotalAmount);
+        drLine.setCreditAmount(BigDecimal.ZERO);
+        if (request.getCompanyId() != null) {
+            drLine.setDimCompanyId(request.getCompanyId());
+        }
+        targetLines.add(drLine);
+    }
+
+    private void generatePosCogsLines(PostingRequest request, Long tenantId, List<JournalEntryLineRequest> targetLines) {
+        BigDecimal totalCogs = BigDecimal.ZERO;
+
+        for (PostingRequest.Line line : request.getLines()) {
+            BigDecimal cogsAmount = line.getCogsAmount() != null ? line.getCogsAmount() : line.getAmount();
+            if (cogsAmount == null || cogsAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+
+            ChartOfAccount cogsAccount;
+            try {
+                if (line.getItemId() != null) {
+                    cogsAccount = resolver.resolveItemAccount(line.getItemId(), "COS", tenantId);
+                } else {
+                    cogsAccount = resolver.resolveAccountBySection(AccountSection.PL_COS_GOODS, tenantId);
+                }
+            } catch (Exception e) {
+                cogsAccount = fallbackOrThrow(AccountSection.PL_COS_GOODS, tenantId,
+                        "Failed to resolve COGS account: " + e.getMessage());
+            }
+
+            ChartOfAccount inventoryAccount;
+            try {
+                if (line.getItemId() != null) {
+                    inventoryAccount = resolver.resolveItemAccount(line.getItemId(), "INVENTORY", tenantId);
+                } else {
+                    inventoryAccount = resolver.resolveAccountBySection(AccountSection.BS_INVENTORIES, tenantId);
+                }
+            } catch (Exception e) {
+                inventoryAccount = fallbackOrThrow(AccountSection.BS_INVENTORIES, tenantId,
+                        "Failed to resolve Inventory account: " + e.getMessage());
+            }
+
+            // Dr: COGS Expense
+            JournalEntryLineRequest drLine = new JournalEntryLineRequest();
+            drLine.setAccountId(cogsAccount.getAccountId());
+            drLine.setDebitAmount(cogsAmount);
+            drLine.setCreditAmount(BigDecimal.ZERO);
+            populateDimensions(line, drLine);
+            targetLines.add(drLine);
+
+            // Cr: Inventory Asset
             JournalEntryLineRequest crLine = new JournalEntryLineRequest();
-            crLine.setAccountId(salesAccount.getAccountId());
+            crLine.setAccountId(inventoryAccount.getAccountId());
             crLine.setDebitAmount(BigDecimal.ZERO);
-            crLine.setCreditAmount(line.getAmount());
+            crLine.setCreditAmount(cogsAmount);
             populateDimensions(line, crLine);
             targetLines.add(crLine);
 
-            totalSalesAmount = totalSalesAmount.add(line.getAmount());
+            totalCogs = totalCogs.add(cogsAmount);
+        }
+    }
+
+    private void generatePosRefundLines(PostingRequest request, Long tenantId, List<JournalEntryLineRequest> targetLines) {
+        BigDecimal totalSalesAmount = BigDecimal.ZERO;
+        BigDecimal totalVatAmount = BigDecimal.ZERO;
+        BigDecimal totalCogsAmount = BigDecimal.ZERO;
+
+        if (request.getLines() != null) {
+            for (PostingRequest.Line line : request.getLines()) {
+                BigDecimal lineAmount = line.getAmount() != null ? line.getAmount() : BigDecimal.ZERO;
+                BigDecimal lineTax = line.getTaxAmount() != null ? line.getTaxAmount() : BigDecimal.ZERO;
+                BigDecimal lineCogs = line.getCogsAmount() != null ? line.getCogsAmount() : BigDecimal.ZERO;
+
+                totalSalesAmount = totalSalesAmount.add(lineAmount);
+                totalVatAmount = totalVatAmount.add(lineTax);
+                totalCogsAmount = totalCogsAmount.add(lineCogs);
+            }
         }
 
-        // Dr: Cash/Bank
-        ChartOfAccount cashBankAccount = fallbackOrThrow(AccountSection.BS_CASH, tenantId,
-                "Failed to resolve cash account for POS Sales");
+        BigDecimal grossRefund = totalSalesAmount.add(totalVatAmount);
 
+        ChartOfAccount salesAccount = fallbackOrThrow(AccountSection.PL_SALES_GOODS, tenantId, "Sales Goods Account");
+        ChartOfAccount vatAccount = fallbackOrThrow(AccountSection.BS_VAT_PAYABLE, tenantId, "VAT Payable Account");
+        ChartOfAccount cashAccount = fallbackOrThrow(AccountSection.BS_CASH, tenantId, "Cash Account");
+
+        // Dr: Sales Revenue (reduce sales)
+        JournalEntryLineRequest drSales = new JournalEntryLineRequest();
+        drSales.setAccountId(salesAccount.getAccountId());
+        drSales.setDebitAmount(totalSalesAmount);
+        drSales.setCreditAmount(BigDecimal.ZERO);
+        targetLines.add(drSales);
+
+        // Dr: VAT Payable (reduce tax liability)
+        if (totalVatAmount.compareTo(BigDecimal.ZERO) > 0) {
+            JournalEntryLineRequest drVat = new JournalEntryLineRequest();
+            drVat.setAccountId(vatAccount.getAccountId());
+            drVat.setDebitAmount(totalVatAmount);
+            drVat.setCreditAmount(BigDecimal.ZERO);
+            targetLines.add(drVat);
+        }
+
+        // Cr: Cash Refund Out
+        JournalEntryLineRequest crCash = new JournalEntryLineRequest();
+        crCash.setAccountId(cashAccount.getAccountId());
+        crCash.setDebitAmount(BigDecimal.ZERO);
+        crCash.setCreditAmount(grossRefund);
+        targetLines.add(crCash);
+
+        // Restock COGS reversal if provided
+        if (totalCogsAmount.compareTo(BigDecimal.ZERO) > 0) {
+            ChartOfAccount inventoryAccount = fallbackOrThrow(AccountSection.BS_INVENTORIES, tenantId, "Inventory Account");
+            ChartOfAccount cogsAccount = fallbackOrThrow(AccountSection.PL_COS_GOODS, tenantId, "COGS Account");
+
+            JournalEntryLineRequest drInv = new JournalEntryLineRequest();
+            drInv.setAccountId(inventoryAccount.getAccountId());
+            drInv.setDebitAmount(totalCogsAmount);
+            drInv.setCreditAmount(BigDecimal.ZERO);
+            targetLines.add(drInv);
+
+            JournalEntryLineRequest crCogs = new JournalEntryLineRequest();
+            crCogs.setAccountId(cogsAccount.getAccountId());
+            crCogs.setDebitAmount(BigDecimal.ZERO);
+            crCogs.setCreditAmount(totalCogsAmount);
+            targetLines.add(crCogs);
+        }
+    }
+
+    private void generatePosShiftReconciliationLines(PostingRequest request, Long tenantId, List<JournalEntryLineRequest> targetLines) {
+        BigDecimal variance = BigDecimal.ZERO;
+        if (request.getLines() != null && !request.getLines().isEmpty()) {
+            variance = request.getLines().get(0).getAmount() != null ? request.getLines().get(0).getAmount() : BigDecimal.ZERO;
+        }
+
+        if (variance.compareTo(BigDecimal.ZERO) == 0) {
+            return;
+        }
+
+        ChartOfAccount cashAccount = fallbackOrThrow(AccountSection.BS_CASH, tenantId, "Cash Account");
+        ChartOfAccount expenseAccount = fallbackOrThrow(AccountSection.PL_COS_GOODS, tenantId, "Expense Account for Shift Variance");
+
+        // Dr: Cash Variance Expense
         JournalEntryLineRequest drLine = new JournalEntryLineRequest();
-        drLine.setAccountId(cashBankAccount.getAccountId());
-        drLine.setDebitAmount(totalSalesAmount);
+        drLine.setAccountId(expenseAccount.getAccountId());
+        drLine.setDebitAmount(variance);
         drLine.setCreditAmount(BigDecimal.ZERO);
         targetLines.add(drLine);
+
+        // Cr: Cash Asset
+        JournalEntryLineRequest crLine = new JournalEntryLineRequest();
+        crLine.setAccountId(cashAccount.getAccountId());
+        crLine.setDebitAmount(BigDecimal.ZERO);
+        crLine.setCreditAmount(variance);
+        targetLines.add(crLine);
+    }
+
+    private void generatePosCardSettlementLines(PostingRequest request, Long tenantId, List<JournalEntryLineRequest> targetLines) {
+        BigDecimal gross = BigDecimal.ZERO;
+        BigDecimal fee = BigDecimal.ZERO;
+        if (request.getLines() != null && !request.getLines().isEmpty()) {
+            PostingRequest.Line line = request.getLines().get(0);
+            gross = line.getAmount() != null ? line.getAmount() : BigDecimal.ZERO;
+            fee = line.getCogsAmount() != null ? line.getCogsAmount() : BigDecimal.ZERO;
+        }
+
+        BigDecimal net = gross.subtract(fee);
+
+        ChartOfAccount bankAccount = fallbackOrThrow(AccountSection.BS_CASH, tenantId, "Bank Account");
+        ChartOfAccount feeAccount = fallbackOrThrow(AccountSection.PL_COS_GOODS, tenantId, "Bank Fee Account");
+        ChartOfAccount clearingAccount = fallbackOrThrow(AccountSection.BS_TRADE_RECEIVABLES, tenantId, "Terminal Clearing Account");
+
+        // Dr: Bank Account (Net received)
+        JournalEntryLineRequest drBank = new JournalEntryLineRequest();
+        drBank.setAccountId(bankAccount.getAccountId());
+        drBank.setDebitAmount(net);
+        drBank.setCreditAmount(BigDecimal.ZERO);
+        targetLines.add(drBank);
+
+        // Dr: Merchant Processing Fee Expense
+        if (fee.compareTo(BigDecimal.ZERO) > 0) {
+            JournalEntryLineRequest drFee = new JournalEntryLineRequest();
+            drFee.setAccountId(feeAccount.getAccountId());
+            drFee.setDebitAmount(fee);
+            drFee.setCreditAmount(BigDecimal.ZERO);
+            targetLines.add(drFee);
+        }
+
+        // Cr: Terminal Clearing Asset
+        JournalEntryLineRequest crClearing = new JournalEntryLineRequest();
+        crClearing.setAccountId(clearingAccount.getAccountId());
+        crClearing.setDebitAmount(BigDecimal.ZERO);
+        crClearing.setCreditAmount(gross);
+        targetLines.add(crClearing);
     }
 }

@@ -1,234 +1,79 @@
 /**
  * Login.jsx
  * =========
- * Emirates ERP login page — Vibrant Enterprise design system.
- *
- * UI Architecture (adapted from Nasim reference project):
- *  ┌─────────────────────────────────────────────────────┐
- *  │  HUD header bar (brand label + live clock)          │
- *  ├─────────────────────┬───────────────────────────────┤
- *  │  LEFT PANEL         │  RIGHT PANEL                  │
- *  │  - Eyebrow          │  - Three.js 3D canvas (abs)   │
- *  │  - Animated heading │  - Chip badge + nav arrows    │
- *  │  - Subtext          │  - Glass slide info card      │
- *  │  - Login form       │  - Progress dot indicators    │
- *  │  - Footer           │                               │
- *  └─────────────────────┴───────────────────────────────┘
- *
- * Business logic (axios calls, role routing, tenant detection) is
- * preserved exactly from the previous implementation.
- *
- * No multilingual (i18n) features — English only.
+ * Emirates ERP Redesigned Login Page
+ * Built completely using Tailwind CSS for clean responsiveness and perfect sizing.
  */
 
 import React, { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import {
-  Users,
-  Building2,
-  Boxes,
-  ShieldCheck,
-  Lock,
   User,
+  Lock,
   Eye,
   EyeOff,
-  ChevronRight,
-  ChevronLeft,
-  Sparkles,
+  ArrowRight,
+  Clock,
+  Check,
   Loader,
+  ShoppingCart,
+  Users,
+  Truck,
+  Box,
+  Lightbulb,
+  TrendingUp,
+  ShieldCheck,
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useTenant } from '../context/TenantContext';
 import { saveThemeToStorage, applyTheme } from '../utils/themeUtils';
 import { getTenantFromSubdomain } from '../utils/tenantUtils';
 
-import PatternBackground from '../components/login/PatternBackground';
-import ThreeCanvas from '../components/login/ThreeCanvas';
-import { useLoginTheme } from '../components/login/useLoginTheme';
-import '../components/login/login.css';
-
-// ── Static content (English) ────────────────────────────────────────────────
-const COMPANY = 'EMIRATES ERP';
-const HUD_VERSION = 'EMIRATES-ERP';
-const HEADING = 'Next-Gen Enterprise Platform';
-const SUBTEXT = 'Unify operations, unlock insights, and scale your business with confidence.';
-
-const ERM_SLIDES = [
-  {
-    id: 0,
-    badge: 'HR & WORKFORCE',
-    badgeIcon: Users,
-    title: 'Human Resource Management',
-    description:
-      'Streamline recruitment, payroll, and performance reviews. Build a high-performing workforce at scale.',
-    stats: [
-      { label: 'Workforce', value: '12,450', color: '#00A9A8' },
-      { label: 'Payroll', value: '100.0%', color: '#00A9A8' },
-      { label: 'Retention', value: '98.4%', color: '#00A9A8' },
-    ],
-  },
-  {
-    id: 1,
-    badge: 'FINANCE & ACCOUNTING',
-    badgeIcon: Building2,
-    title: 'Financial Management & Accuracy',
-    description:
-      'Full-ledger accounting, VAT compliance, and real-time financial dashboards for data-driven decisions.',
-    stats: [
-      { label: 'Revenue', value: 'AED 42.8M', color: '#00A9A8' },
-      { label: 'VAT Status', value: 'COMPLIANT', color: '#00A9A8' },
-      { label: 'Audit', value: '100%', color: '#00A9A8' },
-    ],
-  },
-  {
-    id: 2,
-    badge: 'SUPPLY CHAIN',
-    badgeIcon: Boxes,
-    title: 'Supply Chain & Logistics',
-    description:
-      'End-to-end visibility across procurement, warehousing, and delivery — optimised for speed and accuracy.',
-    stats: [
-      { label: 'Fulfillment', value: '99.8%', color: '#00A9A8' },
-      { label: 'Warehouses', value: '48', color: '#00A9A8' },
-      { label: 'Lead Time', value: '-42.0%', color: '#00A9A8' },
-    ],
-  },
-  {
-    id: 3,
-    badge: 'CRM & SALES',
-    badgeIcon: ShieldCheck,
-    title: 'CRM & Client Intelligence',
-    description:
-      'Manage leads, track deals, and deliver exceptional customer experiences with AI-powered insights.',
-    stats: [
-      { label: 'Conversion', value: '+45.2%', color: '#00A9A8' },
-      { label: 'Deals', value: '1,820', color: '#00A9A8' },
-      { label: 'CSAT', value: '4.9 / 5', color: '#00A9A8' },
-    ],
-  },
-];
-
-// ── Helper: Word-aware animated heading ──────────────────────────────────────
-function AnimatedHeading({ text }) {
-  const words = text.split(' ');
-  let letterIndex = 0;
-  return (
-    <h1 className="login-heading">
-      {words.map((word, wi) => {
-        const wordNode = (
-          <span key={wi} className="login-heading-word">
-            {word.split('').map((char) => {
-              const idx = letterIndex++;
-              return (
-                <motion.span
-                  key={idx}
-                  className="login-heading-letter"
-                  initial={{ opacity: 0, filter: 'blur(6px)', y: 14 }}
-                  animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
-                  transition={{ delay: 0.12 * idx, duration: 0.28, ease: 'easeOut' }}
-                >
-                  {char}
-                </motion.span>
-              );
-            })}
-          </span>
-        );
-
-        return wi < words.length - 1 ? (
-          <React.Fragment key={wi}>
-            {wordNode}
-            <span className="login-heading-space">&nbsp;</span>
-          </React.Fragment>
-        ) : (
-          wordNode
-        );
-      })}
-    </h1>
-  );
-}
-
-// ── Helper: Shimmer animated company eyebrow ────────────────────────────────
-function CompanyEyebrow({ text }) {
-  return (
-    <motion.p
-      className="login-company-eyebrow"
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-    >
-      <motion.span
-        animate={{ opacity: [0.8, 1, 0.8] }}
-        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        {text}
-      </motion.span>
-    </motion.p>
-  );
-}
-
-// ── Main Component ──────────────────────────────────────────────────────────
 const Login = () => {
-  // ── Theme Hook ────────────────────────────────────────────────────────────
-  const { loginTheme } = useLoginTheme();
-
-  // ── Tenant & API ──────────────────────────────────────────────────────────
   const resolvedTenantId = getTenantFromSubdomain();
   const { refreshModules } = useTenant();
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-  // ── Form state ────────────────────────────────────────────────────────────
+  // Form State
   const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState('');
 
-  // ── Carousel / animation state ────────────────────────────────────────────
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [headingKey, setHeadingKey] = useState(0);
-  const [cursorPosition, setCursorPosition] = useState({ x: 400, y: 300 });
+  // Clock State
   const [systemTime, setSystemTime] = useState('');
+  const [systemDate, setSystemDate] = useState('');
 
-  // ── Carousel auto-advance every 7.5 s ────────────────────────────────────
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % ERM_SLIDES.length);
-    }, 7500);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  // ── Replay heading animation every 4.5 s ─────────────────────────────────
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setHeadingKey((k) => k + 1);
-    }, 4500);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  // ── Live clock (GST) ──────────────────────────────────────────────────────
-  useEffect(() => {
-    const update = () => {
+    const updateClock = () => {
       const now = new Date();
-      setSystemTime(now.toTimeString().split(' ')[0] + ' ');
+      setSystemTime(
+        now.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true,
+        })
+      );
+      setSystemDate(
+        now.toLocaleDateString('en-US', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        })
+      );
     };
-    update();
-    const timer = window.setInterval(update, 1000);
-    return () => window.clearInterval(timer);
+    updateClock();
+    const interval = setInterval(updateClock, 1000);
+    return () => clearInterval(interval);
   }, []);
 
-  // ── Cursor tracking for glow + canvas repel ───────────────────────────────
-  const handleMouseMove = (event) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    setCursorPosition({
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
-    });
-  };
-
-  // ── Form handlers ─────────────────────────────────────────────────────────
   const handleChange = (e) => {
     setLoginData({ ...loginData, [e.target.name]: e.target.value });
   };
@@ -246,7 +91,6 @@ const Login = () => {
 
     try {
       let response;
-
       if (resolvedTenantId.toLowerCase() === 'master') {
         response = await axios.post(`${API_URL}/master/auth/login`, {
           username: loginData.email,
@@ -256,7 +100,6 @@ const Login = () => {
         localStorage.setItem('roles', JSON.stringify(response.data.roles));
         localStorage.setItem('username', loginData.email);
         localStorage.setItem('tenantId', 'master');
-        console.log(response.data);
       } else {
         response = await axios.post(`${API_URL}/auth/login`, {
           tenantId: resolvedTenantId,
@@ -269,7 +112,6 @@ const Login = () => {
         localStorage.setItem('tenantId', resolvedTenantId);
         localStorage.setItem('modules', response.data.modules);
 
-        // Theme handling
         if (response.data.theme) {
           saveThemeToStorage(response.data.theme);
           applyTheme(response.data.theme);
@@ -278,26 +120,21 @@ const Login = () => {
         }
       }
 
-      // Confetti on successful login
       confetti({
         particleCount: 80,
         spread: 65,
         origin: { y: 0.6 },
-        colors: [loginTheme.primary, loginTheme.accent, '#00A9A8', '#02888D', '#FFA713'],
+        colors: ['#01AAB1', '#0191A1', '#00A9A8', '#02888D', '#FFA713'],
       });
 
-      // Re-sync sidebar modules
       refreshModules();
-
       const name = loginData.email.trim() || 'Executive';
       setWelcomeMessage(`Welcome back, ${name}!`);
 
-      // Role-based navigation
       const rolesString = localStorage.getItem('roles');
       if (rolesString) {
         const roles = JSON.parse(rolesString);
-
-        window.setTimeout(async () => {
+        setTimeout(async () => {
           if (roles.includes('SUPER_ADMIN') || (roles.includes('POS_ADMIN') && roles.includes('HRMS_ADMIN'))) {
             navigate('/company-dashboard');
           } else if (roles.includes('MASTER_ADMIN')) {
@@ -342,84 +179,63 @@ const Login = () => {
     }
   };
 
-  // ── Derived ───────────────────────────────────────────────────────────────
-  const currentSlide = ERM_SLIDES[activeIndex];
-  const BadgeIcon = currentSlide.badgeIcon;
-
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div
-      className="login-root"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => setCursorPosition({ x: 400, y: 300 })}
-      style={{
-        '--lp-primary': loginTheme.primary,
-        '--lp-secondary': loginTheme.secondary,
-        '--lp-accent': loginTheme.accent,
-        '--lp-surface': loginTheme.surface,
-        '--lp-card-bg': loginTheme.cardBg,
-        '--lp-text': loginTheme.text,
-      }}
-    >
-      {/* Node-graph canvas + ticker bar */}
-      <PatternBackground cursorPosition={cursorPosition} loginTheme={loginTheme} />
-
-      {/* Cursor glow orb */}
+    <div className="min-h-screen w-full bg-gradient-to-r from-[#F5F8FC] to-[#EEF2F9] font-sans flex flex-col items-center justify-start sm:justify-center p-4 sm:p-6 md:p-8 overflow-y-auto py-6 sm:py-10">
       <motion.div
-        className="login-cursor-glow"
-        animate={{ x: cursorPosition.x - 140, y: cursorPosition.y - 140 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 28 }}
-      />
-
-      {/* Subtle grid overlay */}
-      <div className="login-grid-overlay" />
-
-      {/* ── Main Card ──────────────────────────────────────────────── */}
-      <motion.div
-        className="login-card"
-        initial={{ opacity: 0, scale: 0.96, y: 24 }}
+        className="w-full max-w-5xl bg-[#FAFBFD] rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 border border-slate-200/60 my-auto shrink-0"
+        initial={{ opacity: 0, scale: 0.98, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.75, ease: 'easeOut' }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
       >
-        {/* HUD Status Header */}
-        <div className="login-hud-header">
-          <span className="login-hud-brand">{HUD_VERSION}</span>
-          <span className="login-hud-time">{systemTime}</span>
-        </div>
+        {/* ── LEFT PANEL: Form Section ──────────────────────────────── */}
+        <section className="lg:col-span-6 xl:col-span-5 p-6 sm:p-8 flex flex-col justify-between bg-[#FAFBFD] z-10 space-y-5">
+          {/* Logo Header */}
+          <div className="flex items-center">
+            <img
+              src="/Logo_Name.svg"
+              alt="Emirates ERP Solutions LLC"
+              className="w-48 sm:w-56 h-auto object-contain"
+            />
+          </div>
 
-        {/* ── LEFT PANEL: Login Form ──────────────────────────────── */}
-        <section className="login-panel login-form-panel">
-          <motion.div
-            initial={{ opacity: 0, x: -18 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.65 }}
-          >
-            <CompanyEyebrow text={COMPANY} />
-            <AnimatedHeading key={headingKey} text={HEADING} />
+          {/* Title & Subtitle */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5">
+              <span className="w-3.5 h-1 bg-[#01AAB1] rounded-full" />
+              <span className="text-[11px] font-bold text-[#01AAB1] tracking-[0.2em] uppercase">
+                WELCOME BACK
+              </span>
+            </div>
 
-            <motion.p
-              className="login-subtext"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8, duration: 0.5 }}
-            >
-              {SUBTEXT}
-              <span className="login-typing-cursor" />
-            </motion.p>
-          </motion.div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#111111] leading-[1.15] tracking-tight">
+              Access.<br />
+              Insight.<br />
+              <span className="text-[#01AAB1]">Impact.</span>
+            </h1>
+
+            <div className="pt-1 space-y-2">
+              <p className="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-sm">
+                Unify operations, unlock insights, and scale your business with{' '}
+                <span className="text-[#01AAB1] font-semibold">confidence.</span>
+              </p>
+              <div className="w-12 h-1 bg-[#01AAB1] rounded-full" />
+            </div>
+          </div>
 
           {/* Login Form */}
-          <form className="login-form" onSubmit={handleSubmit}>
-            {/* Username */}
-            <label className="login-input-group">
-              <span className="login-input-label">
-                <User size={13} /> Username
-              </span>
-              <div className="login-input-wrapper">
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            {/* Username Input */}
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#111111]">
+                <User size={15} className="text-[#01AAB1]" />
+                <span>USERNAME</span>
+              </label>
+              <div className="relative w-full">
                 <input
                   id="email"
                   name="email"
                   type="text"
+                  className="w-full h-11 sm:h-12 px-4 pr-11 bg-[#F4F8FB] border border-[#D3DDE9] rounded-xl text-slate-800 placeholder-[#5B6A81] text-xs sm:text-sm focus:outline-none focus:border-[#01AAB1] focus:ring-4 focus:ring-[#01AAB1]/15 transition-all"
                   value={loginData.email}
                   onChange={handleChange}
                   placeholder={
@@ -430,19 +246,24 @@ const Login = () => {
                   autoComplete="username"
                   required
                 />
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#01AAB1] pointer-events-none">
+                  <User size={18} />
+                </div>
               </div>
-            </label>
+            </div>
 
-            {/* Password */}
-            <label className="login-input-group">
-              <span className="login-input-label">
-                <Lock size={13} /> Password
-              </span>
-              <div className="login-input-wrapper">
+            {/* Password Input */}
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#111111]">
+                <Lock size={15} className="text-[#01AAB1]" />
+                <span>PASSWORD</span>
+              </label>
+              <div className="relative w-full">
                 <input
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
+                  className="w-full h-11 sm:h-12 px-4 pr-11 bg-[#F4F8FB] border border-[#D3DDE9] rounded-xl text-slate-800 placeholder-[#5B6A81] text-xs sm:text-sm focus:outline-none focus:border-[#01AAB1] focus:ring-4 focus:ring-[#01AAB1]/15 transition-all"
                   value={loginData.password}
                   onChange={handleChange}
                   placeholder="Enter your password"
@@ -451,203 +272,182 @@ const Login = () => {
                 />
                 <button
                   type="button"
-                  className="login-pass-toggle"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#01AAB1] hover:opacity-80 transition-opacity"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-            </label>
+            </div>
 
-            {/* Error */}
-            {error && <div className="login-error-box">{error}</div>}
+            {/* Remember Me & Forgot Password */}
+            <div className="flex items-center justify-between text-xs sm:text-sm pt-1">
+              <label
+                className="flex items-center gap-2.5 cursor-pointer select-none"
+                onClick={() => setRememberMe(!rememberMe)}
+              >
+                <div
+                  className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
+                    rememberMe ? 'bg-[#01AAB1] text-white' : 'bg-[#F4F8FB] border border-[#D3DDE9]'
+                  }`}
+                >
+                  {rememberMe && <Check size={14} strokeWidth={3} />}
+                </div>
+                <span className="text-slate-700 font-medium">Remember me</span>
+              </label>
 
-            {/* Submit */}
-            <motion.button
+              <button
+                type="button"
+                className="text-[#01AAB1] font-semibold hover:underline"
+                onClick={() => alert('Please contact your System Administrator to reset your password.')}
+              >
+                Forgot Password?
+              </button>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs sm:text-sm">
+                {error}
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
               type="submit"
-              className="login-submit-btn"
-              style={{ backgroundColor: loginTheme.primary, color: '#ffffff' }}
-              whileHover={{ scale: 1.02, boxShadow: `0 0 28px ${loginTheme.primary}aa` }}
-              whileTap={{ scale: 0.97 }}
+              className="w-full h-12 sm:h-14 bg-gradient-to-r from-[#0191A1] to-[#01AAB1] text-white rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 shadow-lg shadow-[#01AAB1]/25 hover:shadow-xl hover:shadow-[#01AAB1]/35 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-70 disabled:cursor-not-allowed mt-2"
               disabled={isLoading}
             >
-              <span className="login-btn-content">
-                {isLoading ? (
-                  <>
-                    <Loader className="login-spin-icon" size={16} />
-                    Signing in…
-                  </>
-                ) : (
-                  <>
-                    Login Now
-                    <ChevronRight size={17} />
-                  </>
-                )}
-              </span>
-              <div className="login-btn-shimmer" />
-            </motion.button>
+              {isLoading ? (
+                <>
+                  <Loader className="animate-spin" size={20} />
+                  <span>Signing in…</span>
+                </>
+              ) : (
+                <>
+                  <span>Login Now</span>
+                  <ArrowRight size={22} />
+                </>
+              )}
+            </button>
 
-            {/* Welcome / success message */}
-            <AnimatePresence mode="wait">
+            {/* Welcome Message */}
+            <AnimatePresence>
               {welcomeMessage && (
                 <motion.div
-                  key={welcomeMessage}
-                  className="login-success-box"
-                  initial={{ opacity: 0, y: 10, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="text-[#01AAB1] font-semibold text-sm text-center pt-1"
                 >
-                  <ShieldCheck size={18} className="login-success-icon" />
-                  <span className="login-success-text">
-                    {welcomeMessage.split('').map((char, i) => (
-                      <motion.span
-                        key={i}
-                        initial={{ opacity: 0, filter: 'blur(4px)', y: 8 }}
-                        animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
-                        transition={{
-                          delay: 0.05 * i,
-                          duration: 0.22,
-                          ease: 'easeOut',
-                        }}
-                        style={{ display: 'inline-block' }}
-                      >
-                        {char === ' ' ? '\u00A0' : char}
-                      </motion.span>
-                    ))}
-                  </span>
+                  {welcomeMessage}
                 </motion.div>
               )}
             </AnimatePresence>
           </form>
 
           {/* Footer */}
-          <div className="login-form-footer">
-            <span>© {new Date().getFullYear()} Emirates ERP · All rights reserved</span>
+          <div className="pt-4 border-t border-slate-100">
+            <p className="text-xs sm:text-sm text-slate-500">
+              © {new Date().getFullYear()} Emirates ERP · All rights reserved
+            </p>
           </div>
         </section>
 
-        {/* ── RIGHT PANEL: 3D Carousel ─────────────────────────────── */}
-        <section
-          className="login-panel login-showcase-panel"
-          style={{ backgroundColor: loginTheme.secondary }}
-        >
-          {/* Three.js canvas — fills the panel absolutely */}
-          <ThreeCanvas activeSlideIndex={activeIndex} loginTheme={loginTheme} />
+        {/* ── RIGHT PANEL: Showcase Section (Tailwind) ─────────────── */}
+        <section className="hidden lg:flex lg:col-span-6 xl:col-span-7 relative bg-gradient-to-br from-[#EBF5FA] via-[#D8ECF5] to-[#C4E3EE] p-8 xl:p-10 flex-col justify-between overflow-hidden">
+          {/* Radial Overlay */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.7),transparent_70%)] pointer-events-none" />
 
-          {/* Badge chip + navigation arrows */}
-          <div className="login-showcase-top">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentSlide.badge}
-                className="login-cyber-chip"
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                <BadgeIcon size={14} className="login-chip-icon" />
-                <span>{currentSlide.badge}</span>
-              </motion.div>
-            </AnimatePresence>
-
-            <div className="login-carousel-nav">
-              <button
-                type="button"
-                className="login-nav-btn"
-                onClick={() =>
-                  setActiveIndex((p) =>
-                    p === 0 ? ERM_SLIDES.length - 1 : p - 1
-                  )
-                }
-              >
-                <ChevronLeft size={17} />
-              </button>
-              <button
-                type="button"
-                className="login-nav-btn"
-                onClick={() =>
-                  setActiveIndex((p) => (p + 1) % ERM_SLIDES.length)
-                }
-              >
-                <ChevronRight size={17} />
-              </button>
+          {/* Live Clock Badge */}
+          <div className="absolute top-6 right-6 bg-white/85 backdrop-blur-md border border-white/90 rounded-2xl px-4 py-2 flex flex-col items-end shadow-sm z-20">
+            <div className="flex items-center gap-2 font-bold text-sm text-[#0F2A38]">
+              <Clock size={16} className="text-[#01AAB1]" />
+              <span>{systemTime || '10:43:52 AM'}</span>
+            </div>
+            <div className="text-xs text-slate-500 mt-0.5">
+              {systemDate || 'Thursday, 22 May 2026'}
             </div>
           </div>
 
-          {/* Animated glass info card */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentSlide.id}
-              className="login-3d-card"
-              initial={{ opacity: 0, y: 24, scale: 0.94 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -18, scale: 0.94 }}
-              transition={{ duration: 0.55, ease: 'easeOut' }}
-            >
-              <div className="login-card-glass-body">
-                <motion.h2
-                  className="login-slide-title"
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.12, duration: 0.38 }}
-                >
-                  {currentSlide.title}
-                </motion.h2>
-                <motion.p
-                  className="login-slide-desc"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.22, duration: 0.38 }}
-                >
-                  {currentSlide.description}
-                </motion.p>
-                <div className="login-stats-grid">
-                  {currentSlide.stats.map((stat, idx) => (
-                    <motion.div
-                      key={stat.label}
-                      className="login-stat-box"
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        delay: 0.28 + idx * 0.07,
-                        duration: 0.35,
-                      }}
-                    >
-                      <span className="login-stat-label">{stat.label}</span>
-                      <span
-                        className="login-stat-value"
-                        style={{ color: stat.color }}
-                      >
-                        {stat.value}
-                      </span>
-                    </motion.div>
-                  ))}
+          {/* Hero Illustration Wrapper */}
+          <div className="relative w-full flex-1 flex items-center justify-center my-6">
+            <img
+              src="/login-hero.png"
+              alt="Emirates ERP Business Intelligence Showcase"
+              className="max-h-[360px] xl:max-h-[400px] w-auto object-contain drop-shadow-2xl hover:scale-[1.01] transition-transform duration-300"
+            />
+
+            {/* Floating Metric Overlay Cards */}
+            <div className="absolute right-2 xl:right-6 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-20">
+              <div className="bg-white/90 backdrop-blur-md border border-white/90 rounded-xl p-3 shadow-md flex items-center gap-3 min-w-[190px] hover:-translate-x-1 transition-all">
+                <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                  <ShoppingCart size={18} />
+                </div>
+                <div>
+                  <div className="text-[11px] text-slate-500 font-medium">Total Orders</div>
+                  <div className="text-base font-bold text-slate-900 leading-tight">12,584</div>
+                  <div className="text-[10px] text-[#01AAB1] font-semibold mt-0.5">↑ 14.2% vs last month</div>
                 </div>
               </div>
-            </motion.div>
-          </AnimatePresence>
 
-          {/* Progress dot indicators */}
-          <div className="login-carousel-controls">
-            <div className="login-dots-container">
-              {ERM_SLIDES.map((slide, index) => (
-                <button
-                  key={slide.id}
-                  type="button"
-                  className={`login-dot-pill${index === activeIndex ? ' active' : ''}`}
-                  onClick={() => setActiveIndex(index)}
-                >
-                  {index === activeIndex && (
-                    <motion.div
-                      className="login-dot-progress-fill"
-                      initial={{ width: '0%' }}
-                      animate={{ width: '100%' }}
-                      transition={{ duration: 7.5, ease: 'linear' }}
-                    />
-                  )}
-                </button>
-              ))}
+              <div className="bg-white/90 backdrop-blur-md border border-white/90 rounded-xl p-3 shadow-md flex items-center gap-3 min-w-[190px] hover:-translate-x-1 transition-all">
+                <div className="w-9 h-9 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
+                  <Users size={18} />
+                </div>
+                <div>
+                  <div className="text-[11px] text-slate-500 font-medium">Active Users</div>
+                  <div className="text-base font-bold text-slate-900 leading-tight">3,842</div>
+                  <div className="text-[10px] text-[#01AAB1] font-semibold mt-0.5">↑ 12.8% vs last month</div>
+                </div>
+              </div>
+
+              <div className="bg-white/90 backdrop-blur-md border border-white/90 rounded-xl p-3 shadow-md flex items-center gap-3 min-w-[190px] hover:-translate-x-1 transition-all">
+                <div className="w-9 h-9 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center flex-shrink-0">
+                  <Truck size={18} />
+                </div>
+                <div>
+                  <div className="text-[11px] text-slate-500 font-medium">On-Time Delivery</div>
+                  <div className="text-base font-bold text-slate-900 leading-tight">97.6%</div>
+                  <div className="text-[10px] text-[#01AAB1] font-semibold mt-0.5">↑ 8.3% vs last month</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom 4 Feature Grid Cards */}
+          <div className="grid grid-cols-4 gap-3 relative z-10 w-full">
+            <div className="bg-white/85 backdrop-blur-md border border-white/90 rounded-2xl p-3 text-center flex flex-col items-center hover:bg-white transition-all shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-[#EBF7F8] text-[#01AAB1] flex items-center justify-center mb-1.5">
+                <Box size={18} />
+              </div>
+              <span className="text-xs font-bold text-slate-900">Integrated</span>
+              <span className="text-[10px] text-slate-500 mt-0.5">All modules connected</span>
+            </div>
+
+            <div className="bg-white/85 backdrop-blur-md border border-white/90 rounded-2xl p-3 text-center flex flex-col items-center hover:bg-white transition-all shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-[#EBF7F8] text-[#01AAB1] flex items-center justify-center mb-1.5">
+                <Lightbulb size={18} />
+              </div>
+              <span className="text-xs font-bold text-slate-900">Intelligent</span>
+              <span className="text-[10px] text-slate-500 mt-0.5">AI-driven insights</span>
+            </div>
+
+            <div className="bg-white/85 backdrop-blur-md border border-white/90 rounded-2xl p-3 text-center flex flex-col items-center hover:bg-white transition-all shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-[#EBF7F8] text-[#01AAB1] flex items-center justify-center mb-1.5">
+                <TrendingUp size={18} />
+              </div>
+              <span className="text-xs font-bold text-slate-900">Scalable</span>
+              <span className="text-[10px] text-slate-500 mt-0.5">Grow without limits</span>
+            </div>
+
+            <div className="bg-white/85 backdrop-blur-md border border-white/90 rounded-2xl p-3 text-center flex flex-col items-center hover:bg-white transition-all shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-[#EBF7F8] text-[#01AAB1] flex items-center justify-center mb-1.5">
+                <ShieldCheck size={18} />
+              </div>
+              <span className="text-xs font-bold text-slate-900">Secure</span>
+              <span className="text-[10px] text-slate-500 mt-0.5">Enterprise grade security</span>
             </div>
           </div>
         </section>

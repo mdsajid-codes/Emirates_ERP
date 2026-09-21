@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Demo Requests table — stores demo requests submitted from the Emirates ERP website.
+        The 'module' column is a free-form string (e.g. "POS", "HRMS", "CRM") so future
+        module demo pages work without any schema change.
+    -->
+    <changeSet id="create-demo-requests" author="sajid">
+        <createTable tableName="demo_requests">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="full_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="phone"         type="VARCHAR(50)"/>
+            <column name="company"       type="VARCHAR(255)"/>
+            <!-- Free-form: "POS", "HRMS", "CRM", etc. No FK — extensible without schema changes -->
+            <column name="module"        type="VARCHAR(100)"/>
+            <!-- POS-specific: number of terminals requested -->
+            <column name="terminals"     type="VARCHAR(50)"/>
+            <!-- Business type e.g. "Retail Store", "Restaurant" -->
+            <column name="business_type" type="VARCHAR(100)"/>
+            <column name="message"       type="TEXT"/>
+            <column name="source"        type="VARCHAR(100)"/>
+            <column name="status" type="VARCHAR(30)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reviewed_at"  type="TIMESTAMP"/>
+            <column name="reviewed_by"  type="VARCHAR(255)"/>
+            <column name="review_notes" type="TEXT"/>
+        </createTable>
+
+        <createIndex tableName="demo_requests" indexName="idx_demo_requests_status">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="demo_requests" indexName="idx_demo_requests_module">
+            <column name="module"/>
+        </createIndex>
+
+        <createIndex tableName="demo_requests" indexName="idx_demo_requests_email">
+            <column name="email"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

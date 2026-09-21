@@ -34,6 +34,13 @@
 
     <changeSet id="add-fleet-fks-to-delivery-orders" author="system">
         <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="delivery_orders"/>
+            <tableExists tableName="fleet_drivers"/>
+            <tableExists tableName="fleet_vehicles"/>
+            <tableExists tableName="wms_warehouse"/>
+            <not><foreignKeyConstraintExists foreignKeyTableName="delivery_orders" foreignKeyName="fk_do_driver"/></not>
+        </preConditions>
         <addForeignKeyConstraint baseTableName="delivery_orders" baseColumnNames="driver_id" referencedTableName="fleet_drivers" referencedColumnNames="id" constraintName="fk_do_driver"/>
         <addForeignKeyConstraint baseTableName="delivery_orders" baseColumnNames="vehicle_id" referencedTableName="fleet_vehicles" referencedColumnNames="id" constraintName="fk_do_vehicle"/>
         <addForeignKeyConstraint baseTableName="delivery_orders" baseColumnNames="warehouse_id" referencedTableName="wms_warehouse" referencedColumnNames="id" constraintName="fk_do_warehouse"/>

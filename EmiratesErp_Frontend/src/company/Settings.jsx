@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { SlidersHorizontal, Store, Users, Factory, Palette, BookUser, Landmark, Bell, Shield, Settings as SettingsIcon } from "lucide-react";
+import { SlidersHorizontal, Store, Users, Factory, Palette, BookUser, Landmark, Bell, Shield, Settings as SettingsIcon, Package, Database } from "lucide-react";
 import { useTenant } from '../context/TenantContext';
 import CompanyHubLayout from '../components/CompanyHubLayout';
 
@@ -10,7 +10,9 @@ const allSettingsSections = [
     { name: 'POS', path: '/pos-settings', icon: Store, module: 'POS', color: 'text-orange-500' },
     { name: 'CRM', path: '/crm-settings', icon: Users, module: 'CRM', color: 'text-green-500' },
     { name: 'Notification', path: '/notification-dashboard', icon: Bell, module: 'NOTIFICATION', color: 'text-indigo-600' },
-    { name: 'PartyType', path: '/company-settings/party-type', icon: BookUser, color: 'text-indigo-500' },
+    { name: 'Manage Parties', path: '/company-settings/party-type', icon: BookUser, color: 'text-indigo-500' },
+    { name: 'Product & Services', path: '/company-settings/product-services', icon: Package, color: 'text-teal-500' },
+    { name: 'Master Data', path: '/company-settings/master-data', icon: Database, color: 'text-teal-600' },
     { name: 'Theme', path: '/company-settings/theme', icon: Palette, color: 'text-pink-500' },
     { name: 'Production', path: '/production-settings', icon: Factory, module: 'PRODUCTION', color: 'text-purple-500' },
     { name: 'Hanger Types', path: '/hanger-settings', icon: SettingsIcon, module: 'HANGER_MANUFACTURING', color: 'text-amber-500' },

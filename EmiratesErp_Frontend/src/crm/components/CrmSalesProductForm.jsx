@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowLeft, Save, Loader2, Image as ImageIcon, X, AlertTriangle, Package, Tag, DollarSign, Percent, Barcode } from 'lucide-react';
+import CompanyHubLayout from '../../components/CompanyHubLayout.jsx';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -66,8 +67,11 @@ const ValidationModal = ({ isOpen, onClose, error }) => {
 
 const CrmSalesProductForm = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { id } = useParams();
     const isEditing = !!id;
+    const isCompanySettings = location.pathname.includes('/company-settings');
+    const redirectPath = isCompanySettings ? '/company-settings/product-services' : '/crm-dashboard/products';
 
     const [product, setProduct] = useState({
         itemType: 'PRODUCT',
@@ -222,7 +226,7 @@ const CrmSalesProductForm = () => {
     };
 
     const handleCancel = () => {
-        navigate('/crm-dashboard/products');
+        navigate(redirectPath);
     };
 
     const handleSubmit = async (e) => {
@@ -267,7 +271,7 @@ const CrmSalesProductForm = () => {
             } else {
                 await axios.post(`${API_URL}/crm/sales-products`, formData, config);
             }
-            navigate('/crm-dashboard/products');
+            navigate(redirectPath);
         } catch (err) {
             const msg = err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} product.`;
             setError(msg);
@@ -278,7 +282,7 @@ const CrmSalesProductForm = () => {
         }
     };
 
-    return (
+    const content = (
         <div className="flex flex-col h-full w-full bg-[#F8FAFC] text-[#102A43] p-0 overflow-hidden font-sans">
             <form onSubmit={handleSubmit} className="bg-white border-none rounded-none shadow-none overflow-hidden flex flex-col h-full min-h-0 w-full">
                 {/* Header Bar */}
@@ -620,6 +624,8 @@ const CrmSalesProductForm = () => {
             />
         </div>
     );
+
+    return isCompanySettings ? <CompanyHubLayout>{content}</CompanyHubLayout> : content;
 };
 
 export default CrmSalesProductForm;

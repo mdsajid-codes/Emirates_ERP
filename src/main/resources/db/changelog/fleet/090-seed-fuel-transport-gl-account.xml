@@ -6,6 +6,9 @@
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet id="090-seed-fuel-transport-gl-account" author="dev">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="chart_of_accounts"/>
+        </preConditions>
         <insert tableName="chart_of_accounts">
             <column name="account_code" value="7010701"/>
             <column name="description" value="Fleet Fuel &amp; Transport Expense"/>

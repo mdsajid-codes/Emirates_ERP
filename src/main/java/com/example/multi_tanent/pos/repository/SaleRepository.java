@@ -26,4 +26,8 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
             "AND (:reference IS NULL OR s.salesSourceReference LIKE %:reference%)")
     List<Sale> findSalesBySourceFilters(Long tenantId, Long storeId, java.time.OffsetDateTime startDate,
             java.time.OffsetDateTime endDate, String source, String reference);
+
+    List<Sale> findByTenantAndShiftId(com.example.multi_tanent.spersusers.enitity.Tenant tenant, Long shiftId);
+
+    List<Sale> findByTenantIdAndPaymentClearingStatus(Long tenantId, String paymentClearingStatus);
 }

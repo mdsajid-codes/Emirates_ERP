@@ -38,6 +38,7 @@ const HangerTypes = lazy(() => import('./company/HangerTypes.jsx'));
 const HangerTypeForm = lazy(() => import('./company/HangerTypeForm.jsx'));
 const AllUser = lazy(() => import('./company/AllUser.jsx'));
 const CoilStock = lazy(() => import('./warehouse/pages/CoilStock.jsx'));
+const MasterDataSettings = lazy(() => import('./company/MasterDataSettings.jsx'));
 
 // HRMS Reports
 const ReportsLayout = lazy(() => import('./pages/hrmsReport/ReportsLayout.jsx'));
@@ -372,469 +373,475 @@ function App() {
     <TenantProvider>
       <CrmPermissionsProvider>
         <Router>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* ── PUBLIC ROUTES ──────────────────────────────────────── */}
-            {/* <Route path='/' element={<Home />} /> */}
-            <Route path='/' element={<Navigate to="/login" replace />} />
-            <Route path='/features' element={<Features />} />
-            <Route path='/login' element={<Login />} />
-            <Route path='/register' element={<Register />} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* ── PUBLIC ROUTES ──────────────────────────────────────── */}
+              {/* <Route path='/' element={<Home />} /> */}
+              <Route path='/' element={<Navigate to="/login" replace />} />
+              <Route path='/features' element={<Features />} />
+              <Route path='/login' element={<Login />} />
+              <Route path='/register' element={<Register />} />
 
-            {/* ── MASTER ADMIN ──────────────────────────────────────── */}
-            <Route path='/master-admin' element={
-              <ProtectedRoute allowedRoles={ROLES.MASTER}>
-                <MasterAdmin />
-              </ProtectedRoute>
-            } />
+              {/* ── MASTER ADMIN ──────────────────────────────────────── */}
+              <Route path='/master-admin' element={
+                <ProtectedRoute allowedRoles={ROLES.MASTER}>
+                  <MasterAdmin />
+                </ProtectedRoute>
+              } />
 
-            {/* ── COMPANY HUB ───────────────────────────────────────── */}
-            <Route path='/company-dashboard' element={
-              <ProtectedRoute allowedRoles={ROLES.COMPANY_HUB}>
-                <CompanyDashboard />
-              </ProtectedRoute>
-            } />
+              {/* ── COMPANY HUB ───────────────────────────────────────── */}
+              <Route path='/company-dashboard' element={
+                <ProtectedRoute allowedRoles={ROLES.COMPANY_HUB}>
+                  <CompanyDashboard />
+                </ProtectedRoute>
+              } />
 
-            {/* ── HRMS ──────────────────────────────────────────────── */}
-            <Route path='/hrdashboard' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><HrDashboard /></ProtectedRoute>} />
-            <Route path='/employees' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><Employee /></ProtectedRoute>} />
-            <Route path='/employees/add' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><AddEmployeePage /></ProtectedRoute>} />
-            <Route path='/attendance' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><Attendance /></ProtectedRoute>} />
-            <Route path='/attendance/*' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><Attendance /></ProtectedRoute>} />
-            <Route path='/leave' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><LeaveManagement /></ProtectedRoute>} />
-            <Route path='/leave/*' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><LeaveManagement /></ProtectedRoute>} />
-            <Route path='/payroll-management' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><PayrollManagement /></ProtectedRoute>} />
-            <Route path='/payroll-management/*' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><PayrollManagement /></ProtectedRoute>} />
-            <Route path='/payroll' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><PayrollManagement /></ProtectedRoute>} />
-            <Route path='/payroll/*' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><PayrollManagement /></ProtectedRoute>} />
-            <Route path='/sick-leave-settings' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><SickLeaveManagement /></ProtectedRoute>} />
-            <Route path='/work-schedules' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><WorkScheduleManagement /></ProtectedRoute>} />
-            <Route path='/work-calendar' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><WorkCalendarManagement /></ProtectedRoute>} />
-            <Route path='/shift-roster' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><EmployeeShiftRoster /></ProtectedRoute>} />
-            <Route path="/users-details" element={<ProtectedRoute allowedRoles={ROLES.HRMS}><UsersDetails /></ProtectedRoute>} />
+              {/* ── HRMS ──────────────────────────────────────────────── */}
+              <Route path='/hrdashboard' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><HrDashboard /></ProtectedRoute>} />
+              <Route path='/employees' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><Employee /></ProtectedRoute>} />
+              <Route path='/employees/add' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><AddEmployeePage /></ProtectedRoute>} />
+              <Route path='/attendance' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><Attendance /></ProtectedRoute>} />
+              <Route path='/attendance/*' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><Attendance /></ProtectedRoute>} />
+              <Route path='/leave' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><LeaveManagement /></ProtectedRoute>} />
+              <Route path='/leave/*' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><LeaveManagement /></ProtectedRoute>} />
+              <Route path='/payroll-management' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><PayrollManagement /></ProtectedRoute>} />
+              <Route path='/payroll-management/*' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><PayrollManagement /></ProtectedRoute>} />
+              <Route path='/payroll' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><PayrollManagement /></ProtectedRoute>} />
+              <Route path='/payroll/*' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><PayrollManagement /></ProtectedRoute>} />
+              <Route path='/sick-leave-settings' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><SickLeaveManagement /></ProtectedRoute>} />
+              <Route path='/work-schedules' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><WorkScheduleManagement /></ProtectedRoute>} />
+              <Route path='/work-calendar' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><WorkCalendarManagement /></ProtectedRoute>} />
+              <Route path='/shift-roster' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><EmployeeShiftRoster /></ProtectedRoute>} />
+              <Route path="/users-details" element={<ProtectedRoute allowedRoles={ROLES.HRMS}><UsersDetails /></ProtectedRoute>} />
 
-            {/* ── EMPLOYEE DASHBOARD ────────────────────────────────── */}
-            <Route path='/employee-dashboard' element={<ProtectedRoute allowedRoles={ROLES.EMPLOYEE}><EmployeeDashboard /></ProtectedRoute>} />
+              {/* ── EMPLOYEE DASHBOARD ────────────────────────────────── */}
+              <Route path='/employee-dashboard' element={<ProtectedRoute allowedRoles={ROLES.EMPLOYEE}><EmployeeDashboard /></ProtectedRoute>} />
 
-            {/* ── SETTINGS ──────────────────────────────────────────── */}
-            <Route path='/hrms-settings' element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><HrmsSettings /></ProtectedRoute>} />
-            <Route path='/company-settings' element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><Settings /></ProtectedRoute>} />
-            <Route path='/company-settings/theme'>
-              <Route index element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><ThemeSettings /></ProtectedRoute>} />
-              <Route path="new" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><ThemeForm /></ProtectedRoute>} />
-              <Route path="edit/:id" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><ThemeForm /></ProtectedRoute>} />
-            </Route>
-            <Route path='/hanger-settings'>
-              <Route index element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><HangerTypes /></ProtectedRoute>} />
-              <Route path="new" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><HangerTypeForm /></ProtectedRoute>} />
-              <Route path="edit/:id" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><HangerTypeForm /></ProtectedRoute>} />
-            </Route>
-            <Route path='/company-settings/party-type'>
-              <Route index element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><PartyType /></ProtectedRoute>} />
-              <Route path="new" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><PartyForm /></ProtectedRoute>} />
-              <Route path="edit/:id" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><PartyForm /></ProtectedRoute>} />
-            </Route>
-            <Route path='/account-settings' element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><AccountPlaceholder pageName="Account Settings" /></ProtectedRoute>} />
-            <Route path='/production-settings' element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><ProductionSettings /></ProtectedRoute>} />
-            <Route path='/crm-settings' element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><CrmSettings /></ProtectedRoute>} />
-            <Route path='/all-users' element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><AllUser /></ProtectedRoute>} />
+              {/* ── SETTINGS ──────────────────────────────────────────── */}
+              <Route path='/hrms-settings' element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><HrmsSettings /></ProtectedRoute>} />
+              <Route path='/company-settings' element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><Settings /></ProtectedRoute>} />
+              <Route path='/company-settings/theme'>
+                <Route index element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><ThemeSettings /></ProtectedRoute>} />
+                <Route path="new" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><ThemeForm /></ProtectedRoute>} />
+                <Route path="edit/:id" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><ThemeForm /></ProtectedRoute>} />
+              </Route>
+              <Route path='/hanger-settings'>
+                <Route index element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><HangerTypes /></ProtectedRoute>} />
+                <Route path="new" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><HangerTypeForm /></ProtectedRoute>} />
+                <Route path="edit/:id" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><HangerTypeForm /></ProtectedRoute>} />
+              </Route>
+              <Route path='/company-settings/party-type'>
+                <Route index element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><PartyType /></ProtectedRoute>} />
+                <Route path="new" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><PartyForm /></ProtectedRoute>} />
+                <Route path="edit/:id" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><PartyForm /></ProtectedRoute>} />
+              </Route>
+              <Route path='/company-settings/product-services'>
+                <Route index element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><CrmSalesProduct pageName="Product & Services" /></ProtectedRoute>} />
+                <Route path="new" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><CrmSalesProductForm /></ProtectedRoute>} />
+                <Route path="edit/:id" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><CrmSalesProductForm /></ProtectedRoute>} />
+              </Route>
+              <Route path='/company-settings/master-data' element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><MasterDataSettings /></ProtectedRoute>} />
+              <Route path='/account-settings' element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><AccountPlaceholder pageName="Account Settings" /></ProtectedRoute>} />
+              <Route path='/production-settings' element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><ProductionSettings /></ProtectedRoute>} />
+              <Route path='/crm-settings' element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><CrmSettings /></ProtectedRoute>} />
+              <Route path='/all-users' element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><AllUser /></ProtectedRoute>} />
 
-            {/* ── HRMS REPORTS ─────────────────────────────────────── */}
-            <Route path='/reports' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><ReportsLayout /></ProtectedRoute>}>
-              <Route index element={<Navigate to="employee" replace />} />
-              <Route path='employee' element={<EmployeeReports />}>
-                <Route index element={<Navigate to="master" replace />} />
-                <Route path='master' element={<MasterEmployeeReport />} />
-                <Route path='count' element={<HeadCount />} />
-                <Route path='demographics' element={<Demographics />} />
-                <Route path='employment-status' element={<EmploymentStatus />} />
-                <Route path='documents' element={<EmployeeDocumentsReport />} />
-              </Route>
-              <Route path='attendance' element={<AttendanceReports />}>
-                <Route index element={<Navigate to="daily" replace />} />
-                <Route path='daily' element={<DailyAttendanceReport />} />
-                <Route path='monthly' element={<MonthlyAttendanceReport />} />
-                <Route path='overtime' element={<OvertimeReport />} />
-                <Route path='compliance' element={<ComplianceReport />} />
-              </Route>
-              <Route path='leave' element={<LeaveReports />}>
-                <Route index element={<Navigate to="accrual" replace />} />
-                <Route path='accrual' element={<LeaveAccrualReport />} />
-              </Route>
-              <Route path='payroll' element={<PayrollReports />}>
-                <Route index element={<Navigate to="register" replace />} />
-                <Route path='register' element={<PayrollRegisterReport />} />
-                <Route path='wps-sif' element={<WpsSifReport />} />
-                <Route path='compliance' element={<WpsComplianceReport />} />
-              </Route>
-              <Route path='compliance' element={<ComplianceReports />}>
-                <Route index element={<Navigate to="labor-card" replace />} />
-                <Route path='labor-card' element={<LaborCardReport />} />
-                <Route path='company-quota' element={<CompanyQuotaReport />} />
-                <Route path='nationality' element={<NationalityReport />} />
-                <Route path='emiratization' element={<EmiratizationReport />} />
-                <Route path='absconding' element={<AbscondingReport />} />
-              </Route>
-              <Route path='eos' element={<EndOfServiceReports />}>
-                <Route index element={<Navigate to="eosb" replace />} />
-                <Route path='eosb' element={<EosbCalculationReport />} />
-                <Route path='final-settlement' element={<FinalSettlementReport />} />
-                <Route path='termination-reason' element={<TerminationReasonReport />} />
-              </Route>
-            </Route>
-
-            {/* ── POS ───────────────────────────────────────────────── */}
-            <Route path='/pos-dashboard' element={<ProtectedRoute allowedRoles={ROLES.POS}><PosDashboard /></ProtectedRoute>} />
-            <Route path='/product-scan/:barcode' element={<ProtectedRoute allowedRoles={ROLES.POS}><ProductScanResult /></ProtectedRoute>} />
-            <Route path='/pos-reports' element={<ProtectedRoute allowedRoles={ROLES.POS}><PosReportsLayout /></ProtectedRoute>}>
-              <Route path='business-summary' element={<BusinessSummary />} />
-              <Route path='daily-sales' element={<DailySummaryReport />} />
-              <Route path='total-daily-sales' element={<TotalDailyReports />} />
-              <Route path='closing' element={<ClosingReport />} />
-              <Route path='sales-support' element={<SalesSupportReport />} />
-              <Route path='sales-payment' element={<SalesPaymentReport />} />
-              <Route path='sales-source' element={<SalesSourceReport />} />
-              <Route path='total-sales' element={<TotalSalesReport />} />
-              <Route path='sales-status' element={<SalesStatusReport />} />
-              <Route path='delivery-driver-report' element={<DeliveryDriverReport />} />
-              <Route path='sales-forecasting-report' element={<SalesForecastingReport />} />
-              <Route path='payment-change-report' element={<PaymentChangeReport />} />
-              <Route path='sales-discount-report' element={<SalesDiscountReport />} />
-              <Route path='cancellation-report' element={<CancellationReport />} />
-              <Route path='void-report' element={<VoidReport />} />
-              <Route path='item-movement-report' element={<ItemMovementReport />} />
-              <Route path='slow-selling-report' element={<SlowSellingReport />} />
-              <Route path='best-selling-report' element={<BestSellingReport />} />
-              <Route path='item-sales-report' element={<ItemSalesReport />} />
-              <Route path='user-transfer' element={<UserTransfer />} />
-            </Route>
-
-            {/* ── CRM ───────────────────────────────────────────────── */}
-            <Route path='/crm-dashboard' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><CrmModule /></ProtectedRoute>}>
-              <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="dashboard" element={<PermissionRoute module="DASHBOARD"><CrmDashboard /></PermissionRoute>} />
-              <Route path="recent-activities" element={<PermissionRoute module="DASHBOARD"><CrmRecentActivityPage /></PermissionRoute>} />
-              <Route path="home" element={<CrmHome />} />
-              <Route path="calling-data" element={<PermissionRoute module="CALL_LOG"><CrmCallingData /></PermissionRoute>} />
-              <Route path="calling-data/new" element={<PermissionRoute module="CALL_LOG"><CrmCallLogFormPage /></PermissionRoute>} />
-              <Route path="calling-data/edit/:id" element={<PermissionRoute module="CALL_LOG"><CrmCallLogFormPage /></PermissionRoute>} />
-              <Route path="leads" element={<PermissionRoute module="LEAD"><CrmLead pageName="Leads" /></PermissionRoute>} />
-              <Route path="leads/all" element={<PermissionRoute module="LEAD"><LeadDetails /></PermissionRoute>} />
-              <Route path="leads/new" element={<PermissionRoute module="LEAD"><CrmLeadFormPage /></PermissionRoute>} />
-              <Route path="leads/edit/:id" element={<PermissionRoute module="LEAD"><CrmLeadFormPage /></PermissionRoute>} />
-              <Route path="lead-info" element={<PermissionRoute module="LEAD"><LeadInfo /></PermissionRoute>} />
-              <Route path="leads/:leadId" element={<PermissionRoute module="LEAD"><LeadInfo /></PermissionRoute>} />
-              <Route path="companies" element={<PermissionRoute module="COMPANY"><CrmCompanies pageName="Companies" /></PermissionRoute>} />
-              <Route path="companies/new" element={<PermissionRoute module="COMPANY"><CrmCompanyFormPage /></PermissionRoute>} />
-              <Route path="companies/edit/:id" element={<PermissionRoute module="COMPANY"><CrmCompanyFormPage /></PermissionRoute>} />
-              <Route path="contacts" element={<PermissionRoute module="CONTACT"><CrmContacts pageName="Contacts" /></PermissionRoute>} />
-              <Route path="contacts/new" element={<PermissionRoute module="CONTACT"><CrmContactFormPage /></PermissionRoute>} />
-              <Route path="contacts/edit/:id" element={<PermissionRoute module="CONTACT"><CrmContactFormPage /></PermissionRoute>} />
-              <Route path='products'>
-                <Route index element={<PermissionRoute module="PRODUCT"><CrmSalesProduct pageName="Products" /></PermissionRoute>} />
-                <Route path="new" element={<PermissionRoute module="PRODUCT"><CrmSalesProductForm /></PermissionRoute>} />
-                <Route path="edit/:id" element={<PermissionRoute module="PRODUCT"><CrmSalesProductForm /></PermissionRoute>} />
-              </Route>
-              <Route path="deals" element={<PermissionRoute module="DEAL"><CrmDeals /></PermissionRoute>} />
-              <Route path="deals/new" element={<PermissionRoute module="DEAL"><CrmDealFormPage /></PermissionRoute>} />
-              <Route path="deals/edit/:id" element={<PermissionRoute module="DEAL"><CrmDealFormPage /></PermissionRoute>} />
-              <Route path="tasks" element={<PermissionRoute module="TASK"><CrmTasks /></PermissionRoute>} />
-              <Route path="tasks/new" element={<PermissionRoute module="TASK"><CrmTaskFormPage /></PermissionRoute>} />
-              <Route path="tasks/edit/:id" element={<PermissionRoute module="TASK"><CrmTaskFormPage /></PermissionRoute>} />
-              <Route path="calendar" element={<PermissionRoute module="EVENT"><CrmCalendarPage /></PermissionRoute>} />
-              <Route path="calendar/events/new" element={<PermissionRoute module="EVENT"><CrmEventFormPage /></PermissionRoute>} />
-              <Route path="calendar/events/edit/:id" element={<PermissionRoute module="EVENT"><CrmEventFormPage /></PermissionRoute>} />
-              <Route path="roles" element={<PermissionRoute module="SETTINGS"><CrmRolesPage /></PermissionRoute>} />
-              <Route path="operations" element={<PermissionRoute module="TODO"><CrmOperations /></PermissionRoute>} />
-              <Route path="operations/events/new" element={<PermissionRoute module="TODO"><CrmEventFormPage /></PermissionRoute>} />
-              <Route path="operations/events/edit/:id" element={<PermissionRoute module="TODO"><CrmEventFormPage /></PermissionRoute>} />
-            </Route>
-
-            {/* ── SALES ─────────────────────────────────────────────── */}
-            <Route path="/sales-dashboard" element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><SalesLayout /></ProtectedRoute>}>
-              <Route index element={<SalesDashboard />} />
-              <Route path="delivery-orders">
-                <Route index element={<DeliveryOrder />} />
-                <Route path="new" element={<DeliveryOrderForm />} />
-                <Route path="edit/:id" element={<DeliveryOrderForm />} />
-                <Route path=":id" element={<DeliveryOrderView />} />
-              </Route>
-              <Route path='quotations'>
-                <Route index element={<Quotation />} />
-                <Route path='new' element={<QuotationForm />} />
-                <Route path='edit/:id' element={<QuotationForm />} />
-                <Route path='revise/:id' element={<QuotationForm />} />
-                <Route path=':id' element={<ViewQuotation />} />
-              </Route>
-              <Route path='invoices'>
-                <Route index element={<Invoice />} />
-                <Route path='new' element={<InvoiceForm />} />
-                <Route path='edit/:id' element={<InvoiceForm />} />
-                <Route path=':id' element={<InvoiceView />} />
-              </Route>
-              <Route path="rental-quotations">
-                <Route index element={<RentalQuotation />} />
-                <Route path="new" element={<RentalQuotationForm />} />
-                <Route path="edit/:id" element={<RentalQuotationForm />} />
-                <Route path=":id" element={<RentalQuotationView />} />
-              </Route>
-              <Route path="rental-sales-orders">
-                <Route index element={<RentalSalesOrder />} />
-                <Route path="new" element={<RentalSalesOrderForm />} />
-                <Route path="edit/:id" element={<RentalSalesOrderForm />} />
-                <Route path=":id" element={<RentalSalesOrderView />} />
-              </Route>
-              <Route path="rental-item-received">
-                <Route index element={<RentalItemRecieved />} />
-                <Route path="new" element={<RentalItemRecievedForm />} />
-                <Route path="edit/:id" element={<RentalItemRecievedForm />} />
-                <Route path="by-order/:orderId" element={<RentalItemReceivedByOrder />} />
-                <Route path=":id" element={<RentalItemRecievedView />} />
-              </Route>
-              <Route path="recieved-amounts">
-                <Route index element={<RecievedAmount />} />
-                <Route path="new" element={<RecievedAmountForm />} />
-                <Route path="edit/:id" element={<RecievedAmountForm />} />
-                <Route path=":id" element={<RecievedAmountView />} />
-              </Route>
-              <Route path="credit-notes">
-                <Route index element={<CreditNotes />} />
-                <Route path="new" element={<CreditNotesForm />} />
-                <Route path="edit/:id" element={<CreditNotesForm />} />
-                <Route path=":id" element={<CreditNotesView />} />
-              </Route>
-              <Route path="orders">
-                <Route index element={<Orders />} />
-                <Route path="new" element={<OrderForm />} />
-                <Route path="edit/:id" element={<OrderForm />} />
-                <Route path=":id" element={<ViewSales />} />
-              </Route>
-              <Route path="proforma-invoices">
-                <Route index element={<ProformaInvoice />} />
-                <Route path="new" element={<ProformaInvoiceForm />} />
-                <Route path="edit/:id" element={<ProformaInvoiceForm />} />
-                <Route path=":id" element={<ProformaInvoiceView />} />
-              </Route>
-              <Route path="rental-invoices">
-                <Route index element={<RentalInvoice />} />
-                <Route path="new" element={<RentalInvoiceForm />} />
-                <Route path="edit/:id" element={<RentalInvoiceForm />} />
-                <Route path=":id" element={<RentalInvoiceView />} />
-              </Route>
-              <Route path="additional-expenses">
-                <Route index element={<SalAdditionalExpensePage />} />
-                <Route path="new" element={<SalAdditionalExpenseForm />} />
-                <Route path="edit/:id" element={<SalAdditionalExpenseForm />} />
-                <Route path="view/:id" element={<SalAdditionalExpenseView />} />
-              </Route>
-              <Route path="reports">
-                <Route path="sales-order-by-item" element={<SalesOrderByItemReport />} />
-                <Route path="sales-order-by-customer" element={<SalesOrderByCustomerReport />} />
-                <Route path="due-bills" element={<ListOfDueBillsReport />} />
-                <Route path="due-invoices" element={<ListOfDueInvoicesReport />} />
-                <Route path="sales-by-salesperson" element={<SalesBySalesPersonReport />} />
-                <Route path="sales-by-item" element={<SalesByItemReport />} />
-                <Route path="sales-by-customer" element={<SalesByCustomerReport />} />
-              </Route>
-              <Route path='settings' element={<SalesSetting />} />
-            </Route>
-
-            {/* ── ACCOUNTING (Phase 1 Rebuild) ─────────────────────── */}
-            <Route path='/account-dashboard/*' element={
-              <ProtectedRoute allowedRoles={ROLES.ANY_AUTH}>
-                <AccountingRouter />
-              </ProtectedRoute>
-            } />
-
-            {/* ── PRODUCTION ────────────────────────────────────────── */}
-            <Route path='/production/finished-goods/new' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><ProFinishedGoodForm /></ProtectedRoute>} />
-            <Route path='/production/finished-goods/edit/:id' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><ProFinishedGoodForm /></ProtectedRoute>} />
-            <Route path='/production/finished-goods/:itemId/process' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><ProcessFinishedGood /></ProtectedRoute>} />
-            <Route path='/production/finished-goods/:itemId/bom' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><BomFinishedGood /></ProtectedRoute>} />
-            <Route path='/production/semi-finished/new' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><ProSemiFinishedForm /></ProtectedRoute>} />
-            <Route path='/production/semi-finished/edit/:id' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><ProSemiFinishedForm /></ProtectedRoute>} />
-            <Route path='/production/semi-finished/:itemId/process' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><ProcessSemiFinished /></ProtectedRoute>} />
-            <Route path='/production/semi-finished/:itemId/bom' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><BomSemiFinished /></ProtectedRoute>} />
-
-            <Route path="/production-dashboard" element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><Production /></ProtectedRoute>}>
-              <Route index element={<ProductionDashboard />} />
-              <Route path="overview" element={<ProductionDashboard />} />
-              <Route path="manage-manufacturing-order" element={<ManufacturingOrder />} />
-              <Route path="manage-manufacturing-order/new" element={<ManufacturingOrderForm />} />
-              <Route path="manage-manufacturing-order/edit/:id" element={<ManufacturingOrderForm />} />
-              <Route path="view-manufacturing-order" element={<ViewManufacturingOrder />} />
-              <Route path="view-manufacturing-order/:id" element={<ViewManufacturingOrder />} />
-              <Route path="production-schedule" element={<ProductionSchedule />} />
-              <Route path="production-operation" element={<ProductionOperation />} />
-              <Route path="my-production" element={<MyProductionPlan />} />
-              <Route path="hanger">
-                <Route path="batches">
-                  <Route index element={<BatchListPage />} />
-                  <Route path="new" element={<BatchForm />} />
-                  <Route path="wip" element={<WipTrackingPage />} />
-                  <Route path="oee" element={<OeeDashboardPage />} />
-                  <Route path="reports" element={<ProductionReportsPage />} />
-                  <Route path=":id" element={<BatchDetailPage />} />
-                  <Route path=":id/cost-sheet" element={<CostSheetPage />} />
+              {/* ── HRMS REPORTS ─────────────────────────────────────── */}
+              <Route path='/reports' element={<ProtectedRoute allowedRoles={ROLES.HRMS}><ReportsLayout /></ProtectedRoute>}>
+                <Route index element={<Navigate to="employee" replace />} />
+                <Route path='employee' element={<EmployeeReports />}>
+                  <Route index element={<Navigate to="master" replace />} />
+                  <Route path='master' element={<MasterEmployeeReport />} />
+                  <Route path='count' element={<HeadCount />} />
+                  <Route path='demographics' element={<Demographics />} />
+                  <Route path='employment-status' element={<EmploymentStatus />} />
+                  <Route path='documents' element={<EmployeeDocumentsReport />} />
                 </Route>
-                <Route path="settings/cost-rate" element={<CostRateSettings />} />
+                <Route path='attendance' element={<AttendanceReports />}>
+                  <Route index element={<Navigate to="daily" replace />} />
+                  <Route path='daily' element={<DailyAttendanceReport />} />
+                  <Route path='monthly' element={<MonthlyAttendanceReport />} />
+                  <Route path='overtime' element={<OvertimeReport />} />
+                  <Route path='compliance' element={<ComplianceReport />} />
+                </Route>
+                <Route path='leave' element={<LeaveReports />}>
+                  <Route index element={<Navigate to="accrual" replace />} />
+                  <Route path='accrual' element={<LeaveAccrualReport />} />
+                </Route>
+                <Route path='payroll' element={<PayrollReports />}>
+                  <Route index element={<Navigate to="register" replace />} />
+                  <Route path='register' element={<PayrollRegisterReport />} />
+                  <Route path='wps-sif' element={<WpsSifReport />} />
+                  <Route path='compliance' element={<WpsComplianceReport />} />
+                </Route>
+                <Route path='compliance' element={<ComplianceReports />}>
+                  <Route index element={<Navigate to="labor-card" replace />} />
+                  <Route path='labor-card' element={<LaborCardReport />} />
+                  <Route path='company-quota' element={<CompanyQuotaReport />} />
+                  <Route path='nationality' element={<NationalityReport />} />
+                  <Route path='emiratization' element={<EmiratizationReport />} />
+                  <Route path='absconding' element={<AbscondingReport />} />
+                </Route>
+                <Route path='eos' element={<EndOfServiceReports />}>
+                  <Route index element={<Navigate to="eosb" replace />} />
+                  <Route path='eosb' element={<EosbCalculationReport />} />
+                  <Route path='final-settlement' element={<FinalSettlementReport />} />
+                  <Route path='termination-reason' element={<TerminationReasonReport />} />
+                </Route>
               </Route>
-              <Route path="material-requisition" element={<ProductionPlaceholder pageName="Material Requisition" />} />
-              <Route path="work-order-report" element={<ProductionPlaceholder pageName="Work Order Report" />} />
-            </Route>
 
-            {/* ── PURCHASE ──────────────────────────────────────────── */}
-            <Route path="/purchase-dashboard/*" element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><PurchaseModule /></ProtectedRoute>} />
+              {/* ── POS ───────────────────────────────────────────────── */}
+              <Route path='/pos-dashboard' element={<ProtectedRoute allowedRoles={ROLES.POS}><PosDashboard /></ProtectedRoute>} />
+              <Route path='/product-scan/:barcode' element={<ProtectedRoute allowedRoles={ROLES.POS}><ProductScanResult /></ProtectedRoute>} />
+              <Route path='/pos-reports' element={<ProtectedRoute allowedRoles={ROLES.POS}><PosReportsLayout /></ProtectedRoute>}>
+                <Route path='business-summary' element={<BusinessSummary />} />
+                <Route path='daily-sales' element={<DailySummaryReport />} />
+                <Route path='total-daily-sales' element={<TotalDailyReports />} />
+                <Route path='closing' element={<ClosingReport />} />
+                <Route path='sales-support' element={<SalesSupportReport />} />
+                <Route path='sales-payment' element={<SalesPaymentReport />} />
+                <Route path='sales-source' element={<SalesSourceReport />} />
+                <Route path='total-sales' element={<TotalSalesReport />} />
+                <Route path='sales-status' element={<SalesStatusReport />} />
+                <Route path='delivery-driver-report' element={<DeliveryDriverReport />} />
+                <Route path='sales-forecasting-report' element={<SalesForecastingReport />} />
+                <Route path='payment-change-report' element={<PaymentChangeReport />} />
+                <Route path='sales-discount-report' element={<SalesDiscountReport />} />
+                <Route path='cancellation-report' element={<CancellationReport />} />
+                <Route path='void-report' element={<VoidReport />} />
+                <Route path='item-movement-report' element={<ItemMovementReport />} />
+                <Route path='slow-selling-report' element={<SlowSellingReport />} />
+                <Route path='best-selling-report' element={<BestSellingReport />} />
+                <Route path='item-sales-report' element={<ItemSalesReport />} />
+                <Route path='user-transfer' element={<UserTransfer />} />
+              </Route>
 
-            {/* ── MATERIAL ──────────────────────────────────────────── */}
-            <Route path="/material-dashboard" element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><MaterialModule /></ProtectedRoute>}>
-              <Route index element={<Navigate to="material-requisition" replace />} />
-              <Route path="material-requisition" element={<MaterialRequisition filterPreset={{}} />} />
-              <Route path="reserved-material" element={<MaterialReservedTab />} />
-              <Route path="issued-material" element={<IssueRawMaterialTab />} />
-              <Route path="indent-requisition" element={<ViewIndentMaterialTab />} />
-              <Route path="indent-requisition/new" element={<IndentRequisionForm />} />
-              <Route path="indent-requisition/edit/:id" element={<IndentRequisionForm />} />
-              <Route path="indent-pending" element={<IndentRequisionPOTab />} />
-              <Route path="indent-created" element={<IndentRequisionPOCreatedTab />} />
-              <Route path="issue-raw-material/:id" element={<IssueRawMaterial />} />
-              <Route path="reserve-raw-material/:id" element={<MaterialReserved />} />
-              <Route path="unreserve-raw-material/:id" element={<UnreserveRawMaterial />} />
-              <Route path="indent-reception/:id" element={<IndentMaterial />} />
-            </Route>
+              {/* ── CRM ───────────────────────────────────────────────── */}
+              <Route path='/crm-dashboard' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><CrmModule /></ProtectedRoute>}>
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<PermissionRoute module="DASHBOARD"><CrmDashboard /></PermissionRoute>} />
+                <Route path="recent-activities" element={<PermissionRoute module="DASHBOARD"><CrmRecentActivityPage /></PermissionRoute>} />
+                <Route path="home" element={<CrmHome />} />
+                <Route path="calling-data" element={<PermissionRoute module="CALL_LOG"><CrmCallingData /></PermissionRoute>} />
+                <Route path="calling-data/new" element={<PermissionRoute module="CALL_LOG"><CrmCallLogFormPage /></PermissionRoute>} />
+                <Route path="calling-data/edit/:id" element={<PermissionRoute module="CALL_LOG"><CrmCallLogFormPage /></PermissionRoute>} />
+                <Route path="leads" element={<PermissionRoute module="LEAD"><CrmLead pageName="Leads" /></PermissionRoute>} />
+                <Route path="leads/all" element={<PermissionRoute module="LEAD"><LeadDetails /></PermissionRoute>} />
+                <Route path="leads/new" element={<PermissionRoute module="LEAD"><CrmLeadFormPage /></PermissionRoute>} />
+                <Route path="leads/edit/:id" element={<PermissionRoute module="LEAD"><CrmLeadFormPage /></PermissionRoute>} />
+                <Route path="lead-info" element={<PermissionRoute module="LEAD"><LeadInfo /></PermissionRoute>} />
+                <Route path="leads/:leadId" element={<PermissionRoute module="LEAD"><LeadInfo /></PermissionRoute>} />
+                <Route path="companies" element={<PermissionRoute module="COMPANY"><CrmCompanies pageName="Companies" /></PermissionRoute>} />
+                <Route path="companies/new" element={<PermissionRoute module="COMPANY"><CrmCompanyFormPage /></PermissionRoute>} />
+                <Route path="companies/edit/:id" element={<PermissionRoute module="COMPANY"><CrmCompanyFormPage /></PermissionRoute>} />
+                <Route path="contacts" element={<PermissionRoute module="CONTACT"><CrmContacts pageName="Contacts" /></PermissionRoute>} />
+                <Route path="contacts/new" element={<PermissionRoute module="CONTACT"><CrmContactFormPage /></PermissionRoute>} />
+                <Route path="contacts/edit/:id" element={<PermissionRoute module="CONTACT"><CrmContactFormPage /></PermissionRoute>} />
+                <Route path='products'>
+                  <Route index element={<Navigate to="/company-settings/product-services" replace />} />
+                  <Route path="new" element={<Navigate to="/company-settings/product-services/new" replace />} />
+                  <Route path="edit/:id" element={<Navigate to="/company-settings/product-services" replace />} />
+                </Route>
+                <Route path="deals" element={<PermissionRoute module="DEAL"><CrmDeals /></PermissionRoute>} />
+                <Route path="deals/new" element={<PermissionRoute module="DEAL"><CrmDealFormPage /></PermissionRoute>} />
+                <Route path="deals/edit/:id" element={<PermissionRoute module="DEAL"><CrmDealFormPage /></PermissionRoute>} />
+                <Route path="tasks" element={<PermissionRoute module="TASK"><CrmTasks /></PermissionRoute>} />
+                <Route path="tasks/new" element={<PermissionRoute module="TASK"><CrmTaskFormPage /></PermissionRoute>} />
+                <Route path="tasks/edit/:id" element={<PermissionRoute module="TASK"><CrmTaskFormPage /></PermissionRoute>} />
+                <Route path="calendar" element={<PermissionRoute module="EVENT"><CrmCalendarPage /></PermissionRoute>} />
+                <Route path="calendar/events/new" element={<PermissionRoute module="EVENT"><CrmEventFormPage /></PermissionRoute>} />
+                <Route path="calendar/events/edit/:id" element={<PermissionRoute module="EVENT"><CrmEventFormPage /></PermissionRoute>} />
+                <Route path="roles" element={<PermissionRoute module="SETTINGS"><CrmRolesPage /></PermissionRoute>} />
+                <Route path="operations" element={<PermissionRoute module="TODO"><CrmOperations /></PermissionRoute>} />
+                <Route path="operations/events/new" element={<PermissionRoute module="TODO"><CrmEventFormPage /></PermissionRoute>} />
+                <Route path="operations/events/edit/:id" element={<PermissionRoute module="TODO"><CrmEventFormPage /></PermissionRoute>} />
+              </Route>
 
-            {/* ── WAREHOUSE ─────────────────────────────────────────── */}
-            <Route path="/warehouse-dashboard" element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><WarehouseModule /></ProtectedRoute>}>
-              <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="dashboard" element={<WarehouseDashboard />} />
-              <Route path="inventory" element={<WarehousePlaceholder pageName="Inventory" />} />
-              <Route path="fg-stock" element={<FgStockPage />} />
-              <Route path="coil-stock" element={<CoilStock />} />
-              <Route path="stock-in" element={<WarehousePlaceholder pageName="Stock In" />} />
-              <Route path="stock-out" element={<WarehousePlaceholder pageName="Stock Out" />} />
-            </Route>
+              {/* ── SALES ─────────────────────────────────────────────── */}
+              <Route path="/sales-dashboard" element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><SalesLayout /></ProtectedRoute>}>
+                <Route index element={<SalesDashboard />} />
+                <Route path="delivery-orders">
+                  <Route index element={<DeliveryOrder />} />
+                  <Route path="new" element={<DeliveryOrderForm />} />
+                  <Route path="edit/:id" element={<DeliveryOrderForm />} />
+                  <Route path=":id" element={<DeliveryOrderView />} />
+                </Route>
+                <Route path='quotations'>
+                  <Route index element={<Quotation />} />
+                  <Route path='new' element={<QuotationForm />} />
+                  <Route path='edit/:id' element={<QuotationForm />} />
+                  <Route path='revise/:id' element={<QuotationForm />} />
+                  <Route path=':id' element={<ViewQuotation />} />
+                </Route>
+                <Route path='invoices'>
+                  <Route index element={<Invoice />} />
+                  <Route path='new' element={<InvoiceForm />} />
+                  <Route path='edit/:id' element={<InvoiceForm />} />
+                  <Route path=':id' element={<InvoiceView />} />
+                </Route>
+                <Route path="rental-quotations">
+                  <Route index element={<RentalQuotation />} />
+                  <Route path="new" element={<RentalQuotationForm />} />
+                  <Route path="edit/:id" element={<RentalQuotationForm />} />
+                  <Route path=":id" element={<RentalQuotationView />} />
+                </Route>
+                <Route path="rental-sales-orders">
+                  <Route index element={<RentalSalesOrder />} />
+                  <Route path="new" element={<RentalSalesOrderForm />} />
+                  <Route path="edit/:id" element={<RentalSalesOrderForm />} />
+                  <Route path=":id" element={<RentalSalesOrderView />} />
+                </Route>
+                <Route path="rental-item-received">
+                  <Route index element={<RentalItemRecieved />} />
+                  <Route path="new" element={<RentalItemRecievedForm />} />
+                  <Route path="edit/:id" element={<RentalItemRecievedForm />} />
+                  <Route path="by-order/:orderId" element={<RentalItemReceivedByOrder />} />
+                  <Route path=":id" element={<RentalItemRecievedView />} />
+                </Route>
+                <Route path="recieved-amounts">
+                  <Route index element={<RecievedAmount />} />
+                  <Route path="new" element={<RecievedAmountForm />} />
+                  <Route path="edit/:id" element={<RecievedAmountForm />} />
+                  <Route path=":id" element={<RecievedAmountView />} />
+                </Route>
+                <Route path="credit-notes">
+                  <Route index element={<CreditNotes />} />
+                  <Route path="new" element={<CreditNotesForm />} />
+                  <Route path="edit/:id" element={<CreditNotesForm />} />
+                  <Route path=":id" element={<CreditNotesView />} />
+                </Route>
+                <Route path="orders">
+                  <Route index element={<Orders />} />
+                  <Route path="new" element={<OrderForm />} />
+                  <Route path="edit/:id" element={<OrderForm />} />
+                  <Route path=":id" element={<ViewSales />} />
+                </Route>
+                <Route path="proforma-invoices">
+                  <Route index element={<ProformaInvoice />} />
+                  <Route path="new" element={<ProformaInvoiceForm />} />
+                  <Route path="edit/:id" element={<ProformaInvoiceForm />} />
+                  <Route path=":id" element={<ProformaInvoiceView />} />
+                </Route>
+                <Route path="rental-invoices">
+                  <Route index element={<RentalInvoice />} />
+                  <Route path="new" element={<RentalInvoiceForm />} />
+                  <Route path="edit/:id" element={<RentalInvoiceForm />} />
+                  <Route path=":id" element={<RentalInvoiceView />} />
+                </Route>
+                <Route path="additional-expenses">
+                  <Route index element={<SalAdditionalExpensePage />} />
+                  <Route path="new" element={<SalAdditionalExpenseForm />} />
+                  <Route path="edit/:id" element={<SalAdditionalExpenseForm />} />
+                  <Route path="view/:id" element={<SalAdditionalExpenseView />} />
+                </Route>
+                <Route path="reports">
+                  <Route path="sales-order-by-item" element={<SalesOrderByItemReport />} />
+                  <Route path="sales-order-by-customer" element={<SalesOrderByCustomerReport />} />
+                  <Route path="due-bills" element={<ListOfDueBillsReport />} />
+                  <Route path="due-invoices" element={<ListOfDueInvoicesReport />} />
+                  <Route path="sales-by-salesperson" element={<SalesBySalesPersonReport />} />
+                  <Route path="sales-by-item" element={<SalesByItemReport />} />
+                  <Route path="sales-by-customer" element={<SalesByCustomerReport />} />
+                </Route>
+                <Route path='settings' element={<SalesSetting />} />
+              </Route>
+
+              {/* ── ACCOUNTING (Phase 1 Rebuild) ─────────────────────── */}
+              <Route path='/account-dashboard/*' element={
+                <ProtectedRoute allowedRoles={ROLES.ANY_AUTH}>
+                  <AccountingRouter />
+                </ProtectedRoute>
+              } />
+
+              {/* ── PRODUCTION ────────────────────────────────────────── */}
+              <Route path='/production/finished-goods/new' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><ProFinishedGoodForm /></ProtectedRoute>} />
+              <Route path='/production/finished-goods/edit/:id' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><ProFinishedGoodForm /></ProtectedRoute>} />
+              <Route path='/production/finished-goods/:itemId/process' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><ProcessFinishedGood /></ProtectedRoute>} />
+              <Route path='/production/finished-goods/:itemId/bom' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><BomFinishedGood /></ProtectedRoute>} />
+              <Route path='/production/semi-finished/new' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><ProSemiFinishedForm /></ProtectedRoute>} />
+              <Route path='/production/semi-finished/edit/:id' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><ProSemiFinishedForm /></ProtectedRoute>} />
+              <Route path='/production/semi-finished/:itemId/process' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><ProcessSemiFinished /></ProtectedRoute>} />
+              <Route path='/production/semi-finished/:itemId/bom' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><BomSemiFinished /></ProtectedRoute>} />
+
+              <Route path="/production-dashboard" element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><Production /></ProtectedRoute>}>
+                <Route index element={<ProductionDashboard />} />
+                <Route path="overview" element={<ProductionDashboard />} />
+                <Route path="manage-manufacturing-order" element={<ManufacturingOrder />} />
+                <Route path="manage-manufacturing-order/new" element={<ManufacturingOrderForm />} />
+                <Route path="manage-manufacturing-order/edit/:id" element={<ManufacturingOrderForm />} />
+                <Route path="view-manufacturing-order" element={<ViewManufacturingOrder />} />
+                <Route path="view-manufacturing-order/:id" element={<ViewManufacturingOrder />} />
+                <Route path="production-schedule" element={<ProductionSchedule />} />
+                <Route path="production-operation" element={<ProductionOperation />} />
+                <Route path="my-production" element={<MyProductionPlan />} />
+                <Route path="hanger">
+                  <Route path="batches">
+                    <Route index element={<BatchListPage />} />
+                    <Route path="new" element={<BatchForm />} />
+                    <Route path="wip" element={<WipTrackingPage />} />
+                    <Route path="oee" element={<OeeDashboardPage />} />
+                    <Route path="reports" element={<ProductionReportsPage />} />
+                    <Route path=":id" element={<BatchDetailPage />} />
+                    <Route path=":id/cost-sheet" element={<CostSheetPage />} />
+                  </Route>
+                  <Route path="settings/cost-rate" element={<CostRateSettings />} />
+                </Route>
+                <Route path="material-requisition" element={<ProductionPlaceholder pageName="Material Requisition" />} />
+                <Route path="work-order-report" element={<ProductionPlaceholder pageName="Work Order Report" />} />
+              </Route>
+
+              {/* ── PURCHASE ──────────────────────────────────────────── */}
+              <Route path="/purchase-dashboard/*" element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><PurchaseModule /></ProtectedRoute>} />
+
+              {/* ── MATERIAL ──────────────────────────────────────────── */}
+              <Route path="/material-dashboard" element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><MaterialModule /></ProtectedRoute>}>
+                <Route index element={<Navigate to="material-requisition" replace />} />
+                <Route path="material-requisition" element={<MaterialRequisition filterPreset={{}} />} />
+                <Route path="reserved-material" element={<MaterialReservedTab />} />
+                <Route path="issued-material" element={<IssueRawMaterialTab />} />
+                <Route path="indent-requisition" element={<ViewIndentMaterialTab />} />
+                <Route path="indent-requisition/new" element={<IndentRequisionForm />} />
+                <Route path="indent-requisition/edit/:id" element={<IndentRequisionForm />} />
+                <Route path="indent-pending" element={<IndentRequisionPOTab />} />
+                <Route path="indent-created" element={<IndentRequisionPOCreatedTab />} />
+                <Route path="issue-raw-material/:id" element={<IssueRawMaterial />} />
+                <Route path="reserve-raw-material/:id" element={<MaterialReserved />} />
+                <Route path="unreserve-raw-material/:id" element={<UnreserveRawMaterial />} />
+                <Route path="indent-reception/:id" element={<IndentMaterial />} />
+              </Route>
+
+              {/* ── WAREHOUSE ─────────────────────────────────────────── */}
+              <Route path="/warehouse-dashboard" element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><WarehouseModule /></ProtectedRoute>}>
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<WarehouseDashboard />} />
+                <Route path="inventory" element={<WarehousePlaceholder pageName="Inventory" />} />
+                <Route path="fg-stock" element={<FgStockPage />} />
+                <Route path="coil-stock" element={<CoilStock />} />
+                <Route path="stock-in" element={<WarehousePlaceholder pageName="Stock In" />} />
+                <Route path="stock-out" element={<WarehousePlaceholder pageName="Stock Out" />} />
+              </Route>
 
 
 
-            {/* ── FIXED ASSET ────────────────────────────────────────── */}
-            <Route path='/fixed-asset-dashboard' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><FixedAssetModule /></ProtectedRoute>}>
-              <Route index element={<FixedAssetDashboard />} />
-              <Route path="dashboard" element={<FixedAssetDashboard />} />
-              <Route path="assets" element={<AssetList />} />
-              <Route path="assets/new" element={<FixedAssetForm />} />
-              <Route path="assets/edit/:id" element={<FixedAssetForm />} />
-              <Route path="categories" element={<CategoryList />} />
-            </Route>
+              {/* ── FIXED ASSET ────────────────────────────────────────── */}
+              <Route path='/fixed-asset-dashboard' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><FixedAssetModule /></ProtectedRoute>}>
+                <Route index element={<FixedAssetDashboard />} />
+                <Route path="dashboard" element={<FixedAssetDashboard />} />
+                <Route path="assets" element={<AssetList />} />
+                <Route path="assets/new" element={<FixedAssetForm />} />
+                <Route path="assets/edit/:id" element={<FixedAssetForm />} />
+                <Route path="categories" element={<CategoryList />} />
+              </Route>
 
-            {/* ── ATS ────────────────────────────────────────────────── */}
-            <Route path='/ats-dashboard' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><AtsModule /></ProtectedRoute>}>
-              <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="dashboard" element={<AtsDashboard />} />
-              <Route path="applicants" element={<AtsApplicants />} />
-              <Route path="applicants/add" element={<AddApplicantPage />} />
-              <Route path="applicants/:id" element={<AtsApplicantDetail />} />
-              <Route path="vendors" element={<AtsVendorList />} />
-              <Route path="vendors/new" element={<AtsVendorForm />} />
-              <Route path="vendors/:id" element={<AtsVendorDetail />} />
-              <Route path="vendors/:id/edit" element={<AtsVendorForm />} />
-              <Route path="clients" element={<AtsClientList />} />
-              <Route path="clients/new" element={<AtsClientForm />} />
-              <Route path="clients/:id" element={<AtsClientDetail />} />
-              <Route path="clients/:id/edit" element={<AtsClientForm />} />
-              <Route path="interviewers" element={<AtsInterviewerList />} />
-              <Route path="blacklist" element={<AtsBlacklist />} />
-              <Route path="consent" element={<AtsConsentDetails />} />
-            </Route>
-            <Route path="/ats-settings" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><AtsSettings /></ProtectedRoute>} />
+              {/* ── ATS ────────────────────────────────────────────────── */}
+              <Route path='/ats-dashboard' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><AtsModule /></ProtectedRoute>}>
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<AtsDashboard />} />
+                <Route path="applicants" element={<AtsApplicants />} />
+                <Route path="applicants/add" element={<AddApplicantPage />} />
+                <Route path="applicants/:id" element={<AtsApplicantDetail />} />
+                <Route path="vendors" element={<AtsVendorList />} />
+                <Route path="vendors/new" element={<AtsVendorForm />} />
+                <Route path="vendors/:id" element={<AtsVendorDetail />} />
+                <Route path="vendors/:id/edit" element={<AtsVendorForm />} />
+                <Route path="clients" element={<AtsClientList />} />
+                <Route path="clients/new" element={<AtsClientForm />} />
+                <Route path="clients/:id" element={<AtsClientDetail />} />
+                <Route path="clients/:id/edit" element={<AtsClientForm />} />
+                <Route path="interviewers" element={<AtsInterviewerList />} />
+                <Route path="blacklist" element={<AtsBlacklist />} />
+                <Route path="consent" element={<AtsConsentDetails />} />
+              </Route>
+              <Route path="/ats-settings" element={<ProtectedRoute allowedRoles={ROLES.SETTINGS}><AtsSettings /></ProtectedRoute>} />
 
 
-            {/* ── FLEET MANAGEMENT ─────────────────────────────────────────── */}
-            <Route path="/fleet-dashboard" element={
-              <ProtectedRoute allowedRoles={ROLES.ANY_AUTH}>
-                <FleetLayout />
-              </ProtectedRoute>
-            }>
-              <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="dashboard" element={<FleetDashboard />} />
-              <Route path="vehicle-details/:id" element={<VehicleDetails />} />
-              <Route path="driver-details/:id" element={<DriverDetails />} />
-              <Route path="customer-details/:id" element={<CustomerDetails />} />
-              <Route path="vendor-details/:id" element={<VendorDetails />} />
-              <Route path="vendors/vendor-form" element={<VendorFormPage />} />
-              <Route path="vendors/vendor-form/:id" element={<VendorFormPage />} />
-              <Route path="customers/customer-form" element={<CustomerFormPage />} />
-              <Route path="customers/customer-form/:id" element={<CustomerFormPage />} />
-              <Route path="vehicles" element={<Vehicles />} />
-              <Route path="vehicles/vehicle-form" element={<VehicleFormPage />} />
-              <Route path="vehicles/vehicle-form/:id" element={<VehicleFormPage />} />
-              <Route path="drivers" element={<Drivers />} />
-              <Route path="drivers/driver-form" element={<DriverFormPage />} />
-              <Route path="drivers/driver-form/:id" element={<DriverFormPage />} />
-              <Route path="routes" element={<RoutesPage />} />
-              <Route path="routes/route-form" element={<RouteFormPage />} />
-              <Route path="routes/route-form/:id" element={<RouteFormPage />} />
-              <Route path="routes/route-details/:id" element={<RouteDetailsPage />} />
-              <Route path="maintenance" element={<VehicleMaintenance />} />
-              <Route path="maintenance/maintenance-form" element={<MaintenanceFormPage />} />
-              <Route path="maintenance/maintenance-form/:id" element={<MaintenanceFormPage />} />
-              <Route path="fuel" element={<FuelLog />} />
-              <Route path="fuel/fuel-form" element={<FuelFormPage />} />
-              <Route path="fuel/fuel-form/:id" element={<FuelFormPage />} />
-              <Route path="fuel/fuel-details/:id" element={<FuelDetailsPage />} />
-              <Route path="dispatch" element={<DispatchJobs />} />
-              <Route path="dispatch/job-form" element={<DispatchFormPage />} />
-              <Route path="dispatch/job-form/:id" element={<DispatchFormPage />} />
-              <Route path="dispatch/job-details/:id" element={<DispatchDetailsPage />} />
-               <Route path="complaints" element={<Complaints />} />
-               <Route path="complaints/complaint-form" element={<ComplaintFormPage />} />
-               <Route path="complaints/complaint-form/:id" element={<ComplaintFormPage />} />
-               <Route path="complaints/complaint-details/:id" element={<ComplaintDetailsPage />} />
-               <Route path="performance" element={<DriverPerformances />} />
-               <Route path="performance/performance-form" element={<DriverPerformanceFormPage />} />
-               <Route path="performance/performance-form/:id" element={<DriverPerformanceFormPage />} />
-               <Route path="performance/performance-details/:id" element={<DriverPerformanceDetailsPage />} />
-              <Route path="compliance" element={<DocumentTrackingDashboard />} />
-              <Route path="alerts" element={<FleetAlerts />} />
+              {/* ── FLEET MANAGEMENT ─────────────────────────────────────────── */}
+              <Route path="/fleet-dashboard" element={
+                <ProtectedRoute allowedRoles={ROLES.ANY_AUTH}>
+                  <FleetLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<FleetDashboard />} />
+                <Route path="vehicle-details/:id" element={<VehicleDetails />} />
+                <Route path="driver-details/:id" element={<DriverDetails />} />
+                <Route path="customer-details/:id" element={<CustomerDetails />} />
+                <Route path="vendor-details/:id" element={<VendorDetails />} />
+                <Route path="vendors/vendor-form" element={<VendorFormPage />} />
+                <Route path="vendors/vendor-form/:id" element={<VendorFormPage />} />
+                <Route path="customers/customer-form" element={<CustomerFormPage />} />
+                <Route path="customers/customer-form/:id" element={<CustomerFormPage />} />
+                <Route path="vehicles" element={<Vehicles />} />
+                <Route path="vehicles/vehicle-form" element={<VehicleFormPage />} />
+                <Route path="vehicles/vehicle-form/:id" element={<VehicleFormPage />} />
+                <Route path="drivers" element={<Drivers />} />
+                <Route path="drivers/driver-form" element={<DriverFormPage />} />
+                <Route path="drivers/driver-form/:id" element={<DriverFormPage />} />
+                <Route path="routes" element={<RoutesPage />} />
+                <Route path="routes/route-form" element={<RouteFormPage />} />
+                <Route path="routes/route-form/:id" element={<RouteFormPage />} />
+                <Route path="routes/route-details/:id" element={<RouteDetailsPage />} />
+                <Route path="maintenance" element={<VehicleMaintenance />} />
+                <Route path="maintenance/maintenance-form" element={<MaintenanceFormPage />} />
+                <Route path="maintenance/maintenance-form/:id" element={<MaintenanceFormPage />} />
+                <Route path="fuel" element={<FuelLog />} />
+                <Route path="fuel/fuel-form" element={<FuelFormPage />} />
+                <Route path="fuel/fuel-form/:id" element={<FuelFormPage />} />
+                <Route path="fuel/fuel-details/:id" element={<FuelDetailsPage />} />
+                <Route path="dispatch" element={<DispatchJobs />} />
+                <Route path="dispatch/job-form" element={<DispatchFormPage />} />
+                <Route path="dispatch/job-form/:id" element={<DispatchFormPage />} />
+                <Route path="dispatch/job-details/:id" element={<DispatchDetailsPage />} />
+                <Route path="complaints" element={<Complaints />} />
+                <Route path="complaints/complaint-form" element={<ComplaintFormPage />} />
+                <Route path="complaints/complaint-form/:id" element={<ComplaintFormPage />} />
+                <Route path="complaints/complaint-details/:id" element={<ComplaintDetailsPage />} />
+                <Route path="performance" element={<DriverPerformances />} />
+                <Route path="performance/performance-form" element={<DriverPerformanceFormPage />} />
+                <Route path="performance/performance-form/:id" element={<DriverPerformanceFormPage />} />
+                <Route path="performance/performance-details/:id" element={<DriverPerformanceDetailsPage />} />
+                <Route path="compliance" element={<DocumentTrackingDashboard />} />
+                <Route path="alerts" element={<FleetAlerts />} />
 
-              {/* Merged Trip Routes */}
-              <Route path="trips" element={<Trips />} />
-              <Route path="trips/trip-form" element={<TripFormPage />} />
-              <Route path="trips/trip-form/:id" element={<TripFormPage />} />
-              <Route path="trips/trip-details/:id" element={<TripDetails />} />
-              <Route path="trips/dispatch/:id" element={<TripDispatchPage />} />
-              <Route path="trips/trip-tracker/:id" element={<TripTracker />} />
-              <Route path="customers" element={<Customers />} />
-              <Route path="trip-customers" element={<Customers />} />
-              <Route path="vendors" element={<Vendors />} />
-              <Route path="trip-vendors" element={<Vendors />} />
-              <Route path="invoices" element={<Invoices />} />
-              <Route path="invoices/invoice-form" element={<InvoiceFormPage />} />
-              <Route path="invoices/invoice-form/:id" element={<InvoiceFormPage />} />
-              <Route path="invoices/invoice-details/:id" element={<InvoiceDetailsPage />} />
-              <Route path="invoices/new" element={<InvoiceFormPage />} />
-              <Route path="invoices/:id" element={<InvoiceDetailsPage />} />
-              <Route path="trip-reports" element={<ReportsDashboard />} />
-              <Route path="trip-reports/report-form" element={<ReportFormPage />} />
-              <Route path="trip-reports/report-form/:id" element={<ReportFormPage />} />
-              <Route path="trip-reports/report-details/:id" element={<ReportDetailsPage />} />
-            </Route>
+                {/* Merged Trip Routes */}
+                <Route path="trips" element={<Trips />} />
+                <Route path="trips/trip-form" element={<TripFormPage />} />
+                <Route path="trips/trip-form/:id" element={<TripFormPage />} />
+                <Route path="trips/trip-details/:id" element={<TripDetails />} />
+                <Route path="trips/dispatch/:id" element={<TripDispatchPage />} />
+                <Route path="trips/trip-tracker/:id" element={<TripTracker />} />
+                <Route path="customers" element={<Customers />} />
+                <Route path="trip-customers" element={<Customers />} />
+                <Route path="vendors" element={<Vendors />} />
+                <Route path="trip-vendors" element={<Vendors />} />
+                <Route path="invoices" element={<Invoices />} />
+                <Route path="invoices/invoice-form" element={<InvoiceFormPage />} />
+                <Route path="invoices/invoice-form/:id" element={<InvoiceFormPage />} />
+                <Route path="invoices/invoice-details/:id" element={<InvoiceDetailsPage />} />
+                <Route path="invoices/new" element={<InvoiceFormPage />} />
+                <Route path="invoices/:id" element={<InvoiceDetailsPage />} />
+                <Route path="trip-reports" element={<ReportsDashboard />} />
+                <Route path="trip-reports/report-form" element={<ReportFormPage />} />
+                <Route path="trip-reports/report-form/:id" element={<ReportFormPage />} />
+                <Route path="trip-reports/report-details/:id" element={<ReportDetailsPage />} />
+              </Route>
 
-            {/* ── NOTIFICATION ──────────────────────────────────────── */}
-            <Route path="/notification-dashboard" element={
-              <ProtectedRoute allowedRoles={ROLES.ANY_AUTH}>
-                <NotificationModule />
-              </ProtectedRoute>
-            }>
-              <Route index element={<NotificationDashboard />} />
-              <Route path="email" element={<EmailNotification />} />
-              <Route path="whatsapp" element={<WhatsAppNotification />} />
-              <Route path="sms" element={<SmsNotification />} />
-              <Route path="telegram" element={<TelegramNotification />} />
-              <Route path="website" element={<WebsiteIntegration />} />
-              <Route path="lead-capture" element={<LeadCapture />} />
-            </Route>
-          </Routes>
-        </Suspense>
+              {/* ── NOTIFICATION ──────────────────────────────────────── */}
+              <Route path="/notification-dashboard" element={
+                <ProtectedRoute allowedRoles={ROLES.ANY_AUTH}>
+                  <NotificationModule />
+                </ProtectedRoute>
+              }>
+                <Route index element={<NotificationDashboard />} />
+                <Route path="email" element={<EmailNotification />} />
+                <Route path="whatsapp" element={<WhatsAppNotification />} />
+                <Route path="sms" element={<SmsNotification />} />
+                <Route path="telegram" element={<TelegramNotification />} />
+                <Route path="website" element={<WebsiteIntegration />} />
+                <Route path="lead-capture" element={<LeadCapture />} />
+              </Route>
+            </Routes>
+          </Suspense>
         </Router>
       </CrmPermissionsProvider>
       <ToastContainer />

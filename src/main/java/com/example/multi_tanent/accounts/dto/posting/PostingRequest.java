@@ -17,6 +17,7 @@ public class PostingRequest {
     private String description;
     private Long companyId; // used for looking up default AR/AP account
     private Long linkedInvoiceJeId;
+    private String paymentMethod; // e.g. cash, card, wallet, bank, credit
     private List<Line> lines;
 
     @Data
@@ -26,6 +27,8 @@ public class PostingRequest {
         private BigDecimal quantity;
         private String description;
         private BigDecimal taxPercentage;
+        private BigDecimal taxAmount;
+        private BigDecimal cogsAmount;
 
         // Optional Dimensions to flow to the Journal Entry lines
         private Long dimItemId;
