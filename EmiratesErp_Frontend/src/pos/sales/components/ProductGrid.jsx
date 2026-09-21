@@ -29,14 +29,13 @@ const ProductCard = ({ product, variant, onAddToCart, onDownloadBarcode }) => {
     return (
         <div
             onClick={mainAction}
-            className={`group relative flex flex-col justify-end overflow-hidden select-none bg-white rounded-[6.09px] transition-all hover:scale-[1.02] shadow-[0px_6.09px_9.14px_-1.52px_rgba(0,0,0,0.1),0px_3.05px_6.09px_-3.05px_rgba(0,0,0,0.1)] ${
+            className={`group relative flex flex-col justify-end overflow-hidden select-none bg-white rounded-lg transition-all hover:scale-[1.02] shadow-[0px_4px_8px_-2px_rgba(0,0,0,0.1)] w-full h-[126px] ${
                 isOutOfStock ? 'cursor-not-allowed border-2 border-red-500' : 'cursor-pointer'
             }`}
-            style={{ width: '210px', height: '150px' }}
         >
             {/* Top Red Bar for Out of Stock */}
             {isOutOfStock && (
-                <div className="absolute top-0 left-0 right-0 h-[5px] bg-red-600 z-30" />
+                <div className="absolute top-0 left-0 right-0 h-[4px] bg-red-600 z-30" />
             )}
 
             {/* Background Product Image Container */}
@@ -49,19 +48,21 @@ const ProductCard = ({ product, variant, onAddToCart, onDownloadBarcode }) => {
                     />
                 ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#1E293B] to-[#0F172A] text-slate-400">
-                        <Shirt className="w-[42px] h-[42px] opacity-40 text-white" strokeWidth={1.5} />
+                        <Shirt className="w-8 h-8 opacity-40 text-white" strokeWidth={1.5} />
                     </div>
                 )}
             </div>
 
             {/* Top Badge: Red Badge when Out of Stock, White square otherwise */}
             {isOutOfStock ? (
-                <div className="absolute top-[8px] right-[8px] z-30 px-2 py-0.5 bg-red-600 text-white text-[9px] font-bold uppercase rounded-[4px] shadow-md flex items-center gap-1 border border-red-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                <div className="absolute top-1.5 right-1.5 z-30 px-1.5 py-0.5 bg-red-600 text-white text-[8px] font-bold uppercase rounded shadow-md flex items-center gap-1 border border-red-400">
+                    <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
                     Out of Stock
                 </div>
             ) : (
-                <div className="absolute top-[6.09px] right-[6.09px] z-10 w-[18.28px] h-[18.28px] bg-white rounded-[6.09px] shadow-xs pointer-events-none" />
+                <div className="absolute top-1.5 right-1.5 z-10 w-4 h-4 bg-white/95 backdrop-blur-xs rounded-md shadow-xs pointer-events-none flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400/50" />
+                </div>
             )}
 
             {/* Out of Stock Subtle Overlay */}
@@ -70,13 +71,13 @@ const ProductCard = ({ product, variant, onAddToCart, onDownloadBarcode }) => {
             )}
 
             {/* Bottom Dark Blue Gradient Overlay Bar */}
-            <div className="relative z-10 w-full p-[9.14px] bg-gradient-to-t from-[#102A5C] via-[#102A5C]/80 to-transparent flex items-end justify-between min-h-[55.28px]">
+            <div className="relative z-10 w-full p-2 bg-gradient-to-t from-[#102A5C] via-[#102A5C]/85 to-transparent flex items-end justify-between min-h-[46px]">
                 {/* Left Text: Product Name & AED Price */}
-                <div className="flex flex-col justify-end text-white max-w-[140px] pr-1">
-                    <span className="text-[12.18px] font-bold leading-[18px] text-white truncate drop-shadow-xs" title={product.name}>
+                <div className="flex flex-col justify-end text-white max-w-[calc(100%-28px)] pr-1">
+                    <span className="text-[10.5px] font-bold leading-[14px] text-white truncate drop-shadow-xs" title={product.name}>
                         {product.name}
                     </span>
-                    <span className="text-[12.18px] font-bold leading-[18px] text-white/90 font-mono tracking-tight drop-shadow-xs">
+                    <span className="text-[10.5px] font-bold leading-[14px] text-white/90 font-mono tracking-tight drop-shadow-xs">
                         {formatPrice(variant.priceCents)}
                     </span>
                 </div>
@@ -88,10 +89,10 @@ const ProductCard = ({ product, variant, onAddToCart, onDownloadBarcode }) => {
                             e.stopPropagation();
                             mainAction();
                         }}
-                        className="w-[30.47px] h-[30.47px] rounded-full bg-[#0078BC] hover:bg-[#006096] text-white flex items-center justify-center shrink-0 shadow-md transition-transform active:scale-95 cursor-pointer"
+                        className="w-6 h-6 rounded-full bg-[#0078BC] hover:bg-[#006096] text-white flex items-center justify-center shrink-0 shadow-md transition-transform active:scale-95 cursor-pointer"
                         title="Add to Cart"
                     >
-                        <Plus className="w-[18px] h-[18px] text-white" strokeWidth={2.5} />
+                        <Plus className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
                     </button>
                 )}
             </div>
@@ -169,7 +170,7 @@ const ProductGrid = ({ products, categories = [], selectedCategory = 'All', onSe
 
             {/* Grid of Product Cards */}
             <div className="flex-1 overflow-y-auto no-scrollbar pr-1">
-                <div className="flex flex-wrap gap-3.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-6 gap-2.5">
                     {productVariantsList.map(({ product, variant }) => (
                         <ProductCard
                             key={variant.id}

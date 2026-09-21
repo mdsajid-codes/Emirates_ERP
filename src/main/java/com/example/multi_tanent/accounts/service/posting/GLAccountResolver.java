@@ -132,10 +132,44 @@ public class GLAccountResolver {
         if (accounts.isEmpty()) {
             throw new NoSuchElementException("No active Chart of Account found for section: " + section);
         }
-        // Return first active account in that section
-        return accounts.stream()
+
+        List<ChartOfAccount> activeAccounts = accounts.stream()
                 .filter(ChartOfAccount::getIsActive)
-                .findFirst()
-                .orElseThrow(() -> new NoSuchElementException("No active Chart of Account found for section: " + section));
+                .toList();
+
+        if (activeAccounts.isEmpty()) {
+            throw new NoSuchElementException("No active Chart of Account found for section: " + section);
+        }
+
+        // 1. Priority matching for Cash at Counter / Till Cash
+        if (section == AccountSection.BS_CASH) {
+            return activeAccounts.stream()
+                    .filter(a -> (a.getDescription() != null && (a.getDescription().toLowerCase().contains("cash") ||
+                                 a.getDescription().toLowerCase().contains("till"))) ||
+                                 (a.getAccountCode() != null && a.getAccountCode().startsWith("101")))
+                    .findFirst()
+                    .orElse(activeAccounts.get(0));
+        }
+
+        // 2. Priority matching for Output VAT Payable (exclude prepayments)
+        if (section == AccountSection.BS_VAT_PAYABLE) {
+            return activeAccounts.stream()
+                    .filter(a -> {
+                        String desc = a.getDescription() != null ? a.getDescription().toLowerCase() : "";
+                        String code = a.getAccountCode() != null ? a.getAccountCode() : "";
+                        return (code.startsWith("20301") || desc.contains("output vat") || desc.contains("vat payable"))
+                                && !desc.contains("prepayment");
+                    })
+                    .findFirst()
+                    .orElseGet(() -> activeAccounts.stream()
+                            .filter(a -> {
+                                String desc = a.getDescription() != null ? a.getDescription().toLowerCase() : "";
+                                return !desc.contains("prepayment");
+                            })
+                            .findFirst()
+                            .orElse(activeAccounts.get(0)));
+        }
+
+        return activeAccounts.get(0);
     }
 }

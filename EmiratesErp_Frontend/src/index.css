@@ -15,8 +15,9 @@ body,
 #root {
   font-family: var(--font-family-sans);
   background-color: var(--color-background, #f8fafc);
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 @tailwind base;

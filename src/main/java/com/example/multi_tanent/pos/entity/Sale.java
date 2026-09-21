@@ -120,6 +120,42 @@ public class Sale {
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
+    @Column(name = "journal_entry_id")
+    private Long journalEntryId;
+
+    @Column(name = "cogs_journal_entry_id")
+    private Long cogsJournalEntryId;
+
+    @Column(name = "shift_id")
+    private Long shiftId;
+
+    @Column(name = "location_id")
+    private Long locationId;
+
+    @Column(name = "payment_clearing_status")
+    private String paymentClearingStatus = "PENDING"; // PENDING, SETTLED
+
+    @Column(name = "settlement_id")
+    private Long settlementId;
+
+    @Column(name = "is_return")
+    private Boolean isReturn = false;
+
+    @Column(name = "original_sale_id")
+    private Long originalSaleId;
+
+    @Column(name = "currency_code")
+    private String currencyCode = "AED";
+
+    @Column(name = "fx_rate")
+    private java.math.BigDecimal fxRate = java.math.BigDecimal.ONE;
+
+    @Column(name = "loyalty_points_redeemed")
+    private Integer loyaltyPointsRedeemed = 0;
+
+    @Column(name = "loyalty_discount_cents")
+    private Long loyaltyDiscountCents = 0L;
+
     @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SaleItem> items = new ArrayList<>();
 

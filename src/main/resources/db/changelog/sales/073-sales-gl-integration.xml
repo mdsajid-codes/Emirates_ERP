@@ -6,6 +6,12 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
 
     <changeSet id="073-sales-gl-integration" author="antigravity">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="journal_entries"/>
+            <tableExists tableName="sales_invoices"/>
+            <not><columnExists tableName="sales_invoices" columnName="journal_entry_id"/></not>
+        </preConditions>
         <!-- Sales Invoices -->
         <addColumn tableName="sales_invoices">
             <column name="journal_entry_id" type="BIGINT"/>

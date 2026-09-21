@@ -6,6 +6,9 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
 
     <changeSet id="078-seed-acc-cash-flow-items" author="system">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="acc_cash_flow_items"/>
+        </preConditions>
         <!-- OPERATING -->
         <insert tableName="acc_cash_flow_items">
             <column name="name" value="Cash Receipts from Customers"/>

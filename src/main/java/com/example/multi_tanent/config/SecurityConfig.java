@@ -66,6 +66,7 @@ public class SecurityConfig {
             .requestMatchers("/public/products/**").permitAll()
             .requestMatchers("/api/pos/uploads/view/**").permitAll()
             .requestMatchers("/api/public/leads/**").permitAll()
+            .requestMatchers("/api/public/demo-request/**").permitAll()
             .requestMatchers("/api/public/ats/consent/respond").permitAll()
 
             // Master Admin Endpoints
@@ -74,6 +75,7 @@ public class SecurityConfig {
             .requestMatchers("/api/master/tenants/**").hasRole("MASTER_ADMIN")
             .requestMatchers("/api/master/users/**").authenticated()
             .requestMatchers("/api/master/company-info/**").hasRole("MASTER_ADMIN")
+            .requestMatchers("/api/master/demo-requests/**").hasRole("MASTER_ADMIN")
 
             // Shared/Base Tenant Endpoints
             .requestMatchers("/api/users/**").authenticated()

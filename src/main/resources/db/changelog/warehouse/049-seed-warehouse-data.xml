@@ -21,8 +21,6 @@
             <column name="qc_required" valueBoolean="true"/>
             <column name="bin_tracking_enabled" valueBoolean="true"/>
             <column name="allow_negative_stock" valueBoolean="false"/>
-            <column name="created_at" valueDate="NOW()"/>
-            <column name="updated_at" valueDate="NOW()"/>
         </insert>
     </changeSet>
 
