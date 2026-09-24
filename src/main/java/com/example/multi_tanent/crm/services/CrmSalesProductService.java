@@ -25,6 +25,7 @@ import com.example.multi_tanent.production.repository.ProSubCategoryRepository;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(value = "tenantTx")
 public class CrmSalesProductService {
 
         private final CrmSalesProductRepository repository;
@@ -33,7 +34,7 @@ public class CrmSalesProductService {
         private final ProCategoryRepository proCategoryRepository;
         private final ProSubCategoryRepository proSubCategoryRepository;
 
-        @Transactional
+        @Transactional(value = "tenantTx")
         public CrmSalesProductResponse createProduct(CrmSalesProductRequest request,
                         org.springframework.web.multipart.MultipartFile imageFile) {
                 String tenantIdentifier = TenantContext.getTenantId();
@@ -75,7 +76,7 @@ public class CrmSalesProductService {
                 return mapEntityToResponse(savedProduct);
         }
 
-        @Transactional(readOnly = true)
+        @Transactional(value = "tenantTx", readOnly = true)
         public List<CrmSalesProductResponse> getAllProducts() {
                 String tenantIdentifier = TenantContext.getTenantId();
                 Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
@@ -85,7 +86,7 @@ public class CrmSalesProductService {
                                 .collect(Collectors.toList());
         }
 
-        @Transactional(readOnly = true)
+        @Transactional(value = "tenantTx", readOnly = true)
         public org.springframework.data.domain.Page<CrmSalesProductResponse> getAllProducts(
                         org.springframework.data.domain.Pageable pageable) {
                 String tenantIdentifier = TenantContext.getTenantId();
@@ -95,7 +96,7 @@ public class CrmSalesProductService {
                                 .map(this::mapEntityToResponse);
         }
 
-        @Transactional(readOnly = true)
+        @Transactional(value = "tenantTx", readOnly = true)
         public CrmSalesProductResponse getProductById(Long id) {
                 String tenantIdentifier = TenantContext.getTenantId();
                 Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
