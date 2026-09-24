@@ -11,7 +11,7 @@
         New IDs ensure these run even if v5 IDs are already in DATABASECHANGELOG (where they failed silently).
     -->
 
-    <changeSet id="115-add-category-id-to-crm-sales-products-v6"
+    <changeSet id="115-add-category-id-to-crm-sales-products-v7"
                author="antigravity"
                failOnError="false">
         <addColumn tableName="crm_sales_products">
@@ -21,7 +21,7 @@
         </addColumn>
     </changeSet>
 
-    <changeSet id="115-add-sub-category-id-to-crm-sales-products-v6"
+    <changeSet id="115-add-sub-category-id-to-crm-sales-products-v7"
                author="antigravity"
                failOnError="false">
         <addColumn tableName="crm_sales_products">
