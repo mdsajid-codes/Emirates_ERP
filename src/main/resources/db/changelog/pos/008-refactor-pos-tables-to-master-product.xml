@@ -131,7 +131,7 @@
         </preConditions>
         <addForeignKeyConstraint baseTableName="sales" baseColumnNames="customer_id"
                                  constraintName="fk_sales_unified_customer_party"
-                                 referencedTableName="parties" referencedColumnNames="id"/>
+                                 referencedTableName="base_customers" referencedColumnNames="id"/>
     </changeSet>
 
 </databaseChangeLog>
