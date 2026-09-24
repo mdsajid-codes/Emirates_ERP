@@ -24,7 +24,7 @@ public class SaleItemController {
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<SaleItem>> getAllItemsForSale(@PathVariable Long saleId) {
-        return ResponseEntity.ok(saleItemService.getAllItemsForSale(saleId));
+        return ResponseEntity.ok(saleItemService.getItemsBySaleId(saleId));
     }
 
     @GetMapping("/{itemId}")
@@ -44,7 +44,7 @@ public class SaleItemController {
     @DeleteMapping("/{itemId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> removeSaleItem(@PathVariable Long saleId, @PathVariable Long itemId) {
-        saleItemService.removeSaleItem(saleId, itemId);
+        saleItemService.deleteSaleItem(saleId, itemId);
         return ResponseEntity.noContent().build();
     }
 }

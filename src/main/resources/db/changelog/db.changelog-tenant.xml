@@ -59,6 +59,9 @@
     <include file="db/changelog/pos/pos-schema.xml"/>
     <include file="db/changelog/pos/004-pos-phase3-shift-clearing-returns.xml"/>
     <include file="db/changelog/pos/005-pos-phase4-enterprise-schema.xml"/>
+    <include file="db/changelog/pos/007-add-split-payment-fields.xml"/>
+    <include file="db/changelog/pos/008-add-split-payment-fields-fix.xml"/>
+
 
     <!-- Production Module -->
     <include file="db/changelog/production/production-schema.xml"/>
@@ -222,7 +225,9 @@
     <!-- ==================================================================== -->
     <!-- LAYER 3: Cross-Module Foreign Keys & Inter-Module Alterations        -->
     <!-- ==================================================================== -->
+    <include file="db/changelog/tenant/115-add-category-sub-category-to-crm-sales-products.xml"/>
     <include file="db/changelog/pos/002-add-journal-link-to-sales.xml"/>
+    <include file="db/changelog/pos/008-refactor-pos-tables-to-master-product.xml"/>
     <include file="db/changelog/sales/073-sales-gl-integration.xml"/>
 
     <!-- ==================================================================== -->
@@ -231,9 +236,13 @@
     <include file="db/changelog/tenant/114-seed-crm-reminder-templates.xml"/>
     <include file="db/changelog/warehouse/049-seed-warehouse-data.xml"/>
     <include file="db/changelog/fleet/090-seed-fuel-transport-gl-account.xml"/>
+    <include file="db/changelog/tenant/116-seed-default-master-categories.xml"/>
     <include file="db/changelog/account/006-seed-coa-balance-sheet-assets.xml"/>
     <include file="db/changelog/account/007-seed-coa-liabilities-equity.xml"/>
     <include file="db/changelog/account/008-seed-coa-income-statement.xml"/>
     <include file="db/changelog/account/009-seed-coa-dimensions.xml"/>
     <include file="db/changelog/account/078-seed-acc-cash-flow-items.xml"/>
+    <!-- Phase 1 — POS Chart of Accounts: 10 dedicated POS GL accounts -->
+    <include file="db/changelog/pos/006-seed-pos-chart-of-accounts.xml"/>
+    <include file="db/changelog/pos/009-seed-card-clearing-account.xml"/>
 </databaseChangeLog>

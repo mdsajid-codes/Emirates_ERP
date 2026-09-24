@@ -1,5 +1,6 @@
 package com.example.multi_tanent.pos.entity;
 
+import com.example.multi_tanent.spersusers.enitity.CrmSalesProduct;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
@@ -22,9 +23,9 @@ public class SaleItem {
     private Sale sale;
 
     @ManyToOne
-    @JoinColumn(name = "product_variant_id")
+    @JoinColumn(name = "product_id")
     @JsonIgnore
-    private ProductVariant productVariant;
+    private CrmSalesProduct product;
 
     @Column(name = "cost_cents")
     private Long costCents;

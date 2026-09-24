@@ -307,6 +307,8 @@
         <createTable tableName="crm_sales_products">
             <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true"/></column>
             <column name="tenant_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="category_id" type="BIGINT"/>
+            <column name="sub_category_id" type="BIGINT"/>
             <column name="item_type" type="VARCHAR(255)"/>
             <column name="is_purchase" type="BOOLEAN"/>
             <column name="is_sales" type="BOOLEAN"/>

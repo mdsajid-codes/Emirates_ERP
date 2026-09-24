@@ -26,9 +26,33 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import com.example.multi_tanent.spersusers.enitity.BaseCustomer;
+import com.example.multi_tanent.spersusers.enitity.CrmSalesProduct;
+import com.example.multi_tanent.accounts.repository.journal.JournalEntryRepository;
+import com.example.multi_tanent.accounts.entity.journal.JournalEntry;
+import com.example.multi_tanent.accounts.entity.journal.JournalEntryLine;
+import com.example.multi_tanent.accounts.entity.enums.DocumentType;
+import com.example.multi_tanent.accounts.entity.enums.AccountSection;
+import com.example.multi_tanent.pos.dto.report.*;
+import java.util.TreeMap;
+import java.util.LinkedHashMap;
+
 @Service
 @Transactional("tenantTx")
 public class ReportService {
+
+        private String getCustomerDisplayName(BaseCustomer customer) {
+                if (customer == null) return "Walk-in";
+                if (customer.getCompanyName() != null && !customer.getCompanyName().isBlank()) {
+                        return customer.getCompanyName();
+                }
+                return customer.getPrimaryContactPersonFull() != null ? customer.getPrimaryContactPersonFull() : "Walk-in";
+        }
+
+        private String getCustomerPhone(BaseCustomer customer) {
+                if (customer == null) return "";
+                return customer.getContactPhone() != null ? customer.getContactPhone() : "";
+        }
 
         private final SaleRepository saleRepository;
         private final TenantRepository tenantRepository;
@@ -37,13 +61,15 @@ public class ReportService {
         private final com.example.multi_tanent.spersusers.repository.StoreRepository storeRepository;
         private final com.example.multi_tanent.pos.repository.SalesForecastRepository salesForecastRepository;
         private final com.example.multi_tanent.pos.repository.PaymentChangeLogRepository paymentChangeLogRepository;
+        private final JournalEntryRepository journalEntryRepository;
 
         public ReportService(SaleRepository saleRepository, TenantRepository tenantRepository,
                         com.example.multi_tanent.pos.repository.StockMovementRepository stockMovementRepository,
                         com.example.multi_tanent.pos.repository.PaymentRepository paymentRepository,
                         com.example.multi_tanent.spersusers.repository.StoreRepository storeRepository,
                         com.example.multi_tanent.pos.repository.SalesForecastRepository salesForecastRepository,
-                        com.example.multi_tanent.pos.repository.PaymentChangeLogRepository paymentChangeLogRepository) {
+                        com.example.multi_tanent.pos.repository.PaymentChangeLogRepository paymentChangeLogRepository,
+                        JournalEntryRepository journalEntryRepository) {
                 this.saleRepository = saleRepository;
                 this.tenantRepository = tenantRepository;
                 this.stockMovementRepository = stockMovementRepository;
@@ -51,6 +77,7 @@ public class ReportService {
                 this.storeRepository = storeRepository;
                 this.salesForecastRepository = salesForecastRepository;
                 this.paymentChangeLogRepository = paymentChangeLogRepository;
+                this.journalEntryRepository = journalEntryRepository;
         }
 
         private Tenant getCurrentTenant() {
@@ -189,8 +216,10 @@ public class ReportService {
                         // value.
                         long qty = Math.abs(sm.getChangeQuantity());
                         // Need cost. StockMovement doesn't store cost snapshot?
-                        // It links to ProductVariant. We use current cost if snapshot missing.
-                        long unitCost = sm.getProductVariant().getCostCents();
+                        long unitCost = 0L;
+                        if (sm.getProduct() != null && sm.getProduct().getPurchasePrice() != null) {
+                                unitCost = sm.getProduct().getPurchasePrice().multiply(BigDecimal.valueOf(100)).longValue();
+                        }
                         totalWastageCents += (qty * unitCost);
                 }
 
@@ -237,11 +266,8 @@ public class ReportService {
                                                 || "paid".equalsIgnoreCase(s.getPaymentStatus()))
                                 .flatMap(s -> s.getItems().stream())
                                 .collect(Collectors.groupingBy(i -> {
-                                        if (i.getProductVariant() != null
-                                                        && i.getProductVariant().getTaxRate() != null) {
-                                                return i.getProductVariant().getTaxRate().getName() + " ("
-                                                                + i.getProductVariant().getTaxRate().getPercent()
-                                                                + "%)";
+                                        if (i.getProduct() != null && i.getProduct().getTaxRate() != null) {
+                                                return "VAT (" + i.getProduct().getTaxRate() + "%)";
                                         }
                                         return "No Tax";
                                 }));
@@ -253,15 +279,11 @@ public class ReportService {
                                         .reduce(BigDecimal.ZERO, BigDecimal::add);
                         BigDecimal taxAmt = entry.getValue().stream().map(i -> toBigDecimal(i.getTaxCents()))
                                         .reduce(BigDecimal.ZERO, BigDecimal::add);
-                        // Percent is tricky to parse back from string, assuming user just wants display
-                        // name.
-                        // We can fetch percent from first item.
                         BigDecimal percent = BigDecimal.ZERO;
                         if (!entry.getValue().isEmpty()) {
                                 com.example.multi_tanent.pos.entity.SaleItem first = entry.getValue().get(0);
-                                if (first.getProductVariant() != null
-                                                && first.getProductVariant().getTaxRate() != null) {
-                                        percent = first.getProductVariant().getTaxRate().getPercent();
+                                if (first.getProduct() != null && first.getProduct().getTaxRate() != null) {
+                                        percent = BigDecimal.valueOf(first.getProduct().getTaxRate());
                                 }
                         }
                         taxReports.add(new BusinessSummaryDto.TaxReportSummary(entry.getKey(), percent, salesAmt,
@@ -275,9 +297,7 @@ public class ReportService {
                                                 && s.getUser() != null)
                                 .collect(Collectors.groupingBy(
                                                 s -> s.getUser().getName() != null ? s.getUser().getName()
-                                                                : s.getUser().getEmail())); // Fallback
-                                                                                            // to
-                                                                                            // email
+                                                                : s.getUser().getEmail()));
 
                 List<BusinessSummaryDto.StaffReportSummary> staffReports = new ArrayList<>();
                 for (Map.Entry<String, List<Sale>> entry : byStaff.entrySet()) {
@@ -295,9 +315,8 @@ public class ReportService {
                                                 || "paid".equalsIgnoreCase(s.getPaymentStatus()))
                                 .flatMap(s -> s.getItems().stream())
                                 .collect(Collectors.groupingBy(i -> {
-                                        if (i.getProductVariant() != null && i.getProductVariant().getProduct() != null
-                                                        && i.getProductVariant().getProduct().getCategory() != null) {
-                                                return i.getProductVariant().getProduct().getCategory().getName();
+                                        if (i.getProduct() != null && i.getProduct().getCategory() != null) {
+                                                return i.getProduct().getCategory().getName();
                                         }
                                         return "Uncategorized";
                                 }));
@@ -589,11 +608,8 @@ public class ReportService {
                 Map<String, List<com.example.multi_tanent.pos.entity.SaleItem>> itemsByTax = validSales.stream()
                                 .flatMap(s -> s.getItems().stream())
                                 .collect(Collectors.groupingBy(item -> {
-                                        if (item.getProductVariant() != null
-                                                        && item.getProductVariant().getTaxRate() != null) {
-                                                return item.getProductVariant().getTaxRate().getName() + " ("
-                                                                + item.getProductVariant().getTaxRate().getPercent()
-                                                                + "%)";
+                                        if (item.getProduct() != null && item.getProduct().getTaxRate() != null) {
+                                                return "VAT (" + item.getProduct().getTaxRate() + "%)";
                                         }
                                         return "No Tax";
                                 }));
@@ -734,7 +750,7 @@ public class ReportService {
                         com.example.multi_tanent.pos.dto.report.SalesSupportReportItemDto dto = new com.example.multi_tanent.pos.dto.report.SalesSupportReportItemDto();
                         dto.setRef(sale.getInvoiceNo());
                         dto.setOrderType(sale.getOrderType() != null ? sale.getOrderType().name() : "");
-                        dto.setCustomer(sale.getCustomer() != null ? sale.getCustomer().getName() : "Walk-in");
+                        dto.setCustomer(getCustomerDisplayName(sale.getCustomer()));
                         dto.setOrderTakenBy(sale.getUser() != null ? sale.getUser().getName() : "Unknown");
 
                         // Date & Time
@@ -942,10 +958,7 @@ public class ReportService {
                                         dto.setPaymentType(methods);
 
                                         dto.setAddress(sale.getDeliveryAddress() != null ? sale.getDeliveryAddress()
-                                                        : (sale.getCustomer() != null
-                                                                        && sale.getCustomer().getPhone() != null
-                                                                                        ? sale.getCustomer().getPhone()
-                                                                                        : "")); // Fallback or empty
+                                                        : getCustomerPhone(sale.getCustomer()));
 
                                         if (sale.getExpectedDeliveryTime() != null) {
                                                 dto.setExpectedDeliveryTime(sale.getExpectedDeliveryTime()
@@ -990,11 +1003,7 @@ public class ReportService {
                                                         .atZoneSameInstant(ZoneId.systemDefault())
                                                         .toLocalDate());
                                 }
-                                if (payment.getSale().getCustomer() != null) {
-                                        dto.setCustomer(payment.getSale().getCustomer().getName());
-                                } else {
-                                        dto.setCustomer("Walk-in");
-                                }
+                                dto.setCustomer(getCustomerDisplayName(payment.getSale().getCustomer()));
                         }
                         dto.setReference(payment.getReference());
                         dto.setPaymentDate(
@@ -1054,7 +1063,7 @@ public class ReportService {
                         dto.setReference(sale.getOrderId()); // Assuming Ref column maps to OrderId or custom Ref
                         dto.setSource(sale.getSalesSource());
                         dto.setSalesSourceReference(sale.getSalesSourceReference());
-                        dto.setCustomerName(sale.getCustomer() != null ? sale.getCustomer().getName() : "Walk-in");
+                        dto.setCustomerName(getCustomerDisplayName(sale.getCustomer()));
                         dto.setDate(sale.getInvoiceDate().toLocalDateTime());
                         dto.setSalesTotalAmount(toBigDecimal(sale.getTotalCents()));
                         return dto;
@@ -1081,7 +1090,7 @@ public class ReportService {
                         dto.setRef(sale.getInvoiceNo());
                         dto.setOrderType(sale.getOrderType() != null ? sale.getOrderType().name() : "");
                         dto.setLocation(sale.getStore() != null ? sale.getStore().getName() : "");
-                        dto.setCustomer(sale.getCustomer() != null ? sale.getCustomer().getName() : "Walk-in");
+                        dto.setCustomer(getCustomerDisplayName(sale.getCustomer()));
                         dto.setDebtor("unpaid".equalsIgnoreCase(sale.getPaymentStatus()) ? dto.getCustomer() : "");
                         dto.setSalesSource(sale.getSalesSource());
                         dto.setSalesSourceReference(sale.getSalesSourceReference());
@@ -1296,7 +1305,7 @@ public class ReportService {
                                                         s.getOrderType() != null ? s.getOrderType().name() : "",
                                                         s.getSalesSource() != null ? s.getSalesSource() : "POS",
                                                         s.getUser() != null ? s.getUser().getName() : "Unknown",
-                                                        s.getCustomer() != null ? s.getCustomer().getName() : "Walk-in",
+                                                        getCustomerDisplayName(s.getCustomer()),
                                                         qty,
                                                         toBigDecimal(s.getTotalCents()));
                                 })
@@ -1316,55 +1325,23 @@ public class ReportService {
                 return movements.stream()
                                 .map(sm -> {
                                         String stockId = sm.getId().toString();
-                                        String name = (sm.getProductVariant() != null
-                                                        && sm.getProductVariant().getProduct() != null)
-                                                                        ? sm.getProductVariant().getProduct().getName()
-                                                                        : "Unknown";
-                                        // Append SKU as variant identifier
-                                        if (sm.getProductVariant() != null && sm.getProductVariant().getSku() != null) {
-                                                name += " (" + sm.getProductVariant().getSku() + ")";
+                                        CrmSalesProduct product = sm.getProduct();
+                                        String name = (product != null && product.getName() != null)
+                                                        ? product.getName()
+                                                        : "Unknown";
+                                        if (product != null && product.getItemCode() != null) {
+                                                name += " (" + product.getItemCode() + ")";
                                         }
 
-                                        String description = (sm.getProductVariant() != null
-                                                        && sm.getProductVariant().getProduct() != null)
-                                                                        ? sm.getProductVariant().getProduct()
-                                                                                        .getDescription()
-                                                                        : "";
+                                        String description = (product != null && product.getDescription() != null)
+                                                        ? product.getDescription()
+                                                        : "";
 
-                                        // Qty Out usually implies outgoing. If changeQuantity is negative, it's out.
-                                        // If the report lists ALL movements, we might just show abs value and maybe
-                                        // indicate direction?
-                                        // The UI column says "Qty Out".
-                                        // If user wants only OUT movements, we should filter.
-                                        // But usually "Movement Report" shows flow.
-                                        // Let's assume we show the signed value or absolute value.
-                                        // Given "Qty Out" label, maybe it only wants outgoing?
-                                        // "Item movement" generic title usually implies history.
-                                        // Let's map quantity as is, or abs if the column is specifically 'Qty Out'.
-                                        // If the report is generic Item Movement, maybe distinct columns 'In' and 'Out'
-                                        // are better,
-                                        // but the mockup has one 'Qty Out' column?
-                                        // Wait, looking at the image 1 (Void report) and 2 (void report again)...
-                                        // Wait, user said "add item movement report... by seeing images".
-                                        // I need to check the NEW uploaded images.
-                                        // Image 0_1766140427407.png -> "Item movement", "Qty Out", "Cost".
-                                        // So it seems to target outgoing items? Or maybe it just reuses a template
-                                        // label?
-                                        // Let's map quantity. If it's negative (out), we show as positive 'Out'.
-                                        // If it is positive (in), does it show?
-                                        // Safest is to show Math.abs() and maybe let user filter in frontend, or assume
-                                        // "Qty Out" implies logic.
-                                        // Let's just return the quantity. If strictly "Qty Out" report, we might filter
-                                        // changeQuantity < 0.
-                                        // But search just says "Item:", "From Location", "From", "To".
-                                        // I will return Math.abs() for now as it seems most logical for a column "Qty
-                                        // Out" (amount leaving stock).
-                                        // Cost is unit cost or total value? "Cost" usually unit cost.
                                         Double qty = sm.getChangeQuantity() != null
                                                         ? (double) Math.abs(sm.getChangeQuantity())
                                                         : 0.0;
-                                        BigDecimal cost = (sm.getProductVariant() != null)
-                                                        ? toBigDecimal(sm.getProductVariant().getCostCents())
+                                        BigDecimal cost = (product != null && product.getPurchasePrice() != null)
+                                                        ? product.getPurchasePrice()
                                                         : BigDecimal.ZERO;
 
                                         return new com.example.multi_tanent.pos.dto.report.ItemMovementReportItemDto(
@@ -1385,7 +1362,6 @@ public class ReportService {
                 OffsetDateTime end = toDate.plusDays(1).atStartOfDay().atZone(ZoneId.systemDefault()).toOffsetDateTime()
                                 .minusNanos(1);
 
-                // Fetch sales inside date range
                 List<Sale> sales;
                 if (storeId != null) {
                         sales = saleRepository.findByTenantIdAndStoreIdAndInvoiceDateBetween(tenant.getId(), storeId,
@@ -1394,19 +1370,15 @@ public class ReportService {
                         sales = saleRepository.findByTenantIdAndInvoiceDateBetween(tenant.getId(), start, end);
                 }
 
-                // Filter valid sales
                 List<Sale> validSales = sales.stream()
                                 .filter(s -> "completed".equalsIgnoreCase(s.getStatus())
                                                 || "paid".equalsIgnoreCase(s.getPaymentStatus()))
                                 .collect(Collectors.toList());
 
-                // Flatten to items and map to helper object or process in stream
-                // Key: Variant ID (or SKU/Name combo if variant ID null)
-                // Value: Aggregated stats
                 Map<Long, List<com.example.multi_tanent.pos.entity.SaleItem>> verifyMap = validSales.stream()
                                 .flatMap(s -> s.getItems().stream())
-                                .filter(i -> i.getProductVariant() != null)
-                                .collect(Collectors.groupingBy(i -> i.getProductVariant().getId()));
+                                .filter(i -> i.getProduct() != null)
+                                .collect(Collectors.groupingBy(i -> i.getProduct().getId()));
 
                 List<com.example.multi_tanent.pos.dto.report.SlowSellingReportItemDto> result = new ArrayList<>();
 
@@ -1415,7 +1387,7 @@ public class ReportService {
                         if (items.isEmpty())
                                 continue;
 
-                        com.example.multi_tanent.pos.entity.ProductVariant variant = items.get(0).getProductVariant();
+                        CrmSalesProduct product = items.get(0).getProduct();
 
                         long totalQty = items.stream()
                                         .mapToLong(com.example.multi_tanent.pos.entity.SaleItem::getQuantity).sum();
@@ -1423,7 +1395,6 @@ public class ReportService {
                                         .reduce(BigDecimal.ZERO, BigDecimal::add);
                         long salesCount = items.stream().map(i -> i.getSale().getId()).distinct().count();
 
-                        // Last sale date for this item
                         OffsetDateTime lastSaleDate = items.stream()
                                         .map(i -> i.getSale().getInvoiceDate())
                                         .max(java.util.Comparator.naturalOrder())
@@ -1431,13 +1402,13 @@ public class ReportService {
 
                         long daysDiff = java.time.temporal.ChronoUnit.DAYS.between(lastSaleDate.toLocalDate(), toDate);
 
-                        String name = variant.getProduct().getName();
-                        if (variant.getSku() != null) {
-                                name += " (" + variant.getSku() + ")";
+                        String name = product.getName();
+                        if (product.getItemCode() != null) {
+                                name += " (" + product.getItemCode() + ")";
                         }
 
                         result.add(new com.example.multi_tanent.pos.dto.report.SlowSellingReportItemDto(
-                                        variant.getId().toString(),
+                                        product.getId().toString(),
                                         name,
                                         totalQty,
                                         totalRev,
@@ -1445,8 +1416,6 @@ public class ReportService {
                                         daysDiff));
                 }
 
-                // Sort by Quantity ASC (Slowest selling first)
-                // If sorting by Value, could change comparator
                 result.sort(java.util.Comparator.comparingLong(
                                 com.example.multi_tanent.pos.dto.report.SlowSellingReportItemDto::getQuantity));
 
@@ -1475,8 +1444,8 @@ public class ReportService {
 
                 Map<Long, List<com.example.multi_tanent.pos.entity.SaleItem>> verifyMap = validSales.stream()
                                 .flatMap(s -> s.getItems().stream())
-                                .filter(i -> i.getProductVariant() != null)
-                                .collect(Collectors.groupingBy(i -> i.getProductVariant().getId()));
+                                .filter(i -> i.getProduct() != null)
+                                .collect(Collectors.groupingBy(i -> i.getProduct().getId()));
 
                 List<com.example.multi_tanent.pos.dto.report.BestSellingReportItemDto> result = new ArrayList<>();
 
@@ -1485,7 +1454,7 @@ public class ReportService {
                         if (items.isEmpty())
                                 continue;
 
-                        com.example.multi_tanent.pos.entity.ProductVariant variant = items.get(0).getProductVariant();
+                        CrmSalesProduct product = items.get(0).getProduct();
 
                         long totalQty = items.stream()
                                         .mapToLong(com.example.multi_tanent.pos.entity.SaleItem::getQuantity).sum();
@@ -1500,13 +1469,13 @@ public class ReportService {
 
                         long daysDiff = java.time.temporal.ChronoUnit.DAYS.between(lastSaleDate.toLocalDate(), toDate);
 
-                        String name = variant.getProduct().getName();
-                        if (variant.getSku() != null) {
-                                name += " (" + variant.getSku() + ")";
+                        String name = product.getName();
+                        if (product.getItemCode() != null) {
+                                name += " (" + product.getItemCode() + ")";
                         }
 
                         result.add(new com.example.multi_tanent.pos.dto.report.BestSellingReportItemDto(
-                                        variant.getId().toString(),
+                                        product.getId().toString(),
                                         name,
                                         totalQty,
                                         totalRev,
@@ -1514,7 +1483,6 @@ public class ReportService {
                                         daysDiff));
                 }
 
-                // Sort by Quantity DESC (Best selling first)
                 result.sort(java.util.Comparator.comparingLong(
                                 com.example.multi_tanent.pos.dto.report.BestSellingReportItemDto::getQuantity)
                                 .reversed());
@@ -1542,66 +1510,57 @@ public class ReportService {
                                                 || "paid".equalsIgnoreCase(s.getPaymentStatus()))
                                 .collect(Collectors.toList());
 
-                // Flatten to filtered items
                 List<com.example.multi_tanent.pos.entity.SaleItem> items = validSales.stream()
                                 .flatMap(s -> s.getItems().stream())
-                                .filter(i -> i.getProductVariant() != null)
+                                .filter(i -> i.getProduct() != null)
                                 .filter(i -> categoryId == null
-                                                || (i.getProductVariant().getProduct().getCategory() != null
-                                                                && i.getProductVariant().getProduct().getCategory()
+                                                || (i.getProduct().getCategory() != null
+                                                                && i.getProduct().getCategory()
                                                                                 .getId().equals(categoryId)))
                                 .filter(i -> itemName == null
-                                                || i.getProductVariant().getProduct().getName().toLowerCase()
+                                                || i.getProduct().getName().toLowerCase()
                                                                 .contains(itemName.toLowerCase()))
                                 .collect(Collectors.toList());
 
-                // Group by product variant id
                 Map<Long, List<com.example.multi_tanent.pos.entity.SaleItem>> groupedItems = items.stream()
-                                .collect(Collectors.groupingBy(i -> i.getProductVariant().getId()));
+                                .collect(Collectors.groupingBy(i -> i.getProduct().getId()));
 
                 List<com.example.multi_tanent.pos.dto.report.ItemSalesReportItemDto> result = new ArrayList<>();
 
                 for (Map.Entry<Long, List<com.example.multi_tanent.pos.entity.SaleItem>> entry : groupedItems
                                 .entrySet()) {
-                        List<com.example.multi_tanent.pos.entity.SaleItem> variantItems = entry.getValue();
-                        if (variantItems.isEmpty())
+                        List<com.example.multi_tanent.pos.entity.SaleItem> productItems = entry.getValue();
+                        if (productItems.isEmpty())
                                 continue;
 
-                        com.example.multi_tanent.pos.entity.ProductVariant variant = variantItems.get(0)
-                                        .getProductVariant();
+                        CrmSalesProduct product = productItems.get(0).getProduct();
 
-                        long totalQty = variantItems.stream()
+                        long totalQty = productItems.stream()
                                         .mapToLong(com.example.multi_tanent.pos.entity.SaleItem::getQuantity).sum();
 
-                        // Total with discount (Line Total)
-                        BigDecimal totalWithDiscount = variantItems.stream()
+                        BigDecimal totalWithDiscount = productItems.stream()
                                         .map(i -> toBigDecimal(i.getLineTotalCents()))
                                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                        // Discount Amount
-                        BigDecimal discountAmount = variantItems.stream()
+                        BigDecimal discountAmount = productItems.stream()
                                         .map(i -> i.getDiscountCents() != null ? toBigDecimal(i.getDiscountCents())
                                                         : BigDecimal.ZERO)
                                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                        // Total without discount = Total With Discount + Discount Amount
                         BigDecimal totalWithoutDiscount = totalWithDiscount.add(discountAmount);
 
-                        // Unit Price (Average? Or just take current? Usually average unit price sold
-                        // at)
-                        // If totalQty is 0 (shouldn't be), avoid division by zero.
                         BigDecimal avgUnitPrice = totalQty > 0
                                         ? totalWithoutDiscount.divide(BigDecimal.valueOf(totalQty),
                                                         java.math.RoundingMode.HALF_UP)
                                         : BigDecimal.ZERO;
 
-                        String name = variant.getProduct().getName();
-                        if (variant.getSku() != null) {
-                                name += " (" + variant.getSku() + ")";
+                        String name = product.getName();
+                        if (product.getItemCode() != null) {
+                                name += " (" + product.getItemCode() + ")";
                         }
 
                         result.add(new com.example.multi_tanent.pos.dto.report.ItemSalesReportItemDto(
-                                        variant.getId().toString(),
+                                        product.getId().toString(),
                                         name,
                                         totalQty,
                                         avgUnitPrice,
@@ -1610,10 +1569,217 @@ public class ReportService {
                                         totalWithDiscount));
                 }
 
-                // Sort by name
                 result.sort(java.util.Comparator.comparing(
                                 com.example.multi_tanent.pos.dto.report.ItemSalesReportItemDto::getItemName));
 
                 return result;
         }
+
+        public List<PosGlJournalEntryDto> getPosGlJournalEntries(LocalDate from, LocalDate to) {
+                Tenant tenant = getCurrentTenant();
+                List<JournalEntry> entries = journalEntryRepository.findByEntryDateBetweenAndTenant(from, to, tenant.getId());
+
+                List<DocumentType> posDocTypes = List.of(
+                                DocumentType.POS_SALE,
+                                DocumentType.POS_REFUND,
+                                DocumentType.POS_COGS,
+                                DocumentType.POS_SHIFT_RECONCILIATION,
+                                DocumentType.POS_CARD_SETTLEMENT
+                );
+
+                List<PosGlJournalEntryDto> result = new ArrayList<>();
+                for (JournalEntry entry : entries) {
+                        if (posDocTypes.contains(entry.getDocumentType()) && entry.getLines() != null) {
+                                for (JournalEntryLine line : entry.getLines()) {
+                                        String code = (line.getAccount() != null) ? line.getAccount().getAccountCode() : "";
+                                        String name = (line.getAccount() != null) ? line.getAccount().getDescription() : "";
+                                        result.add(PosGlJournalEntryDto.builder()
+                                                        .entryNumber(entry.getEntryNumber())
+                                                        .entryDate(entry.getEntryDate())
+                                                        .referenceNumber(entry.getReferenceNumber())
+                                                        .docType(entry.getDocumentType().name())
+                                                        .accountCode(code)
+                                                        .accountName(name)
+                                                        .debitAmount(line.getDebitAmount() != null ? line.getDebitAmount() : BigDecimal.ZERO)
+                                                        .creditAmount(line.getCreditAmount() != null ? line.getCreditAmount() : BigDecimal.ZERO)
+                                                        .build());
+                                }
+                        }
+                }
+                return result;
+        }
+
+        public List<PosTrialBalanceDto> getPosTrialBalance(LocalDate from, LocalDate to) {
+                Tenant tenant = getCurrentTenant();
+                List<JournalEntry> entries = journalEntryRepository.findByEntryDateBetweenAndTenant(from, to, tenant.getId());
+
+                List<DocumentType> posDocTypes = List.of(
+                                DocumentType.POS_SALE,
+                                DocumentType.POS_REFUND,
+                                DocumentType.POS_COGS,
+                                DocumentType.POS_SHIFT_RECONCILIATION,
+                                DocumentType.POS_CARD_SETTLEMENT
+                );
+
+                Map<String, PosTrialBalanceDto> tbMap = new LinkedHashMap<>();
+
+                for (JournalEntry entry : entries) {
+                        if (posDocTypes.contains(entry.getDocumentType()) && entry.getLines() != null) {
+                                for (JournalEntryLine line : entry.getLines()) {
+                                        if (line.getAccount() != null) {
+                                                String code = line.getAccount().getAccountCode();
+                                                String name = line.getAccount().getDescription();
+                                                BigDecimal dr = line.getDebitAmount() != null ? line.getDebitAmount() : BigDecimal.ZERO;
+                                                BigDecimal cr = line.getCreditAmount() != null ? line.getCreditAmount() : BigDecimal.ZERO;
+
+                                                tbMap.compute(code, (k, v) -> {
+                                                        if (v == null) {
+                                                                return PosTrialBalanceDto.builder()
+                                                                                .accountCode(code)
+                                                                                .accountName(name)
+                                                                                .drTotal(dr)
+                                                                                .crTotal(cr)
+                                                                                .net(dr.subtract(cr))
+                                                                                .build();
+                                                        } else {
+                                                                BigDecimal newDr = v.getDrTotal().add(dr);
+                                                                BigDecimal newCr = v.getCrTotal().add(cr);
+                                                                v.setDrTotal(newDr);
+                                                                v.setCrTotal(newCr);
+                                                                v.setNet(newDr.subtract(newCr));
+                                                                return v;
+                                                        }
+                                                });
+                                        }
+                                }
+                        }
+                }
+
+                return new ArrayList<>(tbMap.values());
+        }
+
+        public List<PosCardSettlementDto> getPosCardSettlementReport(LocalDate from, LocalDate to) {
+                Tenant tenant = getCurrentTenant();
+                List<JournalEntry> entries = journalEntryRepository.findByEntryDateBetweenAndTenant(from, to, tenant.getId());
+
+                List<PosCardSettlementDto> result = new ArrayList<>();
+                for (JournalEntry entry : entries) {
+                        if (entry.getDocumentType() == DocumentType.POS_CARD_SETTLEMENT && entry.getLines() != null) {
+                                BigDecimal fee = BigDecimal.ZERO;
+                                BigDecimal net = BigDecimal.ZERO;
+                                BigDecimal gross = BigDecimal.ZERO;
+
+                                for (JournalEntryLine line : entry.getLines()) {
+                                        if (line.getAccount() != null) {
+                                                AccountSection sec = line.getAccount().getSection();
+                                                String code = line.getAccount().getAccountCode();
+                                                if (sec == AccountSection.PL_POS_BANK_CHARGES || "6100".equals(code)) {
+                                                        fee = fee.add(line.getDebitAmount() != null ? line.getDebitAmount() : BigDecimal.ZERO);
+                                                } else if (sec == AccountSection.BS_CASH || "1110".equals(code)) {
+                                                        net = net.add(line.getDebitAmount() != null ? line.getDebitAmount() : BigDecimal.ZERO);
+                                                } else if (sec == AccountSection.BS_POS_CARD_CLEARING || "1120".equals(code)) {
+                                                        gross = gross.add(line.getCreditAmount() != null ? line.getCreditAmount() : BigDecimal.ZERO);
+                                                }
+                                        }
+                                }
+                                if (gross.compareTo(BigDecimal.ZERO) == 0) {
+                                        gross = net.add(fee);
+                                }
+
+                                result.add(PosCardSettlementDto.builder()
+                                                .date(entry.getEntryDate())
+                                                .entryNumber(entry.getEntryNumber())
+                                                .grossAmount(gross)
+                                                .feeAmount(fee)
+                                                .netToBank(net)
+                                                .build());
+                        }
+                }
+                return result;
+        }
+
+        public List<PosVatOutputDto> getPosVatOutputReport(LocalDate from, LocalDate to) {
+                Tenant tenant = getCurrentTenant();
+                List<JournalEntry> entries = journalEntryRepository.findByEntryDateBetweenAndTenant(from, to, tenant.getId());
+
+                Map<LocalDate, BigDecimal[]> dateAgg = new TreeMap<>();
+
+                for (JournalEntry entry : entries) {
+                        if (entry.getDocumentType() == DocumentType.POS_SALE && entry.getLines() != null) {
+                                LocalDate date = entry.getEntryDate();
+                                dateAgg.putIfAbsent(date, new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
+                                BigDecimal[] agg = dateAgg.get(date);
+
+                                for (JournalEntryLine line : entry.getLines()) {
+                                        if (line.getAccount() != null) {
+                                                AccountSection sec = line.getAccount().getSection();
+                                                String code = line.getAccount().getAccountCode();
+                                                BigDecimal cr = line.getCreditAmount() != null ? line.getCreditAmount() : BigDecimal.ZERO;
+
+                                                if (sec == AccountSection.PL_SALES_GOODS || "4000".equals(code)) {
+                                                        agg[0] = agg[0].add(cr);
+                                                } else if (sec == AccountSection.BS_VAT_PAYABLE || "2150".equals(code)) {
+                                                        agg[1] = agg[1].add(cr);
+                                                }
+                                        }
+                                }
+                        }
+                }
+
+                List<PosVatOutputDto> result = new ArrayList<>();
+                BigDecimal cumVat = BigDecimal.ZERO;
+                for (Map.Entry<LocalDate, BigDecimal[]> e : dateAgg.entrySet()) {
+                        BigDecimal gross = e.getValue()[0];
+                        BigDecimal vat = e.getValue()[1];
+                        cumVat = cumVat.add(vat);
+                        result.add(PosVatOutputDto.builder()
+                                        .date(e.getKey())
+                                        .grossSales(gross)
+                                        .vatAmount(vat)
+                                        .cumulativeVat(cumVat)
+                                        .build());
+                }
+                return result;
+        }
+
+        public List<PosCashVarianceDto> getPosCashVarianceReport(LocalDate from, LocalDate to) {
+                Tenant tenant = getCurrentTenant();
+                List<JournalEntry> entries = journalEntryRepository.findByEntryDateBetweenAndTenant(from, to, tenant.getId());
+
+                List<PosCashVarianceDto> result = new ArrayList<>();
+                for (JournalEntry entry : entries) {
+                        if (entry.getDocumentType() == DocumentType.POS_SHIFT_RECONCILIATION && entry.getLines() != null) {
+                                for (JournalEntryLine line : entry.getLines()) {
+                                        if (line.getAccount() != null) {
+                                                AccountSection sec = line.getAccount().getSection();
+                                                String code = line.getAccount().getAccountCode();
+                                                if (sec == AccountSection.PL_POS_CASH_VARIANCE || "6200".equals(code)) {
+                                                        BigDecimal dr = line.getDebitAmount() != null ? line.getDebitAmount() : BigDecimal.ZERO;
+                                                        BigDecimal cr = line.getCreditAmount() != null ? line.getCreditAmount() : BigDecimal.ZERO;
+                                                        BigDecimal var = dr.subtract(cr);
+
+                                                        String status;
+                                                        if (var.compareTo(BigDecimal.ZERO) > 0) {
+                                                                status = "SHORT";
+                                                        } else if (var.compareTo(BigDecimal.ZERO) < 0) {
+                                                                status = "OVER";
+                                                        } else {
+                                                                status = "BALANCED";
+                                                        }
+
+                                                        result.add(PosCashVarianceDto.builder()
+                                                                        .date(entry.getEntryDate())
+                                                                        .entryNumber(entry.getEntryNumber())
+                                                                        .referenceNumber(entry.getReferenceNumber())
+                                                                        .varianceAmount(var.abs())
+                                                                        .overOrShort(status)
+                                                                        .build());
+                                                }
+                                        }
+                                }
+                        }
+                }
+                return result;
+        }
 }
+

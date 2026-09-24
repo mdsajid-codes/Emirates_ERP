@@ -1,16 +1,18 @@
 package com.example.multi_tanent.pos.service;
 
+import com.example.multi_tanent.config.TenantContext;
 import com.example.multi_tanent.pos.dto.SaleItemRequest;
-import com.example.multi_tanent.pos.entity.*;
-import com.example.multi_tanent.pos.repository.ProductVariantRepository;
+import com.example.multi_tanent.pos.entity.Sale;
+import com.example.multi_tanent.pos.entity.SaleItem;
 import com.example.multi_tanent.pos.repository.SaleItemRepository;
 import com.example.multi_tanent.pos.repository.SaleRepository;
+import com.example.multi_tanent.spersusers.enitity.CrmSalesProduct;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.spersusers.repository.TenantRepository;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,21 +20,25 @@ import java.util.Optional;
 @Transactional("tenantTx")
 public class SaleItemService {
 
-    private final SaleRepository saleRepository;
     private final SaleItemRepository saleItemRepository;
-    private final ProductVariantRepository productVariantRepository;
+    private final SaleRepository saleRepository;
     private final TenantRepository tenantRepository;
 
-    public SaleItemService(SaleRepository saleRepository, SaleItemRepository saleItemRepository, ProductVariantRepository productVariantRepository, TenantRepository tenantRepository) {
-        this.saleRepository = saleRepository;
+    public SaleItemService(SaleItemRepository saleItemRepository,
+                           SaleRepository saleRepository,
+                           TenantRepository tenantRepository) {
         this.saleItemRepository = saleItemRepository;
-        this.productVariantRepository = productVariantRepository;
+        this.saleRepository = saleRepository;
         this.tenantRepository = tenantRepository;
     }
 
     private Tenant getCurrentTenant() {
-        return tenantRepository.findFirstByOrderByIdAsc()
-                .orElseThrow(() -> new IllegalStateException("Tenant context not found."));
+        String tenantIdStr = TenantContext.getTenantId();
+        if (tenantIdStr == null || tenantIdStr.isEmpty()) {
+            throw new IllegalStateException("Tenant context is not set.");
+        }
+        return tenantRepository.findByTenantId(tenantIdStr)
+                .orElseThrow(() -> new RuntimeException("Tenant not found with identifier: " + tenantIdStr));
     }
 
     private Sale getSaleForCurrentTenant(Long saleId) {
@@ -42,14 +48,14 @@ public class SaleItemService {
     }
 
     @Transactional(readOnly = true)
-    public List<SaleItem> getAllItemsForSale(Long saleId) {
-        Sale sale = getSaleForCurrentTenant(saleId);
-        return sale.getItems();
+    public List<SaleItem> getItemsBySaleId(Long saleId) {
+        getSaleForCurrentTenant(saleId);
+        return saleItemRepository.findBySaleId(saleId);
     }
 
     @Transactional(readOnly = true)
     public Optional<SaleItem> getItemById(Long saleId, Long itemId) {
-        getSaleForCurrentTenant(saleId); // Ensures sale exists for the tenant
+        getSaleForCurrentTenant(saleId);
         return saleItemRepository.findByIdAndSaleId(itemId, saleId);
     }
 
@@ -62,34 +68,36 @@ public class SaleItemService {
         SaleItem saleItem = saleItemRepository.findByIdAndSaleId(itemId, saleId)
                 .orElseThrow(() -> new RuntimeException("SaleItem not found with id: " + itemId));
 
-        // Update quantity and recalculate line totals
         saleItem.setQuantity(itemRequest.getQuantity());
-        ProductVariant variant = saleItem.getProductVariant();
-        saleItem.setUnitPriceCents(variant.getPriceCents());
-        saleItem.setLineTotalCents(variant.getPriceCents() * itemRequest.getQuantity());
+        CrmSalesProduct product = saleItem.getProduct();
+        long unitPriceCents = product != null && product.getSalesPrice() != null
+                ? product.getSalesPrice().multiply(BigDecimal.valueOf(100)).longValue() : saleItem.getUnitPriceCents();
+
+        saleItem.setUnitPriceCents(unitPriceCents);
+        saleItem.setLineTotalCents(unitPriceCents * itemRequest.getQuantity());
 
         long lineTax = 0L;
-        if (variant.getTaxRate() != null) {
-            lineTax = (saleItem.getLineTotalCents() * variant.getTaxRate().getPercent().longValue()) / 100;
+        if (product != null && product.getTaxRate() != null) {
+            lineTax = (long) ((saleItem.getLineTotalCents() * product.getTaxRate()) / 100);
         }
         saleItem.setTaxCents(lineTax);
 
         recalculateSaleTotals(sale);
-        // The sale is the aggregate root, so we save it.
         saleRepository.save(sale);  
         return saleItem;
     }
 
-    public void removeSaleItem(Long saleId, Long itemId) {
+    public void deleteSaleItem(Long saleId, Long itemId) {
         Sale sale = getSaleForCurrentTenant(saleId);
         if ("completed".equals(sale.getStatus()) || "refunded".equals(sale.getStatus())) {
-            throw new IllegalStateException("Cannot remove items from a completed or refunded sale.");
+            throw new IllegalStateException("Cannot delete items from a completed or refunded sale.");
         }
 
-        boolean removed = sale.getItems().removeIf(item -> item.getId().equals(itemId));
-        if (!removed) {
-            throw new RuntimeException("SaleItem not found with id: " + itemId + " in sale " + saleId);
-        }
+        SaleItem saleItem = saleItemRepository.findByIdAndSaleId(itemId, saleId)
+                .orElseThrow(() -> new RuntimeException("SaleItem not found with id: " + itemId));
+
+        sale.getItems().remove(saleItem);
+        saleItemRepository.delete(saleItem);
 
         recalculateSaleTotals(sale);
         saleRepository.save(sale);
@@ -106,9 +114,6 @@ public class SaleItemService {
 
         sale.setSubtotalCents(subtotal);
         sale.setTaxCents(totalTax);
-        // Sale-level discount is preserved
         sale.setTotalCents(subtotal + totalTax - sale.getDiscountCents());
-
-        // You might also want to re-evaluate payment status here
     }
 }

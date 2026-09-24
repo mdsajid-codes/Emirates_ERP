@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface ProSubCategoryRepository extends JpaRepository<ProSubCategory, Long> {
     List<ProSubCategory> findByTenantIdAndCategoryIdOrderByNameAsc(Long tenantId, Long categoryId);
 
+    List<ProSubCategory> findByTenantIdOrderByNameAsc(Long tenantId);
+
     Optional<ProSubCategory> findByTenantIdAndId(Long tenantId, Long id);
 
     boolean existsByCategoryIdAndNameIgnoreCase(Long categoryId, String name);

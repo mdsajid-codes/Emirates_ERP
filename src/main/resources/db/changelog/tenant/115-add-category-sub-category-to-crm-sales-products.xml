@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        v6: Use plain ALTER TABLE (no IF NOT EXISTS — MySQL 8.0 doesn't support it on ADD COLUMN).
+        failOnError="false" handles the case where the column already exists (e.g. added by 062 on a fresh schema).
+        New IDs ensure these run even if v5 IDs are already in DATABASECHANGELOG (where they failed silently).
+    -->
+
+    <changeSet id="115-add-category-id-to-crm-sales-products-v6"
+               author="antigravity"
+               failOnError="false">
+        <addColumn tableName="crm_sales_products">
+            <column name="category_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="115-add-sub-category-id-to-crm-sales-products-v6"
+               author="antigravity"
+               failOnError="false">
+        <addColumn tableName="crm_sales_products">
+            <column name="sub_category_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

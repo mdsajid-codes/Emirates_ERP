@@ -6,6 +6,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.multi_tanent.spersusers.enitity.BaseCustomer;
 import com.example.multi_tanent.spersusers.enitity.Store;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.spersusers.enitity.User;
@@ -35,7 +36,7 @@ public class Sale {
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
-    private Customer customer;
+    private BaseCustomer customer;
 
     @Column(nullable = false, unique = true, name = "order_id")
     private String orderId;

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        v3 changesets: Removed <validCheckSum>ANY</validCheckSum> which, when combined with
+        <preConditions>, causes a Liquibase 4.31.1 scope-tracking bug (Cannot end scope X
+        when currently at scope Y). New IDs (v3) ensure these run fresh; preConditions with
+        onFail=MARK_RAN handle cases where changes were already applied by v2.
+    -->
+
+    <!-- 1. Add product_id to inventory -->
+    <changeSet id="008-add-product-id-to-inventory-v3" author="antigravity">
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <tableExists tableName="inventory"/>
+            <not>
+                <columnExists tableName="inventory" columnName="product_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="inventory">
+            <column name="product_id" type="BIGINT">
+                <constraints foreignKeyName="fk_inventory_master_product" referencedTableName="crm_sales_products" referencedColumnNames="id"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- 2. Drop old FK fk_inventory_variant if exists -->
+    <changeSet id="008-drop-fk-inventory-variant-v3" author="antigravity">
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <tableExists tableName="inventory"/>
+            <foreignKeyConstraintExists foreignKeyTableName="inventory" foreignKeyName="fk_inventory_variant"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="inventory" constraintName="fk_inventory_variant"/>
+    </changeSet>
+
+    <!-- 3. Drop product_variant_id from inventory if exists -->
+    <changeSet id="008-drop-product-variant-id-from-inventory-v3" author="antigravity">
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <tableExists tableName="inventory"/>
+            <columnExists tableName="inventory" columnName="product_variant_id"/>
+        </preConditions>
+        <dropColumn tableName="inventory" columnName="product_variant_id"/>
+    </changeSet>
+
+    <!-- 4. Add product_id to sale_items -->
+    <changeSet id="008-add-product-id-to-sale-items-v3" author="antigravity">
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <tableExists tableName="sale_items"/>
+            <not>
+                <columnExists tableName="sale_items" columnName="product_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="sale_items">
+            <column name="product_id" type="BIGINT">
+                <constraints foreignKeyName="fk_sale_items_master_product" referencedTableName="crm_sales_products" referencedColumnNames="id"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- 5. Drop old FK fk_sale_item_variant if exists -->
+    <changeSet id="008-drop-fk-sale-item-variant-v3" author="antigravity">
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <tableExists tableName="sale_items"/>
+            <foreignKeyConstraintExists foreignKeyTableName="sale_items" foreignKeyName="fk_sale_item_variant"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="sale_items" constraintName="fk_sale_item_variant"/>
+    </changeSet>
+
+    <!-- 6. Drop product_variant_id from sale_items if exists -->
+    <changeSet id="008-drop-product-variant-id-from-sale-items-v3" author="antigravity">
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <tableExists tableName="sale_items"/>
+            <columnExists tableName="sale_items" columnName="product_variant_id"/>
+        </preConditions>
+        <dropColumn tableName="sale_items" columnName="product_variant_id"/>
+    </changeSet>
+
+    <!-- 7. Add product_id to stock_movements -->
+    <changeSet id="008-add-product-id-to-stock-movements-v3" author="antigravity">
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <tableExists tableName="stock_movements"/>
+            <not>
+                <columnExists tableName="stock_movements" columnName="product_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="stock_movements">
+            <column name="product_id" type="BIGINT">
+                <constraints foreignKeyName="fk_stock_movements_master_product" referencedTableName="crm_sales_products" referencedColumnNames="id"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- 8. Drop old FK fk_stock_movement_variant if exists -->
+    <changeSet id="008-drop-fk-stock-movement-variant-v3" author="antigravity">
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <tableExists tableName="stock_movements"/>
+            <foreignKeyConstraintExists foreignKeyTableName="stock_movements" foreignKeyName="fk_stock_movement_variant"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="stock_movements" constraintName="fk_stock_movement_variant"/>
+    </changeSet>
+
+    <!-- 9. Drop product_variant_id from stock_movements if exists -->
+    <changeSet id="008-drop-product-variant-id-from-stock-movements-v3" author="antigravity">
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <tableExists tableName="stock_movements"/>
+            <columnExists tableName="stock_movements" columnName="product_variant_id"/>
+        </preConditions>
+        <dropColumn tableName="stock_movements" columnName="product_variant_id"/>
+    </changeSet>
+
+    <!-- 10. Drop old FK fk_sales_customer if exists -->
+    <changeSet id="008-drop-fk-sales-customer-v3" author="antigravity">
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <tableExists tableName="sales"/>
+            <foreignKeyConstraintExists foreignKeyTableName="sales" foreignKeyName="fk_sales_customer"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="sales" constraintName="fk_sales_customer"/>
+    </changeSet>
+
+    <!-- 11. Add unified customer party FK to sales -->
+    <changeSet id="008-add-fk-sales-unified-customer-party-v3" author="antigravity">
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <tableExists tableName="sales"/>
+            <columnExists tableName="sales" columnName="customer_id"/>
+            <not>
+                <foreignKeyConstraintExists foreignKeyTableName="sales" foreignKeyName="fk_sales_unified_customer_party"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="sales" baseColumnNames="customer_id"
+                                 constraintName="fk_sales_unified_customer_party"
+                                 referencedTableName="parties" referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

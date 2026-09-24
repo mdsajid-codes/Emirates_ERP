@@ -11,8 +11,22 @@ public class StockMovementRequest {
     @NotNull(message = "Store ID is required.")
     private Long storeId;
 
-    // Not required for bulk upload, where SKU is used initially
+    private Long productId;
     private Long productVariantId;
+
+    public Long getProductId() {
+        return productId != null ? productId : productVariantId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
+        this.productVariantId = productId;
+    }
+
+    public void setProductVariantId(Long productVariantId) {
+        this.productVariantId = productVariantId;
+        this.productId = productVariantId;
+    }
 
     @NotNull(message = "Change quantity is required.")
     private Long changeQuantity;
@@ -23,6 +37,5 @@ public class StockMovementRequest {
     private String batchCode;
     private OffsetDateTime expireDate;
 
-    // Transient field for bulk upload linking
     private String productVariantSkuForBulk;
 }

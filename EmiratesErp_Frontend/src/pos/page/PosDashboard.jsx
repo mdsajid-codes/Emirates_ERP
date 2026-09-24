@@ -16,7 +16,9 @@ import {
     Search,
     Bell,
     Home,
+    Scale,
 } from 'lucide-react';
+
 import PosDashboardView from './PosDashboardView';
 import ProductsView from './ProductsView';
 import SalesView from './SalesView';
@@ -33,9 +35,10 @@ const NAV_ITEMS = [
     { name: 'Sales',     label: 'Sales',     icon: ShoppingCart,    Component: SalesView },
     { name: 'Products',  label: 'Products',  icon: Package,         Component: ProductsView },
     { name: 'Inventory', label: 'Inventory', icon: Warehouse,       Component: InventoryView },
-    { name: 'Customers', label: 'Customers', icon: Users,           Component: CustomersView },
-    { name: 'Reports',   label: 'Reports',   icon: BarChart3,       Component: ReportsView },
-    { name: 'Settings',  label: 'Settings',  icon: Settings,        Component: PosSettingsView },
+    { name: 'Customers',         label: 'Customers',         icon: Users,           Component: CustomersView },
+    { name: 'Reports',           label: 'Reports',           icon: BarChart3,       Component: ReportsView },
+    { name: 'Financial Reports', label: 'Financial Reports', icon: Scale,           Component: null },
+    { name: 'Settings',          label: 'Settings',          icon: Settings,        Component: PosSettingsView },
 ];
 
 /* ─── Sidebar link item ─────────────────────────────────────────────────────── */
@@ -82,7 +85,17 @@ const PosDashboard = () => {
     }, []);
     const isSuperAdmin = roles.includes('SUPER_ADMIN');
 
-    const setActiveItem = (itemName) => setSearchParams({ view: itemName });
+    const setActiveItem = (itemName) => {
+        if (itemName === 'Products') {
+            navigate('/company-settings/product-services');
+            return;
+        }
+        if (itemName === 'Financial Reports') {
+            navigate('/pos-financial-reports/gl-journal-entries');
+            return;
+        }
+        setSearchParams({ view: itemName });
+    };
 
     useEffect(() => {
         if (!searchParams.get('view')) {
@@ -100,7 +113,7 @@ const PosDashboard = () => {
                 const res = await axios.get(`${API_URL}/company-info`, { headers });
                 const companyName = res.data?.companyName || 'Emirates ERP Solutions LLC';
                 setTenantName(companyName);
-                const rawLogoUrl = res.data?.logoPath;
+                const rawLogoUrl = res.data?.logoUrl;
                 if (rawLogoUrl) {
                     try {
                         const logoRes = await axios.get(`${API_URL}/company-info/logo`, { headers, responseType: 'blob' });
@@ -224,7 +237,7 @@ const PosDashboard = () => {
                     </button>
 
                     {/* Store / Company Selector Pill */}
-                    <div className="relative">
+                    <div className="hidden">
                         <button
                             onClick={() => setStoreDropdownOpen(!storeDropdownOpen)}
                             className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-xs font-semibold text-[#0F172A] hover:bg-slate-50 transition-colors cursor-pointer"

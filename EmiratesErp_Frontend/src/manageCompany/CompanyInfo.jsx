@@ -142,6 +142,13 @@ const CompanyInfo = ({ posTheme }) => {
 
             if (logoFile) {
                 savedData = await api.uploadLogo(logoFile);
+                try {
+                    const url = await api.getLogo();
+                    setFetchedLogoUrl(url);
+                    setLogoPreview(url);
+                } catch (e) {
+                    console.error("Failed to fetch newly uploaded logo", e);
+                }
             }
 
             setCompanyInfo(savedData);

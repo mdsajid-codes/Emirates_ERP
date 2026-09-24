@@ -20,6 +20,9 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.oned.Code128Writer;
 import java.io.ByteArrayOutputStream;
 
+import com.example.multi_tanent.production.repository.ProCategoryRepository;
+import com.example.multi_tanent.production.repository.ProSubCategoryRepository;
+
 @Service
 @RequiredArgsConstructor
 public class CrmSalesProductService {
@@ -27,6 +30,8 @@ public class CrmSalesProductService {
         private final CrmSalesProductRepository repository;
         private final TenantRepository tenantRepository;
         private final com.example.multi_tanent.tenant.service.FileStorageService fileStorageService;
+        private final ProCategoryRepository proCategoryRepository;
+        private final ProSubCategoryRepository proSubCategoryRepository;
 
         @Transactional
         public CrmSalesProductResponse createProduct(CrmSalesProductRequest request,
@@ -173,6 +178,12 @@ public class CrmSalesProductService {
                         product.setTax(request.getTax());
                 if (request.getTaxRate() != null)
                         product.setTaxRate(request.getTaxRate());
+                if (request.getCategoryId() != null) {
+                        product.setCategory(proCategoryRepository.findById(request.getCategoryId()).orElse(null));
+                }
+                if (request.getSubCategoryId() != null) {
+                        product.setSubCategory(proSubCategoryRepository.findById(request.getSubCategoryId()).orElse(null));
+                }
         }
 
         private byte[] generateBarcodeImage(String text, int width, int height) throws Exception {
@@ -202,6 +213,14 @@ public class CrmSalesProductService {
                 response.setBarcode(product.getBarcode());
                 response.setBarcodeUrl(product.getBarcodeUrl());
                 response.setTaxRate(product.getTaxRate());
+                if (product.getCategory() != null) {
+                        response.setCategoryId(product.getCategory().getId());
+                        response.setCategoryName(product.getCategory().getName());
+                }
+                if (product.getSubCategory() != null) {
+                        response.setSubCategoryId(product.getSubCategory().getId());
+                        response.setSubCategoryName(product.getSubCategory().getName());
+                }
                 response.setCreatedAt(product.getCreatedAt());
                 response.setUpdatedAt(product.getUpdatedAt());
                 return response;

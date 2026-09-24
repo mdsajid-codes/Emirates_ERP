@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="006-seed-pos-chart-of-accounts" author="dev-a">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="chart_of_accounts"/>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM chart_of_accounts WHERE account_code = 'POS-1010'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="chart_of_accounts">
+            <column name="account_code" value="POS-1010"/>
+            <column name="description" value="POS Cash in Till"/>
+            <column name="account_type" value="DEBIT"/>
+            <column name="section" value="BS_CASH"/>
+            <column name="is_quantitative" valueBoolean="false"/>
+            <column name="is_off_balance" valueBoolean="false"/>
+            <column name="level" valueNumeric="3"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="currency" value="AED"/>
+            <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+            <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS t WHERE t.account_code = '2050000' LIMIT 1)"/>
+        </insert>
+
+        <insert tableName="chart_of_accounts">
+            <column name="account_code" value="POS-1015"/>
+            <column name="description" value="POS Card Clearing"/>
+            <column name="account_type" value="DEBIT"/>
+            <column name="section" value="BS_POS_CARD_CLEARING"/>
+            <column name="is_quantitative" valueBoolean="false"/>
+            <column name="is_off_balance" valueBoolean="false"/>
+            <column name="level" valueNumeric="3"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="currency" value="AED"/>
+            <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+            <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS t WHERE t.account_code = '2050000' LIMIT 1)"/>
+        </insert>
+
+        <insert tableName="chart_of_accounts">
+            <column name="account_code" value="POS-1020"/>
+            <column name="description" value="POS Petty Cash Float"/>
+            <column name="account_type" value="DEBIT"/>
+            <column name="section" value="BS_CASH"/>
+            <column name="is_quantitative" valueBoolean="false"/>
+            <column name="is_off_balance" valueBoolean="false"/>
+            <column name="level" valueNumeric="3"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="currency" value="AED"/>
+            <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+            <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS t WHERE t.account_code = '2050000' LIMIT 1)"/>
+        </insert>
+
+        <insert tableName="chart_of_accounts">
+            <column name="account_code" value="POS-2010"/>
+            <column name="description" value="POS VAT Payable"/>
+            <column name="account_type" value="CREDIT"/>
+            <column name="section" value="BS_VAT_PAYABLE"/>
+            <column name="is_quantitative" valueBoolean="false"/>
+            <column name="is_off_balance" valueBoolean="false"/>
+            <column name="level" valueNumeric="3"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="currency" value="AED"/>
+            <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+            <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS t WHERE t.account_code = '5000000' LIMIT 1)"/>
+        </insert>
+
+        <insert tableName="chart_of_accounts">
+            <column name="account_code" value="POS-4010"/>
+            <column name="description" value="POS Sales Revenue"/>
+            <column name="account_type" value="CREDIT"/>
+            <column name="section" value="PL_SALES_GOODS"/>
+            <column name="is_quantitative" valueBoolean="false"/>
+            <column name="is_off_balance" valueBoolean="false"/>
+            <column name="level" valueNumeric="3"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="currency" value="AED"/>
+            <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+            <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS t WHERE t.account_code = '6010000' LIMIT 1)"/>
+        </insert>
+
+        <insert tableName="chart_of_accounts">
+            <column name="account_code" value="POS-4015"/>
+            <column name="description" value="POS Sales Returns"/>
+            <column name="account_type" value="DEBIT"/>
+            <column name="section" value="PL_TRADE_DISCOUNTS"/>
+            <column name="is_quantitative" valueBoolean="false"/>
+            <column name="is_off_balance" valueBoolean="false"/>
+            <column name="level" valueNumeric="3"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="currency" value="AED"/>
+            <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+            <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS t WHERE t.account_code = '6010000' LIMIT 1)"/>
+        </insert>
+
+        <insert tableName="chart_of_accounts">
+            <column name="account_code" value="POS-5010"/>
+            <column name="description" value="POS Cost of Goods Sold"/>
+            <column name="account_type" value="DEBIT"/>
+            <column name="section" value="PL_COS_GOODS"/>
+            <column name="is_quantitative" valueBoolean="false"/>
+            <column name="is_off_balance" valueBoolean="false"/>
+            <column name="level" valueNumeric="3"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="currency" value="AED"/>
+            <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+            <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS t WHERE t.account_code = '7000000' LIMIT 1)"/>
+        </insert>
+
+        <insert tableName="chart_of_accounts">
+            <column name="account_code" value="POS-6010"/>
+            <column name="description" value="POS Merchant Processing Fee"/>
+            <column name="account_type" value="DEBIT"/>
+            <column name="section" value="PL_POS_BANK_CHARGES"/>
+            <column name="is_quantitative" valueBoolean="false"/>
+            <column name="is_off_balance" valueBoolean="false"/>
+            <column name="level" valueNumeric="3"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="currency" value="AED"/>
+            <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+            <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS t WHERE t.account_code = '7000000' LIMIT 1)"/>
+        </insert>
+
+        <insert tableName="chart_of_accounts">
+            <column name="account_code" value="POS-6020"/>
+            <column name="description" value="POS Cash Over/Short"/>
+            <column name="account_type" value="DEBIT"/>
+            <column name="section" value="PL_POS_CASH_VARIANCE"/>
+            <column name="is_quantitative" valueBoolean="false"/>
+            <column name="is_off_balance" valueBoolean="false"/>
+            <column name="level" valueNumeric="3"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="currency" value="AED"/>
+            <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+            <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS t WHERE t.account_code = '7000000' LIMIT 1)"/>
+        </insert>
+
+        <insert tableName="chart_of_accounts">
+            <column name="account_code" value="POS-6030"/>
+            <column name="description" value="POS Loyalty Discount Expense"/>
+            <column name="account_type" value="DEBIT"/>
+            <column name="section" value="PL_OPERATING_EXPENSES"/>
+            <column name="is_quantitative" valueBoolean="false"/>
+            <column name="is_off_balance" valueBoolean="false"/>
+            <column name="level" valueNumeric="3"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="currency" value="AED"/>
+            <column name="tenant_id" valueComputed="(SELECT id FROM tenants LIMIT 1)"/>
+            <column name="parent_id" valueComputed="(SELECT account_id FROM (SELECT account_id, account_code FROM chart_of_accounts) AS t WHERE t.account_code = '7000000' LIMIT 1)"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -61,6 +61,15 @@ public class ProSubCategoryService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<ProSubCategoryResponse> getAll() {
+        Long tenantId = getCurrentTenant().getId();
+        return subCategoryRepository.findByTenantIdOrderByNameAsc(tenantId)
+                .stream()
+                .map(ProSubCategoryResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
     public ProSubCategoryResponse update(Long id, ProSubCategoryRequest request) {
         Tenant tenant = getCurrentTenant();
         ProSubCategory subCategory = subCategoryRepository.findByTenantIdAndId(tenant.getId(), id)
