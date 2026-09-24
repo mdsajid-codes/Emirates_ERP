@@ -38,8 +38,8 @@ const ProductCard = ({ product, variant, onAddToCart, onDownloadBarcode }) => {
                 <div className="absolute top-0 left-0 right-0 h-[4px] bg-red-600 z-30" />
             )}
 
-            {/* Background Product Image Container */}
-            <div className="absolute inset-0 w-full h-full bg-[#E5E9EE]">
+            {/* Top Image Section */}
+            <div className="flex-1 w-full relative bg-[#E5E9EE] overflow-hidden">
                 {variant.imageUrl ? (
                     <img
                         src={constructImageUrl(variant.imageUrl)}
@@ -47,37 +47,37 @@ const ProductCard = ({ product, variant, onAddToCart, onDownloadBarcode }) => {
                         className="w-full h-full object-cover"
                     />
                 ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#1E293B] to-[#0F172A] text-slate-400">
-                        <Shirt className="w-8 h-8 opacity-40 text-white" strokeWidth={1.5} />
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400">
+                        <Shirt className="w-8 h-8 opacity-40 text-slate-400" strokeWidth={1.5} />
                     </div>
+                )}
+
+                {/* Top Badge: Red Badge when Out of Stock, White square otherwise */}
+                {isOutOfStock ? (
+                    <div className="absolute top-1.5 right-1.5 z-30 px-1.5 py-0.5 bg-red-600 text-white text-[8px] font-bold uppercase rounded shadow-md flex items-center gap-1 border border-red-400">
+                        <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
+                        Out of Stock
+                    </div>
+                ) : (
+                    <div className="absolute top-1.5 right-1.5 z-10 w-4 h-4 bg-white/95 backdrop-blur-xs rounded-md shadow-xs pointer-events-none flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-400/50" />
+                    </div>
+                )}
+
+                {/* Out of Stock Subtle Overlay */}
+                {isOutOfStock && (
+                    <div className="absolute inset-0 z-20 bg-black/10 backdrop-blur-[0.5px] pointer-events-none" />
                 )}
             </div>
 
-            {/* Top Badge: Red Badge when Out of Stock, White square otherwise */}
-            {isOutOfStock ? (
-                <div className="absolute top-1.5 right-1.5 z-30 px-1.5 py-0.5 bg-red-600 text-white text-[8px] font-bold uppercase rounded shadow-md flex items-center gap-1 border border-red-400">
-                    <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
-                    Out of Stock
-                </div>
-            ) : (
-                <div className="absolute top-1.5 right-1.5 z-10 w-4 h-4 bg-white/95 backdrop-blur-xs rounded-md shadow-xs pointer-events-none flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400/50" />
-                </div>
-            )}
-
-            {/* Out of Stock Subtle Overlay */}
-            {isOutOfStock && (
-                <div className="absolute inset-0 z-20 bg-black/35 backdrop-blur-[0.5px] pointer-events-none" />
-            )}
-
-            {/* Bottom Dark Blue Gradient Overlay Bar */}
-            <div className="relative z-10 w-full p-2 bg-gradient-to-t from-[#102A5C] via-[#102A5C]/85 to-transparent flex items-end justify-between min-h-[46px]">
+            {/* Bottom White Information Bar */}
+            <div className="w-full px-2 py-1.5 bg-white flex items-center justify-between min-h-[46px] border-t border-slate-100 shrink-0">
                 {/* Left Text: Product Name & AED Price */}
-                <div className="flex flex-col justify-end text-white max-w-[calc(100%-28px)] pr-1">
-                    <span className="text-[10.5px] font-bold leading-[14px] text-white truncate drop-shadow-xs" title={product.name}>
+                <div className="flex flex-col justify-center text-[#102A5C] max-w-[calc(100%-28px)] pr-1">
+                    <span className="text-[10.5px] font-bold leading-[14px] truncate" title={product.name}>
                         {product.name}
                     </span>
-                    <span className="text-[10.5px] font-bold leading-[14px] text-white/90 font-mono tracking-tight drop-shadow-xs">
+                    <span className="text-[10px] font-bold leading-[14px] text-teal-600 font-mono tracking-tight mt-0.5">
                         {formatPrice(variant.priceCents)}
                     </span>
                 </div>
@@ -89,7 +89,7 @@ const ProductCard = ({ product, variant, onAddToCart, onDownloadBarcode }) => {
                             e.stopPropagation();
                             mainAction();
                         }}
-                        className="w-6 h-6 rounded-full bg-[#0078BC] hover:bg-[#006096] text-white flex items-center justify-center shrink-0 shadow-md transition-transform active:scale-95 cursor-pointer"
+                        className="w-6 h-6 rounded-full bg-[#00A9A8] hover:bg-[#008f8e] text-white flex items-center justify-center shrink-0 shadow-sm transition-transform active:scale-95 cursor-pointer"
                         title="Add to Cart"
                     >
                         <Plus className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
@@ -100,7 +100,18 @@ const ProductCard = ({ product, variant, onAddToCart, onDownloadBarcode }) => {
     );
 };
 
-const ProductGrid = ({ products, categories = [], selectedCategory = 'All', onSelectCategory, onAddToCart, onDownloadBarcode }) => {
+const ProductGrid = ({
+    products,
+    categories = [],
+    selectedCategory = 'All',
+    onSelectCategory,
+    subCategories = [],
+    selectedSubCategory = 'All',
+    onSelectSubCategory,
+    onAddToCart,
+    onDownloadBarcode,
+    onAddProduct
+}) => {
     // Combine 'All' with real categories fetched from database
     const categoryTabs = useMemo(() => {
         const list = [{ id: 'All', name: 'All' }];
@@ -168,6 +179,26 @@ const ProductGrid = ({ products, categories = [], selectedCategory = 'All', onSe
                 })}
             </div>
 
+            {/* Sub Categories Tabs Row */}
+            {subCategories && subCategories.length > 1 && (
+                <div className="flex items-center gap-2 mb-3 overflow-x-auto no-scrollbar shrink-0">
+                    {subCategories.map(subCat => (
+                        <button
+                            key={subCat}
+                            onClick={() => onSelectSubCategory && onSelectSubCategory(subCat)}
+                            className={`text-[10px] font-medium leading-[14px] px-3 py-1 rounded-full transition-all whitespace-nowrap cursor-pointer ${
+                                selectedSubCategory === subCat
+                                    ? 'bg-[#00A9A8] text-white shadow-sm'
+                                    : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]'
+                            }`}
+                        >
+                            {subCat}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+
             {/* Grid of Product Cards */}
             <div className="flex-1 overflow-y-auto no-scrollbar pr-1">
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-6 gap-2.5">
@@ -180,6 +211,18 @@ const ProductGrid = ({ products, categories = [], selectedCategory = 'All', onSe
                             onDownloadBarcode={onDownloadBarcode}
                         />
                     ))}
+
+                    {/* Add New Product Card */}
+                    <div
+                        onClick={onAddProduct}
+                        className="group relative flex flex-col items-center justify-center overflow-hidden select-none bg-slate-50 border-2 border-dashed border-slate-300 rounded-lg transition-all hover:bg-slate-100 hover:border-slate-400 hover:scale-[1.02] cursor-pointer w-full h-[126px]"
+                        title="Add New Product"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-slate-200 group-hover:bg-slate-300 flex items-center justify-center mb-2 transition-colors">
+                            <Plus className="w-5 h-5 text-slate-600" strokeWidth={2.5} />
+                        </div>
+                        <span className="text-xs font-bold text-slate-600">Add Product</span>
+                    </div>
                 </div>
 
                 {products.length === 0 && (

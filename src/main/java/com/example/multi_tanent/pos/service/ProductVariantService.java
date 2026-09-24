@@ -113,7 +113,7 @@ public class ProductVariantService {
         ProductVariant variant = productVariantRepository.findByIdAndProductId(variantId, productId)
                 .orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + variantId));
 
-        boolean hasBeenSold = saleItemRepository.existsByProductVariantId(variant.getId());
+        boolean hasBeenSold = saleItemRepository.existsByProductId(variant.getId());
         if (hasBeenSold) {
             variant.setActive(false); // Soft delete by marking as inactive
             productVariantRepository.save(variant);
@@ -228,11 +228,11 @@ public class ProductVariantService {
         }
         int totalQuantity;
         if (storeId != null) {
-            totalQuantity = inventoryRepository.findByStoreIdAndProductVariantId(storeId, variant.getId())
+            totalQuantity = inventoryRepository.findByStoreIdAndProductId(storeId, variant.getId())
                     .map(inv -> inv.getQuantity() != null ? inv.getQuantity().intValue() : 0)
                     .orElse(0);
         } else {
-            totalQuantity = inventoryRepository.findByProductVariantId(variant.getId())
+            totalQuantity = inventoryRepository.findByProductId(variant.getId())
                     .stream().mapToInt(inv -> inv.getQuantity() != null ? inv.getQuantity().intValue() : 0).sum();
         }
         dto.setQuantity(totalQuantity);

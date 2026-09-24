@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
-import { ShoppingCart, Package, PlusCircle, Loader, X, Eye, Edit, Trash2, SlidersHorizontal, History, Store, Tag } from 'lucide-react';
+import { Package, PlusCircle, Loader, X, SlidersHorizontal, History, Store, Tag } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { POS_FALLBACK_THEME } from '../../utils/themeUtils';
 
@@ -21,7 +21,6 @@ const usePosAuth = () => {
     return { isPosAdmin, canManage };
 };
 
-const formatPrice = (cents) => `AED ${(cents / 100).toFixed(2)}`;
 const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleString() : 'N/A';
 
 // --- Modal Component ---
@@ -40,109 +39,11 @@ const Modal = ({ isOpen, onClose, title, children, size = 'max-w-2xl' }) => {
     );
 };
 
-// --- Purchase Order Form ---
-const PurchaseOrderForm = ({ onSave, onCancel, stores, products, posTheme }) => {
-    const [formData, setFormData] = useState({
-        storeId: stores[0]?.id || '',
-        supplierName: '',
-        status: 'open',
-        items: [{ productVariantId: '', quantityOrdered: 1, unitCostCents: 0 }]
-    });
-    const [isLoading, setIsLoading] = useState(false);
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleItemChange = (index, e) => {
-        const { name, value } = e.target;
-        const newItems = [...formData.items];
-        newItems[index][name] = value;
-        setFormData(prev => ({ ...prev, items: newItems }));
-    };
-
-    const addItem = () => {
-        setFormData(prev => ({
-            ...prev,
-            items: [...prev.items, { productVariantId: '', quantityOrdered: 1, unitCostCents: 0 }]
-        }));
-    };
-
-    const removeItem = (index) => {
-        setFormData(prev => ({ ...prev, items: prev.items.filter((_, i) => i !== index) }));
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-        try {
-            await onSave(formData);
-        } catch (error) {
-            // Handled by parent
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                <div>
-                    <label className="block font-bold text-slate-700 mb-1">Store *</label>
-                    <select name="storeId" value={formData.storeId} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required>
-                        {stores.map(store => <option key={store.id} value={store.id}>{store.name}</option>)}
-                    </select>
-                </div>
-                <div>
-                    <label className="block font-bold text-slate-700 mb-1">Supplier Name *</label>
-                    <input name="supplierName" value={formData.supplierName} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required />
-                </div>
-            </div>
-            <h4 className="font-bold text-slate-900 pt-3 border-t border-slate-100">Order Items</h4>
-            <div className="space-y-2.5">
-                {formData.items.map((item, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-2 items-end bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
-                        <div className="col-span-5">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Product</label>
-                            <select name="productVariantId" value={item.productVariantId} onChange={e => handleItemChange(index, e)} className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium outline-none" required>
-                                <option value="">Select Product</option>
-                                {products.flatMap(p => p.variants.map(v => (
-                                    <option key={v.id} value={v.id}>{p.name} ({v.sku})</option>
-                                )))}
-                            </select>
-                        </div>
-                        <div className="col-span-3">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Quantity</label>
-                            <input name="quantityOrdered" type="number" min="1" value={item.quantityOrdered} onChange={e => handleItemChange(index, e)} className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold outline-none" />
-                        </div>
-                        <div className="col-span-3">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Unit Cost (Cents)</label>
-                            <input name="unitCostCents" type="number" min="0" value={item.unitCostCents} onChange={e => handleItemChange(index, e)} className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold outline-none" />
-                        </div>
-                        <div className="col-span-1">
-                            <button type="button" onClick={() => removeItem(index)} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 size={15} /></button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-            <button type="button" onClick={addItem} className="px-3.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200 transition-all inline-flex items-center gap-1.5">
-                <PlusCircle size={14} /> Add Line Item
-            </button>
-            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
-                <button type="button" onClick={onCancel} className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition-all hover:opacity-90 flex items-center gap-2" style={{ backgroundColor: posTheme?.primary || '#0f172a' }} disabled={isLoading}>
-                    {isLoading && <Loader className="animate-spin h-4 w-4" />} Create Purchase Order
-                </button>
-            </div>
-        </form>
-    );
-};
-
-const StockAdjustmentForm = ({ onSave, onCancel, item, stores, products, posTheme }) => {
+// --- Stock Adjustment Form ---
+const StockAdjustmentForm = ({ onSave, onCancel, item, stores, posTheme }) => {
     const [formData, setFormData] = useState({
         storeId: item?.storeId || stores[0]?.id || '',
-        productVariantId: item?.productVariantId || '',
+        productId: item?.productId || '',
         changeQuantity: 1,
         reason: 'Manual Adjustment',
     });
@@ -156,19 +57,13 @@ const StockAdjustmentForm = ({ onSave, onCancel, item, stores, products, posThem
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        try {
-            await onSave(formData);
-        } catch (error) {
-            // Handled by parent
-        } finally {
-            setIsLoading(false);
-        }
+        try { await onSave(formData); } catch (error) { } finally { setIsLoading(false); }
     };
 
     return (
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
-            <p className="text-xs text-slate-600">Adjusting stock for: <span className="font-bold text-slate-900">{item?.productName} ({item?.productVariantSku || item?.variantSku})</span></p>
-            <input type="hidden" name="productVariantId" value={formData.productVariantId} />
+            <p className="text-xs text-slate-600">Adjusting stock for: <span className="font-bold text-slate-900">{item?.productName} ({item?.productVariantSku})</span></p>
+            <input type="hidden" name="productId" value={formData.productId} />
             <div>
                 <label className="block font-bold text-slate-700 mb-1">Store *</label>
                 <select name="storeId" value={formData.storeId} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required>
@@ -193,18 +88,17 @@ const StockAdjustmentForm = ({ onSave, onCancel, item, stores, products, posThem
     );
 };
 
-const AddStockItemForm = ({ onSave, onCancel, stores, products, existingVariantIds, selectedStoreId, posTheme }) => {
+// --- Add Stock Item Form ---
+const AddStockItemForm = ({ onSave, onCancel, stores, products, existingProductIds, selectedStoreId, posTheme }) => {
     const [formData, setFormData] = useState({
         storeId: selectedStoreId || stores[0]?.id || '',
-        productVariantId: '',
+        productId: '',
         changeQuantity: 1,
         reason: 'Initial Stock',
     });
     const [isLoading, setIsLoading] = useState(false);
 
-    const availableVariants = useMemo(() => {
-        return products.flatMap(p => p.variants.filter(v => !existingVariantIds.has(v.id)));
-    }, [products, existingVariantIds]);
+    const availableProducts = useMemo(() => products.filter(p => !existingProductIds.has(p.id)), [products, existingProductIds]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -214,27 +108,31 @@ const AddStockItemForm = ({ onSave, onCancel, stores, products, existingVariantI
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        try {
-            await onSave(formData);
-        } catch (error) {
-            // Handled by parent
-        } finally {
-            setIsLoading(false);
-        }
+        try { await onSave(formData); } catch (error) { } finally { setIsLoading(false); }
     };
 
     return (
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
             <div>
-                <label className="block font-bold text-slate-700 mb-1">Product Variant *</label>
-                <select name="productVariantId" value={formData.productVariantId} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required>
-                    <option value="">Select a product variant...</option>
-                    {availableVariants.map(v => <option key={v.id} value={v.id}>{v.productName} ({v.sku})</option>)}
+                <label className="block font-bold text-slate-700 mb-1">Store *</label>
+                <select name="storeId" value={formData.storeId} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required>
+                    <option value="">Select a store...</option>
+                    {stores.map(store => <option key={store.id} value={store.id}>{store.name}</option>)}
                 </select>
             </div>
             <div>
+                <label className="block font-bold text-slate-700 mb-1">Product *</label>
+                <select name="productId" value={formData.productId} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-slate-900 outline-none" required>
+                    <option value="">Select a product...</option>
+                    {availableProducts.map(p => <option key={p.id} value={p.id}>{p.name}{p.itemCode ? ` (${p.itemCode})` : ''}</option>)}
+                </select>
+                {availableProducts.length === 0 && products.length > 0 && (
+                    <p className="text-[11px] text-slate-400 mt-1">All products already have stock in this store.</p>
+                )}
+            </div>
+            <div>
                 <label className="block font-bold text-slate-700 mb-1">Initial Quantity *</label>
-                <input name="changeQuantity" type="number" min="0" value={formData.changeQuantity} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-bold focus:ring-2 focus:ring-slate-900 outline-none" required />
+                <input name="changeQuantity" type="number" min="1" value={formData.changeQuantity} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-bold focus:ring-2 focus:ring-slate-900 outline-none" required />
             </div>
             <div>
                 <label className="block font-bold text-slate-700 mb-1">Reason *</label>
@@ -250,6 +148,7 @@ const AddStockItemForm = ({ onSave, onCancel, stores, products, existingVariantI
     );
 };
 
+// --- Stock Levels Tab ---
 const StockLevelsTab = ({ posTheme }) => {
     const { canManage } = usePosAuth();
     const [stockLevels, setStockLevels] = useState([]);
@@ -269,30 +168,22 @@ const StockLevelsTab = ({ posTheme }) => {
             const token = localStorage.getItem('token');
             const headers = { "Authorization": `Bearer ${token}` };
             const [productsRes, storesRes] = await Promise.all([
-                axios.get(`${API_URL}/pos/products`, { headers }),
+                axios.get(`${API_URL}/crm/sales-products`, { headers }),
                 axios.get(`${API_URL}/pos/stores`, { headers }),
             ]);
-            const processedProducts = productsRes.data.map(p => ({
-                ...p, variants: p.variants.map(v => ({ ...v, productName: p.name }))
-            }));
-            setProducts(processedProducts);
+            setProducts(productsRes.data.content || productsRes.data || []);
             setStores(storesRes.data);
-            if (storesRes.data.length > 0) {
-                setSelectedStore(storesRes.data[0].id);
-            }
+            if (storesRes.data.length > 0) setSelectedStore(storesRes.data[0].id);
         } catch (err) {
-            setError('Failed to load stock levels.');
-            toast.error("Failed to load stock levels.");
+            setError('Failed to load stores or products.');
+            toast.error("Failed to load stores or products.");
         } finally {
             setLoading(prev => ({ ...prev, stores: false }));
         }
     }, []);
 
     const fetchStockForStore = useCallback(async (storeId) => {
-        if (!storeId) {
-            setStockLevels([]);
-            return;
-        }
+        if (!storeId) { setStockLevels([]); return; }
         setLoading(prev => ({ ...prev, stock: true }));
         setError('');
         try {
@@ -301,7 +192,7 @@ const StockLevelsTab = ({ posTheme }) => {
             const response = await axios.get(`${API_URL}/pos/inventory/store/${storeId}`, { headers });
             setStockLevels(response.data);
         } catch (err) {
-            setError(`Failed to load stock levels for the selected store.`);
+            setError('Failed to load stock levels for the selected store.');
             toast.error("Failed to load store stock levels.");
         } finally {
             setLoading(prev => ({ ...prev, stock: false }));
@@ -309,15 +200,9 @@ const StockLevelsTab = ({ posTheme }) => {
     }, []);
 
     useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => { if (selectedStore) fetchStockForStore(selectedStore); }, [selectedStore, fetchStockForStore]);
 
-    const handleOpenAdjustModal = (item) => {
-        setAdjustmentItem(item);
-        setIsAdjustModalOpen(true);
-    };
-
-    useEffect(() => {
-        if (selectedStore) fetchStockForStore(selectedStore);
-    }, [selectedStore, fetchStockForStore]);
+    const handleOpenAdjustModal = (item) => { setAdjustmentItem(item); setIsAdjustModalOpen(true); };
 
     const handleSaveAdjustment = async (adjustmentData) => {
         try {
@@ -345,23 +230,20 @@ const StockLevelsTab = ({ posTheme }) => {
         }
     };
 
+    const productMap = useMemo(() => new Map(products.map(p => [p.id, p])), [products]);
+
     const groupedStock = useMemo(() => {
-        if (!stockLevels.length || !products.length) return {};
-        const variantMap = new Map(products.flatMap(p => p.variants.map(v => [v.id, p])));
+        if (!stockLevels.length) return {};
         return stockLevels.reduce((acc, item) => {
-            const product = variantMap.get(item.productVariantId);
-            const categoryName = product?.category?.name || 'Uncategorized';
-            if (!acc[categoryName]) {
-                acc[categoryName] = [];
-            }
+            const product = productMap.get(item.productId);
+            const categoryName = product?.category?.name || product?.categoryName || 'Uncategorized';
+            if (!acc[categoryName]) acc[categoryName] = [];
             acc[categoryName].push(item);
             return acc;
         }, {});
-    }, [stockLevels, products]);
+    }, [stockLevels, productMap]);
 
-    const existingVariantIdsInStore = useMemo(() =>
-        new Set(stockLevels.map(item => item.productVariantId))
-        , [stockLevels]);
+    const existingProductIdsInStore = useMemo(() => new Set(stockLevels.map(item => item.productId)), [stockLevels]);
 
     if (loading.stores) return <div className="flex justify-center items-center p-10"><Loader className="animate-spin h-6 w-6 text-slate-900" /></div>;
     if (error) return <div className="text-center text-rose-600 font-semibold p-6 bg-rose-50 rounded-2xl text-xs">{error}</div>;
@@ -403,7 +285,7 @@ const StockLevelsTab = ({ posTheme }) => {
                                     <thead className="bg-slate-50/50 border-b border-slate-100 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                                         <tr>
                                             <th className="py-2.5 px-4">Product</th>
-                                            <th className="py-2.5 px-4">SKU</th>
+                                            <th className="py-2.5 px-4">Item Code / SKU</th>
                                             <th className="py-2.5 px-4 text-right">Quantity</th>
                                             {canManage && <th className="py-2.5 px-4 text-right">Actions</th>}
                                         </tr>
@@ -412,8 +294,8 @@ const StockLevelsTab = ({ posTheme }) => {
                                         {items.map(item => (
                                             <tr key={item.inventoryId} className="hover:bg-slate-50/80 transition-colors">
                                                 <td className="py-2.5 px-4 font-bold text-slate-900">{item.productName}</td>
-                                                <td className="py-2.5 px-4 font-mono text-slate-500">{item.productVariantSku}</td>
-                                                <td className="py-2.5 px-4 text-right font-extrabold text-slate-900">{item.quantity}</td>
+                                                <td className="py-2.5 px-4 font-mono text-slate-500">{item.productVariantSku || '—'}</td>
+                                                <td className={`py-2.5 px-4 text-right font-extrabold ${item.quantity <= 0 ? 'text-rose-600' : 'text-slate-900'}`}>{item.quantity}</td>
                                                 {canManage && (
                                                     <td className="py-2.5 px-4 text-right">
                                                         <button onClick={() => handleOpenAdjustModal(item)} className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors" title="Adjust Stock">
@@ -431,15 +313,16 @@ const StockLevelsTab = ({ posTheme }) => {
                 </div>
             )}
             <Modal isOpen={isAdjustModalOpen} onClose={() => setIsAdjustModalOpen(false)} title="Adjust Stock" size="max-w-xl">
-                <StockAdjustmentForm onSave={handleSaveAdjustment} onCancel={() => setIsAdjustModalOpen(false)} item={adjustmentItem} stores={stores} products={products} posTheme={posTheme} />
+                <StockAdjustmentForm onSave={handleSaveAdjustment} onCancel={() => setIsAdjustModalOpen(false)} item={adjustmentItem} stores={stores} posTheme={posTheme} />
             </Modal>
             <Modal isOpen={isAddStockModalOpen} onClose={() => setIsAddStockModalOpen(false)} title="Add Product to Stock" size="max-w-2xl">
-                <AddStockItemForm onSave={handleSaveNewStockItem} onCancel={() => setIsAddStockModalOpen(false)} stores={stores} products={products} existingVariantIds={existingVariantIdsInStore} selectedStoreId={selectedStore} posTheme={posTheme} />
+                <AddStockItemForm onSave={handleSaveNewStockItem} onCancel={() => setIsAddStockModalOpen(false)} stores={stores} products={products} existingProductIds={existingProductIdsInStore} selectedStoreId={selectedStore} posTheme={posTheme} />
             </Modal>
         </div>
     );
 };
 
+// --- Stock Movements Tab ---
 const StockMovementsTab = () => {
     const [movements, setMovements] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -474,18 +357,18 @@ const StockMovementsTab = () => {
                         <tr>
                             <th className="py-2.5 px-4">Date</th>
                             <th className="py-2.5 px-4">Product</th>
-                            <th className="py-2.5 px-4">SKU</th>
                             <th className="py-2.5 px-4">Store</th>
                             <th className="py-2.5 px-4 text-right">Quantity Change</th>
                             <th className="py-2.5 px-4">Reason</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
-                        {movements.map(item => (
+                        {movements.length === 0 ? (
+                            <tr><td colSpan={5} className="py-10 text-center text-slate-400 font-medium">No stock movements recorded yet.</td></tr>
+                        ) : movements.map(item => (
                             <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                                 <td className="py-2.5 px-4 font-mono text-[11px] text-slate-500">{formatDate(item.createdAt)}</td>
                                 <td className="py-2.5 px-4 font-bold text-slate-900">{item.productName}</td>
-                                <td className="py-2.5 px-4 font-mono text-slate-500">{item.variantSku}</td>
                                 <td className="py-2.5 px-4 text-slate-600">{item.storeName}</td>
                                 <td className={`py-2.5 px-4 text-right font-black ${item.changeQuantity > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                                     {item.changeQuantity > 0 ? `+${item.changeQuantity}` : item.changeQuantity}
@@ -500,6 +383,7 @@ const StockMovementsTab = () => {
     );
 };
 
+// --- Main Inventory View ---
 const InventoryView = ({ posTheme: propPosTheme }) => {
     const posTheme = propPosTheme || POS_FALLBACK_THEME;
     const [activeTab, setActiveTab] = useState('stock');
@@ -513,12 +397,11 @@ const InventoryView = ({ posTheme: propPosTheme }) => {
         <div className="p-4 sm:p-5 font-sans space-y-3.5">
             <div className="flex flex-wrap justify-between items-center gap-3">
                 <div>
-                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Inventory & Stock</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Inventory &amp; Stock</h1>
                     <p className="text-xs text-slate-500 mt-0.5">Track real-time store stock levels and inventory movement history.</p>
                 </div>
             </div>
 
-            {/* Rounded Tab Navigation Bar */}
             <div className="flex items-center gap-1.5 p-1 bg-slate-200/60 rounded-full w-fit text-xs font-bold">
                 {tabs.map((tab) => {
                     const isActive = activeTab === tab.id;
@@ -527,8 +410,7 @@ const InventoryView = ({ posTheme: propPosTheme }) => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-1.5 px-4 py-2 rounded-full transition-all cursor-pointer ${isActive ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                                }`}
+                            className={`flex items-center gap-1.5 px-4 py-2 rounded-full transition-all cursor-pointer ${isActive ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
                         >
                             <Icon size={14} />
                             <span>{tab.name}</span>

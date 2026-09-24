@@ -21,4 +21,6 @@ public class CrmSalesProductRequest {
     private BigDecimal salesPrice;
     private String tax;
     private Double taxRate;
+    private Long categoryId;
+    private Long subCategoryId;
 }

@@ -11,7 +11,7 @@ import LookupModal from '../sales/components/LookupModal';
 import DiscountModal from '../sales/components/DiscountModal';
 import SaleSuccessModal from '../sales/components/SaleSuccessModal';
 import BillModal from '../sales/components/BillModal';
-import ProductPanel from '../sales/components/ProductPanel';
+import PosProductModal from '../sales/components/PosProductModal';
 import InsertModal from '../sales/components/InsertModal';
 import { formatPrice } from '../sales/utils';
 import { POS_FALLBACK_THEME } from '../../utils/themeUtils';
@@ -29,6 +29,7 @@ const SalesView = ({ posTheme: propPosTheme }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCustomer, setSelectedCustomer] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [selectedSubCategory, setSelectedSubCategory] = useState('All');
     const [selectedStore, setSelectedStore] = useState('');
     const [loading, setLoading] = useState({ products: true, customers: true, stores: true, sale: false });
     const [discountCents, setDiscountCents] = useState(0);
@@ -47,30 +48,53 @@ const SalesView = ({ posTheme: propPosTheme }) => {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        const headers = { "Authorization": `Bearer ${token}` };
+        const tenantId = localStorage.getItem('tenantId') || 'default';
+        const headers = { "Authorization": `Bearer ${token}`, "X-Tenant-ID": tenantId };
 
         const fetchInitialData = async () => {
             try {
                 const [customersRes, storesRes, categoriesRes] = await Promise.all([
-                    axios.get(`${API_URL}/pos/customers`, { headers }),
+                    axios.get(`${API_URL}/parties?type=CUSTOMER`, { headers }),
                     axios.get(`${API_URL}/pos/stores`, { headers }),
-                    axios.get(`${API_URL}/pos/categories`, { headers }),
+                    axios.get(`${API_URL}/production/categories`, { headers }),
                 ]);
-                setCustomers(customersRes.data);
-                setStores(storesRes.data);
-                setCategories(categoriesRes.data);
+                setCustomers(Array.isArray(customersRes.data?.content) ? customersRes.data.content : (Array.isArray(customersRes.data) ? customersRes.data : []));
+                setStores(Array.isArray(storesRes.data) ? storesRes.data : []);
+                setCategories(Array.isArray(categoriesRes.data) ? categoriesRes.data : []);
                 
                 let storeId = null;
-                if (storesRes.data.length > 0) {
+                if (Array.isArray(storesRes.data) && storesRes.data.length > 0) {
                     storeId = storesRes.data[0].id;
                     setSelectedStore(storeId);
                 }
 
-                const productsRes = await axios.get(`${API_URL}/pos/products`, {
-                    headers,
-                    params: storeId ? { storeId } : {}
-                });
-                setProducts(productsRes.data);
+                const productsRes = await axios.get(`${API_URL}/crm/sales-products`, { headers, params: { size: 1000 } });
+                const rawProducts = Array.isArray(productsRes.data?.content) ? productsRes.data.content : (Array.isArray(productsRes.data) ? productsRes.data : []);
+                
+                const mappedProducts = rawProducts.filter(p => p.isSales !== false).map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    category: p.categoryName ? { id: p.categoryId, name: p.categoryName } : null,
+                    categoryName: p.categoryName || null,
+                    subCategory: p.subCategoryName ? { id: p.subCategoryId, name: p.subCategoryName } : null,
+                    subCategoryName: p.subCategoryName || null,
+                    active: true,
+                    isActive: true,
+                    sku: p.itemCode,
+                    variants: [
+                        {
+                            id: p.id,
+                            productId: p.id,
+                            sku: p.itemCode,
+                            priceCents: Math.round((p.salesPrice || 0) * 100),
+                            imageUrl: p.imageUrl ? (p.imageUrl.startsWith('http') || p.imageUrl.startsWith('data:') ? p.imageUrl : (p.imageUrl.startsWith(`documents/${tenantId}/`) ? p.imageUrl : (p.imageUrl.startsWith(`${tenantId}/`) ? `documents/${p.imageUrl}` : `documents/${tenantId}/${p.imageUrl}`))) : null,
+                            quantity: 9999,
+                            taxRatePercent: p.taxRate,
+                            taxRateName: p.tax
+                        }
+                    ]
+                }));
+                setProducts(mappedProducts);
             } catch (err) {
                 console.error("Error fetching initial POS data:", err);
             } finally {
@@ -81,22 +105,46 @@ const SalesView = ({ posTheme: propPosTheme }) => {
         fetchInitialData();
     }, []);
 
-    const fetchProducts = useCallback(async (storeId = selectedStore) => {
+    const fetchProducts = useCallback(async () => {
         setLoading(prev => ({ ...prev, products: true }));
         try {
             const token = localStorage.getItem('token');
-            const params = storeId ? { storeId } : {};
-            const productsRes = await axios.get(`${API_URL}/pos/products`, {
-                headers: { "Authorization": `Bearer ${token}` },
-                params
+            const tenantId = localStorage.getItem('tenantId') || 'default';
+            const productsRes = await axios.get(`${API_URL}/crm/sales-products`, {
+                headers: { "Authorization": `Bearer ${token}`, "X-Tenant-ID": tenantId },
+                params: { size: 1000 }
             });
-            setProducts(productsRes.data);
+            const rawProducts = Array.isArray(productsRes.data?.content) ? productsRes.data.content : (Array.isArray(productsRes.data) ? productsRes.data : []);
+            const mappedProducts = rawProducts.filter(p => p.isSales !== false).map(p => ({
+                id: p.id,
+                name: p.name,
+                category: p.categoryName ? { id: p.categoryId, name: p.categoryName } : null,
+                categoryName: p.categoryName || null,
+                subCategory: p.subCategoryName ? { id: p.subCategoryId, name: p.subCategoryName } : null,
+                subCategoryName: p.subCategoryName || null,
+                active: true,
+                isActive: true,
+                sku: p.itemCode,
+                variants: [
+                    {
+                        id: p.id,
+                        productId: p.id,
+                        sku: p.itemCode,
+                        priceCents: Math.round((p.salesPrice || 0) * 100),
+                        imageUrl: p.imageUrl ? (p.imageUrl.startsWith('http') || p.imageUrl.startsWith('data:') ? p.imageUrl : (p.imageUrl.startsWith(`documents/${tenantId}/`) ? p.imageUrl : (p.imageUrl.startsWith(`${tenantId}/`) ? `documents/${p.imageUrl}` : `documents/${tenantId}/${p.imageUrl}`))) : null,
+                        quantity: 9999,
+                        taxRatePercent: p.taxRate,
+                        taxRateName: p.tax
+                    }
+                ]
+            }));
+            setProducts(mappedProducts);
         } catch (err) {
             console.error("Error refetching products:", err);
         } finally {
             setLoading(prev => ({ ...prev, products: false }));
         }
-    }, [selectedStore]);
+    }, []);
 
     const isInitialMount = React.useRef(true);
     useEffect(() => {
@@ -132,9 +180,9 @@ const SalesView = ({ posTheme: propPosTheme }) => {
                 return prevCart;
             }
 
-            const taxRateObj = variant.taxRateId
+            const taxRateObj = (variant.taxRatePercent !== undefined && variant.taxRatePercent !== null)
                 ? {
-                    id: variant.taxRateId,
+                    id: variant.taxRateName || 'tax',
                     name: variant.taxRateName || 'Tax',
                     percent: Number(variant.taxRatePercent || 0),
                 }
@@ -212,7 +260,7 @@ const SalesView = ({ posTheme: propPosTheme }) => {
             customerId: selectedCustomer || null,
             orderId: orderId,
             items: cart.map(item => ({ productVariantId: item.productVariantId, quantity: item.quantity })),
-            payments: [payment],
+            payments: Array.isArray(payment) ? payment : [payment],
             orderType: saleDetails.orderType || 'DINE_IN',
             adultsCount: saleDetails.adultsCount || 0,
             kidsCount: saleDetails.kidsCount || 0,
@@ -337,15 +385,21 @@ const SalesView = ({ posTheme: propPosTheme }) => {
         setLoading(prev => ({ ...prev, customers: true }));
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post(`${API_URL}/pos/customers`, customerData, {
-                headers: { Authorization: `Bearer ${token}` }
+            const tenantId = localStorage.getItem('tenantId') || 'default';
+            const response = await axios.post(`${API_URL}/parties`, {
+                ...customerData,
+                partyType: 'CUSTOMER'
+            }, {
+                headers: { Authorization: `Bearer ${token}`, 'X-Tenant-ID': tenantId }
             });
             const newCustomer = response.data;
-            setCustomers(prev => [...prev, newCustomer].sort((a, b) => a.name.localeCompare(b.name)));
-            setSelectedCustomer(newCustomer.id);
+            setCustomers(prev => [newCustomer, ...prev]);
+            if (newCustomer?.id) {
+                setSelectedCustomer(newCustomer.id);
+            }
             setCustomerModalOpen(false);
         } catch (err) {
-            console.error("Failed to save customer:", err);
+            console.error("Failed to save customer party:", err);
         } finally {
             setLoading(prev => ({ ...prev, customers: false }));
         }
@@ -358,9 +412,24 @@ const SalesView = ({ posTheme: propPosTheme }) => {
             (p.name.toLowerCase().includes(searchTerm.toLowerCase()) || (p.sku || '').toLowerCase().includes(searchTerm.toLowerCase())) &&
             (selectedCategory === 'All' ||
                 (selectedCategory === 'Uncategorized' && !p.categoryName) ||
-                (p.categoryName === selectedCategory))
+                (p.categoryName === selectedCategory)) &&
+            (selectedSubCategory === 'All' || p.subCategoryName === selectedSubCategory)
         )
-        , [products, searchTerm, selectedCategory, showInactive]);
+        , [products, searchTerm, selectedCategory, selectedSubCategory, showInactive]);
+
+    const handleSelectCategory = (cat) => {
+        setSelectedCategory(cat);
+        setSelectedSubCategory('All');
+    };
+
+    const subCategories = useMemo(() => {
+        if (selectedCategory === 'All') return [];
+        const subCats = new Set(products
+            .filter(p => p.categoryName === selectedCategory && p.subCategoryName)
+            .map(p => p.subCategoryName)
+        );
+        return ['All', ...Array.from(subCats).sort()];
+    }, [products, selectedCategory]);
 
     const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.priceCents * item.quantity, 0), [cart]);
     const tax = useMemo(() => cart.reduce((sum, item) => {
@@ -433,9 +502,13 @@ const SalesView = ({ posTheme: propPosTheme }) => {
                             products={filteredProducts}
                             categories={categories}
                             selectedCategory={selectedCategory}
-                            onSelectCategory={setSelectedCategory}
+                            onSelectCategory={handleSelectCategory}
+                            subCategories={subCategories}
+                            selectedSubCategory={selectedSubCategory}
+                            onSelectSubCategory={setSelectedSubCategory}
                             onAddToCart={handleAddToCart}
                             onDownloadBarcode={handleDownloadBarcode}
+                            onAddProduct={() => setProductPanelOpen(true)}
                             posTheme={posTheme}
                         />
                     )}
@@ -473,7 +546,8 @@ const SalesView = ({ posTheme: propPosTheme }) => {
                     isOpen={isBillModalOpen}
                     onClose={() => { setBillModalOpen(false); setPendingSaleId(null); }}
                     cart={cart}
-                    customer={customers.find(c => c.id === selectedCustomer)}
+                    customer={customers.find(c => String(c.id) === String(selectedCustomer))}
+
                     subtotal={subtotal}
                     initialOrderId={pendingSaleId}
                     tax={tax}
@@ -520,20 +594,23 @@ const SalesView = ({ posTheme: propPosTheme }) => {
             )}
 
             {isCustomerModalOpen && (
-                <Modal isOpen={isCustomerModalOpen} onClose={() => setCustomerModalOpen(false)} title="Add New Customer">
+                <Modal isOpen={isCustomerModalOpen} onClose={() => setCustomerModalOpen(false)} title="Add New Customer Party">
                     <CustomerForm
                         onSave={handleSaveCustomer}
                         onCancel={() => setCustomerModalOpen(false)}
                         isSubmitting={loading.customers}
+                        posTheme={posTheme}
                     />
                 </Modal>
             )}
 
-            <ProductPanel
+            <PosProductModal
                 isOpen={isProductPanelOpen}
                 onClose={() => setProductPanelOpen(false)}
-                onSave={handleSaveProduct}
-                isSubmitting={isSubmittingProduct}
+                onSuccess={() => {
+                    setProductPanelOpen(false);
+                    fetchProducts();
+                }}
             />
         </div>
     );

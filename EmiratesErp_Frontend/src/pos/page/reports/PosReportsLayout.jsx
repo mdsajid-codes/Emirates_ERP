@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
-import { LayoutDashboard, FileText, ChevronLeft, Menu, Sparkles } from 'lucide-react';
+import { LayoutDashboard, FileText, ChevronLeft, Menu, Sparkles, ArrowLeft } from 'lucide-react';
+
 import axios from 'axios';
 import { useEffect } from 'react';
 
@@ -105,13 +106,26 @@ const PosReportsLayout = () => {
         }
     ];
 
+
+
+
     return (
         <div className="flex h-screen bg-background overflow-hidden">
             {/* Sidebar */}
             <div className={`bg-sidebar-bg border-r border-border text-sidebar-text flex-shrink-0 transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-0 overflow-hidden'} print:hidden`}>
                 <div className="p-4 border-b border-border flex items-center justify-between">
-                    <span className="font-bold text-lg">POS Reports</span>
+                    <div className="flex items-center gap-2.5">
+                        <button
+                            onClick={() => navigate('/pos-dashboard')}
+                            title="Back to POS"
+                            className="p-1.5 rounded-lg hover:bg-white/10 text-white/90 hover:text-white transition-all cursor-pointer flex items-center justify-center border border-white/10"
+                        >
+                            <ArrowLeft className="w-5 h-5 text-emerald-400" />
+                        </button>
+                        <span className="font-bold text-lg text-white tracking-tight">POS Reports</span>
+                    </div>
                 </div>
+
                 <nav className="p-2 space-y-6 overflow-y-auto h-[calc(100vh-60px)]">
                     {reportSections.map((section, idx) => (
                         <div key={idx}>

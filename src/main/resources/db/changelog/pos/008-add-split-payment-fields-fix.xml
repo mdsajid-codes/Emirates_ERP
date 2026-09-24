@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="008-add-split-payment-fields-fix" author="dev-a">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="payments"/>
+                <not>
+                    <columnExists tableName="payments" columnName="card_terminal_id"/>
+                </not>
+            </and>
+        </preConditions>
+        <addColumn tableName="payments">
+            <column name="payment_reference" type="VARCHAR(255)"/>
+            <column name="card_terminal_id" type="VARCHAR(100)"/>
+            <column name="gl_posted" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

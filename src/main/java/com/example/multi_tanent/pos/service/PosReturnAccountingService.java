@@ -51,8 +51,8 @@ public class PosReturnAccountingService {
                     long qty = (item.getQuantity() != null ? item.getQuantity() : 0L);
 
                     PostingRequest.Line line = new PostingRequest.Line();
-                    if (item.getProductVariant() != null && item.getProductVariant().getProduct() != null) {
-                        line.setItemId(item.getProductVariant().getProduct().getId());
+                    if (item.getProduct() != null) {
+                        line.setItemId(item.getProduct().getId());
                     }
                     line.setAmount(BigDecimal.valueOf(lineTotal).divide(BigDecimal.valueOf(100)));
                     line.setTaxAmount(BigDecimal.valueOf(lineTax).divide(BigDecimal.valueOf(100)));

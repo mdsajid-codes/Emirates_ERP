@@ -26,8 +26,11 @@ public class ProSubCategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProSubCategoryResponse>> getAllByCategoryId(@RequestParam Long categoryId) {
-        return ResponseEntity.ok(service.getAllByCategoryId(categoryId));
+    public ResponseEntity<List<ProSubCategoryResponse>> getAll(@RequestParam(required = false) Long categoryId) {
+        if (categoryId != null) {
+            return ResponseEntity.ok(service.getAllByCategoryId(categoryId));
+        }
+        return ResponseEntity.ok(service.getAll());
     }
 
     @PutMapping("/{id}")

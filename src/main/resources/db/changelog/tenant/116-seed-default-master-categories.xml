@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="116-seed-default-master-categories-v1" author="emirates-erp">
+        <sql dbms="mysql">
+            INSERT IGNORE INTO pro_categories (id, tenant_id, name, code) VALUES
+            (1, 1, 'Electronics &amp; Hardware', 'CAT-ELEC'),
+            (2, 1, 'Building Materials &amp; Metals', 'CAT-BLDG'),
+            (3, 1, 'Apparel &amp; Textiles', 'CAT-TEXT'),
+            (4, 1, 'General Trading Goods', 'CAT-GEN'),
+            (5, 1, 'Services &amp; Maintenance', 'CAT-SERV');
+
+            INSERT IGNORE INTO pro_sub_categories (id, tenant_id, category_id, name, code) VALUES
+            (1, 1, 1, 'Computers &amp; Laptops', 'SUB-COMP'),
+            (2, 1, 1, 'Mobile &amp; Accessories', 'SUB-MOB'),
+            (3, 1, 1, 'Office Equipment', 'SUB-OFF'),
+            (4, 1, 2, 'Aluminum &amp; Metal Profiles', 'SUB-ALUM'),
+            (5, 1, 2, 'Hardware &amp; Fasteners', 'SUB-HARD'),
+            (6, 1, 2, 'Pipes &amp; Fittings', 'SUB-PIPE'),
+            (7, 1, 3, 'Uniforms &amp; Workwear', 'SUB-UNIF'),
+            (8, 1, 3, 'Fabrics &amp; Garments', 'SUB-FAB'),
+            (9, 1, 4, 'Consumer Goods', 'SUB-CONS'),
+            (10, 1, 4, 'Packaging Materials', 'SUB-PACK'),
+            (11, 1, 5, 'IT Support &amp; Software', 'SUB-ITS'),
+            (12, 1, 5, 'Consulting &amp; Installation', 'SUB-SERV-CONS');
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

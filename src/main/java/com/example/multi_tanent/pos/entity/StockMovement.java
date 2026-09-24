@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.OffsetDateTime;
 
+import com.example.multi_tanent.spersusers.enitity.CrmSalesProduct;
 import com.example.multi_tanent.spersusers.enitity.Store;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 
@@ -28,8 +29,8 @@ public class StockMovement {
     private Store store;
 
     @ManyToOne
-    @JoinColumn(name = "product_variant_id")
-    private ProductVariant productVariant;
+    @JoinColumn(name = "product_id")
+    private CrmSalesProduct product;
 
     @Column(name = "change_quantity")
     private Long changeQuantity; // positive incoming, negative outgoing

@@ -18,4 +18,7 @@ public class PaymentRequest {
 
     @JsonDeserialize(using = StringObjectDeserializer.class)
     private String reference; // e.g., transaction ID
+
+    @JsonDeserialize(using = StringObjectDeserializer.class)
+    private String cardTerminalId;
 }

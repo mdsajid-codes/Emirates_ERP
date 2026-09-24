@@ -21,8 +21,8 @@ import { POS_FALLBACK_THEME } from '../../utils/themeUtils';
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const formatCurrency = (amount) => {
-    if (amount === undefined || amount === null) return '$0.00';
-    return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (amount === undefined || amount === null) return 'AED 0.00';
+    return `AED ${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
 const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
@@ -44,17 +44,30 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
             setLoading(true);
             try {
                 const token = localStorage.getItem('token');
-                const headers = token ? { headers: { "Authorization": `Bearer ${token}` } } : {};
+                const tenantId = localStorage.getItem('tenantId') || 'default';
+                const headers = token ? { headers: { "Authorization": `Bearer ${token}`, "X-Tenant-ID": tenantId } } : {};
 
                 const [salesRes, productsRes, customersRes] = await Promise.allSettled([
                     axios.get(`${API_URL}/pos/sales`, headers),
-                    axios.get(`${API_URL}/pos/products`, headers),
-                    axios.get(`${API_URL}/pos/customers`, headers),
+                    axios.get(`${API_URL}/crm/sales-products`, { ...headers, params: { size: 1000 } }),
+                    axios.get(`${API_URL}/parties?type=CUSTOMER`, headers),
                 ]);
 
                 let salesData = salesRes.status === 'fulfilled' && Array.isArray(salesRes.value?.data) ? salesRes.value.data : [];
-                let productsData = productsRes.status === 'fulfilled' && Array.isArray(productsRes.value?.data) ? productsRes.value.data : [];
-                let customersData = customersRes.status === 'fulfilled' && Array.isArray(customersRes.value?.data) ? customersRes.value.data : [];
+                
+                let rawProductsData = productsRes.status === 'fulfilled' && Array.isArray(productsRes.value?.data?.content) ? productsRes.value.data.content : 
+                                      (productsRes.status === 'fulfilled' && Array.isArray(productsRes.value?.data) ? productsRes.value.data : []);
+                
+                let productsData = rawProductsData.filter(p => p.isSales !== false).map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    brand: p.categoryName || 'Unknown',
+                    priceCents: Math.round((p.salesPrice || 0) * 100),
+                    imageUrl: p.imageUrl ? (p.imageUrl.startsWith('http') || p.imageUrl.startsWith('data:') ? p.imageUrl : (p.imageUrl.startsWith(`documents/${tenantId}/`) ? p.imageUrl : (p.imageUrl.startsWith(`${tenantId}/`) ? `documents/${p.imageUrl}` : `documents/${tenantId}/${p.imageUrl}`))) : null,
+                    variants: []
+                }));
+
+                let customersData = customersRes.status === 'fulfilled' ? (customersRes.value?.data?.content || customersRes.value?.data || []) : [];
 
                 const totalRevCents = salesData.reduce((sum, s) => sum + (s.totalCents || 0), 0);
                 const computedRev = totalRevCents > 0 ? totalRevCents / 100 : 500324;
@@ -63,7 +76,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                     todayRevenue: computedRev,
                     totalSalesCount: salesData.length > 0 ? salesData.length : 202324,
                     totalProducts: productsData.length > 0 ? productsData.length : 123726,
-                    totalCustomers: customersData.length > 0 ? customersData.length : 3440031,
+                    totalCustomers: Array.isArray(customersData) && customersData.length > 0 ? customersData.length : 3440031,
                 });
 
                 if (salesData.length > 0) {
@@ -576,7 +589,7 @@ const PosDashboardView = ({ setActiveItem, posTheme: propPosTheme }) => {
                                         Brand: {topProduct ? topProduct.brand || 'Apple' : 'Apple'} <span className="mx-1">•</span> 10.2k Stock Available
                                     </p>
                                     <p className="text-xs font-extrabold mt-0.5" style={{ color: posTheme.text }}>
-                                        {topProduct ? formatCurrency(topProduct.priceCents ? topProduct.priceCents / 100 : 799) : '$799.00'}
+                                        {topProduct ? formatCurrency(topProduct.priceCents ? topProduct.priceCents / 100 : 799) : 'AED 799.00'}
                                     </p>
                                 </div>
                             </div>

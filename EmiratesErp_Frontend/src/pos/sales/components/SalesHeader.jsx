@@ -93,6 +93,11 @@ const CustomerSearchDropdown = ({ selectedCustomer, onCustomerChange, customers,
     const [searchQuery, setSearchQuery] = React.useState('');
     const dropdownRef = React.useRef(null);
 
+    const getCustomerName = (c) => c?.companyName || c?.name || c?.primaryContactPerson || [c?.primaryFirstName, c?.primaryLastName].filter(Boolean).join(' ') || 'Unnamed Customer';
+    const getCustomerPhone = (c) => c?.contactPhone || c?.mobile || c?.phone || '';
+    const getCustomerEmail = (c) => c?.contactEmail || c?.email || '';
+    const getCustomerTrn = (c) => c?.vatTrnNumber || c?.vatNumber || '';
+
     const selectedCustObj = React.useMemo(() => {
         return customers.find(c => String(c.id) === String(selectedCustomer));
     }, [customers, selectedCustomer]);
@@ -101,9 +106,10 @@ const CustomerSearchDropdown = ({ selectedCustomer, onCustomerChange, customers,
         const query = searchQuery.toLowerCase().trim();
         if (!query) return customers;
         return customers.filter(c =>
-            (c.name || '').toLowerCase().includes(query) ||
-            (c.phone || '').toLowerCase().includes(query) ||
-            (c.email || '').toLowerCase().includes(query)
+            getCustomerName(c).toLowerCase().includes(query) ||
+            getCustomerPhone(c).toLowerCase().includes(query) ||
+            getCustomerEmail(c).toLowerCase().includes(query) ||
+            getCustomerTrn(c).toLowerCase().includes(query)
         );
     }, [customers, searchQuery]);
 
@@ -126,7 +132,7 @@ const CustomerSearchDropdown = ({ selectedCustomer, onCustomerChange, customers,
                 <div className="flex items-center gap-2 truncate">
                     <User className="w-4 h-4 text-[#013E5B] shrink-0" />
                     <span className="text-[14px] font-[500] text-[#102A5C] truncate">
-                        {selectedCustObj ? selectedCustObj.name : 'Select Customer'}
+                        {selectedCustObj ? getCustomerName(selectedCustObj) : 'Select Customer'}
                     </span>
                 </div>
                 <ChevronDown className={`w-4 h-4 text-[#013E5B] shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -149,7 +155,7 @@ const CustomerSearchDropdown = ({ selectedCustomer, onCustomerChange, customers,
                         <Search className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1" />
                         <input
                             type="text"
-                            placeholder="Search customer name or phone..."
+                            placeholder="Search customer name, phone, or TRN..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             autoFocus
@@ -177,6 +183,10 @@ const CustomerSearchDropdown = ({ selectedCustomer, onCustomerChange, customers,
                         {/* Filtered Customer Options */}
                         {filteredCustomers.map(c => {
                             const isSelected = String(c.id) === String(selectedCustomer);
+                            const name = getCustomerName(c);
+                            const phone = getCustomerPhone(c);
+                            const trn = getCustomerTrn(c);
+
                             return (
                                 <div
                                     key={c.id}
@@ -190,10 +200,13 @@ const CustomerSearchDropdown = ({ selectedCustomer, onCustomerChange, customers,
                                     }`}
                                 >
                                     <div className="flex items-center justify-between">
-                                        <span className="font-semibold truncate">{c.name}</span>
+                                        <span className="font-semibold truncate">{name}</span>
                                         {isSelected && <Check className="w-3.5 h-3.5 text-[#00A9A8] shrink-0" />}
                                     </div>
-                                    {c.phone && <span className="text-[10px] text-slate-400 font-mono">{c.phone}</span>}
+                                    <div className="flex items-center justify-between text-[10px] text-slate-400">
+                                        {phone && <span className="font-mono">{phone}</span>}
+                                        {trn && <span className="font-mono bg-slate-100 px-1 rounded">TRN: {trn}</span>}
+                                    </div>
                                 </div>
                             );
                         })}

@@ -88,14 +88,53 @@ const CrmSalesProductForm = () => {
         tax: '',
         taxRate: '',
         barcodeUrl: '',
+        categoryId: '',
+        subCategoryId: '',
     });
+    const [categories, setCategories] = useState([]);
+    const [subCategories, setSubCategories] = useState([]);
+    const [units, setUnits] = useState([]);
+    const [taxes, setTaxes] = useState([]);
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
 
+    const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
+    const [isAddSubCategoryModalOpen, setIsAddSubCategoryModalOpen] = useState(false);
+    const [isAddUomModalOpen, setIsAddUomModalOpen] = useState(false);
+    const [isAddTaxModalOpen, setIsAddTaxModalOpen] = useState(false);
+
+    const [newCategory, setNewCategory] = useState({ name: '', code: '' });
+    const [newSubCategory, setNewSubCategory] = useState({ name: '', code: '' });
+    const [newUom, setNewUom] = useState({ name: '', description: '' });
+    const [newTax, setNewTax] = useState({ code: '', rate: 0, description: '' });
+    const [modalLoading, setModalLoading] = useState(false);
+
     const getBarcodeUrl = (path) => path ? `${API_URL}/crm/sales-products/${id}/barcode` : null;
+
+    useEffect(() => {
+        const fetchMasterData = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const headers = { Authorization: `Bearer ${token}` };
+                const [catRes, subRes, uomRes, taxRes] = await Promise.all([
+                    axios.get(`${API_URL}/production/categories`, { headers }),
+                    axios.get(`${API_URL}/production/sub-categories`, { headers }),
+                    axios.get(`${API_URL}/production/units`, { headers }),
+                    axios.get(`${API_URL}/production/taxes`, { headers })
+                ]);
+                setCategories(Array.isArray(catRes.data) ? catRes.data : []);
+                setSubCategories(Array.isArray(subRes.data) ? subRes.data : []);
+                setUnits(Array.isArray(uomRes.data) ? uomRes.data : []);
+                setTaxes(Array.isArray(taxRes.data) ? taxRes.data : []);
+            } catch (err) {
+                console.error("Failed to fetch master data", err);
+            }
+        };
+        fetchMasterData();
+    }, []);
 
     const fetchProduct = useCallback(async () => {
         if (!isEditing) return;
@@ -121,6 +160,8 @@ const CrmSalesProductForm = () => {
                 tax: data.tax || '',
                 taxRate: data.taxRate || '',
                 barcodeUrl: data.barcodeUrl || '',
+                categoryId: data.categoryId || '',
+                subCategoryId: data.subCategoryId || '',
             });
 
             if (data.imageUrl) {
@@ -208,9 +249,19 @@ const CrmSalesProductForm = () => {
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         const val = type === 'checkbox' ? checked : value;
+        
+        let extraUpdates = {};
+        if (name === 'tax') {
+            const selectedTax = taxes.find(t => t.code === val);
+            if (selectedTax) {
+                extraUpdates.taxRate = selectedTax.rate;
+            }
+        }
+
         setProduct(prev => ({
             ...prev,
             [name]: val,
+            ...extraUpdates
         }));
         if (type !== 'checkbox') {
             validateField(name, val);
@@ -227,6 +278,91 @@ const CrmSalesProductForm = () => {
 
     const handleCancel = () => {
         navigate(redirectPath);
+    };
+
+    const handleAddCategory = async (e) => {
+        e.preventDefault();
+        setModalLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(`${API_URL}/production/categories`, newCategory, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setCategories([...categories, res.data]);
+            setProduct(prev => ({ ...prev, categoryId: res.data.id, subCategoryId: '' }));
+            setIsAddCategoryModalOpen(false);
+            setNewCategory({ name: '', code: '' });
+        } catch (err) {
+            console.error("Failed to add category", err);
+            alert("Failed to add category");
+        } finally {
+            setModalLoading(false);
+        }
+    };
+
+    const handleAddSubCategory = async (e) => {
+        e.preventDefault();
+        if (!product.categoryId) {
+            alert("Please select a Master Category first");
+            return;
+        }
+        setModalLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const payload = { ...newSubCategory, categoryId: product.categoryId };
+            const res = await axios.post(`${API_URL}/production/sub-categories`, payload, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setSubCategories([...subCategories, res.data]);
+            setProduct(prev => ({ ...prev, subCategoryId: res.data.id }));
+            setIsAddSubCategoryModalOpen(false);
+            setNewSubCategory({ name: '', code: '' });
+        } catch (err) {
+            console.error("Failed to add sub-category", err);
+            alert("Failed to add sub-category");
+        } finally {
+            setModalLoading(false);
+        }
+    };
+
+    const handleAddUom = async (e) => {
+        e.preventDefault();
+        setModalLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(`${API_URL}/production/units`, newUom, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setUnits([...units, res.data]);
+            setProduct(prev => ({ ...prev, unitOfMeasure: res.data.name }));
+            setIsAddUomModalOpen(false);
+            setNewUom({ name: '', description: '' });
+        } catch (err) {
+            console.error("Failed to add UOM", err);
+            alert("Failed to add UOM");
+        } finally {
+            setModalLoading(false);
+        }
+    };
+
+    const handleAddTax = async (e) => {
+        e.preventDefault();
+        setModalLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(`${API_URL}/production/taxes`, newTax, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setTaxes([...taxes, res.data]);
+            setProduct(prev => ({ ...prev, tax: res.data.code, taxRate: res.data.rate }));
+            setIsAddTaxModalOpen(false);
+            setNewTax({ code: '', rate: 0, description: '' });
+        } catch (err) {
+            console.error("Failed to add Tax", err);
+            alert("Failed to add Tax");
+        } finally {
+            setModalLoading(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -443,6 +579,57 @@ const CrmSalesProductForm = () => {
                                         </select>
                                     </div>
 
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="block text-xs font-bold text-[#102A43]">
+                                                Master Category
+                                            </label>
+                                            <button type="button" onClick={() => setIsAddCategoryModalOpen(true)} className="text-[#0178BC] hover:underline text-[10px] font-bold">
+                                                + Add New
+                                            </button>
+                                        </div>
+                                        <select
+                                            name="categoryId"
+                                            value={product.categoryId}
+                                            onChange={(e) => {
+                                                const catId = e.target.value;
+                                                setProduct(prev => ({ ...prev, categoryId: catId, subCategoryId: '' }));
+                                            }}
+                                            className="w-full px-3 py-1.5 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8 cursor-pointer"
+                                        >
+                                            <option value="">Select Master Category</option>
+                                            {categories.map(cat => (
+                                                <option key={cat.id} value={cat.id}>{cat.name} ({cat.code})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="block text-xs font-bold text-[#102A43]">
+                                                Master Sub Category
+                                            </label>
+                                            <button type="button" onClick={() => setIsAddSubCategoryModalOpen(true)} className="text-[#0178BC] hover:underline text-[10px] font-bold">
+                                                + Add New
+                                            </button>
+                                        </div>
+                                        <select
+                                            name="subCategoryId"
+                                            value={product.subCategoryId}
+                                            onChange={handleChange}
+                                            disabled={!product.categoryId}
+                                            className="w-full px-3 py-1.5 bg-white border border-[#C9D8E5] rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8 cursor-pointer disabled:opacity-50"
+                                        >
+                                            <option value="">Select Master Sub Category</option>
+                                            {subCategories
+                                                .filter(sub => String(sub.category?.id || sub.categoryId) === String(product.categoryId))
+                                                .map(sub => (
+                                                    <option key={sub.id} value={sub.id}>{sub.name} ({sub.code})</option>
+                                                ))
+                                            }
+                                        </select>
+                                    </div>
+
                                     <div className="sm:col-span-2">
                                         <label className="block text-xs font-bold text-[#102A43] mb-1">
                                             Description
@@ -529,18 +716,25 @@ const CrmSalesProductForm = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-bold text-[#102A43] mb-1">
-                                            Unit of Measure
-                                        </label>
-                                        <input
-                                            type="text"
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="block text-xs font-bold text-[#102A43]">
+                                                Unit of Measure
+                                            </label>
+                                            <button type="button" onClick={() => setIsAddUomModalOpen(true)} className="text-[#0178BC] hover:underline text-[10px] font-bold">
+                                                + Add New
+                                            </button>
+                                        </div>
+                                        <select
                                             name="unitOfMeasure"
-                                            maxLength={15}
                                             value={product.unitOfMeasure}
                                             onChange={handleChange}
-                                            placeholder="e.g. pcs, kg, ltr"
-                                            className={`w-full px-3 py-1.5 bg-white border ${fieldErrors.unitOfMeasure ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8`}
-                                        />
+                                            className={`w-full px-3 py-1.5 bg-white border ${fieldErrors.unitOfMeasure ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8 cursor-pointer`}
+                                        >
+                                            <option value="">Select UOM</option>
+                                            {units.map(uom => (
+                                                <option key={uom.id} value={uom.name}>{uom.name}</option>
+                                            ))}
+                                        </select>
                                         {fieldErrors.unitOfMeasure && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors.unitOfMeasure}</p>}
                                     </div>
 
@@ -562,18 +756,25 @@ const CrmSalesProductForm = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-bold text-[#102A43] mb-1">
-                                            Tax Type
-                                        </label>
-                                        <input
-                                            type="text"
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="block text-xs font-bold text-[#102A43]">
+                                                Tax Type
+                                            </label>
+                                            <button type="button" onClick={() => setIsAddTaxModalOpen(true)} className="text-[#0178BC] hover:underline text-[10px] font-bold">
+                                                + Add New
+                                            </button>
+                                        </div>
+                                        <select
                                             name="tax"
-                                            maxLength={15}
                                             value={product.tax}
                                             onChange={handleChange}
-                                            placeholder="e.g. VAT"
-                                            className={`w-full px-3 py-1.5 bg-white border ${fieldErrors.tax ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8`}
-                                        />
+                                            className={`w-full px-3 py-1.5 bg-white border ${fieldErrors.tax ? 'border-red-500 ring-1 ring-red-500' : 'border-[#C9D8E5]'} rounded-md text-xs text-[#102A43] focus:border-[#0178BC] focus:ring-1 focus:ring-[#0178BC] outline-none transition-all h-8 cursor-pointer`}
+                                        >
+                                            <option value="">Select Tax Type</option>
+                                            {taxes.map(t => (
+                                                <option key={t.id} value={t.code}>{t.code}</option>
+                                            ))}
+                                        </select>
                                         {fieldErrors.tax && <p className="text-[10px] text-red-500 font-medium mt-0.5">{fieldErrors.tax}</p>}
                                     </div>
 
@@ -597,7 +798,7 @@ const CrmSalesProductForm = () => {
 
                                     <div className="sm:col-span-2">
                                         <label className="block text-xs font-bold text-[#102A43] mb-1">
-                                            VAT / GST Classification Code
+                                            VAT Classification Code
                                         </label>
                                         <input
                                             type="text"
@@ -616,6 +817,115 @@ const CrmSalesProductForm = () => {
                     </div>
                 </div>
             </form>
+
+            {/* Inline Modals */}
+            {isAddCategoryModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[80] p-4" onClick={() => setIsAddCategoryModalOpen(false)}>
+                    <div className="bg-white text-[#102A43] rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                        <div className="p-4 border-b border-[#D7E3EE] flex justify-between items-center bg-[#F4F7F9]">
+                            <h3 className="font-bold text-sm">Add New Master Category</h3>
+                            <button onClick={() => setIsAddCategoryModalOpen(false)} className="text-[#60738E] hover:text-black"><X size={18} /></button>
+                        </div>
+                        <form onSubmit={handleAddCategory} className="p-4 flex flex-col gap-3">
+                            <div>
+                                <label className="block text-xs font-bold mb-1">Name *</label>
+                                <input type="text" required value={newCategory.name} onChange={e => setNewCategory({ ...newCategory, name: e.target.value })} className="w-full px-3 py-1.5 border rounded-md text-xs focus:ring-1 focus:ring-[#0178BC] outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold mb-1">Code *</label>
+                                <input type="text" required value={newCategory.code} onChange={e => setNewCategory({ ...newCategory, code: e.target.value })} className="w-full px-3 py-1.5 border rounded-md text-xs focus:ring-1 focus:ring-[#0178BC] outline-none" />
+                            </div>
+                            <div className="flex justify-end gap-2 mt-2 pt-3 border-t border-[#D7E3EE]">
+                                <button type="button" onClick={() => setIsAddCategoryModalOpen(false)} className="px-4 py-1.5 text-xs font-bold text-[#60738E] border border-[#D7E3EE] rounded hover:bg-gray-50">Cancel</button>
+                                <button type="submit" disabled={modalLoading} className="px-4 py-1.5 text-xs font-bold text-white bg-[#0178BC] rounded hover:bg-[#015f96] disabled:opacity-50">{modalLoading ? 'Adding...' : 'Add'}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            
+            {isAddSubCategoryModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[80] p-4" onClick={() => setIsAddSubCategoryModalOpen(false)}>
+                    <div className="bg-white text-[#102A43] rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                        <div className="p-4 border-b border-[#D7E3EE] flex justify-between items-center bg-[#F4F7F9]">
+                            <h3 className="font-bold text-sm">Add New Sub Category</h3>
+                            <button onClick={() => setIsAddSubCategoryModalOpen(false)} className="text-[#60738E] hover:text-black"><X size={18} /></button>
+                        </div>
+                        <form onSubmit={handleAddSubCategory} className="p-4 flex flex-col gap-3">
+                            <div>
+                                <label className="block text-xs font-bold mb-1">Parent Category</label>
+                                <input type="text" disabled value={categories.find(c => c.id == product.categoryId)?.name || ''} className="w-full px-3 py-1.5 border rounded-md text-xs bg-gray-100" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold mb-1">Name *</label>
+                                <input type="text" required value={newSubCategory.name} onChange={e => setNewSubCategory({ ...newSubCategory, name: e.target.value })} className="w-full px-3 py-1.5 border rounded-md text-xs focus:ring-1 focus:ring-[#0178BC] outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold mb-1">Code *</label>
+                                <input type="text" required value={newSubCategory.code} onChange={e => setNewSubCategory({ ...newSubCategory, code: e.target.value })} className="w-full px-3 py-1.5 border rounded-md text-xs focus:ring-1 focus:ring-[#0178BC] outline-none" />
+                            </div>
+                            <div className="flex justify-end gap-2 mt-2 pt-3 border-t border-[#D7E3EE]">
+                                <button type="button" onClick={() => setIsAddSubCategoryModalOpen(false)} className="px-4 py-1.5 text-xs font-bold text-[#60738E] border border-[#D7E3EE] rounded hover:bg-gray-50">Cancel</button>
+                                <button type="submit" disabled={modalLoading || !product.categoryId} className="px-4 py-1.5 text-xs font-bold text-white bg-[#0178BC] rounded hover:bg-[#015f96] disabled:opacity-50">{modalLoading ? 'Adding...' : 'Add'}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {isAddUomModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[80] p-4" onClick={() => setIsAddUomModalOpen(false)}>
+                    <div className="bg-white text-[#102A43] rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                        <div className="p-4 border-b border-[#D7E3EE] flex justify-between items-center bg-[#F4F7F9]">
+                            <h3 className="font-bold text-sm">Add New Unit of Measure</h3>
+                            <button onClick={() => setIsAddUomModalOpen(false)} className="text-[#60738E] hover:text-black"><X size={18} /></button>
+                        </div>
+                        <form onSubmit={handleAddUom} className="p-4 flex flex-col gap-3">
+                            <div>
+                                <label className="block text-xs font-bold mb-1">Name *</label>
+                                <input type="text" required value={newUom.name} onChange={e => setNewUom({ ...newUom, name: e.target.value })} placeholder="e.g. pcs, kg" className="w-full px-3 py-1.5 border rounded-md text-xs focus:ring-1 focus:ring-[#0178BC] outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold mb-1">Description</label>
+                                <input type="text" value={newUom.description} onChange={e => setNewUom({ ...newUom, description: e.target.value })} className="w-full px-3 py-1.5 border rounded-md text-xs focus:ring-1 focus:ring-[#0178BC] outline-none" />
+                            </div>
+                            <div className="flex justify-end gap-2 mt-2 pt-3 border-t border-[#D7E3EE]">
+                                <button type="button" onClick={() => setIsAddUomModalOpen(false)} className="px-4 py-1.5 text-xs font-bold text-[#60738E] border border-[#D7E3EE] rounded hover:bg-gray-50">Cancel</button>
+                                <button type="submit" disabled={modalLoading} className="px-4 py-1.5 text-xs font-bold text-white bg-[#0178BC] rounded hover:bg-[#015f96] disabled:opacity-50">{modalLoading ? 'Adding...' : 'Add'}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {isAddTaxModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[80] p-4" onClick={() => setIsAddTaxModalOpen(false)}>
+                    <div className="bg-white text-[#102A43] rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                        <div className="p-4 border-b border-[#D7E3EE] flex justify-between items-center bg-[#F4F7F9]">
+                            <h3 className="font-bold text-sm">Add New Tax Type</h3>
+                            <button onClick={() => setIsAddTaxModalOpen(false)} className="text-[#60738E] hover:text-black"><X size={18} /></button>
+                        </div>
+                        <form onSubmit={handleAddTax} className="p-4 flex flex-col gap-3">
+                            <div>
+                                <label className="block text-xs font-bold mb-1">Tax Code (Name) *</label>
+                                <input type="text" required value={newTax.code} onChange={e => setNewTax({ ...newTax, code: e.target.value })} placeholder="e.g. VAT" className="w-full px-3 py-1.5 border rounded-md text-xs focus:ring-1 focus:ring-[#0178BC] outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold mb-1">Rate (%) *</label>
+                                <input type="number" required min="0" step="0.01" value={newTax.rate} onChange={e => setNewTax({ ...newTax, rate: e.target.value })} className="w-full px-3 py-1.5 border rounded-md text-xs focus:ring-1 focus:ring-[#0178BC] outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold mb-1">Description</label>
+                                <input type="text" value={newTax.description} onChange={e => setNewTax({ ...newTax, description: e.target.value })} className="w-full px-3 py-1.5 border rounded-md text-xs focus:ring-1 focus:ring-[#0178BC] outline-none" />
+                            </div>
+                            <div className="flex justify-end gap-2 mt-2 pt-3 border-t border-[#D7E3EE]">
+                                <button type="button" onClick={() => setIsAddTaxModalOpen(false)} className="px-4 py-1.5 text-xs font-bold text-[#60738E] border border-[#D7E3EE] rounded hover:bg-gray-50">Cancel</button>
+                                <button type="submit" disabled={modalLoading} className="px-4 py-1.5 text-xs font-bold text-white bg-[#0178BC] rounded hover:bg-[#015f96] disabled:opacity-50">{modalLoading ? 'Adding...' : 'Add'}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             <ValidationModal
                 isOpen={isValidationModalOpen}
