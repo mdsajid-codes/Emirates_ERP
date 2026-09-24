@@ -265,6 +265,8 @@ const CrmSalesProduct = ({ pageName }) => {
                                         <th className="py-3.5 px-5 w-16">IMAGE</th>
                                         <th className="py-3.5 px-5">NAME</th>
                                         <th className="py-3.5 px-5">ITEM CODE</th>
+                                        <th className="py-3.5 px-5">CATEGORY</th>
+                                        <th className="py-3.5 px-5">SUB CATEGORY</th>
                                         <th className="py-3.5 px-5">BARCODE</th>
                                         <th className="py-3.5 px-5">TYPE</th>
                                         <th className="py-3.5 px-5">SALES PRICE</th>
@@ -285,6 +287,8 @@ const CrmSalesProduct = ({ pageName }) => {
                                             </td>
                                             <td className="py-3 px-5 font-bold text-[#111111] group-hover:text-[#00A3A6] transition-colors">{product.name}</td>
                                             <td className="py-3 px-5 font-mono text-[#62708A]">{product.itemCode || '-'}</td>
+                                            <td className="py-3 px-5 text-xs text-[#62708A] font-medium">{product.categoryName || '-'}</td>
+                                            <td className="py-3 px-5 text-xs text-[#62708A] font-medium">{product.subCategoryName || '-'}</td>
                                             <td className="py-3 px-5 text-xs font-mono text-[#62708A]">{product.barcode || '-'}</td>
                                             <td className="py-3 px-5">
                                                 <span className="px-2 py-0.5 bg-[#E6F0F8] text-[#0178BC] font-bold text-[10px] rounded-full uppercase">

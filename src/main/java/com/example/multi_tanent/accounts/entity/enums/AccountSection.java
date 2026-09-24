@@ -76,6 +76,13 @@ public enum AccountSection {
     // ─── INCOME STATEMENT — TAX ───────────────────────────────────────────
     PL_INCOME_TAX,                    // Corporate income tax expense
 
+    // ─── POS-SPECIFIC ─────────────────────────────────────────────────────
+    BS_POS_CARD_CLEARING,             // Bridge: card tender, clears to zero after acquirer settlement
+    PL_POS_BANK_CHARGES,              // Merchant/acquirer processing fees (not COGS)
+    PL_POS_CASH_VARIANCE,             // Cash over/short at shift close (not COGS)
+    PL_POS_RETURNS,                   // Contra-revenue: POS sales returns/refunds
+    PL_POS_COGS,                      // POS COGS expense
+
     // ─── SPECIAL ──────────────────────────────────────────────────────────
     ACCOUNTS_GROUP,                   // Parent/group nodes (not postable accounts)
     OFF_BALANCE                       // Off-balance sheet accounts (contingencies)

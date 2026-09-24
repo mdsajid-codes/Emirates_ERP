@@ -79,6 +79,8 @@ const TerminationReasonReport = lazy(() => import('./pages/hrmsReport/EndOfServi
 const PosDashboard = lazy(() => import('./pos/page/PosDashboard'));
 const ProductScanResult = lazy(() => import('./pos/page/ProductScanResult'));
 const PosReportsLayout = lazy(() => import('./pos/page/reports/PosReportsLayout.jsx'));
+const FinancialReportsLayout = lazy(() => import('./pos/page/reports/FinancialReportsLayout.jsx'));
+
 const BusinessSummary = lazy(() => import('./pos/page/reports/BusinessSummary.jsx'));
 const DailySummaryReport = lazy(() => import('./pos/page/reports/DailySummaryReport'));
 const TotalDailyReports = lazy(() => import('./pos/page/reports/TotalDailyReports'));
@@ -99,6 +101,14 @@ const SlowSellingReport = lazy(() => import('./pos/page/reports/SlowSellingRepor
 const BestSellingReport = lazy(() => import('./pos/page/reports/BestSellingReport.jsx'));
 const ItemSalesReport = lazy(() => import('./pos/page/reports/ItemSalesReport.jsx'));
 const UserTransfer = lazy(() => import('./pos/page/reports/UserTransfer.jsx'));
+const GlJournalEntries = lazy(() => import('./pos/page/reports/GlJournalEntries.jsx'));
+const PosTrialBalance = lazy(() => import('./pos/page/reports/PosTrialBalance.jsx'));
+const CardSettlementReport = lazy(() => import('./pos/page/reports/CardSettlementReport.jsx'));
+const VatOutputReport = lazy(() => import('./pos/page/reports/VatOutputReport.jsx'));
+const CashVarianceReport = lazy(() => import('./pos/page/reports/CashVarianceReport.jsx'));
+const PosProfitAndLoss = lazy(() => import('./pos/page/reports/PosProfitAndLoss.jsx'));
+const PosBalanceSheet = lazy(() => import('./pos/page/reports/PosBalanceSheet.jsx'));
+
 
 // Production
 const ProductionSettings = lazy(() => import('./production/settings/ProductionSettings.jsx'));
@@ -514,7 +524,25 @@ function App() {
                 <Route path='best-selling-report' element={<BestSellingReport />} />
                 <Route path='item-sales-report' element={<ItemSalesReport />} />
                 <Route path='user-transfer' element={<UserTransfer />} />
+                <Route path='gl-journal-entries' element={<GlJournalEntries />} />
+                <Route path='trial-balance' element={<PosTrialBalance />} />
+                <Route path='card-settlement' element={<CardSettlementReport />} />
+                <Route path='vat-output' element={<VatOutputReport />} />
+                <Route path='cash-variance' element={<CashVarianceReport />} />
               </Route>
+
+              <Route path='/pos-financial-reports' element={<ProtectedRoute allowedRoles={ROLES.POS}><FinancialReportsLayout /></ProtectedRoute>}>
+                <Route index element={<Navigate to="gl-journal-entries" replace />} />
+                <Route path='gl-journal-entries' element={<GlJournalEntries />} />
+                <Route path='trial-balance' element={<PosTrialBalance />} />
+                <Route path='profit-and-loss' element={<PosProfitAndLoss />} />
+                <Route path='balance-sheet' element={<PosBalanceSheet />} />
+                <Route path='card-settlement' element={<CardSettlementReport />} />
+                <Route path='vat-output' element={<VatOutputReport />} />
+                <Route path='cash-variance' element={<CashVarianceReport />} />
+              </Route>
+
+
 
               {/* ── CRM ───────────────────────────────────────────────── */}
               <Route path='/crm-dashboard' element={<ProtectedRoute allowedRoles={ROLES.ANY_AUTH}><CrmModule /></ProtectedRoute>}>

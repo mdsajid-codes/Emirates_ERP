@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { X, User, Printer, CreditCard, DollarSign, Loader, ParkingSquare } from 'lucide-react';
+import { X, User, Printer, CreditCard, DollarSign, Loader, ParkingSquare, Plus, Trash2 } from 'lucide-react';
 import { formatPrice, formatVariantAttributes, constructImageUrl } from '../utils';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
+
+const getCustomerDisplayName = (c) => {
+    if (!c) return 'Walk-in Customer';
+    if (typeof c === 'string') return c;
+    return c.companyName || c.name || c.displayName || c.primaryContactPersonFull || c.primaryContactPerson || [c.primaryFirstName, c.primaryLastName].filter(Boolean).join(' ') || 'Walk-in Customer';
+};
 
 const BillModal = ({
     isOpen,
@@ -22,11 +28,14 @@ const BillModal = ({
     initialDetails
 }) => {
     const [orderId, setOrderId] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState('CASH');
-    const [receivedAmount, setReceivedAmount] = useState('');
     const [companyInfo, setCompanyInfo] = useState(null);
 
-    // New Fields
+    // Split Payment Legs State
+    const [paymentLegs, setPaymentLegs] = useState([
+        { method: 'CASH', amount: (total / 100).toFixed(2), reference: '', cardTerminalId: '' }
+    ]);
+
+    // Order Details Fields
     const [orderType, setOrderType] = useState('DINE_IN');
     const [adultsCount, setAdultsCount] = useState(0);
     const [kidsCount, setKidsCount] = useState(0);
@@ -48,31 +57,49 @@ const BillModal = ({
         fetchCompanyInfo();
     }, []);
 
-
-
     useEffect(() => {
         if (isOpen) {
             setOrderId(initialOrderId || `ORD-${Date.now().toString().slice(-6)}`);
-            // Reset payment fields
-            setReceivedAmount('');
-            // Reset or Set details
+            setPaymentLegs([
+                { method: 'CASH', amount: (total / 100).toFixed(2), reference: '', cardTerminalId: '' }
+            ]);
             setOrderType(initialDetails?.orderType || 'DINE_IN');
             setAdultsCount(initialDetails?.adultsCount || 0);
             setKidsCount(initialDetails?.kidsCount || 0);
             setSalesSource(initialDetails?.salesSource || 'POS');
         }
-    }, [isOpen, initialOrderId, initialDetails]);
+    }, [isOpen, initialOrderId, initialDetails, total]);
 
-    const balanceAmount = total;
-    const changeAmount = receivedAmount ? (parseFloat(receivedAmount) * 100) - total : 0;
+    const totalPaidCents = paymentLegs.reduce((sum, leg) => sum + Math.round((parseFloat(leg.amount) || 0) * 100), 0);
+    const remainingDueCents = Math.max(0, total - totalPaidCents);
+    const changeCents = Math.max(0, totalPaidCents - total);
+
+    const handleAddLeg = () => {
+        const rem = (remainingDueCents / 100).toFixed(2);
+        setPaymentLegs([...paymentLegs, { method: 'CARD', amount: parseFloat(rem) > 0 ? rem : '0.00', reference: '', cardTerminalId: '' }]);
+    };
+
+    const handleUpdateLeg = (index, field, value) => {
+        const updated = [...paymentLegs];
+        updated[index] = { ...updated[index], [field]: value };
+        setPaymentLegs(updated);
+    };
+
+    const handleRemoveLeg = (index) => {
+        if (paymentLegs.length > 1) {
+            setPaymentLegs(paymentLegs.filter((_, i) => i !== index));
+        }
+    };
 
     const handlePay = () => {
         if (loading) return;
-        onProcessSale(orderId, {
-            method: paymentMethod,
-            amountCents: paymentMethod === 'CASH' && receivedAmount ? parseFloat(receivedAmount) * 100 : total,
-            reference: paymentMethod === 'CARD' ? 'CARD_TRANSACTION' : null
-        }, {
+        const formattedLegs = paymentLegs.map(leg => ({
+            method: leg.method.toLowerCase(),
+            amountCents: Math.round((parseFloat(leg.amount) || 0) * 100),
+            reference: leg.reference || null,
+            cardTerminalId: leg.cardTerminalId || null
+        }));
+        onProcessSale(orderId, formattedLegs, {
             orderType, adultsCount, kidsCount, salesSource
         });
     };
@@ -95,71 +122,13 @@ const BillModal = ({
                                 <span>Order ID: <span className="font-medium text-slate-700">{orderId}</span></span>
                                 <div className="flex items-center gap-2">
                                     <User size={14} />
-                                    <span>{customer?.name || 'Walk-in Customer'}</span>
+                                    <span>{getCustomerDisplayName(customer)}</span>
                                 </div>
                             </div>
                         </div>
+
                         <div className="flex-grow overflow-y-auto p-4 space-y-2">
-                            {/* Order Details Inputs */}
-                            <div className="p-2 mb-2 bg-slate-50 border rounded-lg text-sm grid grid-cols-2 gap-3">
-                                <div className="col-span-2 flex gap-2">
-                                    {['DINE_IN', 'TAKEAWAY', 'DELIVERY'].map(type => (
-                                        <button
-                                            key={type}
-                                            onClick={() => setOrderType(type)}
-                                            className={`flex-1 py-1.5 rounded-md border text-xs font-medium transition-colors ${orderType === type
-                                                ? 'bg-blue-600 text-white border-blue-600'
-                                                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                                                }`}
-                                        >
-                                            {type.replace('_', ' ')}
-                                        </button>
-                                    ))}
-                                </div>
-                                {orderType === 'DINE_IN' && (
-                                    <>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-slate-500 w-16">Adults:</span>
-                                            <div className="flex items-center border rounded-md bg-white">
-                                                <button onClick={() => setAdultsCount(Math.max(0, adultsCount - 1))} className="px-2 py-1 hover:bg-slate-100">-</button>
-                                                <input
-                                                    type="number"
-                                                    value={adultsCount}
-                                                    onChange={(e) => setAdultsCount(parseInt(e.target.value) || 0)}
-                                                    className="w-12 text-center focus:outline-none"
-                                                />
-                                                <button onClick={() => setAdultsCount(adultsCount + 1)} className="px-2 py-1 hover:bg-slate-100">+</button>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-slate-500 w-16">Kids:</span>
-                                            <div className="flex items-center border rounded-md bg-white">
-                                                <button onClick={() => setKidsCount(Math.max(0, kidsCount - 1))} className="px-2 py-1 hover:bg-slate-100">-</button>
-                                                <input
-                                                    type="number"
-                                                    value={kidsCount}
-                                                    onChange={(e) => setKidsCount(parseInt(e.target.value) || 0)}
-                                                    className="w-12 text-center focus:outline-none"
-                                                />
-                                                <button onClick={() => setKidsCount(kidsCount + 1)} className="px-2 py-1 hover:bg-slate-100">+</button>
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
-                                <div className="col-span-2 flex items-center gap-2">
-                                    <span className="text-slate-500 w-16">Source:</span>
-                                    <select
-                                        value={salesSource}
-                                        onChange={(e) => setSalesSource(e.target.value)}
-                                        className="flex-1 p-1 border rounded-md text-slate-700 focus:outline-none focus:border-blue-500 bg-white"
-                                    >
-                                        <option value="POS">POS</option>
-                                        <option value="Phone">Phone</option>
-                                        <option value="Online">Online</option>
-                                        <option value="Aggregator">Aggregator</option>
-                                    </select>
-                                </div>
-                            </div>
+
 
                             {cart.map(item => (
                                 <div key={item.productVariantId} className="flex justify-between items-center text-sm">
@@ -179,7 +148,7 @@ const BillModal = ({
                             {discountCents > 0 && <div className="flex justify-between text-green-600"><span className="font-medium">Discount</span><span className="font-medium">-{formatPrice(discountCents)}</span></div>}
                             <div className="flex justify-between"><span className="text-slate-600">Delivery Charge</span><span>AED 0.00</span></div>
                             <div className="flex justify-between"><span className="text-slate-600">Tax (estimated)</span><span>{formatPrice(tax)}</span></div>
-                            <div className="flex justify-between text-lg font-bold pt-2 border-t mt-2"><span >Total</span><span>{formatPrice(total)}</span></div>
+                            <div className="flex justify-between text-lg font-bold pt-2 border-t mt-2"><span>Total</span><span>{formatPrice(total)}</span></div>
                         </div>
                         <div className="p-4 border-t grid grid-cols-4 gap-2">
                             <button className="btn-secondary text-sm" onClick={onClose}>Close</button>
@@ -193,110 +162,133 @@ const BillModal = ({
                         </div>
                     </div>
 
-                    {/* Right Side: Payment */}
+                    {/* Right Side: Split Payment */}
                     <div className="w-2/5 flex flex-col bg-slate-50">
-                        <div className="p-4 border-b border-slate-200 flex justify-end">
-                            <button className="btn-secondary text-sm" onClick={() => alert('New Sale clicked')}>New Sale</button>
+                        <div className="p-3 border-b border-slate-200 flex justify-between items-center bg-white">
+                            <h4 className="font-semibold text-slate-800 text-xs uppercase tracking-wide">Split Payment</h4>
+                            <div className="flex gap-1">
+                                <button type="button" onClick={() => setPaymentLegs([{ method: 'CASH', amount: (total / 100).toFixed(2), reference: '', cardTerminalId: '' }])} className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-[11px] font-medium rounded text-slate-700">Cash</button>
+                                <button type="button" onClick={() => setPaymentLegs([{ method: 'CARD', amount: (total / 100).toFixed(2), reference: 'CARD_TX', cardTerminalId: 'POS-TERM-1' }])} className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-[11px] font-medium rounded text-slate-700">Card</button>
+                                <button type="button" onClick={() => setPaymentLegs([
+                                    { method: 'CASH', amount: ((total / 100) / 2).toFixed(2), reference: '', cardTerminalId: '' },
+                                    { method: 'CARD', amount: ((total / 100) / 2).toFixed(2), reference: 'CARD_TX', cardTerminalId: 'POS-TERM-1' }
+                                ])} className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-[11px] font-medium rounded text-slate-700">50/50</button>
+                            </div>
                         </div>
-                        <div className="p-6 space-y-4 flex-grow">
-                            <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 space-y-3 flex-grow overflow-y-auto">
+                            <div className="grid grid-cols-2 gap-3 bg-white p-3 rounded-lg border">
                                 <div>
-                                    <label className="label">Paid Amount</label>
-                                    <p className="input-display">{formatPrice(receivedAmount ? parseFloat(receivedAmount) * 100 : 0)}</p>
+                                    <label className="label text-xs">Total Due</label>
+                                    <p className="font-bold text-slate-800 text-base">{formatPrice(total)}</p>
                                 </div>
                                 <div>
-                                    <label className="label">Balance Amount</label>
-                                    <p className="input-display font-bold text-blue-600">{formatPrice(balanceAmount)}</p>
+                                    <label className="label text-xs">Total Tendered</label>
+                                    <p className={`font-bold text-base ${totalPaidCents >= total ? 'text-green-600' : 'text-amber-600'}`}>{formatPrice(totalPaidCents)}</p>
                                 </div>
-                            </div>
-                            <div>
-                                <label className="label">Received Amount</label>
-                                <input
-                                    type="number"
-                                    value={receivedAmount}
-                                    onChange={e => setReceivedAmount(e.target.value)}
-                                    className="input text-lg text-center"
-                                    placeholder="0.00"
-                                    disabled={paymentMethod !== 'CASH'}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setReceivedAmount((total / 100).toFixed(2))}
-                                    disabled={paymentMethod !== 'CASH'}
-                                    className="w-full mt-1.5 py-1.5 px-3 bg-teal-50 hover:bg-teal-100 text-[#00A9A8] border border-[#00A9A8]/30 rounded-md text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1 shadow-2xs"
-                                >
-                                    <span>⚡ Full Payment ({formatPrice(total)})</span>
-                                </button>
-                            </div>
-                            <div>
-                                <label className="label">Change Amount</label>
-                                <p className="input-display font-bold text-green-600">{formatPrice(changeAmount > 0 ? changeAmount : 0)}</p>
                             </div>
 
-                            <div className="pt-4">
-                                <label className="label">Mode of Payment</label>
-                                <div className="flex gap-2 mt-1">
-                                    <button onClick={() => setPaymentMethod('CASH')} className={`flex-1 btn-secondary flex items-center justify-center gap-2 ${paymentMethod === 'CASH' && 'ring-2 ring-blue-500'}`}>
-                                        <DollarSign size={16} /> Cash
-                                    </button>
-                                    <button onClick={() => setPaymentMethod('CARD')} className={`flex-1 btn-secondary flex items-center justify-center gap-2 ${paymentMethod === 'CARD' && 'ring-2 ring-blue-500'}`}>
-                                        <CreditCard size={16} /> Card
-                                    </button>
+                            {remainingDueCents > 0 ? (
+                                <div className="text-xs bg-amber-50 border border-amber-200 p-2 rounded text-amber-800 flex justify-between font-medium">
+                                    <span>Remaining Due:</span>
+                                    <span>{formatPrice(remainingDueCents)}</span>
                                 </div>
+                            ) : changeCents > 0 ? (
+                                <div className="text-xs bg-green-50 border border-green-200 p-2 rounded text-green-800 flex justify-between font-medium">
+                                    <span>Change Due:</span>
+                                    <span>{formatPrice(changeCents)}</span>
+                                </div>
+                            ) : null}
+
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <label className="label text-xs">Payment Legs</label>
+                                </div>
+                                {paymentLegs.map((leg, index) => (
+                                    <div key={index} className="p-2.5 bg-white border rounded-md space-y-2 text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <select
+                                                value={leg.method}
+                                                onChange={e => handleUpdateLeg(index, 'method', e.target.value)}
+                                                className="border rounded p-1 bg-white font-medium text-slate-700 focus:outline-none flex-1 text-xs"
+                                            >
+                                                <option value="CASH">Cash</option>
+                                                <option value="CARD">Card</option>
+                                                <option value="WALLET">Wallet / Bank</option>
+                                                <option value="CREDIT">On Account (Credit)</option>
+                                            </select>
+                                            <div className="flex items-center gap-1 w-32">
+                                                <span className="text-slate-400 font-medium">AED</span>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={leg.amount}
+                                                    onChange={e => handleUpdateLeg(index, 'amount', e.target.value)}
+                                                    className="w-full border rounded p-1 text-right font-bold focus:outline-none text-xs"
+                                                    placeholder="0.00"
+                                                />
+                                            </div>
+                                            {paymentLegs.length > 1 && (
+                                                <button type="button" onClick={() => handleRemoveLeg(index)} className="text-red-500 hover:text-red-700 p-1">
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        {leg.method === 'CARD' && (
+                                            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Terminal ID (e.g. POS-TERM-1)"
+                                                    value={leg.cardTerminalId || ''}
+                                                    onChange={e => handleUpdateLeg(index, 'cardTerminalId', e.target.value)}
+                                                    className="border rounded p-1 text-[11px]"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Tx Ref / Auth Code"
+                                                    value={leg.reference || ''}
+                                                    onChange={e => handleUpdateLeg(index, 'reference', e.target.value)}
+                                                    className="border rounded p-1 text-[11px]"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={handleAddLeg}
+                                    className="w-full py-1.5 border border-dashed border-slate-300 hover:border-blue-500 text-blue-600 rounded text-xs flex items-center justify-center gap-1 font-medium transition-colors"
+                                >
+                                    <Plus size={14} /> Add Payment Method
+                                </button>
                             </div>
                         </div>
-                        <div className="p-4">
-                            <button onClick={handlePay} className="w-full btn-primary text-lg" disabled={loading}>
-                                {loading ? <Loader className="animate-spin h-5 w-5 mr-2" /> : null}
-                                Pay
+                        <div className="p-4 border-t bg-white">
+                            <button onClick={handlePay} className="w-full btn-primary text-base py-2.5" disabled={loading}>
+                                {loading ? <Loader className="animate-spin h-5 w-5 mr-2 inline" /> : null}
+                                Complete Sale ({formatPrice(totalPaidCents)})
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Thermal Printer Receipt Section */}
-            <div className="print-thermal-container font-mono text-[10px] leading-tight text-black bg-white">
+            {/* Hidden Thermal Receipt Print View */}
+            <div id="thermal-receipt" className="hidden print:block font-mono text-black bg-white p-2 w-[80mm] mx-auto leading-tight">
                 <style>{`
-                    @page {
-                        size: 80mm 200mm !important;
-                        margin: 0mm !important;
-                    }
-                    @media screen {
-                        .print-thermal-container {
-                            display: none !important;
-                        }
-                    }
                     @media print {
-                        @page {
-                            size: 80mm 200mm !important;
-                            margin: 0mm !important;
-                        }
-                        html, body {
-                            margin: 0 !important;
-                            padding: 0 !important;
-                            background: #ffffff !important;
-                            width: 80mm !important;
-                            max-width: 80mm !important;
-                            -webkit-print-color-adjust: exact !important;
-                            print-color-adjust: exact !important;
-                        }
                         body * {
-                            visibility: hidden !important;
+                            visibility: hidden;
                         }
-                        .print-thermal-container, .print-thermal-container * {
-                            visibility: visible !important;
+                        #thermal-receipt, #thermal-receipt * {
+                            visibility: visible;
                         }
-                        .print-thermal-container {
-                            display: block !important;
-                            position: absolute !important;
-                            left: 0 !important;
-                            top: 0 !important;
-                            width: 80mm !important;
-                            max-width: 80mm !important;
-                            margin: 0 !important;
-                            padding: 2mm 3mm !important;
-                            box-sizing: border-box !important;
+                        #thermal-receipt {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            width: 100%;
+                            padding: 0;
+                            margin: 0;
                             font-family: 'Courier New', Courier, monospace !important;
                             font-size: 10px !important;
                             color: #000000 !important;
@@ -342,7 +334,8 @@ const BillModal = ({
                         <span>Date: {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                     <div className="flex justify-between">
-                        <span>Customer: <strong>{customer?.name || 'Walk-in'}</strong></span>
+                        <span>Customer: <strong>{getCustomerDisplayName(customer)}</strong></span>
+
                         <span>Cashier: <strong>Admin</strong></span>
                     </div>
                 </div>
@@ -394,22 +387,21 @@ const BillModal = ({
                         <span>TOTAL:</span>
                         <span>{formatPrice(total)}</span>
                     </div>
-                    <div className="flex justify-between text-[10px]">
-                        <span>Payment Method:</span>
-                        <span className="font-semibold">{paymentMethod}</span>
-                    </div>
-                    {paymentMethod === 'CASH' && receivedAmount && (
-                        <>
-                            <div className="flex justify-between text-[10px]">
-                                <span>Paid Amount:</span>
-                                <span>{formatPrice(parseFloat(receivedAmount) * 100)}</span>
+                    <div className="border-t border-dashed pt-1 mt-1 space-y-0.5">
+                        <span className="font-semibold block text-[10px]">Payment Breakdown:</span>
+                        {paymentLegs.map((leg, i) => (
+                            <div key={i} className="flex justify-between text-[10px]">
+                                <span>{leg.method}:</span>
+                                <span>{formatPrice(Math.round((parseFloat(leg.amount) || 0) * 100))}</span>
                             </div>
-                            <div className="flex justify-between text-[10px]">
+                        ))}
+                        {changeCents > 0 && (
+                            <div className="flex justify-between text-[10px] font-medium">
                                 <span>Change:</span>
-                                <span>{formatPrice(changeAmount > 0 ? changeAmount : 0)}</span>
+                                <span>{formatPrice(changeCents)}</span>
                             </div>
-                        </>
-                    )}
+                        )}
+                    </div>
                 </div>
 
                 {/* Footer */}

@@ -4,25 +4,27 @@ import com.example.multi_tanent.pos.dto.SaleDto;
 import com.example.multi_tanent.pos.dto.SaleRequest;
 import com.example.multi_tanent.pos.dto.SaleItemDto;
 import com.example.multi_tanent.pos.entity.*;
+import com.example.multi_tanent.spersusers.enitity.BaseCustomer;
+import com.example.multi_tanent.spersusers.enitity.CrmSalesProduct;
 import com.example.multi_tanent.spersusers.enitity.Store;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
-import com.example.multi_tanent.spersusers.enitity.User; // Corrected import
+import com.example.multi_tanent.spersusers.enitity.User;
+import com.example.multi_tanent.spersusers.repository.CrmSalesProductRepository;
+import com.example.multi_tanent.spersusers.repository.PartyRepository;
 import com.example.multi_tanent.spersusers.repository.StoreRepository;
 import com.example.multi_tanent.spersusers.repository.TenantRepository;
-import com.example.multi_tanent.spersusers.repository.UserRepository; // Corrected import
+import com.example.multi_tanent.spersusers.repository.UserRepository;
 import com.example.multi_tanent.pos.repository.*;
+import com.example.multi_tanent.config.TenantContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,112 +38,122 @@ public class SaleService {
     private final SaleRepository saleRepository;
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
-    private final CustomerRepository customerRepository;
-    private final ProductVariantRepository productVariantRepository;
-
+    private final PartyRepository partyRepository;
+    private final CrmSalesProductRepository crmSalesProductRepository;
     private final InventoryRepository inventoryRepository;
     private final StoreRepository storeRepository;
     private final StockMovementService stockMovementService;
     private final PosAccountingIntegrationService posAccountingIntegrationService;
 
     public SaleService(SaleRepository saleRepository, TenantRepository tenantRepository,
-            UserRepository userRepository, CustomerRepository customerRepository,
-            ProductVariantRepository productVariantRepository, StoreRepository storeRepository,
-            InventoryRepository inventoryRepository, StockMovementService stockMovementService,
+            UserRepository userRepository, PartyRepository partyRepository,
+            CrmSalesProductRepository crmSalesProductRepository,
+            InventoryRepository inventoryRepository, StoreRepository storeRepository,
+            StockMovementService stockMovementService,
             PosAccountingIntegrationService posAccountingIntegrationService) {
         this.saleRepository = saleRepository;
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
-        this.customerRepository = customerRepository;
-        this.productVariantRepository = productVariantRepository;
-        this.stockMovementService = stockMovementService;
-
+        this.partyRepository = partyRepository;
+        this.crmSalesProductRepository = crmSalesProductRepository;
         this.inventoryRepository = inventoryRepository;
         this.storeRepository = storeRepository;
+        this.stockMovementService = stockMovementService;
         this.posAccountingIntegrationService = posAccountingIntegrationService;
     }
 
     private Tenant getCurrentTenant() {
-        return tenantRepository.findFirstByOrderByIdAsc()
-                .orElseThrow(() -> new IllegalStateException("Tenant context not found."));
+        String tenantIdStr = TenantContext.getTenantId();
+        if (tenantIdStr == null || tenantIdStr.isEmpty()) {
+            throw new IllegalStateException("Tenant context is not set.");
+        }
+        return tenantRepository.findByTenantId(tenantIdStr)
+                .orElseThrow(() -> new RuntimeException("Tenant not found with identifier: " + tenantIdStr));
     }
 
-    private User getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByEmail(username)
-                .orElseThrow(() -> new IllegalStateException("Authenticated user not found in current tenant."));
-    }
-
+    @Transactional
     public SaleDto createSale(SaleRequest request) {
         Tenant currentTenant = getCurrentTenant();
-        User currentUser = getCurrentUser();
 
         Sale sale = new Sale();
         sale.setTenant(currentTenant);
-        sale.setUser(currentUser);
-        sale.setOrderId(request.getOrderId());
         sale.setInvoiceNo(generateInvoiceNumber());
         sale.setInvoiceDate(OffsetDateTime.now());
-        sale.setStatus("completed"); // Default status
+        sale.setStatus("completed");
+        sale.setPaymentStatus("paid");
+        sale.setOrderId(request.getOrderId() != null ? request.getOrderId()
+                : "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
 
-        sale.setInvoiceDate(OffsetDateTime.now());
-        sale.setStatus("completed"); // Default status
+        if (request.getOrderType() != null) {
+            sale.setOrderType(request.getOrderType());
+        } else {
+            sale.setOrderType(com.example.multi_tanent.pos.enums.OrderType.DINE_IN);
+        }
+        sale.setAdultsCount(request.getAdultsCount());
+        sale.setKidsCount(request.getKidsCount());
+        sale.setSalesSource(request.getSalesSource());
+        sale.setDeliveryCharge(request.getDeliveryCharge() != null ? request.getDeliveryCharge() : 0L);
 
-        sale.setOrderType(request.getOrderType() != null ? request.getOrderType()
-                : com.example.multi_tanent.pos.enums.OrderType.DINE_IN);
-        sale.setAdultsCount(request.getAdultsCount() != null ? request.getAdultsCount() : 0);
-        sale.setKidsCount(request.getKidsCount() != null ? request.getKidsCount() : 0);
-        sale.setSalesSource(request.getSalesSource() != null ? request.getSalesSource() : "POS");
-
-        // Associate store if provided or from user
-        // storeId is now mandatory in SaleRequest
-        Store saleStore = storeRepository.findByIdAndTenantId(request.getStoreId(), currentTenant.getId())
-                .orElseThrow(() -> new RuntimeException("Store not found with id: " + request.getStoreId()));
-        sale.setStore(saleStore);
-
-        // Associate customer if provided
         if (request.getCustomerId() != null) {
-            Customer customer = customerRepository.findByIdAndTenantId(request.getCustomerId(), currentTenant.getId())
-                    .orElseThrow(() -> new RuntimeException("Customer not found with id: " + request.getCustomerId()));
+            BaseCustomer customer = partyRepository.findById(request.getCustomerId()).orElse(null);
             sale.setCustomer(customer);
         }
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = username != null ? userRepository.findByEmail(username).orElse(null) : null;
+        sale.setUser(currentUser);
+
+        Store saleStore = null;
+        if (request.getStoreId() != null) {
+            saleStore = storeRepository.findByIdAndTenantId(request.getStoreId(), currentTenant.getId()).orElse(null);
+        }
+        if (saleStore == null) {
+            List<Store> tenantStores = storeRepository.findByTenantId(currentTenant.getId());
+            if (!tenantStores.isEmpty()) {
+                saleStore = tenantStores.get(0);
+            }
+        }
+        sale.setStore(saleStore);
 
         long subtotal = 0L;
         long totalTax = 0L;
 
-        // --- Inventory Check ---
-        // Log warnings if stock is low, allowing POS sales to process smoothly
+        final Store finalStore = saleStore;
         for (var itemRequest : request.getItems()) {
-            inventoryRepository.findByStoreIdAndProductVariantId(saleStore.getId(), itemRequest.getProductVariantId())
-                    .ifPresent(inventory -> {
-                        if (inventory.getQuantity() < itemRequest.getQuantity()) {
-                            logger.warn("Low stock for SKU {}: Requested {}, but only {} available. Proceeding with POS sale.",
-                                    inventory.getProductVariant().getSku(), itemRequest.getQuantity(), inventory.getQuantity());
-                        }
-                    });
+            if (finalStore != null) {
+                inventoryRepository.findByStoreIdAndProductId(finalStore.getId(), itemRequest.getProductId())
+                        .ifPresent(inventory -> {
+                            if (inventory.getQuantity() < itemRequest.getQuantity()) {
+                                logger.warn("Low stock for product {}: Requested {}, but only {} available.",
+                                        inventory.getProduct().getName(), itemRequest.getQuantity(), inventory.getQuantity());
+                            }
+                        });
+            }
         }
 
         List<SaleItem> saleItems = request.getItems().stream().map(itemRequest -> {
-            ProductVariant variant = productVariantRepository.findById(itemRequest.getProductVariantId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "ProductVariant not found with id: " + itemRequest.getProductVariantId()));
+            CrmSalesProduct product = crmSalesProductRepository.findByIdAndTenantId(itemRequest.getProductId(), currentTenant.getId())
+                    .orElseThrow(() -> new RuntimeException("Master product not found with id: " + itemRequest.getProductId()));
 
-            if (!variant.getProduct().getTenant().getId().equals(currentTenant.getId())) {
-                throw new SecurityException("Attempted to sell a product from another tenant.");
-            }
+            long unitPriceCents = product.getSalesPrice() != null
+                    ? product.getSalesPrice().multiply(java.math.BigDecimal.valueOf(100)).longValue()
+                    : 0L;
+            long costCents = product.getPurchasePrice() != null
+                    ? product.getPurchasePrice().multiply(java.math.BigDecimal.valueOf(100)).longValue()
+                    : 0L;
 
-            long lineTotal = variant.getPriceCents() * itemRequest.getQuantity();
+            long lineTotal = unitPriceCents * itemRequest.getQuantity();
             long lineTax = 0L;
-            if (variant.getTaxRate() != null) {
-                lineTax = (lineTotal * variant.getTaxRate().getPercent().longValue()) / 100;
+            if (product.getTaxRate() != null) {
+                lineTax = (long) ((lineTotal * product.getTaxRate()) / 100);
             }
 
             SaleItem saleItem = new SaleItem();
             saleItem.setSale(sale);
-            saleItem.setProductVariant(variant);
-            saleItem.setCostCents(variant.getCostCents());
+            saleItem.setProduct(product);
+            saleItem.setCostCents(costCents);
             saleItem.setQuantity(itemRequest.getQuantity());
-            saleItem.setUnitPriceCents(variant.getPriceCents());
+            saleItem.setUnitPriceCents(unitPriceCents);
             saleItem.setLineTotalCents(lineTotal);
             saleItem.setTaxCents(lineTax);
             saleItem.setDiscountCents(0L);
@@ -183,16 +195,14 @@ public class SaleService {
 
         final Sale savedSale = saleRepository.save(sale);
 
-        // After sale is saved, create stock movements which will update inventory
         savedSale.getItems().forEach(item -> {
             stockMovementService.createMovementForSale(
                     savedSale,
-                    item.getProductVariant(),
-                    -item.getQuantity() // Negative quantity for a sale
+                    item.getProduct(),
+                    -item.getQuantity()
             );
         });
 
-        // Trigger GL Accounting Integration (Revenue, Output VAT, Payment Asset & COGS)
         try {
             Long tenantId = savedSale.getTenant() != null ? savedSale.getTenant().getId() : null;
             if (tenantId != null) {
@@ -233,27 +243,20 @@ public class SaleService {
         Sale sale = getSaleById(id)
                 .orElseThrow(() -> new RuntimeException("Sale not found with id: " + id));
 
-        // Reverse accounting journal entries if present
         if (sale.getTenant() != null) {
             posAccountingIntegrationService.reverseSaleFromLedger(sale, sale.getTenant().getId());
         }
 
-        // Before deleting the sale, we must break the link from any stock movements
-        // that reference it to avoid a foreign key constraint violation.
         if (sale.getStockMovements() != null) {
             sale.getStockMovements().forEach(movement -> movement.setRelatedSale(null));
-            // The changes to the movements will be persisted by cascade or implicitly when
-            // the transaction commits.
         }
 
-        // Before deleting the sale, reverse the stock movements to correct inventory.
         sale.getItems().forEach(item -> {
-            // Create a new stock movement to add the quantity back to inventory.
             StockMovement reversalMovement = StockMovement.builder()
                     .tenant(sale.getTenant())
                     .store(sale.getStore())
-                    .productVariant(item.getProductVariant())
-                    .changeQuantity(item.getQuantity()) // Positive quantity to reverse the sale
+                    .product(item.getProduct())
+                    .changeQuantity(item.getQuantity())
                     .reason("Sale Deletion (Reversal for INV-" + sale.getInvoiceNo() + ")")
                     .build();
 
@@ -267,10 +270,6 @@ public class SaleService {
         return "INV-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
-    // private String generateOrderId() {
-    // return "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-    // }
-
     private SaleDto toDto(Sale sale) {
         SaleDto dto = new SaleDto();
         dto.setId(sale.getId());
@@ -282,7 +281,9 @@ public class SaleService {
 
         if (sale.getCustomer() != null) {
             dto.setCustomerId(sale.getCustomer().getId());
-            dto.setCustomerName(sale.getCustomer().getName());
+            String cName = sale.getCustomer().getCompanyName() != null && !sale.getCustomer().getCompanyName().isBlank()
+                    ? sale.getCustomer().getCompanyName() : sale.getCustomer().getPrimaryContactPersonFull();
+            dto.setCustomerName(cName);
         }
         if (sale.getStore() != null) {
             dto.setStoreId(sale.getStore().getId());
@@ -307,11 +308,9 @@ public class SaleService {
     private SaleItemDto toSaleItemDto(SaleItem saleItem) {
         SaleItemDto dto = new SaleItemDto();
         dto.setId(saleItem.getId());
-        if (saleItem.getProductVariant() != null) {
-            dto.setProductVariantId(saleItem.getProductVariant().getId());
-            if (saleItem.getProductVariant().getProduct() != null) {
-                dto.setProductName(saleItem.getProductVariant().getProduct().getName());
-            }
+        if (saleItem.getProduct() != null) {
+            dto.setProductId(saleItem.getProduct().getId());
+            dto.setProductName(saleItem.getProduct().getName());
         }
         dto.setQuantity(saleItem.getQuantity());
         dto.setUnitPriceCents(saleItem.getUnitPriceCents());

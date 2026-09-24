@@ -584,8 +584,6 @@ const tabs = [
     { name: 'Company Info', icon: FileText, component: CompanyInfo, requiredRoles: ['POS_ADMIN'] },
     { name: 'Stores', icon: Store, component: StoreSettingsTab },
     { name: 'Users', icon: Users, component: UserSettingsTab },
-    { name: 'Taxes', icon: Percent, component: TaxSettingsTab },
-    { name: 'Categories', icon: Tag, component: CategorySettingsTab },
     { name: 'Audit Log', icon: ClipboardList, component: AuditEventLogTab, requiredRoles: ['POS_ADMIN', 'POS_MANAGER'] },
 ];
 

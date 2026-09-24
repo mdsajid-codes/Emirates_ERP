@@ -10,6 +10,9 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
 
     Optional<Sale> findByIdAndTenantId(Long id, Long tenantId);
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"items", "customer", "store", "user"})
+    Optional<Sale> findWithDetailsById(Long id);
+
     List<Sale> findByTenantIdAndInvoiceDateBetween(Long tenantId, java.time.OffsetDateTime startDate,
             java.time.OffsetDateTime endDate);
 

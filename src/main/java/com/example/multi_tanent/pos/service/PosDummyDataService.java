@@ -1,13 +1,22 @@
 package com.example.multi_tanent.pos.service;
 
 import com.example.multi_tanent.config.TenantContext;
-import com.example.multi_tanent.pos.dto.ProductRequest;
-import com.example.multi_tanent.pos.dto.ProductVariantRequest;
+import com.example.multi_tanent.crm.enums.CrmItemType;
 import com.example.multi_tanent.pos.dto.StockMovementRequest;
 import com.example.multi_tanent.pos.entity.*;
 import com.example.multi_tanent.pos.repository.*;
+import com.example.multi_tanent.production.entity.ProCategory;
+import com.example.multi_tanent.production.entity.ProTax;
+import com.example.multi_tanent.production.entity.ProUnit;
+import com.example.multi_tanent.production.repository.ProCategoryRepository;
+import com.example.multi_tanent.production.repository.ProTaxRepository;
+import com.example.multi_tanent.production.repository.ProUnitRepository;
+import com.example.multi_tanent.spersusers.enitity.BaseCustomer;
+import com.example.multi_tanent.spersusers.enitity.CrmSalesProduct;
 import com.example.multi_tanent.spersusers.enitity.Store;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.repository.PartyRepository;
+import com.example.multi_tanent.spersusers.repository.CrmSalesProductRepository;
 import com.example.multi_tanent.spersusers.repository.StoreRepository;
 import com.example.multi_tanent.spersusers.repository.TenantRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -29,18 +37,18 @@ public class PosDummyDataService {
 
     private final TenantRepository tenantRepository;
     private final TaxRateRepository taxRateRepository;
-    private final CategoryRepository categoryRepository;
     private final StoreRepository storeRepository;
-    private final CustomerRepository customerRepository;
-    private final ProductService productService;
-    private final ProductRepository productRepository;
-    private final ProductVariantRepository productVariantRepository;
     private final StockMovementService stockMovementService;
     private final SaleRepository saleRepository;
     private final SaleItemRepository saleItemRepository;
     private final PaymentRepository paymentRepository;
     private final InventoryRepository inventoryRepository;
     private final ObjectMapper objectMapper;
+    private final PartyRepository partyRepository;
+    private final CrmSalesProductRepository crmSalesProductRepository;
+    private final ProCategoryRepository proCategoryRepository;
+    private final ProTaxRepository proTaxRepository;
+    private final ProUnitRepository proUnitRepository;
 
     private Tenant getCurrentTenant() {
         String tenantId = TenantContext.getTenantId();
@@ -93,6 +101,43 @@ public class PosDummyDataService {
             }
             counts.put("taxRates", taxCount);
 
+            // Seed ProTax (For CRM Sales Product)
+            ProTax defaultProTax = null;
+            if (taxRatesNode != null && taxRatesNode.isArray()) {
+                for (JsonNode tNode : taxRatesNode) {
+                    String name = tNode.get("name").asText();
+                    String code = name.replace(" ", "").toUpperCase();
+                    double percent = tNode.get("percent").asDouble();
+
+                    Optional<ProTax> existingProTax = proTaxRepository.findAll().stream()
+                            .filter(t -> t.getCode().equalsIgnoreCase(code)).findFirst();
+                    if (existingProTax.isPresent()) {
+                        defaultProTax = existingProTax.get();
+                    } else {
+                        ProTax proTax = new ProTax();
+                        proTax.setTenant(tenant);
+                        proTax.setCode(code);
+                        proTax.setRate(BigDecimal.valueOf(percent));
+                        proTax.setDescription(name);
+                        defaultProTax = proTaxRepository.save(proTax);
+                    }
+                }
+            }
+
+            // Seed ProUnit
+            ProUnit defaultUnit = null;
+            Optional<ProUnit> existingUnit = proUnitRepository.findAll().stream()
+                    .filter(u -> u.getName().equalsIgnoreCase("PCS")).findFirst();
+            if (existingUnit.isPresent()) {
+                defaultUnit = existingUnit.get();
+            } else {
+                ProUnit proUnit = new ProUnit();
+                proUnit.setTenant(tenant);
+                proUnit.setName("PCS");
+                proUnit.setDescription("Pieces");
+                defaultUnit = proUnitRepository.save(proUnit);
+            }
+
             // 2. Seed Stores
             Store defaultStore = null;
             JsonNode storesNode = root.get("stores");
@@ -131,25 +176,24 @@ public class PosDummyDataService {
             }
 
             // 3. Seed Categories
-            Map<String, Category> categoryMap = new HashMap<>();
+            Map<String, ProCategory> categoryMap = new HashMap<>();
             JsonNode categoriesNode = root.get("categories");
             int catCount = 0;
             if (categoriesNode != null && categoriesNode.isArray()) {
                 for (JsonNode cNode : categoriesNode) {
                     String name = cNode.get("name").asText();
-                    String description = cNode.has("description") ? cNode.get("description").asText() : "";
 
-                    Optional<Category> existing = categoryRepository.findAll().stream()
+                    Optional<ProCategory> existing = proCategoryRepository.findAll().stream()
                             .filter(c -> c.getName().equalsIgnoreCase(name)).findFirst();
-                    Category cat;
+                    ProCategory cat;
                     if (existing.isPresent()) {
                         cat = existing.get();
                     } else {
-                        cat = new Category();
+                        cat = new ProCategory();
                         cat.setTenant(tenant);
                         cat.setName(name);
-                        cat.setDescription(description);
-                        cat = categoryRepository.save(cat);
+                        cat.setCode(name.substring(0, Math.min(name.length(), 4)).toUpperCase());
+                        cat = proCategoryRepository.save(cat);
                         catCount++;
                     }
                     categoryMap.put(name, cat);
@@ -158,7 +202,7 @@ public class PosDummyDataService {
             counts.put("categories", catCount);
 
             // 4. Seed Customers
-            List<Customer> seededCustomers = new ArrayList<>();
+            List<BaseCustomer> seededCustomers = new ArrayList<>();
             JsonNode customersNode = root.get("customers");
             int custCount = 0;
             if (customersNode != null && customersNode.isArray()) {
@@ -167,18 +211,22 @@ public class PosDummyDataService {
                     String phone = custNode.has("phone") ? custNode.get("phone").asText() : "";
                     String email = custNode.has("email") ? custNode.get("email").asText() : "";
 
-                    Optional<Customer> existing = customerRepository.findAll().stream()
-                            .filter(c -> c.getEmail() != null && c.getEmail().equalsIgnoreCase(email)).findFirst();
-                    Customer customer;
+                    Optional<BaseCustomer> existing = partyRepository.findAll().stream()
+                            .filter(p -> p instanceof BaseCustomer && ((BaseCustomer) p).getContactEmail() != null && ((BaseCustomer) p).getContactEmail().equalsIgnoreCase(email))
+                            .map(p -> (BaseCustomer) p)
+                            .findFirst();
+                    BaseCustomer customer;
                     if (existing.isPresent()) {
-                        customer = existing.get();
+                        customer = (BaseCustomer) existing.get();
                     } else {
-                        customer = new Customer();
+                        customer = new BaseCustomer();
                         customer.setTenant(tenant);
-                        customer.setName(name);
-                        customer.setPhone(phone);
-                        customer.setEmail(email);
-                        customer = customerRepository.save(customer);
+                        customer.setCompanyName(name);
+                        customer.setMobile(phone);
+                        customer.setContactEmail(email);
+                        customer.setPartyType(com.example.multi_tanent.spersusers.base.PartyBase.PartyType.CUSTOMER);
+                        customer.setActive(true);
+                        customer = partyRepository.save(customer);
                         custCount++;
                     }
                     seededCustomers.add(customer);
@@ -186,73 +234,69 @@ public class PosDummyDataService {
             }
             counts.put("customers", custCount);
 
-            // 5. Seed Products & Variants
+            // 5. Seed Products
             JsonNode productsNode = root.get("products");
             int prodCount = 0;
-            List<ProductVariant> createdVariants = new ArrayList<>();
 
             if (productsNode != null && productsNode.isArray()) {
                 for (JsonNode pNode : productsNode) {
                     String name = pNode.get("name").asText();
                     String sku = pNode.get("sku").asText();
                     String categoryName = pNode.get("categoryName").asText();
-                    Category cat = categoryMap.get(categoryName);
+                    ProCategory cat = categoryMap.get(categoryName);
                     int initialStockQty = pNode.has("initialStock") ? pNode.get("initialStock").asInt() : 50;
-                    List<ProductVariant> variantsToStock = new ArrayList<>();
 
-                    Optional<Product> existing = productRepository.findAll().stream()
-                            .filter(p -> p.getSku() != null && p.getSku().equalsIgnoreCase(sku)).findFirst();
+                    Optional<CrmSalesProduct> existing = crmSalesProductRepository.findAll().stream()
+                            .filter(p -> p.getItemCode() != null && p.getItemCode().equalsIgnoreCase(sku)).findFirst();
+                    
+                    CrmSalesProduct prod;
                     if (existing.isEmpty()) {
-                        ProductRequest req = new ProductRequest();
-                        req.setName(name);
-                        req.setSku(sku);
-                        req.setDescription(name + " - High Quality Dubai ERP Product");
-                        req.setActive(true);
+                        prod = new CrmSalesProduct();
+                        prod.setTenant(tenant);
+                        prod.setName(name);
+                        prod.setItemCode(sku);
+                        prod.setDescription(name + " - High Quality Dubai ERP Product");
                         if (cat != null) {
-                            req.setCategoryId(cat.getId());
+                            prod.setCategory(cat);
                         }
-
-                        ProductVariantRequest variantReq = new ProductVariantRequest();
-                        variantReq.setSku(sku + "-V1");
-                        variantReq.setBarcode(pNode.has("barcode") ? pNode.get("barcode").asText() : "BAR-" + sku);
-                        variantReq.setPriceCents(pNode.get("priceCents").asLong());
-                        variantReq.setCostCents(pNode.get("costCents").asLong());
-                        variantReq.setActive(true);
-                        if (defaultTax != null) {
-                            variantReq.setTaxRateId(defaultTax.getId());
+                        prod.setIsSales(true);
+                        prod.setIsPurchase(true);
+                        prod.setItemType(CrmItemType.PRODUCT);
+                        
+                        long priceCents = pNode.has("priceCents") ? pNode.get("priceCents").asLong() : 5000L;
+                        long costCents = pNode.has("costCents") ? pNode.get("costCents").asLong() : 2500L;
+                        prod.setSalesPrice(BigDecimal.valueOf(priceCents).divide(BigDecimal.valueOf(100)));
+                        prod.setPurchasePrice(BigDecimal.valueOf(costCents).divide(BigDecimal.valueOf(100)));
+                        
+                        prod.setBarcode(pNode.has("barcode") ? pNode.get("barcode").asText() : "BAR-" + sku);
+                        if (pNode.has("image")) {
+                            prod.setImageUrl(pNode.get("image").asText());
                         }
-
-                        req.setVariants(Collections.singletonList(variantReq));
-
-                        productService.createProduct(req);
+                        if (defaultUnit != null) {
+                            prod.setUnitOfMeasure(defaultUnit.getName());
+                        }
+                        if (defaultProTax != null) {
+                            prod.setTax(defaultProTax.getCode());
+                            prod.setTaxRate(defaultProTax.getRate().doubleValue());
+                        } else if (defaultTax != null) {
+                            prod.setTax(defaultTax.getName());
+                            prod.setTaxRate(defaultTax.getPercent().doubleValue());
+                        }
+                        prod = crmSalesProductRepository.save(prod);
                         prodCount++;
-
-                        Optional<ProductVariant> pvOpt = productVariantRepository.findAll().stream()
-                                .filter(pv -> pv.getSku() != null && pv.getSku().equalsIgnoreCase(sku + "-V1")).findFirst();
-                        if (pvOpt.isPresent()) {
-                            ProductVariant pv = pvOpt.get();
-                            if (pNode.has("image")) {
-                                pv.setImageUrl(pNode.get("image").asText());
-                                productVariantRepository.save(pv);
-                            }
-                            variantsToStock.add(pv);
-                        }
                     } else {
-                        variantsToStock.addAll(existing.get().getVariants());
+                        prod = existing.get();
                     }
 
                     if (targetStore != null) {
-                        for (ProductVariant pv : variantsToStock) {
-                            Optional<Inventory> invOpt = inventoryRepository.findByStoreIdAndProductVariantId(targetStore.getId(), pv.getId());
-                            if (invOpt.isEmpty() || invOpt.get().getQuantity() == null || invOpt.get().getQuantity() <= 0) {
-                                StockMovementRequest smReq = new StockMovementRequest();
-                                smReq.setStoreId(targetStore.getId());
-                                smReq.setProductVariantId(pv.getId());
-                                smReq.setChangeQuantity((long) initialStockQty);
-                                smReq.setReason("Dummy Data Seeding Restock");
-                                stockMovementService.createStockMovement(smReq);
-                            }
-                            createdVariants.add(pv);
+                        Optional<Inventory> invOpt = inventoryRepository.findByStoreIdAndProductId(targetStore.getId(), prod.getId());
+                        if (invOpt.isEmpty() || invOpt.get().getQuantity() == null || invOpt.get().getQuantity() <= 0) {
+                            StockMovementRequest smReq = new StockMovementRequest();
+                            smReq.setStoreId(targetStore.getId());
+                            smReq.setProductId(prod.getId());
+                            smReq.setChangeQuantity((long) initialStockQty);
+                            smReq.setReason("Dummy Data Seeding Restock");
+                            stockMovementService.createStockMovement(smReq);
                         }
                     }
                 }
@@ -261,7 +305,13 @@ public class PosDummyDataService {
 
             // 6. Seed Initial Sales Transactions for realistic analytics
             int saleCount = 0;
-            if (defaultStore != null && !createdVariants.isEmpty() && !seededCustomers.isEmpty()) {
+            List<CrmSalesProduct> masterProducts = crmSalesProductRepository.findByTenantId(tenant.getId());
+            List<BaseCustomer> baseCustomers = partyRepository.findAll().stream()
+                    .filter(p -> p instanceof BaseCustomer)
+                    .map(p -> (BaseCustomer) p)
+                    .toList();
+
+            if (defaultStore != null && !masterProducts.isEmpty() && !baseCustomers.isEmpty()) {
                 long timestamp = System.currentTimeMillis();
                 Random random = new Random(42);
                 for (int i = 1; i <= 15; i++) {
@@ -270,8 +320,10 @@ public class PosDummyDataService {
                     Optional<Sale> existingSale = saleRepository.findAll().stream()
                             .filter(s -> s.getOrderId() != null && s.getOrderId().equalsIgnoreCase(orderId)).findFirst();
                     if (existingSale.isEmpty()) {
-                        Customer cust = seededCustomers.get(random.nextInt(seededCustomers.size()));
-                        ProductVariant variant = createdVariants.get(random.nextInt(createdVariants.size()));
+                        BaseCustomer cust = baseCustomers.get(random.nextInt(baseCustomers.size()));
+                        CrmSalesProduct masterProd = masterProducts.get(random.nextInt(masterProducts.size()));
+
+                        long unitPriceCents = masterProd.getSalesPrice() != null ? masterProd.getSalesPrice().multiply(BigDecimal.valueOf(100)).longValue() : 5000L;
 
                         Sale sale = new Sale();
                         sale.setTenant(tenant);
@@ -279,7 +331,7 @@ public class PosDummyDataService {
                         sale.setCustomer(cust);
                         sale.setOrderId(orderId);
                         sale.setInvoiceNo(invoiceNo);
-                        sale.setSubtotalCents(variant.getPriceCents() * 2);
+                        sale.setSubtotalCents(unitPriceCents * 2);
                         sale.setTaxCents((long) (sale.getSubtotalCents() * 0.05));
                         sale.setTotalCents(sale.getSubtotalCents() + sale.getTaxCents());
                         sale.setDiscountCents(0L);
@@ -292,10 +344,10 @@ public class PosDummyDataService {
                         // Item
                         SaleItem item = new SaleItem();
                         item.setSale(sale);
-                        item.setProductVariant(variant);
+                        item.setProduct(masterProd);
                         item.setQuantity(2L);
-                        item.setUnitPriceCents(variant.getPriceCents());
-                        item.setLineTotalCents(variant.getPriceCents() * 2);
+                        item.setUnitPriceCents(unitPriceCents);
+                        item.setLineTotalCents(unitPriceCents * 2);
                         saleItemRepository.save(item);
 
                         // Payment

@@ -190,8 +190,36 @@ const ReportsView = ({ posTheme: propPosTheme }) => {
                         },
                         {
                             title: "Closing Report",
+                            path: "/pos-reports/closing",
                             description: "End-of-day register summary enabling register audits, payment channel balance checks, and cashier review.",
                         },
+                        {
+                            title: "GL Journal Entries",
+                            path: "/pos-financial-reports/gl-journal-entries",
+                            description: "Detailed General Ledger posting breakdown for POS sales, refunds, COGS, card settlements, and shift closes.",
+                        },
+                        {
+                            title: "POS Trial Balance",
+                            path: "/pos-financial-reports/trial-balance",
+                            description: "Aggregated debit, credit, and net balances by account for POS accounting transactions.",
+                        },
+                        {
+                            title: "Card Settlement Report",
+                            path: "/pos-financial-reports/card-settlement",
+                            description: "Bank acquirer settlements, merchant transaction fees, and net deposited amounts.",
+                        },
+                        {
+                            title: "POS VAT Output Report",
+                            path: "/pos-financial-reports/vat-output",
+                            description: "Daily gross sales revenue and UAE FTA Output VAT (5%) audit ledger.",
+                        },
+                        {
+                            title: "Cash Variance Report",
+                            path: "/pos-financial-reports/cash-variance",
+                            description: "Shift close cash audit overages and shortages ledger.",
+                        },
+
+
                     ].map((report, index) => (
                         <div key={index} onClick={() => report.path && navigate(report.path)} className="group cursor-pointer bg-slate-50/70 hover:bg-slate-100/80 p-3 rounded-xl border border-slate-100 hover:border-slate-200 transition-all duration-200 flex flex-col justify-between">
                             <div>

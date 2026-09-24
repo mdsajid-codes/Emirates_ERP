@@ -100,9 +100,24 @@ public class InvoicePdfService {
     }
 
     private void addStoreHeader(Document document, InvoiceDto invoice) {
-        String storeName = (invoice != null && invoice.getStore() != null && invoice.getStore().getName() != null)
-                ? invoice.getStore().getName().toUpperCase()
-                : "EMIRATES ERP POS";
+        if (invoice != null && invoice.getCompany() != null && invoice.getCompany().getLogoBytes() != null) {
+            try {
+                com.itextpdf.layout.element.Image logo = new com.itextpdf.layout.element.Image(
+                        com.itextpdf.io.image.ImageDataFactory.create(invoice.getCompany().getLogoBytes())
+                );
+                logo.setWidth(80f);
+                logo.setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.CENTER);
+                logo.setMargins(0, 0, 5f, 0);
+                document.add(logo);
+            } catch (Exception e) {
+                logger.error("Failed to load logo", e);
+            }
+        }
+
+        String storeName = (invoice != null && invoice.getCompany() != null && invoice.getCompany().getName() != null)
+                ? invoice.getCompany().getName().toUpperCase()
+                : (invoice != null && invoice.getStore() != null && invoice.getStore().getName() != null)
+                ? invoice.getStore().getName().toUpperCase() : "EMIRATES ERP POS";
 
         Paragraph p = new Paragraph(storeName)
                 .setFont(boldFont)
@@ -112,13 +127,27 @@ public class InvoicePdfService {
                 .setMarginBottom(1f);
         document.add(p);
 
-        if (invoice != null && invoice.getStore() != null && invoice.getStore().getAddress() != null) {
-            Paragraph addr = new Paragraph(invoice.getStore().getAddress())
+        String address = (invoice != null && invoice.getCompany() != null && invoice.getCompany().getAddress() != null)
+                ? invoice.getCompany().getAddress()
+                : (invoice != null && invoice.getStore() != null && invoice.getStore().getAddress() != null)
+                ? invoice.getStore().getAddress() : null;
+
+        if (address != null) {
+            Paragraph addr = new Paragraph(address)
                     .setFont(font)
                     .setFontSize(7f)
                     .setTextAlignment(TextAlignment.CENTER)
-                    .setMarginBottom(2f);
+                    .setMarginBottom(1f);
             document.add(addr);
+        }
+        
+        if (invoice != null && invoice.getCompany() != null && invoice.getCompany().getTrn() != null && !invoice.getCompany().getTrn().isBlank()) {
+            Paragraph trn = new Paragraph("TRN: " + invoice.getCompany().getTrn())
+                    .setFont(boldFont)
+                    .setFontSize(8f)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setMarginBottom(2f);
+            document.add(trn);
         }
     }
 
@@ -175,11 +204,26 @@ public class InvoicePdfService {
         table.addCell(new Cell().add(left3).setBorder(Border.NO_BORDER).setPadding(1));
         table.addCell(new Cell().add(right3).setBorder(Border.NO_BORDER).setPadding(1));
 
+        if (invoice != null && invoice.getCustomer() != null) {
+            if (invoice.getCustomer().getTrn() != null && !invoice.getCustomer().getTrn().isBlank()) {
+                Paragraph trn = new Paragraph().setFontSize(7.5f)
+                        .add(new Text("Cust TRN: ").setFont(font))
+                        .add(new Text(invoice.getCustomer().getTrn()).setFont(font));
+                table.addCell(new Cell(1, 2).add(trn).setBorder(Border.NO_BORDER).setPadding(1));
+            }
+            if (invoice.getCustomer().getAddress() != null && !invoice.getCustomer().getAddress().isBlank()) {
+                Paragraph address = new Paragraph().setFontSize(7.5f)
+                        .add(new Text("Address: ").setFont(font))
+                        .add(new Text(invoice.getCustomer().getAddress()).setFont(font));
+                table.addCell(new Cell(1, 2).add(address).setBorder(Border.NO_BORDER).setPadding(1));
+            }
+        }
+
         document.add(table);
     }
 
     private void addItemsTable(Document document, InvoiceDto invoice) {
-        Table table = new Table(UnitValue.createPercentArray(new float[]{4.6f, 1.2f, 2.1f, 2.1f})).useAllAvailableWidth();
+        Table table = new Table(UnitValue.createPercentArray(new float[]{4.2f, 1.6f, 2.1f, 2.1f})).useAllAvailableWidth();
         String currency = (invoice != null && invoice.getStore() != null && invoice.getStore().getCurrency() != null) ? invoice.getStore().getCurrency() : "AED";
 
         // Header
@@ -192,9 +236,14 @@ public class InvoicePdfService {
             for (InvoiceItemDto item : invoice.getItems()) {
                 String itemText = item.getProductName();
                 long unitPriceCents = item.getQuantity() > 0 ? (item.getLineTotalCents() / item.getQuantity()) : item.getLineTotalCents();
+                
+                String qtyStr = String.valueOf(item.getQuantity());
+                if (item.getUom() != null && !item.getUom().isBlank()) {
+                    qtyStr += " " + item.getUom();
+                }
 
                 table.addCell(createNoBorderCell(itemText, boldFont, 7.5f, TextAlignment.LEFT));
-                table.addCell(createNoBorderCell(String.valueOf(item.getQuantity()), font, 7.5f, TextAlignment.CENTER));
+                table.addCell(createNoBorderCell(qtyStr, font, 7f, TextAlignment.CENTER));
                 table.addCell(createNoBorderCell(formatCurrency(unitPriceCents, currency), font, 7.5f, TextAlignment.RIGHT));
                 table.addCell(createNoBorderCell(formatCurrency(item.getLineTotalCents(), currency), boldFont, 7.5f, TextAlignment.RIGHT));
             }

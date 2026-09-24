@@ -1,13 +1,12 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useSearchParams } from 'react-router-dom';
-import ProductionLayout, { productionNavLinks } from '../layout/ProductionLayout';
+import ProductionLayout from '../layout/ProductionLayout';
 
 // Import Components
 import GeneralSettings from './GeneralSettings';
 import WorkGroup from './WorkGroup';
 import ManageProcess from './ManageProcess';
 import ProParameter from './ProParameter';
-import ProCategories from './ProCategories';
 import ProRawMaterial from './ProRawMaterial';
 import ProSemiFinished from './ProSemiFinished';
 import ProFinishedGood from '../pages/ProFinishedGood';
@@ -18,7 +17,6 @@ const componentMap = {
     'Workgroup': WorkGroup,
     'Manage Process': ManageProcess,
     'Parameter': ProParameter,
-    'Categories': ProCategories,
     'Raw Materials': ProRawMaterial,
     'Semi Finished': ProSemiFinished,
     'Finished Good': ProFinishedGood,

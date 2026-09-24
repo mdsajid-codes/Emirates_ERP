@@ -12,4 +12,5 @@ public class InvoiceItemDto {
     private Long unitPriceCents;
     private Long lineTotalCents;
     private Long taxCents;
+    private String uom;
 }

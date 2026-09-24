@@ -53,17 +53,22 @@ public class PosAccountingIntegrationService {
                 request.setCompanyId(sale.getCustomer().getId());
             }
 
-            // Determine payment method from first payment or sale payment status
-            String paymentMethod = "cash";
+            // Populate split payment legs if present
             if (sale.getPayments() != null && !sale.getPayments().isEmpty()) {
-                Payment firstPayment = sale.getPayments().get(0);
-                if (firstPayment.getMethod() != null) {
-                    paymentMethod = firstPayment.getMethod();
+                for (Payment p : sale.getPayments()) {
+                    PostingRequest.PaymentLeg leg = new PostingRequest.PaymentLeg();
+                    leg.setMethod(p.getMethod());
+                    leg.setAmountCents(p.getAmountCents());
+                    leg.setReference(p.getPaymentReference() != null ? p.getPaymentReference() : p.getReference());
+                    request.getPaymentLegs().add(leg);
                 }
+                // Set primary payment method for backwards compatibility
+                request.setPaymentMethod(sale.getPayments().get(0).getMethod());
             } else if ("unpaid".equalsIgnoreCase(sale.getPaymentStatus()) || "credit".equalsIgnoreCase(sale.getPaymentStatus())) {
-                paymentMethod = "credit";
+                request.setPaymentMethod("credit");
+            } else {
+                request.setPaymentMethod("cash");
             }
-            request.setPaymentMethod(paymentMethod);
 
             List<PostingRequest.Line> lines = new ArrayList<>();
             BigDecimal totalVatAmount = BigDecimal.ZERO;
@@ -76,10 +81,7 @@ public class PosAccountingIntegrationService {
                 }
 
                 // Resolve product ID for GL account lookup
-                Long productId = null;
-                if (item.getProductVariant() != null && item.getProductVariant().getProduct() != null) {
-                    productId = item.getProductVariant().getProduct().getId();
-                }
+                Long productId = item.getProduct() != null ? item.getProduct().getId() : null;
                 line.setItemId(productId);
 
                 // Line subtotal (excluding VAT): lineTotalCents is already net item subtotal
@@ -95,8 +97,8 @@ public class PosAccountingIntegrationService {
                         .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
                 line.setTaxAmount(lineTax);
 
-                String variantName = item.getProductVariant() != null ? item.getProductVariant().getSku() : "Item";
-                line.setDescription("Sale Item: " + variantName);
+                String productName = item.getProduct() != null ? item.getProduct().getName() : "Item";
+                line.setDescription("Sale Item: " + productName);
                 line.setQuantity(BigDecimal.valueOf(item.getQuantity() != null ? item.getQuantity() : 1L));
 
                 lines.add(line);
@@ -157,14 +159,14 @@ public class PosAccountingIntegrationService {
             BigDecimal totalCogs = BigDecimal.ZERO;
 
             for (SaleItem item : sale.getItems()) {
-                if (item.getProductVariant() == null) continue;
+                if (item.getProduct() == null) continue;
 
-                // Use per-item costCents if populated on SaleItem, otherwise fall back to variant cost
+                // Use per-item costCents if populated on SaleItem, otherwise fall back to product purchasePrice
                 long perUnitCostCents = 0L;
                 if (item.getCostCents() != null && item.getCostCents() > 0) {
                     perUnitCostCents = item.getCostCents();
-                } else {
-                    perUnitCostCents = item.getProductVariant().getCostCents();
+                } else if (item.getProduct().getPurchasePrice() != null) {
+                    perUnitCostCents = item.getProduct().getPurchasePrice().multiply(BigDecimal.valueOf(100)).longValue();
                 }
 
                 if (perUnitCostCents <= 0) continue;
@@ -175,15 +177,14 @@ public class PosAccountingIntegrationService {
 
                 if (itemCogs.compareTo(BigDecimal.ZERO) <= 0) continue;
 
-                Long productId = item.getProductVariant().getProduct() != null
-                        ? item.getProductVariant().getProduct().getId() : null;
+                Long productId = item.getProduct().getId();
 
                 PostingRequest.Line line = new PostingRequest.Line();
                 line.setItemId(productId);
                 line.setCogsAmount(itemCogs);
                 line.setAmount(itemCogs);
                 line.setQuantity(BigDecimal.valueOf(qty));
-                line.setDescription("COGS: " + item.getProductVariant().getSku());
+                line.setDescription("COGS: " + item.getProduct().getName());
 
                 lines.add(line);
                 totalCogs = totalCogs.add(itemCogs);

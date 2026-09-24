@@ -1,6 +1,8 @@
 package com.example.multi_tanent.spersusers.enitity;
 
 import com.example.multi_tanent.crm.enums.CrmItemType;
+import com.example.multi_tanent.production.entity.ProCategory;
+import com.example.multi_tanent.production.entity.ProSubCategory;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,6 +27,14 @@ public class CrmSalesProduct {
     @ManyToOne(optional = false)
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenant tenant;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private ProCategory category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sub_category_id")
+    private ProSubCategory subCategory;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "item_type")

@@ -15,6 +15,7 @@ public class InvoiceDto {
     private OffsetDateTime invoiceDate;
 
     private StoreInfo store;
+    private CompanyInfo company;
     private CustomerInfo customer;
 
     private List<InvoiceItemDto> items;
@@ -41,9 +42,22 @@ public class InvoiceDto {
 
     @Data
     @Builder
+    public static class CompanyInfo {
+        private String name;
+        private String address;
+        private String trn;
+        private String email;
+        private String phone;
+        private byte[] logoBytes;
+    }
+
+    @Data
+    @Builder
     public static class CustomerInfo {
         private String name;
         private String email;
         private String phone;
+        private String address;
+        private String trn;
     }
 }

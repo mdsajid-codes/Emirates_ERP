@@ -25,6 +25,10 @@ public class CrmSalesProductResponse {
     private String barcode;
     private String barcodeUrl;
     private Double taxRate;
+    private Long categoryId;
+    private String categoryName;
+    private Long subCategoryId;
+    private String subCategoryName;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 }

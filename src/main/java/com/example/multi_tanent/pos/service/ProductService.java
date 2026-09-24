@@ -481,7 +481,7 @@ public class ProductService {
         // 3. Soft-delete or hard-delete variants that are being removed
         for (ProductVariant variantToRemove : variantsToRemove) {
             boolean hasBeenSold = variantToRemove.getId() != null
-                    && saleItemRepository.existsByProductVariantId(variantToRemove.getId());
+                    && saleItemRepository.existsByProductId(variantToRemove.getId());
             if (hasBeenSold) {
                 variantToRemove.setActive(false); // Soft delete
             } else {
@@ -502,7 +502,7 @@ public class ProductService {
         boolean hasSalesHistory = false;
         if (product.getVariants() != null && !product.getVariants().isEmpty()) {
             for (ProductVariant variant : product.getVariants()) {
-                if (saleItemRepository.existsByProductVariantId(variant.getId())) {
+                if (saleItemRepository.existsByProductId(variant.getId())) {
                     hasSalesHistory = true;
                     break;
                 }
@@ -524,9 +524,9 @@ public class ProductService {
                 List<Long> variantIds = product.getVariants().stream().map(ProductVariant::getId)
                         .collect(Collectors.toList());
                 // Delete associated inventory records
-                inventoryRepository.deleteByProductVariantIdIn(variantIds);
+                inventoryRepository.deleteByProductIdIn(variantIds);
                 // Delete associated stock movement records
-                stockMovementRepository.deleteByProductVariantIdIn(variantIds);
+                stockMovementRepository.deleteByProductIdIn(variantIds);
             }
 
             productRepository.delete(product);
@@ -540,9 +540,9 @@ public class ProductService {
         if (product.getVariants() != null && !product.getVariants().isEmpty()) {
             for (ProductVariant variant : product.getVariants()) {
                 // Unlink from sales
-                List<SaleItem> saleItems = saleItemRepository.findByProductVariantId(variant.getId());
+                List<SaleItem> saleItems = saleItemRepository.findByProductId(variant.getId());
                 for (SaleItem item : saleItems) {
-                    item.setProductVariant(null);
+                    item.setProduct(null);
                     saleItemRepository.save(item);
                 }
             }
@@ -550,9 +550,9 @@ public class ProductService {
             List<Long> variantIds = product.getVariants().stream().map(ProductVariant::getId)
                     .collect(Collectors.toList());
             // Delete associated inventory records
-            inventoryRepository.deleteByProductVariantIdIn(variantIds);
+            inventoryRepository.deleteByProductIdIn(variantIds);
             // Delete associated stock movement records
-            stockMovementRepository.deleteByProductVariantIdIn(variantIds);
+            stockMovementRepository.deleteByProductIdIn(variantIds);
         }
 
         productRepository.delete(product);

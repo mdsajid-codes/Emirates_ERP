@@ -32,6 +32,16 @@ public class Payment {
     @Column(name = "reference")
     private String reference; // gateway tx id
 
+    @Column(name = "payment_reference")
+    private String paymentReference;
+
+    @Column(name = "card_terminal_id")
+    private String cardTerminalId;
+
+    @Builder.Default
+    @Column(name = "gl_posted")
+    private Boolean glPosted = false;
+
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 

@@ -15,15 +15,28 @@ import org.springframework.http.MediaType;
 import java.io.ByteArrayInputStream;
 import java.util.List;
 
+import com.example.multi_tanent.accounts.service.reports.IncomeStatementService;
+import com.example.multi_tanent.accounts.service.reports.BalanceSheetService;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
+
 @RestController
 @RequestMapping("/api/pos/reports")
 @CrossOrigin(origins = "*")
 public class ReportController {
 
     private final ReportService reportService;
+    private final IncomeStatementService incomeStatementService;
+    private final BalanceSheetService balanceSheetService;
+    private final TenantRepository tenantRepository;
 
-    public ReportController(ReportService reportService) {
+    public ReportController(ReportService reportService,
+                            IncomeStatementService incomeStatementService,
+                            BalanceSheetService balanceSheetService,
+                            TenantRepository tenantRepository) {
         this.reportService = reportService;
+        this.incomeStatementService = incomeStatementService;
+        this.balanceSheetService = balanceSheetService;
+        this.tenantRepository = tenantRepository;
     }
 
     @GetMapping("/business-summary")
@@ -217,4 +230,74 @@ public class ReportController {
             @RequestParam(required = false) String itemName) {
         return ResponseEntity.ok(reportService.getItemSalesReport(fromDate, toDate, storeId, categoryId, itemName));
     }
+
+    @GetMapping("/gl-journal-entries")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'POS_ADMIN')")
+    public ResponseEntity<List<com.example.multi_tanent.pos.dto.report.PosGlJournalEntryDto>> getPosGlJournalEntries(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        return ResponseEntity.ok(reportService.getPosGlJournalEntries(fromDate, toDate));
+    }
+
+    @GetMapping("/trial-balance")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'POS_ADMIN')")
+    public ResponseEntity<List<com.example.multi_tanent.pos.dto.report.PosTrialBalanceDto>> getPosTrialBalance(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        return ResponseEntity.ok(reportService.getPosTrialBalance(fromDate, toDate));
+    }
+
+    @GetMapping("/card-settlement")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'POS_ADMIN')")
+    public ResponseEntity<List<com.example.multi_tanent.pos.dto.report.PosCardSettlementDto>> getPosCardSettlementReport(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        return ResponseEntity.ok(reportService.getPosCardSettlementReport(fromDate, toDate));
+    }
+
+    @GetMapping("/vat-output")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'POS_ADMIN')")
+    public ResponseEntity<List<com.example.multi_tanent.pos.dto.report.PosVatOutputDto>> getPosVatOutputReport(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        return ResponseEntity.ok(reportService.getPosVatOutputReport(fromDate, toDate));
+    }
+
+    @GetMapping("/cash-variance")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'POS_ADMIN')")
+    public ResponseEntity<List<com.example.multi_tanent.pos.dto.report.PosCashVarianceDto>> getPosCashVarianceReport(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        return ResponseEntity.ok(reportService.getPosCashVarianceReport(fromDate, toDate));
+    }
+
+    @GetMapping("/income-statement")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'POS_ADMIN', 'POS')")
+    public ResponseEntity<Object> getPosIncomeStatement(
+            @RequestParam(value = "fromDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(value = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        if (fromDate == null) fromDate = LocalDate.now().withDayOfYear(1);
+        if (toDate == null) toDate = LocalDate.now();
+        Long tenantId = resolveTenantId();
+        return ResponseEntity.ok(incomeStatementService.getIncomeStatement(tenantId, fromDate, toDate));
+    }
+
+    @GetMapping("/balance-sheet")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'POS_ADMIN', 'POS')")
+    public ResponseEntity<Object> getPosBalanceSheet(
+            @RequestParam(value = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        if (toDate == null) toDate = LocalDate.now();
+        Long tenantId = resolveTenantId();
+        return ResponseEntity.ok(balanceSheetService.getBalanceSheet(tenantId, toDate));
+    }
+
+    private Long resolveTenantId() {
+        String tenantIdStr = com.example.multi_tanent.config.TenantContext.getTenantId();
+        return tenantRepository.findByTenantId(tenantIdStr)
+                .map(t -> t.getId())
+                .orElse(1L);
+    }
 }
+
+
+

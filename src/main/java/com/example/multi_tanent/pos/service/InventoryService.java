@@ -39,12 +39,14 @@ public class InventoryService {
 
     private InventoryDto toDto(Inventory inventory) {
         InventoryDto dto = new InventoryDto();
-        dto.setInventoryId(inventory.getId())   ;
+        dto.setInventoryId(inventory.getId());
         dto.setStoreId(inventory.getStore().getId());
         dto.setStoreName(inventory.getStore().getName());
-        dto.setProductVariantId(inventory.getProductVariant().getId());
-        dto.setProductName(inventory.getProductVariant().getProduct().getName());
-        dto.setProductVariantSku(inventory.getProductVariant().getSku());
+        if (inventory.getProduct() != null) {
+            dto.setProductId(inventory.getProduct().getId());
+            dto.setProductName(inventory.getProduct().getName());
+            dto.setProductVariantSku(inventory.getProduct().getItemCode());
+        }
         dto.setQuantity(inventory.getQuantity());
         return dto;
     }
